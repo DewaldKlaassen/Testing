@@ -1,0 +1,1300 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FB_GTAC_EOAT_20170704" Id="{f85cafa3-152f-4dec-b594-c69d4952ccce}" SpecialFunc="None">
+    <Declaration><![CDATA[(*FB for use with Robot EOATs
+
+	Original Author(s): Brent Lekx-Toniolo of Sodecia GTAC.; 
+------------------------------------------------------------------------------------------
+REVISION NOTES:
+	Version 20151105
+		- intial concept, b.lekx-toniolo
+	Version 20170507
+		- made the FB more awesomer, b.lekx-toniolo
+	Version 20170704
+		- made the FB even more awesomer with valve changes, j.vandongen
+		- added in Part_In_EOAT, removed from robot control, j.vandongen
+------------------------------------------------------------------------------------------
+*)
+
+
+
+FUNCTION_BLOCK FB_GTAC_EOAT_20170704
+
+VAR_INPUT
+(*General Inputs*)
+	Enable_FB: BOOL;
+	Enable_Motion: BOOL;
+	Dry_Cycle: BOOL;
+
+
+(*Node Counts and configuration data*)
+	Input_Node_Count: UDINT;
+	VB_Node_Count: UDINT;
+	Part_Present_Count: UDINT;
+	Clamp_Count: UDINT;
+
+	All_Sensors_Off_Grp1: BOOL;
+	All_Sensors_On_Grp1: BOOL;
+	All_Sensors_Off_Grp2: BOOL;
+	All_Sensors_On_Grp2: BOOL;
+	All_Sensors_Off_Grp3: BOOL;
+	All_Sensors_On_Grp3: BOOL;
+	All_Sensors_Off_Grp4: BOOL;
+	All_Sensors_On_Grp4: BOOL;
+	All_Sensors_Off_Grp5: BOOL;
+	All_Sensors_On_Grp5: BOOL;
+	All_Sensors_Off_Grp6: BOOL;
+	All_Sensors_On_Grp6: BOOL;
+	All_Sensors_Off_Grp7: BOOL;
+	All_Sensors_On_Grp7: BOOL;
+	All_Sensors_Off_Grp8: BOOL;
+	All_Sensors_On_Grp8: BOOL;
+
+	LH_Part_In_EOAT_Grp: BOOL;
+	LH_EOAT_Empty_Grp: BOOL;
+	RH_Part_In_EOAT_Grp: BOOL;
+	RH_EOAT_Empty_Grp: BOOL;
+	Part_In_EOAT_Grp: BOOL;
+	EOAT_Empty_Grp: BOOL;
+
+	Tool_At_Home_Grp1: BOOL;
+	Tool_At_Work_Grp1: BOOL;
+	Tool_At_Home_Grp2: BOOL;
+	Tool_At_Work_Grp2: BOOL;
+	Tool_At_Home_Grp3: BOOL;
+	Tool_At_Work_Grp3: BOOL;
+	Tool_At_Home_Grp4: BOOL;
+	Tool_At_Work_Grp4: BOOL;
+	Tool_At_Home_Grp5: BOOL;
+	Tool_At_Work_Grp5: BOOL;
+	Tool_At_Home_Grp6: BOOL;
+	Tool_At_Work_Grp6: BOOL;
+	Tool_At_Home_Grp7: BOOL;
+	Tool_At_Work_Grp7: BOOL;
+	Tool_At_Home_Grp8: BOOL;
+	Tool_At_Work_Grp8: BOOL;
+
+(*Clamp and PP Mapping*)
+	MAP_Clamp1_HomeSens: BOOL;
+	MAP_Clamp1_WorkSens: BOOL;
+	MAP_Clamp1_HomeReqd: BOOL;
+	MAP_Clamp1_WorkReqd: BOOL;
+	MAP_Clamp2_HomeSens: BOOL;
+	MAP_Clamp2_WorkSens: BOOL;
+	MAP_Clamp2_HomeReqd: BOOL;
+	MAP_Clamp2_WorkReqd: BOOL;
+	MAP_Clamp3_HomeSens: BOOL;
+	MAP_Clamp3_WorkSens: BOOL;
+	MAP_Clamp3_HomeReqd: BOOL;
+	MAP_Clamp3_WorkReqd: BOOL;
+	MAP_Clamp4_HomeSens: BOOL;
+	MAP_Clamp4_WorkSens: BOOL;
+	MAP_Clamp4_HomeReqd: BOOL;
+	MAP_Clamp4_WorkReqd: BOOL;
+	MAP_Clamp5_HomeSens: BOOL;
+	MAP_Clamp5_WorkSens: BOOL;
+	MAP_Clamp5_HomeReqd: BOOL;
+	MAP_Clamp5_WorkReqd: BOOL;
+	MAP_Clamp6_HomeSens: BOOL;
+	MAP_Clamp6_WorkSens: BOOL;
+	MAP_Clamp6_HomeReqd: BOOL;
+	MAP_Clamp6_WorkReqd: BOOL;
+	MAP_Clamp7_HomeSens: BOOL;
+	MAP_Clamp7_WorkSens: BOOL;
+	MAP_Clamp7_HomeReqd: BOOL;
+	MAP_Clamp7_WorkReqd: BOOL;
+	MAP_Clamp8_HomeSens: BOOL;
+	MAP_Clamp8_WorkSens: BOOL;
+	MAP_Clamp8_HomeReqd: BOOL;
+	MAP_Clamp8_WorkReqd: BOOL;
+	MAP_Clamp9_HomeSens: BOOL;
+	MAP_Clamp9_WorkSens: BOOL;
+	MAP_Clamp9_HomeReqd: BOOL;
+	MAP_Clamp9_WorkReqd: BOOL;
+	MAP_Clamp10_HomeSens: BOOL;
+	MAP_Clamp10_WorkSens: BOOL;
+	MAP_Clamp10_HomeReqd: BOOL;
+	MAP_Clamp10_WorkReqd: BOOL;
+	MAP_Clamp11_HomeSens: BOOL;
+	MAP_Clamp11_WorkSens: BOOL;
+	MAP_Clamp11_HomeReqd: BOOL;
+	MAP_Clamp11_WorkReqd: BOOL;
+	MAP_Clamp12_HomeSens: BOOL;
+	MAP_Clamp12_WorkSens: BOOL;
+	MAP_Clamp12_HomeReqd: BOOL;
+	MAP_Clamp12_WorkReqd: BOOL;
+	MAP_Clamp13_HomeSens: BOOL;
+	MAP_Clamp13_WorkSens: BOOL;
+	MAP_Clamp13_HomeReqd: BOOL;
+	MAP_Clamp13_WorkReqd: BOOL;
+	MAP_Clamp14_HomeSens: BOOL;
+	MAP_Clamp14_WorkSens: BOOL;
+	MAP_Clamp14_HomeReqd: BOOL;
+	MAP_Clamp14_WorkReqd: BOOL;
+	MAP_Clamp15_HomeSens: BOOL;
+	MAP_Clamp15_WorkSens: BOOL;
+	MAP_Clamp15_HomeReqd: BOOL;
+	MAP_Clamp15_WorkReqd: BOOL;
+	MAP_Clamp16_HomeSens: BOOL;
+	MAP_Clamp16_WorkSens: BOOL;
+	MAP_Clamp16_HomeReqd: BOOL;
+	MAP_Clamp16_WorkReqd: BOOL;
+	MAP_Clamp17_HomeSens: BOOL;
+	MAP_Clamp17_WorkSens: BOOL;
+	MAP_Clamp17_HomeReqd: BOOL;
+	MAP_Clamp17_WorkReqd: BOOL;
+	MAP_Clamp18_HomeSens: BOOL;
+	MAP_Clamp18_WorkSens: BOOL;
+	MAP_Clamp18_HomeReqd: BOOL;
+	MAP_Clamp18_WorkReqd: BOOL;
+	MAP_Clamp19_HomeSens: BOOL;
+	MAP_Clamp19_WorkSens: BOOL;
+	MAP_Clamp19_HomeReqd: BOOL;
+	MAP_Clamp19_WorkReqd: BOOL;
+	MAP_Clamp20_HomeSens: BOOL;
+	MAP_Clamp20_WorkSens: BOOL;
+	MAP_Clamp20_HomeReqd: BOOL;
+	MAP_Clamp20_WorkReqd: BOOL;
+
+	MAP_PP1_Sens: BOOL;
+	MAP_PP1_ReqdOn: BOOL;
+	MAP_PP1_ReqdOff: BOOL;
+	MAP_PP2_Sens: BOOL;
+	MAP_PP2_ReqdOn: BOOL;
+	MAP_PP2_ReqdOff: BOOL;
+	MAP_PP3_Sens: BOOL;
+	MAP_PP3_ReqdOn: BOOL;
+	MAP_PP3_ReqdOff: BOOL;
+	MAP_PP4_Sens: BOOL;
+	MAP_PP4_ReqdOn: BOOL;
+	MAP_PP4_ReqdOff: BOOL;
+	MAP_PP5_Sens: BOOL;
+	MAP_PP5_ReqdOn: BOOL;
+	MAP_PP5_ReqdOff: BOOL;
+	MAP_PP6_Sens: BOOL;
+	MAP_PP6_ReqdOn: BOOL;
+	MAP_PP6_ReqdOff: BOOL;
+	MAP_PP7_Sens: BOOL;
+	MAP_PP7_ReqdOn: BOOL;
+	MAP_PP7_ReqdOff: BOOL;
+	MAP_PP8_Sens: BOOL;
+	MAP_PP8_ReqdOn: BOOL;
+	MAP_PP8_ReqdOff: BOOL;
+
+
+
+(*CMDs (commands)*)
+	CMD_CheckAllSensors_OFF: BOOL;
+	CMD_CheckAllSensors_ON: BOOL;
+	CMD_CheckSensorsOFF_Grp1: BOOL;
+	CMD_CheckSensorsON_Grp1: BOOL;
+	CMD_CheckSensorsOFF_Grp2: BOOL;
+	CMD_CheckSensorsON_Grp2: BOOL;
+	CMD_CheckSensorsOFF_Grp3: BOOL;
+	CMD_CheckSensorsON_Grp3: BOOL;
+	CMD_CheckSensorsOFF_Grp4: BOOL;
+	CMD_CheckSensorsON_Grp4: BOOL;
+	CMD_CheckSensorsOFF_Grp5: BOOL;
+	CMD_CheckSensorsON_Grp5: BOOL;
+	CMD_CheckSensorsOFF_Grp6: BOOL;
+	CMD_CheckSensorsON_Grp6: BOOL;
+	CMD_CheckSensorsOFF_Grp7: BOOL;
+	CMD_CheckSensorsON_Grp7: BOOL;
+	CMD_CheckSensorsOFF_Grp8: BOOL;
+	CMD_CheckSensorsON_Grp8: BOOL;
+
+	CMD_Tool_To_WORK: BOOL;
+	CMD_Tool_To_HOME: BOOL;
+	CMD_ClampsToWORK_Grp1: BOOL;
+	CMD_ClampsToHOME_Grp1: BOOL;
+	CMD_ClampsToWORK_Grp2: BOOL;
+	CMD_ClampsToHOME_Grp2: BOOL;
+	CMD_ClampsToWORK_Grp3: BOOL;
+	CMD_ClampsToHOME_Grp3: BOOL;
+	CMD_ClampsToWORK_Grp4: BOOL;
+	CMD_ClampsToHOME_Grp4: BOOL;
+	CMD_ClampsToWORK_Grp5: BOOL;
+	CMD_ClampsToHOME_Grp5: BOOL;
+	CMD_ClampsToWORK_Grp6: BOOL;
+	CMD_ClampsToHOME_Grp6: BOOL;
+	CMD_ClampsToWORK_Grp7: BOOL;
+	CMD_ClampsToHOME_Grp7: BOOL;
+	CMD_ClampsToWORK_Grp8: BOOL;
+	CMD_ClampsToHOME_Grp8: BOOL;
+
+END_VAR
+
+VAR
+(*Hardware Related Data Types*)
+			(*Develop "Beckhoff Nodes"*)
+			N01 AT %I*: udt_EP1008_002_v2;
+			N02 AT %I*: udt_EP1008_002_v2;
+			N03 AT %I*: udt_EP1008_002_v2;
+			N04 AT %I*: udt_EP1008_002_v2;
+			N05 AT %I*: udt_EP1008_002_v2;
+			N06 AT %I*: udt_EP1008_002_v2;
+			N07 AT %I*: udt_EP1008_002_v2;
+			N08 AT %I*: udt_EP1008_002_v2;
+			N09 AT %I*: udt_EP1008_002_v2;
+			N100 AT %Q*: udt_SMC_EX260_ValveBank;
+			N100_STAT AT %I*:udt_SMC_EX260_Stat;
+
+(* Nodes States*)
+	DiscreteNode_OK: BOOL;
+(* Cable Break States*)
+	ECatSlave_Cable_Breaks: UDINT;
+
+(*Standard Internal Variables*)
+		(*Generic Sensor Variables*)
+		All_Sensors_On: UINT;
+		All_Sensors_Off: UINT;
+		(*Generic Position Variables*)
+		Tool_At_Home: UINT;
+		Tool_At_Work: UINT;
+		(*General Internals*)
+		CLFaulted: UDINT;
+		PPFaulted: UDINT;
+
+(*Non-Standard Variables*)
+
+		(*FB Instances*)
+		Clamp1FB: FB_Clamp_Status;
+		Clamp2FB: FB_Clamp_Status;
+		Clamp3FB: FB_Clamp_Status;
+		Clamp4FB: FB_Clamp_Status;
+		Clamp5FB: FB_Clamp_Status;
+		Clamp6FB: FB_Clamp_Status;
+		Clamp7FB: FB_Clamp_Status;
+		Clamp8FB: FB_Clamp_Status;
+		Clamp9FB: FB_Clamp_Status;
+		Clamp10FB: FB_Clamp_Status;
+		Clamp11FB: FB_Clamp_Status;
+		Clamp12FB: FB_Clamp_Status;
+		Clamp13FB: FB_Clamp_Status;
+		Clamp14FB: FB_Clamp_Status;
+		Clamp15FB: FB_Clamp_Status;
+		Clamp16FB: FB_Clamp_Status;
+		Clamp17FB: FB_Clamp_Status;
+		Clamp18FB: FB_Clamp_Status;
+		Clamp19FB: FB_Clamp_Status;
+		Clamp20FB: FB_Clamp_Status;
+		Part_Present1FB: FB_PP_Sensor;
+		Part_Present2FB: FB_PP_Sensor;
+		Part_Present3FB: FB_PP_Sensor;
+		Part_Present4FB: FB_PP_Sensor;
+		Part_Present5FB: FB_PP_Sensor;
+		Part_Present6FB: FB_PP_Sensor;
+		Part_Present7FB: FB_PP_Sensor;
+		Part_Present8FB: FB_PP_Sensor;
+		Tape_Present1FB: FB_PP_Sensor;
+		(*Valve FBs*)
+		Valve1FB: FB_GTAC_Valve_20170704;
+		Valve2FB: FB_GTAC_Valve_20170704;
+		Valve3FB: FB_GTAC_Valve_20170704;
+		Valve4FB: FB_GTAC_Valve_20170704;
+		Valve5FB: FB_GTAC_Valve_20170704;
+		Valve6FB: FB_GTAC_Valve_20170704;
+		Valve7FB: FB_GTAC_Valve_20170704;
+		Valve8FB: FB_GTAC_Valve_20170704;
+
+		(*Tool Positions*)
+			Clamp1WORK: BOOL;
+			Clamp1HOME: BOOL;
+			Clamp2WORK: BOOL;
+			Clamp2HOME: BOOL;
+			Clamp3WORK: BOOL;
+			Clamp3HOME: BOOL;
+			Clamp4WORK: BOOL;
+			Clamp4HOME: BOOL;
+			Clamp5WORK: BOOL;
+			Clamp5HOME: BOOL;
+			Clamp6WORK: BOOL;
+			Clamp6HOME: BOOL;
+			Clamp7WORK: BOOL;
+			Clamp7HOME: BOOL;
+			Clamp8WORK: BOOL;
+			Clamp8HOME: BOOL;
+			Clamp9WORK: BOOL;
+			Clamp9HOME: BOOL;
+			Clamp10WORK: BOOL;
+			Clamp10HOME: BOOL;
+			Clamp11WORK: BOOL;
+			Clamp11HOME: BOOL;
+			Clamp12WORK: BOOL;
+			Clamp12HOME: BOOL;
+			Clamp13WORK: BOOL;
+			Clamp13HOME: BOOL;
+			Clamp14WORK: BOOL;
+			Clamp14HOME: BOOL;
+			Clamp15WORK: BOOL;
+			Clamp15HOME: BOOL;
+			Clamp16WORK: BOOL;
+			Clamp16HOME: BOOL;
+			Clamp17WORK: BOOL;
+			Clamp17HOME: BOOL;
+			Clamp18WORK: BOOL;
+			Clamp18HOME: BOOL;
+			Clamp19WORK: BOOL;
+			Clamp19HOME: BOOL;
+			Clamp20WORK: BOOL;
+			Clamp20HOME: BOOL;
+		(*Part Present Sensors*)
+			(*Main Body Present*)
+			Part_Present1: BOOL;
+			Part_Present2: BOOL;
+			Part_Present3: BOOL;
+			Part_Present4: BOOL;
+			Part_Present5: BOOL;
+			Part_Present6: BOOL;
+			Part_Present7: BOOL;
+			Part_Present8: BOOL;
+
+
+
+END_VAR
+
+VAR_OUTPUT
+
+		FB_OK: BOOL;
+		Discrete_Image: udt_EOATxx_Image_20170607;
+
+		CLFaults1:UDINT;
+		CLFaults2:UDINT;
+		CLFaults3:UDINT;
+		CLFaults4:UDINT;
+		PPFaults: UDINT;
+
+		LH_Part_In_EOAT:BOOL;
+		RH_Part_In_EOAT:BOOL;
+		Part_In_EOAT:BOOL;
+
+(*ACKS*)
+	ACK_AllSensors_OFF: BOOL;
+	ACK_AllSensors_ON: BOOL;
+	ACK_SensorsOFF_Grp1: BOOL;
+	ACK_SensorsON_Grp1: BOOL;
+	ACK_SensorsOFF_Grp2: BOOL;
+	ACK_SensorsON_Grp2: BOOL;
+	ACK_SensorsOFF_Grp3: BOOL;
+	ACK_SensorsON_Grp3: BOOL;
+	ACK_SensorsOFF_Grp4: BOOL;
+	ACK_SensorsON_Grp4: BOOL;
+	ACK_SensorsOFF_Grp5: BOOL;
+	ACK_SensorsON_Grp5: BOOL;
+	ACK_SensorsOFF_Grp6: BOOL;
+	ACK_SensorsON_Grp6: BOOL;
+	ACK_SensorsOFF_Grp7: BOOL;
+	ACK_SensorsON_Grp7: BOOL;
+	ACK_SensorsOFF_Grp8: BOOL;
+	ACK_SensorsON_Grp8: BOOL;
+
+	ACK_Tool_At_WORK: BOOL;
+	ACK_Tool_At_HOME: BOOL;
+	ACK_ClampsAtWORK_Grp1: BOOL;
+	ACK_ClampsAtHOME_Grp1: BOOL;
+	ACK_ClampsAtWORK_Grp2: BOOL;
+	ACK_ClampsAtHOME_Grp2: BOOL;
+	ACK_ClampsAtWORK_Grp3: BOOL;
+	ACK_ClampsAtHOME_Grp3: BOOL;
+	ACK_ClampsAtWORK_Grp4: BOOL;
+	ACK_ClampsAtHOME_Grp4: BOOL;
+	ACK_ClampsAtWORK_Grp5: BOOL;
+	ACK_ClampsAtHOME_Grp5: BOOL;
+	ACK_ClampsAtWORK_Grp6: BOOL;
+	ACK_ClampsAtHOME_Grp6: BOOL;
+	ACK_ClampsAtWORK_Grp7: BOOL;
+	ACK_ClampsAtHOME_Grp7: BOOL;
+	ACK_ClampsAtWORK_Grp8: BOOL;
+	ACK_ClampsAtHOME_Grp8: BOOL;
+
+END_VAR
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[	(*Set FB_OK to True*)
+	FB_OK:= TRUE;
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$Gather Status Of Hardware $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Discrete I/O Nodes*)
+
+	IF N01.InfoData.State=8
+		AND (N02.InfoData.State=8 OR (Input_Node_Count<2))
+		AND (N03.InfoData.State=8 OR (Input_Node_Count<3))
+		AND (N04.InfoData.State=8 OR (Input_Node_Count<4))
+		AND (N05.InfoData.State=8 OR (Input_Node_Count<5))
+		AND (N06.InfoData.State=8 OR (Input_Node_Count<6))
+		AND (N07.InfoData.State=8 OR (Input_Node_Count<7))
+		AND (N08.InfoData.State=8 OR (Input_Node_Count<8))
+		AND (N09.InfoData.State=8 OR (Input_Node_Count<9))
+		AND N100_STAT.InfoData.State=8
+
+		THEN
+			DiscreteNode_OK:=TRUE;
+
+	ELSE
+			DiscreteNode_OK:=FALSE;
+
+	END_IF;
+
+	(*Cable Break Detection*)
+	ECatSlave_Cable_Breaks:= FUN_GTAC_EcatSlaveConnState
+							(N100_STAT.InfoData.State,
+							N01.InfoData.State ,
+							N02.InfoData.State,
+							N03.InfoData.State,
+							N04.InfoData.State,
+							N05.InfoData.State,
+							N06.InfoData.State,
+							N07.InfoData.State,
+							N08.InfoData.State,
+							N09.InfoData.State,
+							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0); (*Function Returns Flags to warn of possible cable break*)
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Gather Safety Inputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Gather Standard Inputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+(*----------------------------------------------------------------------- Gather Clamp Sensor Inputs -----------------------------------------------------*)
+(*Clamp/Cylinder Inputs*)
+		(*Clamp1*)
+		Clamp1FB(
+			(*All sensor input mapping and solenoid mapping is done external to FB by end deployment*)
+			Home_Sensor:= MAP_Clamp1_HomeSens,
+			Work_Sensor:= MAP_Clamp1_WorkSens,
+			Home_Solenoid:= Enable_Motion AND (CMD_Tool_To_HOME OR MAP_Clamp1_HomeReqd),
+			Work_Solenoid:= Enable_Motion AND (CMD_Tool_To_WORK OR MAP_Clamp1_WorkReqd),
+			Home_Delay:= T#0.1s,
+			Work_Delay:= T#0.1s ,
+			Fault_Delay:= T#3s ,
+			In_Home_Position=> Clamp1HOME,
+			In_Work_Position=> Clamp1WORK,
+			);
+			CLFaults1.1:= Clamp1FB.Faulted AND Clamp_Count>=1; 		(*Interlock Clamp Fault with Clamp Count Configuration Data*)
+
+		(*Clamp2*)
+		Clamp2FB(
+			(*All sensor input mapping and solenoid mapping is done external to FB by end deployment*)
+			Home_Sensor:= MAP_Clamp2_HomeSens,
+			Work_Sensor:= MAP_Clamp2_WorkSens,
+			Home_Solenoid:= Enable_Motion AND (CMD_Tool_To_HOME OR MAP_Clamp2_HomeReqd),
+			Work_Solenoid:= Enable_Motion AND (CMD_Tool_To_WORK OR MAP_Clamp2_WorkReqd),
+			Home_Delay:= T#0.1s,
+			Work_Delay:= T#0.1s ,
+			Fault_Delay:= T#3s ,
+			In_Home_Position=> Clamp2HOME,
+			In_Work_Position=> Clamp2WORK,
+			);
+			CLFaults1.2:= Clamp2FB.Faulted AND Clamp_Count>=2; 		(*Interlock Clamp Fault with Clamp Count Configuration Data*)
+		(*Clamp3*)
+		Clamp3FB(
+			(*All sensor input mapping and solenoid mapping is done external to FB by end deployment*)
+			Home_Sensor:= MAP_Clamp3_HomeSens,
+			Work_Sensor:= MAP_Clamp3_WorkSens,
+			Home_Solenoid:= Enable_Motion AND (CMD_Tool_To_HOME OR MAP_Clamp3_HomeReqd),
+			Work_Solenoid:= Enable_Motion AND (CMD_Tool_To_WORK OR MAP_Clamp3_WorkReqd),
+			Home_Delay:= T#0.1s,
+			Work_Delay:= T#0.1s ,
+			Fault_Delay:= T#3s ,
+			In_Home_Position=> Clamp3HOME,
+			In_Work_Position=> Clamp3WORK,
+			);
+			CLFaults1.3:= Clamp3FB.Faulted AND Clamp_Count>=3; 		(*Interlock Clamp Fault with Clamp Count Configuration Data*)
+		(*Clamp4*)
+		Clamp4FB(
+			(*All sensor input mapping and solenoid mapping is done external to FB by end deployment*)
+			Home_Sensor:= MAP_Clamp4_HomeSens,
+			Work_Sensor:= MAP_Clamp4_WorkSens,
+			Home_Solenoid:= Enable_Motion AND (CMD_Tool_To_HOME OR MAP_Clamp4_HomeReqd),
+			Work_Solenoid:= Enable_Motion AND (CMD_Tool_To_WORK OR MAP_Clamp4_WorkReqd),
+			Home_Delay:= T#0.1s,
+			Work_Delay:= T#0.1s ,
+			Fault_Delay:= T#3s ,
+			In_Home_Position=> Clamp4HOME,
+			In_Work_Position=> Clamp4WORK,
+			);
+			CLFaults1.4:= Clamp4FB.Faulted AND Clamp_Count>=4; 		(*Interlock Clamp Fault with Clamp Count Configuration Data*)
+		(*Clamp5*)
+		Clamp5FB(
+			(*All sensor input mapping and solenoid mapping is done external to FB by end deployment*)
+			Home_Sensor:= MAP_Clamp5_HomeSens,
+			Work_Sensor:= MAP_Clamp5_WorkSens,
+			Home_Solenoid:= Enable_Motion AND (CMD_Tool_To_HOME OR MAP_Clamp5_HomeReqd),
+			Work_Solenoid:= Enable_Motion AND (CMD_Tool_To_WORK OR MAP_Clamp5_WorkReqd),
+			Home_Delay:= T#0.1s,
+			Work_Delay:= T#0.1s ,
+			Fault_Delay:= T#3s ,
+			In_Home_Position=> Clamp5HOME,
+			In_Work_Position=> Clamp5WORK,
+			);
+			CLFaults1.5:= Clamp5FB.Faulted AND Clamp_Count>=5; 		(*Interlock Clamp Fault with Clamp Count Configuration Data*)
+		(*Clamp6*)
+		Clamp6FB(
+			(*All sensor input mapping and solenoid mapping is done external to FB by end deployment*)
+			Home_Sensor:= MAP_Clamp6_HomeSens,
+			Work_Sensor:= MAP_Clamp6_WorkSens,
+			Home_Solenoid:= Enable_Motion AND (CMD_Tool_To_HOME OR MAP_Clamp6_HomeReqd),
+			Work_Solenoid:= Enable_Motion AND (CMD_Tool_To_WORK OR MAP_Clamp6_WorkReqd),
+			Home_Delay:= T#0.1s,
+			Work_Delay:= T#0.1s ,
+			Fault_Delay:= T#3s ,
+			In_Home_Position=> Clamp6HOME,
+			In_Work_Position=> Clamp6WORK,
+			);
+			CLFaults1.6:= Clamp6FB.Faulted AND Clamp_Count>=6; 		(*Interlock Clamp Fault with Clamp Count Configuration Data*)
+		(*Clamp7*)
+		Clamp7FB(
+			(*All sensor input mapping and solenoid mapping is done external to FB by end deployment*)
+			Home_Sensor:= MAP_Clamp7_HomeSens,
+			Work_Sensor:= MAP_Clamp7_WorkSens,
+			Home_Solenoid:= Enable_Motion AND (CMD_Tool_To_HOME OR MAP_Clamp7_HomeReqd),
+			Work_Solenoid:= Enable_Motion AND (CMD_Tool_To_WORK OR MAP_Clamp7_WorkReqd),
+			Home_Delay:= T#0.1s,
+			Work_Delay:= T#0.1s ,
+			Fault_Delay:= T#3s ,
+			In_Home_Position=> Clamp7HOME,
+			In_Work_Position=> Clamp7WORK,
+			);
+			CLFaults1.7:= Clamp7FB.Faulted AND Clamp_Count>=7; 		(*Interlock Clamp Fault with Clamp Count Configuration Data*)
+		(*Clamp8*)
+		Clamp8FB(
+			(*All sensor input mapping and solenoid mapping is done external to FB by end deployment*)
+			Home_Sensor:= MAP_Clamp8_HomeSens,
+			Work_Sensor:= MAP_Clamp8_WorkSens,
+			Home_Solenoid:= Enable_Motion AND (CMD_Tool_To_HOME OR MAP_Clamp8_HomeReqd),
+			Work_Solenoid:= Enable_Motion AND (CMD_Tool_To_WORK OR MAP_Clamp8_WorkReqd),
+			Home_Delay:= T#0.1s,
+			Work_Delay:= T#0.1s ,
+			Fault_Delay:= T#3s ,
+			In_Home_Position=> Clamp8HOME,
+			In_Work_Position=> Clamp8WORK,
+			);
+			CLFaults1.8:= Clamp8FB.Faulted AND Clamp_Count>=8; 		(*Interlock Clamp Fault with Clamp Count Configuration Data*)
+		(*Clamp9*)
+		Clamp9FB(
+			(*All sensor input mapping and solenoid mapping is done external to FB by end deployment*)
+			Home_Sensor:= MAP_Clamp9_HomeSens,
+			Work_Sensor:= MAP_Clamp9_WorkSens,
+			Home_Solenoid:= Enable_Motion AND (CMD_Tool_To_HOME OR MAP_Clamp9_HomeReqd),
+			Work_Solenoid:= Enable_Motion AND (CMD_Tool_To_WORK OR MAP_Clamp9_WorkReqd),
+			Home_Delay:= T#0.1s,
+			Work_Delay:= T#0.1s ,
+			Fault_Delay:= T#3s ,
+			In_Home_Position=> Clamp9HOME,
+			In_Work_Position=> Clamp9WORK,
+			);
+			CLFaults1.9:= Clamp9FB.Faulted AND Clamp_Count>=9; 		(*Interlock Clamp Fault with Clamp Count Configuration Data*)
+		(*Clamp10*)
+		Clamp10FB(
+			(*All sensor input mapping and solenoid mapping is done external to FB by end deployment*)
+			Home_Sensor:= MAP_Clamp10_HomeSens,
+			Work_Sensor:= MAP_Clamp10_WorkSens,
+			Home_Solenoid:= Enable_Motion AND (CMD_Tool_To_HOME OR MAP_Clamp10_HomeReqd),
+			Work_Solenoid:= Enable_Motion AND (CMD_Tool_To_WORK OR MAP_Clamp10_WorkReqd),
+			Home_Delay:= T#0.1s,
+			Work_Delay:= T#0.1s ,
+			Fault_Delay:= T#3s ,
+			In_Home_Position=> Clamp10HOME,
+			In_Work_Position=> Clamp10WORK,
+			);
+			CLFaults1.10:= Clamp10FB.Faulted AND Clamp_Count>=10; 		(*Interlock Clamp Fault with Clamp Count Configuration Data*)
+		(*Clamp11*)
+		Clamp11FB(
+			(*All sensor input mapping and solenoid mapping is done external to FB by end deployment*)
+			Home_Sensor:= MAP_Clamp11_HomeSens,
+			Work_Sensor:= MAP_Clamp11_WorkSens,
+			Home_Solenoid:= Enable_Motion AND (CMD_Tool_To_HOME OR MAP_Clamp11_HomeReqd),
+			Work_Solenoid:= Enable_Motion AND (CMD_Tool_To_WORK OR MAP_Clamp11_WorkReqd),
+			Home_Delay:= T#0.1s,
+			Work_Delay:= T#0.1s ,
+			Fault_Delay:= T#3s ,
+			In_Home_Position=> Clamp11HOME,
+			In_Work_Position=> Clamp11WORK,
+			);
+			CLFaults1.11:= Clamp11FB.Faulted AND Clamp_Count>=11; 		(*Interlock Clamp Fault with Clamp Count Configuration Data*)
+		(*Clamp12*)
+		Clamp12FB(
+			(*All sensor input mapping and solenoid mapping is done external to FB by end deployment*)
+			Home_Sensor:= MAP_Clamp12_HomeSens,
+			Work_Sensor:= MAP_Clamp12_WorkSens,
+			Home_Solenoid:= Enable_Motion AND (CMD_Tool_To_HOME OR MAP_Clamp12_HomeReqd),
+			Work_Solenoid:= Enable_Motion AND (CMD_Tool_To_WORK OR MAP_Clamp12_WorkReqd),
+			Home_Delay:= T#0.1s,
+			Work_Delay:= T#0.1s ,
+			Fault_Delay:= T#3s ,
+			In_Home_Position=> Clamp12HOME,
+			In_Work_Position=> Clamp12WORK,
+			);
+			CLFaults1.12:= Clamp12FB.Faulted AND Clamp_Count>=12; 		(*Interlock Clamp Fault with Clamp Count Configuration Data*)
+		(*Clamp13*)
+		Clamp13FB(
+			(*All sensor input mapping and solenoid mapping is done external to FB by end deployment*)
+			Home_Sensor:= MAP_Clamp13_HomeSens,
+			Work_Sensor:= MAP_Clamp13_WorkSens,
+			Home_Solenoid:= Enable_Motion AND (CMD_Tool_To_HOME OR MAP_Clamp13_HomeReqd),
+			Work_Solenoid:= Enable_Motion AND (CMD_Tool_To_WORK OR MAP_Clamp13_WorkReqd),
+			Home_Delay:= T#0.1s,
+			Work_Delay:= T#0.1s ,
+			Fault_Delay:= T#3s ,
+			In_Home_Position=> Clamp13HOME,
+			In_Work_Position=> Clamp13WORK,
+			);
+			CLFaults1.13:= Clamp13FB.Faulted AND Clamp_Count>=13; 		(*Interlock Clamp Fault with Clamp Count Configuration Data*)
+		(*Clamp14*)
+		Clamp14FB(
+			(*All sensor input mapping and solenoid mapping is done external to FB by end deployment*)
+			Home_Sensor:= MAP_Clamp14_HomeSens,
+			Work_Sensor:= MAP_Clamp14_WorkSens,
+			Home_Solenoid:= Enable_Motion AND (CMD_Tool_To_HOME OR MAP_Clamp14_HomeReqd),
+			Work_Solenoid:= Enable_Motion AND (CMD_Tool_To_WORK OR MAP_Clamp14_WorkReqd),
+			Home_Delay:= T#0.1s,
+			Work_Delay:= T#0.1s ,
+			Fault_Delay:= T#3s ,
+			In_Home_Position=> Clamp14HOME,
+			In_Work_Position=> Clamp14WORK,
+			);
+			CLFaults1.14:= Clamp14FB.Faulted AND Clamp_Count>=14; 		(*Interlock Clamp Fault with Clamp Count Configuration Data*)
+		(*Clamp15*)
+		Clamp15FB(
+			(*All sensor input mapping and solenoid mapping is done external to FB by end deployment*)
+			Home_Sensor:= MAP_Clamp15_HomeSens,
+			Work_Sensor:= MAP_Clamp15_WorkSens,
+			Home_Solenoid:= Enable_Motion AND (CMD_Tool_To_HOME OR MAP_Clamp15_HomeReqd),
+			Work_Solenoid:= Enable_Motion AND (CMD_Tool_To_WORK OR MAP_Clamp15_WorkReqd),
+			Home_Delay:= T#0.1s,
+			Work_Delay:= T#0.1s ,
+			Fault_Delay:= T#3s ,
+			In_Home_Position=> Clamp15HOME,
+			In_Work_Position=> Clamp15WORK,
+			);
+			CLFaults1.15:= Clamp15FB.Faulted AND Clamp_Count>=15; 		(*Interlock Clamp Fault with Clamp Count Configuration Data*)
+		(*Clamp16*)
+		Clamp16FB(
+			(*All sensor input mapping and solenoid mapping is done external to FB by end deployment*)
+			Home_Sensor:= MAP_Clamp16_HomeSens,
+			Work_Sensor:= MAP_Clamp16_WorkSens,
+			Home_Solenoid:= Enable_Motion AND (CMD_Tool_To_HOME OR MAP_Clamp16_HomeReqd),
+			Work_Solenoid:= Enable_Motion AND (CMD_Tool_To_WORK OR MAP_Clamp16_WorkReqd),
+			Home_Delay:= T#0.1s,
+			Work_Delay:= T#0.1s ,
+			Fault_Delay:= T#3s ,
+			In_Home_Position=> Clamp16HOME,
+			In_Work_Position=> Clamp16WORK,
+			);
+			CLFaults1.16:= Clamp16FB.Faulted AND Clamp_Count>=16; 		(*Interlock Clamp Fault with Clamp Count Configuration Data*)
+		(*Clamp17*)
+		Clamp17FB(
+			(*All sensor input mapping and solenoid mapping is done external to FB by end deployment*)
+			Home_Sensor:= MAP_Clamp17_HomeSens,
+			Work_Sensor:= MAP_Clamp17_WorkSens,
+			Home_Solenoid:= Enable_Motion AND (CMD_Tool_To_HOME OR MAP_Clamp17_HomeReqd),
+			Work_Solenoid:= Enable_Motion AND (CMD_Tool_To_WORK OR MAP_Clamp17_WorkReqd),
+			Home_Delay:= T#0.1s,
+			Work_Delay:= T#0.1s ,
+			Fault_Delay:= T#3s ,
+			In_Home_Position=> Clamp17HOME,
+			In_Work_Position=> Clamp17WORK,
+			);
+			CLFaults1.17:= Clamp17FB.Faulted AND Clamp_Count>=17; 		(*Interlock Clamp Fault with Clamp Count Configuration Data*)
+		(*Clamp18*)
+		Clamp18FB(
+			(*All sensor input mapping and solenoid mapping is done external to FB by end deployment*)
+			Home_Sensor:= MAP_Clamp18_HomeSens,
+			Work_Sensor:= MAP_Clamp18_WorkSens,
+			Home_Solenoid:= Enable_Motion AND (CMD_Tool_To_HOME OR MAP_Clamp18_HomeReqd),
+			Work_Solenoid:= Enable_Motion AND (CMD_Tool_To_WORK OR MAP_Clamp18_WorkReqd),
+			Home_Delay:= T#0.1s,
+			Work_Delay:= T#0.1s ,
+			Fault_Delay:= T#3s ,
+			In_Home_Position=> Clamp18HOME,
+			In_Work_Position=> Clamp18WORK,
+			);
+			CLFaults1.18:= Clamp18FB.Faulted AND Clamp_Count>=18; 		(*Interlock Clamp Fault with Clamp Count Configuration Data*)
+		(*Clamp19*)
+		Clamp19FB(
+			(*All sensor input mapping and solenoid mapping is done external to FB by end deployment*)
+			Home_Sensor:= MAP_Clamp19_HomeSens,
+			Work_Sensor:= MAP_Clamp19_WorkSens,
+			Home_Solenoid:= Enable_Motion AND (CMD_Tool_To_HOME OR MAP_Clamp19_HomeReqd),
+			Work_Solenoid:= Enable_Motion AND (CMD_Tool_To_WORK OR MAP_Clamp19_WorkReqd),
+			Home_Delay:= T#0.1s,
+			Work_Delay:= T#0.1s ,
+			Fault_Delay:= T#3s ,
+			In_Home_Position=> Clamp19HOME,
+			In_Work_Position=> Clamp19WORK,
+			);
+			CLFaults1.19:= Clamp19FB.Faulted AND Clamp_Count>=19; 		(*Interlock Clamp Fault with Clamp Count Configuration Data*)
+		(*Clamp20*)
+		Clamp20FB(
+			(*All sensor input mapping and solenoid mapping is done external to FB by end deployment*)
+			Home_Sensor:= MAP_Clamp20_HomeSens,
+			Work_Sensor:= MAP_Clamp20_WorkSens,
+			Home_Solenoid:= Enable_Motion AND (CMD_Tool_To_HOME OR MAP_Clamp20_HomeReqd),
+			Work_Solenoid:= Enable_Motion AND (CMD_Tool_To_WORK OR MAP_Clamp20_WorkReqd),
+			Home_Delay:= T#0.1s,
+			Work_Delay:= T#0.1s ,
+			Fault_Delay:= T#3s ,
+			In_Home_Position=> Clamp20HOME,
+			In_Work_Position=> Clamp20WORK,
+			);
+			CLFaults1.20:= Clamp20FB.Faulted AND Clamp_Count>=20; 		(*Interlock Clamp Fault with Clamp Count Configuration Data*)
+
+(*---------------------------------------------------- Group Clamp Sensors ----------------------------------------------------------------*)
+
+	(*Tool All Home*)
+	Tool_At_Home.0:= (Clamp1HOME OR Clamp_Count<1)
+						AND (Clamp2HOME OR Clamp_Count<2)
+						AND (Clamp3HOME OR Clamp_Count<3)
+						AND (Clamp4HOME OR Clamp_Count<4)
+						AND (Clamp5HOME OR Clamp_Count<5)
+						AND (Clamp6HOME OR Clamp_Count<6)
+						AND (Clamp7HOME OR Clamp_Count<7)
+						AND (Clamp8HOME OR Clamp_Count<8)
+						AND (Clamp9HOME OR Clamp_Count<9)
+						AND (Clamp10HOME OR Clamp_Count<10)
+						AND (Clamp11HOME OR Clamp_Count<11)
+						AND (Clamp12HOME OR Clamp_Count<12)
+						AND (Clamp13HOME OR Clamp_Count<13)
+						AND (Clamp14HOME OR Clamp_Count<14)
+						AND (Clamp15HOME OR Clamp_Count<15)
+						AND (Clamp16HOME OR Clamp_Count<16)
+						AND (Clamp17HOME OR Clamp_Count<17)
+						AND (Clamp18HOME OR Clamp_Count<18)
+						AND (Clamp19HOME OR Clamp_Count<19)
+						AND (Clamp20HOME OR Clamp_Count<20);
+	(*Tool All Work*)
+	Tool_At_Work.0:= (Clamp1WORK OR Clamp_Count<1)
+						AND (Clamp2WORK OR Clamp_Count<2)
+						AND (Clamp3WORK OR Clamp_Count<3)
+						AND (Clamp4WORK OR Clamp_Count<4)
+						AND (Clamp5WORK OR Clamp_Count<5)
+						AND (Clamp6WORK OR Clamp_Count<6)
+						AND (Clamp7WORK OR Clamp_Count<7)
+						AND (Clamp8WORK OR Clamp_Count<8)
+						AND (Clamp9WORK OR Clamp_Count<9)
+						AND (Clamp10WORK OR Clamp_Count<10)
+						AND (Clamp11WORK OR Clamp_Count<11)
+						AND (Clamp12WORK OR Clamp_Count<12)
+						AND (Clamp13WORK OR Clamp_Count<13)
+						AND (Clamp14WORK OR Clamp_Count<14)
+						AND (Clamp15WORK OR Clamp_Count<15)
+						AND (Clamp16WORK OR Clamp_Count<16)
+						AND (Clamp17WORK OR Clamp_Count<17)
+						AND (Clamp18WORK OR Clamp_Count<18)
+						AND (Clamp19WORK OR Clamp_Count<19)
+						AND (Clamp20WORK OR Clamp_Count<20);
+
+(*Note: The remaining Tool_At bits are used for groups and are mapped outside of FB by end deployment*)
+	(*Group 1*)
+	Tool_At_Home.1:= Tool_At_Home_Grp1;
+	Tool_At_Work.1:= Tool_At_Work_Grp1;
+	(*Group 2*)
+	Tool_At_Home.2:= Tool_At_Home_Grp2;
+	Tool_At_Work.2:= Tool_At_Work_Grp2;
+	(*Group 3*)
+	Tool_At_Home.3:= Tool_At_Home_Grp3;
+	Tool_At_Work.3:= Tool_At_Work_Grp3;
+	(*Group 4*)
+	Tool_At_Home.4:= Tool_At_Home_Grp4;
+	Tool_At_Work.4:= Tool_At_Work_Grp4;
+	(*Group 5*)
+	Tool_At_Home.5:= Tool_At_Home_Grp5;
+	Tool_At_Work.5:= Tool_At_Work_Grp5;
+	(*Group 6*)
+	Tool_At_Home.6:= Tool_At_Home_Grp6;
+	Tool_At_Work.6:= Tool_At_Work_Grp6;
+	(*Group 7*)
+	Tool_At_Home.7:= Tool_At_Home_Grp7;
+	Tool_At_Work.7:= Tool_At_Work_Grp7;
+	(*Group 8*)
+	Tool_At_Home.8:= Tool_At_Home_Grp8;
+	Tool_At_Work.8:= Tool_At_Work_Grp8;
+
+(*------------------------------------------------------------ Gather Part Present Sensor Inputs -----------------------------------------------*)
+(*Part Present Inputs*)
+
+	(*Part 1 Present*)
+		Part_Present1FB(
+			(*All Sensor Input mapping and Trigger on/off_1 mapping done external to FB by end deloyment*)
+			Sensor_Input:= MAP_PP1_Sens,
+			On_Trigger1:= CMD_CheckAllSensors_ON OR MAP_PP1_ReqdOn,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= CMD_CheckAllSensors_OFF OR MAP_PP1_ReqdOff,
+			On_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present1,
+			);
+			PPFaults.1:= Part_Present1FB.Faulted AND Part_Present_Count>=1;		(*Interlock Part Present Fault with Part Present Count Configuration Data*)
+	(*Part 2 Present*)
+		Part_Present2FB(
+			(*All Sensor Input mapping and Trigger on/off_1 mapping done external to FB by end deloyment*)
+			Sensor_Input:= MAP_PP2_Sens,
+			On_Trigger1:= CMD_CheckAllSensors_ON OR MAP_PP2_ReqdOn,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= CMD_CheckAllSensors_OFF OR MAP_PP2_ReqdOff,
+			On_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present2,
+			);
+			PPFaults.2:= Part_Present2FB.Faulted AND Part_Present_Count>=2;		(*Interlock Part Present Fault with Part Present Count Configuration Data*)
+	(*Part 3 Present*)
+		Part_Present3FB(
+			(*All Sensor Input mapping and Trigger on/off_1 mapping done external to FB by end deloyment*)
+			Sensor_Input:= MAP_PP3_Sens,
+			On_Trigger1:= CMD_CheckAllSensors_ON OR MAP_PP3_ReqdOn,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= CMD_CheckAllSensors_OFF OR MAP_PP3_ReqdOff,
+			On_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present3,
+			);
+			PPFaults.3:= Part_Present3FB.Faulted AND Part_Present_Count>=3;		(*Interlock Part Present Fault with Part Present Count Configuration Data*)
+	(*Part 4 Present*)
+		Part_Present4FB(
+			(*All Sensor Input mapping and Trigger on/off_1 mapping done external to FB by end deloyment*)
+			Sensor_Input:= MAP_PP4_Sens,
+			On_Trigger1:= CMD_CheckAllSensors_ON OR MAP_PP4_ReqdOn,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= CMD_CheckAllSensors_OFF OR MAP_PP4_ReqdOff,
+			On_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present4,
+			);
+			PPFaults.4:= Part_Present4FB.Faulted AND Part_Present_Count>=4;		(*Interlock Part Present Fault with Part Present Count Configuration Data*)
+	(*Part 5 Present*)
+		Part_Present5FB(
+			(*All Sensor Input mapping and Trigger on/off_1 mapping done external to FB by end deloyment*)
+			Sensor_Input:= MAP_PP5_Sens,
+			On_Trigger1:= CMD_CheckAllSensors_ON OR MAP_PP5_ReqdOn,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= CMD_CheckAllSensors_OFF OR MAP_PP5_ReqdOff,
+			On_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present5,
+			);
+			PPFaults.5:= Part_Present5FB.Faulted AND Part_Present_Count>=5;		(*Interlock Part Present Fault with Part Present Count Configuration Data*)
+	(*Part 6 Present*)
+		Part_Present6FB(
+			(*All Sensor Input mapping and Trigger on/off_1 mapping done external to FB by end deloyment*)
+			Sensor_Input:= MAP_PP6_Sens,
+			On_Trigger1:= CMD_CheckAllSensors_ON OR MAP_PP6_ReqdOn,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= CMD_CheckAllSensors_OFF OR MAP_PP6_ReqdOff,
+			On_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present6,
+			);
+			PPFaults.6:= Part_Present6FB.Faulted AND Part_Present_Count>=6;		(*Interlock Part Present Fault with Part Present Count Configuration Data*)
+	(*Part 7 Present*)
+		Part_Present7FB(
+			(*All Sensor Input mapping and Trigger on/off_1 mapping done external to FB by end deloyment*)
+			Sensor_Input:= MAP_PP7_Sens,
+			On_Trigger1:= CMD_CheckAllSensors_ON OR MAP_PP7_ReqdOn,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= CMD_CheckAllSensors_OFF OR MAP_PP7_ReqdOff,
+			On_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present7,
+			);
+			PPFaults.7:= Part_Present7FB.Faulted AND Part_Present_Count>=7;		(*Interlock Part Present Fault with Part Present Count Configuration Data*)
+	(*Part 8 Present*)
+		Part_Present8FB(
+			(*All Sensor Input mapping and Trigger on/off_1 mapping done external to FB by end deloyment*)
+			Sensor_Input:= MAP_PP8_Sens,
+			On_Trigger1:= CMD_CheckAllSensors_ON OR MAP_PP8_ReqdOn,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= CMD_CheckAllSensors_OFF OR MAP_PP8_ReqdOff,
+			On_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present8,
+			);
+			PPFaults.8:= Part_Present8FB.Faulted AND Part_Present_Count>=8;		(*Interlock Part Present Fault with Part Present Count Configuration Data*)
+
+(*---------------------------------------------------- Group Part Present Sensors ----------------------------------------------------------------*)
+
+	(*All Sensors Off*)
+	All_Sensors_Off.0:= NOT Part_Present1 AND NOT Part_Present2 AND NOT  Part_Present3
+					AND NOT Part_Present4 AND NOT Part_Present5 AND NOT Part_Present6
+					AND NOT Part_Present7 AND NOT Part_Present8;
+	(*All Sensors On*)
+	All_Sensors_On.0:= ((Part_Present1 OR Part_Present_Count<1)
+						AND (Part_Present2 OR Part_Present_Count<2)
+						AND (Part_Present3 OR Part_Present_Count<3)
+						AND (Part_Present4 OR Part_Present_Count<4)
+						AND (Part_Present5 OR Part_Present_Count<5)
+						AND (Part_Present6 OR Part_Present_Count<6)
+						AND (Part_Present7 OR Part_Present_Count<7)
+						AND (Part_Present8 OR Part_Present_Count<8))
+					OR (All_Sensors_Off.0 AND Dry_Cycle);
+
+(*Note: The remaining All_Sensors_On bits are used for groups and are mapped outside of FB by end deployment*)
+
+	(*All Sensors On Designated for Group 1*)
+	All_Sensors_On.1:= (All_Sensors_On_Grp1 AND NOT Dry_Cycle)
+					OR (All_Sensors_Off.0 AND Dry_Cycle);
+	(*All Sensors Off Designated for Group 1*)
+	All_Sensors_Off.1:= All_Sensors_Off_Grp1;
+
+	(*All Sensors On Designated for Group 2*)
+	All_Sensors_On.2:= (All_Sensors_On_Grp2 AND NOT Dry_Cycle)
+					OR (All_Sensors_Off.0 AND Dry_Cycle);
+	(*All Sensors Off Designated for Group 1*)
+	All_Sensors_Off.2:= All_Sensors_Off_Grp2;
+
+	(*All Sensors On Designated for Group 3*)
+	All_Sensors_On.3:= (All_Sensors_On_Grp3 AND NOT Dry_Cycle)
+					OR (All_Sensors_Off.0 AND Dry_Cycle);
+	(*All Sensors Off Designated for Group 1*)
+	All_Sensors_Off.3:= All_Sensors_Off_Grp3;
+
+	(*All Sensors On Designated for Group 4*)
+	All_Sensors_On.4:= (All_Sensors_On_Grp4 AND NOT Dry_Cycle)
+					OR (All_Sensors_Off.0 AND Dry_Cycle);
+	(*All Sensors Off Designated for Group 1*)
+	All_Sensors_Off.4:= All_Sensors_Off_Grp4;
+
+	(*All Sensors On Designated for Group 5*)
+	All_Sensors_On.5:= (All_Sensors_On_Grp5 AND NOT Dry_Cycle)
+					OR (All_Sensors_Off.0 AND Dry_Cycle);
+	(*All Sensors Off Designated for Group 1*)
+	All_Sensors_Off.5:= All_Sensors_Off_Grp5;
+
+	(*All Sensors On Designated for Group 6*)
+	All_Sensors_On.6:= (All_Sensors_On_Grp6 AND NOT Dry_Cycle)
+					OR (All_Sensors_Off.0 AND Dry_Cycle);
+	(*All Sensors Off Designated for Group 1*)
+	All_Sensors_Off.6:= All_Sensors_Off_Grp6;
+
+	(*All Sensors On Designated for Group 7*)
+	All_Sensors_On.7:= (All_Sensors_On_Grp7 AND NOT Dry_Cycle)
+					OR (All_Sensors_Off.0 AND Dry_Cycle);
+	(*All Sensors Off Designated for Group 1*)
+	All_Sensors_Off.7:= All_Sensors_Off_Grp7;
+
+	(*All Sensors On Designated for Group 8*)
+	All_Sensors_On.8:= (All_Sensors_On_Grp8 AND NOT Dry_Cycle)
+					OR (All_Sensors_Off.0 AND Dry_Cycle);
+	(*All Sensors Off Designated for Group 1*)
+	All_Sensors_Off.8:= All_Sensors_Off_Grp8;
+
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Faults $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Clamp/Cylinder Faults*)
+		IF CLFaults1>0
+			THEN CLFaulted.1:=TRUE;
+		ELSE
+			CLFaulted.1:=FALSE;
+		END_IF;
+	(*Spare Fault Word*)
+		IF CLFaults2>0
+			THEN CLFaulted.2:=TRUE;
+		ELSE
+			CLFaulted.2:=FALSE;
+		END_IF;
+	(*Spare Fault Word*)
+		IF CLFaults3>0
+			THEN CLFaulted.3:=TRUE;
+		ELSE
+			CLFaulted.3:=FALSE;
+		END_IF;
+	(*Spare Fault Word*)
+		IF CLFaults4>0
+			THEN CLFaulted.4:=TRUE;
+		ELSE
+			CLFaulted.4:=FALSE;
+		END_IF;
+	(*Bit 0 is designated as ANY Clamp Fault Word Faulted*)
+	IF CLFaulted.1 OR CLFaulted.2 OR CLFaulted.3
+		THEN CLFaulted.0:= TRUE;
+	ELSE CLFaulted.0 := FALSE;
+	END_IF;
+
+	(*Part Present Sensor Faults*)
+		IF PPFaults>0
+			THEN PPFaulted.0:=TRUE;
+		ELSE
+			PPFaulted.0:=FALSE;
+		END_IF;
+
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Transfer Standard Outputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Transfer General Status and I/O Images for Display On HMI*)
+	Discrete_Image.CLFaults1:= CLFaults1;
+	Discrete_Image.CLFaults2:= CLFaults2;
+	Discrete_Image.CLFaults3:= CLFaults3;
+	Discrete_Image.CLFaults4:= CLFaults4;
+	Discrete_Image.CLFaulted:= CLFaulted;
+	Discrete_Image.PPFaults:= PPFaults;
+	Discrete_Image.PPFaulted:= PPFaulted;
+
+	Discrete_Image.N01:=N01;
+	Discrete_Image.N02:=N02;
+	Discrete_Image.N03:=N03;
+	Discrete_Image.N04:=N04;
+	Discrete_Image.N05:=N05;
+	Discrete_Image.N06:=N06;
+	Discrete_Image.N07:=N07;
+	Discrete_Image.N08:=N08;
+	Discrete_Image.N09:=N09;
+	Discrete_Image.N100:=N100;
+	Discrete_Image.N100_STAT:=N100_STAT;
+
+	Discrete_Image.ECatSlave_Cable_Breaks:= ECatSlave_Cable_Breaks;
+	Discrete_Image.Input_Node_Count:= Input_Node_Count;
+	Discrete_Image.VB_Node_Count:= VB_Node_Count;
+
+(*---------------------------------------------------------------------------------------- Transfer ACKS Back to external of FB ----------------------------------------------------------*)
+
+	ACK_AllSensors_OFF:= CMD_CheckAllSensors_OFF AND All_Sensors_Off.0;
+	ACK_AllSensors_ON:= CMD_CheckAllSensors_ON AND All_Sensors_On.0;
+
+	ACK_SensorsOFF_Grp1:= CMD_CheckSensorsOFF_Grp1 AND All_Sensors_Off.1;
+	ACK_SensorsON_Grp1:= CMD_CheckSensorsON_Grp1 AND All_Sensors_On.1;
+	ACK_SensorsOFF_Grp2:= CMD_CheckSensorsOFF_Grp2 AND All_Sensors_Off.2;
+	ACK_SensorsON_Grp2:= CMD_CheckSensorsON_Grp2 AND All_Sensors_On.2;
+	ACK_SensorsOFF_Grp3:= CMD_CheckSensorsOFF_Grp3 AND All_Sensors_Off.3;
+	ACK_SensorsON_Grp3:= CMD_CheckSensorsON_Grp3 AND All_Sensors_On.3;
+	ACK_SensorsOFF_Grp4:= CMD_CheckSensorsOFF_Grp4 AND All_Sensors_Off.4;
+	ACK_SensorsON_Grp4:= CMD_CheckSensorsON_Grp4 AND All_Sensors_On.4;
+	ACK_SensorsOFF_Grp5:= CMD_CheckSensorsOFF_Grp5 AND All_Sensors_Off.5;
+	ACK_SensorsON_Grp5:= CMD_CheckSensorsON_Grp5 AND All_Sensors_On.5;
+	ACK_SensorsOFF_Grp6:= CMD_CheckSensorsOFF_Grp6 AND All_Sensors_Off.6;
+	ACK_SensorsON_Grp6:= CMD_CheckSensorsON_Grp6 AND All_Sensors_On.6;
+	ACK_SensorsOFF_Grp7:= CMD_CheckSensorsOFF_Grp7 AND All_Sensors_Off.7;
+	ACK_SensorsON_Grp7:= CMD_CheckSensorsON_Grp7 AND All_Sensors_On.7;
+	ACK_SensorsOFF_Grp8:= CMD_CheckSensorsOFF_Grp8 AND All_Sensors_Off.8;
+	ACK_SensorsON_Grp8:= CMD_CheckSensorsON_Grp8 AND All_Sensors_On.8;
+
+	IF LH_Part_In_EOAT_Grp AND NOT LH_EOAT_Empty_Grp
+		THEN LH_Part_In_EOAT:= TRUE;
+	ELSIF  LH_EOAT_Empty_Grp
+		THEN LH_Part_In_EOAT:= FALSE;
+	END_IF;
+
+	IF RH_Part_In_EOAT_Grp AND NOT RH_EOAT_Empty_Grp
+		THEN RH_Part_In_EOAT:= TRUE;
+	ELSIF  RH_EOAT_Empty_Grp
+		THEN RH_Part_In_EOAT:= FALSE;
+	END_IF;
+
+	IF (LH_Part_In_EOAT_Grp AND RH_Part_In_EOAT_Grp)
+		AND (NOT LH_EOAT_Empty_Grp AND NOT RH_EOAT_Empty_Grp)
+		THEN Part_In_EOAT:= TRUE;
+	ELSIF  (LH_EOAT_Empty_Grp AND RH_EOAT_Empty_Grp)
+		THEN Part_In_EOAT:= FALSE;
+	END_IF;
+
+	ACK_Tool_At_WORK:= CMD_Tool_To_WORK AND Tool_At_WORK.0;
+	ACK_Tool_At_HOME:= CMD_Tool_To_HOME AND Tool_At_HOME.0;
+
+	ACK_ClampsAtWORK_Grp1:= CMD_ClampsToWORK_Grp1 AND Tool_At_WORK.1;
+	ACK_ClampsAtHOME_Grp1:= CMD_ClampsToHOME_Grp1 AND Tool_At_HOME.1;
+	ACK_ClampsAtWORK_Grp2:= CMD_ClampsToWORK_Grp2 AND Tool_At_WORK.2;
+	ACK_ClampsAtHOME_Grp2:= CMD_ClampsToHOME_Grp2 AND Tool_At_HOME.2;
+	ACK_ClampsAtWORK_Grp3:= CMD_ClampsToWORK_Grp3 AND Tool_At_WORK.3;
+	ACK_ClampsAtHOME_Grp3:= CMD_ClampsToHOME_Grp3 AND Tool_At_HOME.3;
+	ACK_ClampsAtWORK_Grp4:= CMD_ClampsToWORK_Grp4 AND Tool_At_WORK.4;
+	ACK_ClampsAtHOME_Grp4:= CMD_ClampsToHOME_Grp4 AND Tool_At_HOME.4;
+	ACK_ClampsAtWORK_Grp5:= CMD_ClampsToWORK_Grp5 AND Tool_At_WORK.5;
+	ACK_ClampsAtHOME_Grp5:= CMD_ClampsToHOME_Grp5 AND Tool_At_HOME.5;
+	ACK_ClampsAtWORK_Grp6:= CMD_ClampsToWORK_Grp6 AND Tool_At_WORK.6;
+	ACK_ClampsAtHOME_Grp6:= CMD_ClampsToHOME_Grp6 AND Tool_At_HOME.6;
+	ACK_ClampsAtWORK_Grp7:= CMD_ClampsToWORK_Grp7 AND Tool_At_WORK.7;
+	ACK_ClampsAtHOME_Grp7:= CMD_ClampsToHOME_Grp7 AND Tool_At_HOME.7;
+	ACK_ClampsAtWORK_Grp8:= CMD_ClampsToWORK_Grp8 AND Tool_At_WORK.8;
+	ACK_ClampsAtHOME_Grp8:= CMD_ClampsToHOME_Grp8 AND Tool_At_HOME.8;
+
+
+(*-----------------------------------------------------------------------------------------Transfer Valve Outputs --------------------------------------------------------------------------------*)
+
+	(*Valve 1, A+B*)
+	(*Clamp Group 1*)
+		Valve1FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= FALSE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.1S,
+			Enable_Auto_Commands:= Enable_Motion,
+			In_Auto_SideA_Command:= CMD_Tool_To_WORK OR CMD_ClampsToWORK_Grp1,
+			In_Auto_SideB_Command:= CMD_Tool_To_HOME OR CMD_ClampsToHOME_Grp1,
+			Enable_Manual_Commands:= FALSE,
+			In_Manual_SideA_Command:= FALSE,
+			In_Manual_SideB_Command:= FALSE,
+			SideA_Indicator:= Tool_At_WORK.1,
+			SideB_Indicator:= Tool_At_HOME.1,
+			TurnOn_SideA_SOL=> N100.Q.0,
+			TurnOn_SideB_SOL=> N100.Q.1,
+			TurnOn_SideA_Indicator=> ,
+			TurnOn_SideB_Indicator=>
+			 );
+	(*Valve 2, A+B*)
+	(*Clamp Group 2*)
+		Valve2FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= FALSE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.1S,
+			Enable_Auto_Commands:= Enable_Motion,
+			In_Auto_SideA_Command:= CMD_ClampsToWORK_Grp2,
+			In_Auto_SideB_Command:= CMD_ClampsToHome_Grp2,
+			Enable_Manual_Commands:= FALSE,
+			In_Manual_SideA_Command:= FALSE,
+			In_Manual_SideB_Command:= FALSE,
+			SideA_Indicator:= Tool_At_WORK.2,
+			SideB_Indicator:= Tool_At_HOME.2,
+			TurnOn_SideA_SOL=> N100.Q.2,
+			TurnOn_SideB_SOL=> N100.Q.3,
+			TurnOn_SideA_Indicator=> ,
+			TurnOn_SideB_Indicator=>
+			 );
+	(*Valve 3, A+B*)
+	(*Clamp Group 3*)
+		Valve3FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= FALSE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.1S,
+			Enable_Auto_Commands:= Enable_Motion,
+			In_Auto_SideA_Command:= CMD_ClampsToWORK_Grp3,
+			In_Auto_SideB_Command:= CMD_ClampsToHome_Grp3,
+			Enable_Manual_Commands:= FALSE,
+			In_Manual_SideA_Command:= FALSE,
+			In_Manual_SideB_Command:= FALSE,
+			SideA_Indicator:= Tool_At_WORK.3,
+			SideB_Indicator:= Tool_At_HOME.3,
+			TurnOn_SideA_SOL=> N100.Q.4,
+			TurnOn_SideB_SOL=> N100.Q.5,
+			TurnOn_SideA_Indicator=> ,
+			TurnOn_SideB_Indicator=>
+			 );
+	(*Valve 4, A+B*)
+	(*Clamp Group 4*)
+		Valve4FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= FALSE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.1S,
+			Enable_Auto_Commands:= Enable_Motion,
+			In_Auto_SideA_Command:= CMD_ClampsToWORK_Grp4,
+			In_Auto_SideB_Command:= CMD_ClampsToHome_Grp4,
+			Enable_Manual_Commands:= FALSE,
+			In_Manual_SideA_Command:= FALSE,
+			In_Manual_SideB_Command:= FALSE,
+			SideA_Indicator:= Tool_At_WORK.4,
+			SideB_Indicator:= Tool_At_HOME.4,
+			TurnOn_SideA_SOL=> N100.Q.6,
+			TurnOn_SideB_SOL=> N100.Q.7,
+			TurnOn_SideA_Indicator=> ,
+			TurnOn_SideB_Indicator=>
+			 );
+	(*Valve 5, A+B*)
+	(*Clamp Group 5*)
+		Valve5FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= FALSE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.1S,
+			Enable_Auto_Commands:= Enable_Motion,
+			In_Auto_SideA_Command:= CMD_ClampsToWORK_Grp5,
+			In_Auto_SideB_Command:= CMD_ClampsToHome_Grp5,
+			Enable_Manual_Commands:= FALSE,
+			In_Manual_SideA_Command:= FALSE,
+			In_Manual_SideB_Command:= FALSE,
+			SideA_Indicator:= Tool_At_WORK.5,
+			SideB_Indicator:= Tool_At_HOME.5,
+			TurnOn_SideA_SOL=> N100.Q.8,
+			TurnOn_SideB_SOL=> N100.Q.9,
+			TurnOn_SideA_Indicator=> ,
+			TurnOn_SideB_Indicator=>
+			 );
+	(*Valve 6, A+B*)
+	(*Clamp Group 6*)
+		Valve6FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= FALSE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.1S,
+			Enable_Auto_Commands:= Enable_Motion,
+			In_Auto_SideA_Command:= CMD_ClampsToWORK_Grp6,
+			In_Auto_SideB_Command:= CMD_ClampsToHome_Grp6,
+			Enable_Manual_Commands:= FALSE,
+			In_Manual_SideA_Command:= FALSE,
+			In_Manual_SideB_Command:= FALSE,
+			SideA_Indicator:= Tool_At_WORK.6,
+			SideB_Indicator:= Tool_At_HOME.6,
+			TurnOn_SideA_SOL=> N100.Q.10,
+			TurnOn_SideB_SOL=> N100.Q.11,
+			TurnOn_SideA_Indicator=> ,
+			TurnOn_SideB_Indicator=>
+			 );
+	(*Valve 7, A+B*)
+	(*Clamp Group 7*)
+		Valve7FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= FALSE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.1S,
+			Enable_Auto_Commands:= Enable_Motion,
+			In_Auto_SideA_Command:= CMD_ClampsToWORK_Grp7,
+			In_Auto_SideB_Command:= CMD_ClampsToHome_Grp7,
+			Enable_Manual_Commands:= FALSE,
+			In_Manual_SideA_Command:= FALSE,
+			In_Manual_SideB_Command:= FALSE,
+			SideA_Indicator:= Tool_At_WORK.7,
+			SideB_Indicator:= Tool_At_HOME.7,
+			TurnOn_SideA_SOL=> N100.Q.12,
+			TurnOn_SideB_SOL=> N100.Q.13,
+			TurnOn_SideA_Indicator=> ,
+			TurnOn_SideB_Indicator=>
+			 );
+	(*Valve 8, A+B*)
+	(*Clamp Group 8*)
+		Valve8FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= FALSE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.1S,
+			Enable_Auto_Commands:= Enable_Motion,
+			In_Auto_SideA_Command:= CMD_ClampsToWORK_Grp8,
+			In_Auto_SideB_Command:= CMD_ClampsToHome_Grp8,
+			Enable_Manual_Commands:= FALSE,
+			In_Manual_SideA_Command:= FALSE,
+			In_Manual_SideB_Command:= FALSE,
+			SideA_Indicator:= Tool_At_WORK.8,
+			SideB_Indicator:= Tool_At_HOME.8,
+			TurnOn_SideA_SOL=> N100.Q.14,
+			TurnOn_SideB_SOL=> N100.Q.15,
+			TurnOn_SideA_Indicator=> ,
+			TurnOn_SideB_Indicator=>
+			 );]]></ST>
+    </Implementation>
+    <LineIds Name="FB_GTAC_EOAT_20170704">
+      <LineId Id="409" Count="880" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

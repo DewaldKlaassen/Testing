@@ -1,0 +1,124 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FB_GTAC_Valve_20170704" Id="{628d4203-c66b-4eaf-b8a7-ed4e61a04d30}" SpecialFunc="None">
+    <Declaration><![CDATA[(*FB for use with standard double sided Solenoid Valve:
+	Original Author(s): Brent Lekx-Toniolo of Sodecia GTAC; 
+------------------------------------------------------------------------------------------
+REVISION NOTES:
+	Version 20150218
+	- Original Concept, b.lekx-toniolo (S.H.H.D.I.)
+	Version 20160407
+	- Added Enable Latch (Detent Type) functionality, r.remillard
+	Version 20170704
+	-incorporated precharge into the function block, j.vandongen
+
+------------------------------------------------------------------------------------------
+*)
+
+
+FUNCTION_BLOCK FB_GTAC_Valve_20170704
+
+VAR_INPUT
+	Enable_Motion: BOOL;
+	Enable_Auto_Commands: BOOL;
+	Enable_Latch: BOOL;									(*Used to maintain Solenoid at last requested state*)
+	Enable_SideA_PreCharge: BOOL;
+	Enable_SideB_PreCharge: BOOL;
+	In_Auto_SideA_Command: BOOL;
+	In_Auto_SideB_Command: BOOL;
+	Enable_Manual_Commands: BOOL;
+	In_Manual_SideA_Command: BOOL;
+	In_Manual_SideB_Command: BOOL;
+	SideA_Indicator: BOOL;
+	SideB_Indicator: BOOL;
+	PreCharge_Time: TIME;
+END_VAR
+
+VAR
+	In_Auto_SideA_REQ: BOOL;
+	In_Auto_SideB_REQ: BOOL;
+	In_Manual_SideA_REQ: BOOL;
+	In_Manual_SideB_REQ: BOOL;
+	PreCharge_Timer_SideA: TON;
+	PreCharge_Timer_SideB: TON;
+END_VAR
+
+VAR_OUTPUT
+	TurnOn_SideA_SOL: BOOL;
+	TurnOn_SideB_SOL: BOOL;
+	TurnOn_SideA_Indicator: BOOL;
+	TurnOn_SideB_Indicator: BOOL;
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Gather Auto Mode Requests*)
+	In_Auto_SideA_REQ:= Enable_Motion AND Enable_Auto_Commands AND In_Auto_SideA_Command;
+	In_Auto_SideB_REQ:= Enable_Motion AND Enable_Auto_Commands AND In_Auto_SideB_Command;
+
+
+
+(*Gather Manual Mode Requests*)
+	In_Manual_SideA_REQ:= Enable_Motion AND Enable_Manual_Commands AND In_Manual_SideA_Command;
+	In_Manual_SideB_REQ:= Enable_Motion AND Enable_Manual_Commands AND In_Manual_SideB_Command;
+
+
+
+(*Pre Charge Timers*)
+	PreCharge_Timer_SideA(
+					In:= Enable_SideA_PreCharge AND (In_Auto_SideA_REQ OR (PreCharge_Timer_SideA.Q AND NOT In_Auto_SideB_REQ)),
+					PT:= PreCharge_Time
+					);
+
+	PreCharge_Timer_SideB(
+					In:= Enable_SideB_PreCharge AND (In_Auto_SideB_REQ OR (PreCharge_Timer_SideA.Q AND NOT In_Auto_SideA_REQ)),
+					PT:= PreCharge_Time
+					);
+
+
+
+(*Set Actual Outputs*)
+	(*Valve Outputs*)
+	TurnOn_SideA_SOL:= (((In_Auto_SideA_REQ AND (PreCharge_Timer_SideA.Q OR NOT Enable_SideA_PreCharge))
+						OR (In_Auto_SideB_REQ AND NOT PreCharge_Timer_SideB.Q AND Enable_SideB_PreCharge)
+						OR In_Manual_SideA_REQ)
+						OR (Enable_Latch AND TurnOn_SideA_SOL AND NOT (In_Auto_SideB_REQ OR In_Manual_SideB_REQ)))
+						AND NOT TurnOn_SideB_SOL;
+
+	TurnOn_SideB_SOL:= (((In_Auto_SideB_REQ AND (PreCharge_Timer_SideB.Q OR NOT Enable_SideB_PreCharge))
+						OR (In_Auto_SideA_REQ AND NOT PreCharge_Timer_SideA.Q AND Enable_SideA_PreCharge)
+						 OR In_Manual_SideB_REQ)
+						OR (Enable_Latch AND TurnOn_SideB_SOL AND NOT (In_Auto_SideA_REQ OR In_Manual_SideA_REQ)))
+						AND NOT TurnOn_SideA_SOL;
+
+
+
+	(*Indicator Outputs*)
+	TurnOn_SideA_Indicator:= SideA_Indicator;
+	TurnOn_SideB_Indicator:= SideB_Indicator;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(*end*)]]></ST>
+    </Implementation>
+    <LineIds Name="FB_GTAC_Valve_20170704">
+      <LineId Id="50" Count="63" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

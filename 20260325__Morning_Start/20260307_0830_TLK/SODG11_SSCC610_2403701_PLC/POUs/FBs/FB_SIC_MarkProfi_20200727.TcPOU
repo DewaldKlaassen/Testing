@@ -1,0 +1,705 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FB_SIC_MarkProfi_20200727" Id="{e1caa147-f1c2-497a-80d4-22ce99fc4f17}" SpecialFunc="None">
+    <Declaration><![CDATA[(*FB for use with a SIC Dot Peen Marking System.
+
+Revision
+------------------------------------------------------------------------------
+	Version 20161124:
+	- Initial concept, R.Remillard
+	Version 20170223:
+	- Added Enable_Motion, J.Vandongen and R.Remillard
+	Version 20200727
+	-Rebuilt FB for new ProfibusV2 SIC Version C.Drees
+
+*)
+
+FUNCTION_BLOCK FB_SIC_MarkProfi_20200727
+
+VAR_INPUT
+	Enable_Motion:						BOOL;
+	Start_bool:							BOOL;
+	ResetError_bool:						BOOL;
+	LoadFile_bool:						BOOL;
+	FileName_string:						STRING(12);		(*Max 4 character File Name for V1, Max 12 Character File Name for V2*)
+	CompleteReset_bool:					BOOL;
+	Bypass_bool:							BOOL;
+	Retry_Enable:						BOOL;
+	Comm_Method:						INT;(* 1 - V1(RS232 Mode), 2- V2(Full Profibus Comms)*)
+	Variables: 							ARRAY [1..11] OF STRING(16);
+
+
+END_VAR
+
+VAR
+
+	Txx_Internal_ProfiMaster AT %I*: 		udt_EL6731;
+
+	SICMarker_Inputs AT %I*:				udt_SIC_Profi_Input_20200727;
+	SICMarker_Outputs AT %Q*:			udt_SIC_Profi_Output_20200727;
+
+	StringLength:							INT;
+
+	LoadChar:							ARRAY [0..11] OF 	BYTE;
+	FileChar:								ARRAY [0..11] OF	STRING(1);
+	VarByte:								ARRAY [0..15] OF 	BYTE;
+	VarChar:								ARRAY [0..15] OF	STRING(1);
+
+
+	Retry:								BOOL;
+	Retry_TMR:							TON;
+
+	StartRtrig:							R_TRIG;
+	LastDotRTrig:							R_TRIG;
+	AtHomeRtrig:							R_TRIG;
+	X:									INT;
+	Y:									INT;
+	AllVariablesOK: BOOL;
+	LoadFileOK: BOOL;
+	
+END_VAR
+
+VAR_OUTPUT
+
+	DpState:								INT;
+	Profinode_OK_bool:					BOOL;
+
+	SIC_Running_bool:					BOOL;
+	LastDot_bool:							BOOL;
+	BackHome_bool:						BOOL;
+	Complete_bool:						BOOL;
+
+	DataReceived_string:					STRING;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Check Prifinode is OK*)
+Profinode_OK_bool:= SICMarker_Inputs.Inputs.DpState = 0;
+DpState:= SICMarker_Inputs.Inputs.DpState;
+
+CASE Comm_Method OF
+1:
+(*------------------------------------------------------------------------------------------------------------------------------------------------*)
+(*Load required command in SIC unit*)
+IF Start_bool AND NOT Bypass_bool AND NOT Retry_TMR.Q
+	THEN
+		(*run[CR][LF] command to SIC Controller*)
+		SICMarker_Outputs.Output1_0[0] := 255;			(*FF Hex*)
+		SICMarker_Outputs.Output1_0[1]:= 82;				(*R ASCII*)
+		SICMarker_Outputs.Output1_0[2]:= 85;				(*U ASCII*)
+		SICMarker_Outputs.Output1_0[3]:= 78;				(*N ACCII*)
+		SICMarker_Outputs.Output1_0[4]:= 13;				(*[CR] ASCII*)
+		SICMarker_Outputs.Output1_0[5]:= 10;				(*[LF] ASCII*)
+		SICMarker_Outputs.Output1_0[6]:= 0;
+		SICMarker_Outputs.Output1_0[7]:= 0;
+		SICMarker_Outputs.Output1_0[8]:= 0;
+		SICMarker_Outputs.Output1_0[9]:= 0;
+		SICMarker_Outputs.Output1_0[10]:= 0;
+		SICMarker_Outputs.Output1_0[11]:= 0;
+		SICMarker_Outputs.Output1_0[12]:= 0;
+		SICMarker_Outputs.Output1_0[13]:= 0;
+		SICMarker_Outputs.Output1_0[14]:= 0;
+		SICMarker_Outputs.Output1_0[15]:= 0;
+
+ELSIF (ResetError_bool OR CompleteReset_bool) AND NOT Start_bool AND NOT SIC_Running_bool
+	THEN
+		(*reseterror[CR][LF] command to SIC Controller*)
+		SICMarker_Outputs.Output1_0[0]:= 255;				(*FF Hex*)
+		SICMarker_Outputs.Output1_0[1]:= 82;				(*R ASCII*)
+		SICMarker_Outputs.Output1_0[2]:= 69;				(*E ASCII*)
+		SICMarker_Outputs.Output1_0[3]:= 83;				(*S ASCII*)
+		SICMarker_Outputs.Output1_0[4]:= 69;				(*E ASCII*)
+		SICMarker_Outputs.Output1_0[5]:= 84;				(*T ASCII*)
+		SICMarker_Outputs.Output1_0[6]:= 69;				(*E ASCII*)
+		SICMarker_Outputs.Output1_0[7]:= 82;				(*R ASCII*)
+		SICMarker_Outputs.Output1_0[8]:= 82;				(*R ASCII*)
+		SICMarker_Outputs.Output1_0[9]:= 79;				(*O ASCII*)
+		SICMarker_Outputs.Output1_0[10]:= 82;			(*R ASCII*)
+		SICMarker_Outputs.Output1_0[11]:= 13;			(*[CR] ASCII*)
+		SICMarker_Outputs.Output1_0[12]:= 10;			(*[LF] ASCII*)
+		SICMarker_Outputs.Output1_0[13]:= 0;
+		SICMarker_Outputs.Output1_0[14]:= 0;
+		SICMarker_Outputs.Output1_0[15]:= 0;
+
+ELSIF LoadFile_bool AND NOT Start_bool
+	THEN
+		(*loadfile[CR][LF] command to SIC Controller*)
+		SICMarker_Outputs.Output1_0[0]:= 255;				(*FF Hex*)
+		SICMarker_Outputs.Output1_0[1]:= 76;				(*L ASCII*)
+		SICMarker_Outputs.Output1_0[2]:= 79;				(*O ASCII*)
+		SICMarker_Outputs.Output1_0[3]:= 65;				(*A ASCII*)
+		SICMarker_Outputs.Output1_0[4]:= 68;				(*D ASCII*)
+		SICMarker_Outputs.Output1_0[5]:= 70;				(*F ASCII*)
+		SICMarker_Outputs.Output1_0[6]:= 73;				(*I ASCII*)
+		SICMarker_Outputs.Output1_0[7]:= 76;				(*L ASCII*)
+		SICMarker_Outputs.Output1_0[8]:= 69;				(*E ASCII*)
+		SICMarker_Outputs.Output1_0[9]:= 32;				(*Space ASCII*)
+		SICMarker_Outputs.Output1_0[10]:= LoadChar[1];		(*"Char 1" ASCII*)
+		SICMarker_Outputs.Output1_0[11]:= LoadChar[2];		(*"Char 2" ASCII*)
+		SICMarker_Outputs.Output1_0[12]:= LoadChar[3];		(*"Char 3" ASCII*)
+		SICMarker_Outputs.Output1_0[13]:= LoadChar[4];		(*"Char 4" ASCII*)
+		SICMarker_Outputs.Output1_0[14]:= LoadChar[5];		(*"Char 5" ASCII*)
+		SICMarker_Outputs.Output1_0[15]:= LoadChar[6];		(*"Char 6" ASCII*)
+
+ELSE
+		SICMarker_Outputs.Output1_0[0]:= 0;
+		SICMarker_Outputs.Output1_0[1]:= 0;
+		SICMarker_Outputs.Output1_0[2]:= 0;
+		SICMarker_Outputs.Output1_0[3]:= 0;
+		SICMarker_Outputs.Output1_0[4]:= 0;
+		SICMarker_Outputs.Output1_0[5]:= 0;
+		SICMarker_Outputs.Output1_0[6]:= 0;
+		SICMarker_Outputs.Output1_0[7]:= 0;
+		SICMarker_Outputs.Output1_0[8]:= 0;
+		SICMarker_Outputs.Output1_0[9]:= 0;
+		SICMarker_Outputs.Output1_0[10]:= 0;
+		SICMarker_Outputs.Output1_0[11]:= 0;
+		SICMarker_Outputs.Output1_0[12]:= 0;
+		SICMarker_Outputs.Output1_0[13]:= 0;
+		SICMarker_Outputs.Output1_0[14]:= 0;
+		SICMarker_Outputs.Output1_0[15]:= 0;
+END_IF;
+
+
+(*--------------------------------------------------------------------------------------------------------------------------------------------------*)
+(*Reply information from SIC control converted to String*)
+DataReceived_string:= FUN_GTAC_ASCIItoSTRING(
+					SICMarker_Inputs.Input0_0[1],
+					SICMarker_Inputs.Input0_0[2],
+					SICMarker_Inputs.Input0_0[3],
+					SICMarker_Inputs.Input0_0[4],
+					SICMarker_Inputs.Input0_0[5],
+					SICMarker_Inputs.Input0_0[6],
+					SICMarker_Inputs.Input0_0[7],
+					SICMarker_Inputs.Input0_0[8],
+					SICMarker_Inputs.Input0_0[9],
+					SICMarker_Inputs.Input0_0[10],
+					SICMarker_Inputs.Input0_0[11],
+					SICMarker_Inputs.Input0_0[12],
+					SICMarker_Inputs.Input0_0[13],
+					SICMarker_Inputs.Input0_0[14],
+					SICMarker_Inputs.Input0_0[15],
+					0);
+
+(*Capture Responses to RUN command*)
+IF DataReceived_string = 'RUN OK$R$N'
+	THEN
+		SIC_Running_bool:= TRUE;
+END_IF;
+
+IF DataReceived_string = '$04'
+	THEN
+		LastDot_bool:= TRUE;
+END_IF;
+
+IF DataReceived_string = '$05'
+	THEN
+		BackHome_bool:= TRUE;
+END_IF;
+
+
+(*-------------------------------------------------------------------------------------------------------------------------------------------------*)
+(*Retry Handling*)
+	(*Enable Retry IF Start with SIC Running bool*)
+	IF Enable_Motion AND (Start_bool AND NOT BackHome_bool AND NOT SIC_Running_bool) AND Retry_Enable
+		THEN
+			Retry:=TRUE;
+	ELSIF (SIC_Running_bool OR BackHome_bool OR Complete_bool) OR NOT Retry_Enable
+		THEN
+			Retry:= FALSE;
+	END_IF;
+	Retry_TMR.PT:= T#2s;
+	Retry_TMR.IN:= Retry;
+	Retry_TMR();
+
+(*-------------------------------------------------------------------------------------------------------------------------------------------------*)
+(*Complete handling*)
+(*Complete*)
+IF SIC_Running_bool AND LastDot_bool AND BackHome_bool
+	THEN
+		Complete_bool:= TRUE;
+
+ELSIF Bypass_bool AND Start_bool
+	THEN
+		Complete_bool:= TRUE;
+
+END_IF;
+
+(*Reset*)
+IF CompleteReset_bool OR NOT Enable_Motion
+	THEN
+		SIC_Running_bool:= FALSE;
+		LastDot_bool:= FALSE;
+		BackHome_bool:= FALSE;
+		Complete_bool:= FALSE;
+		Retry:= FALSE;
+END_IF;
+
+
+(*------------------------------------------------------------------------------------------------------------------------------------------------*)
+(*Get Length of string*)
+StringLength:= LEN (FileName_string);
+
+
+(*Separate each character from the File Name*)
+IF StringLength = 4
+	THEN
+(*Shift String based on string length*)
+		FileChar[1]:= RIGHT (FileName_string,4);
+		FileChar[2]:= RIGHT (FileName_string,3);
+		FileChar[3]:= RIGHT (FileName_string,2);
+		FileChar[4]:= RIGHT (FileName_string,1);
+
+(*Convert file name to ascii characters*)
+		LoadChar[1]:= F_ToASC(FileChar[1]);
+		LoadChar[2]:= F_ToASC(FileChar[2]);
+		LoadChar[3]:= F_ToASC(FileChar[3]);
+		LoadChar[4]:= F_ToASC(FileChar[4]);
+		LoadChar[5]:= 13;
+		LoadChar[6]:= 10;
+
+ELSIF StringLength =3
+	THEN
+(*Shift String based on string length*)
+		FileChar[1]:= RIGHT (FileName_string,3);
+		FileChar[2]:= RIGHT (FileName_string,2);
+		FileChar[3]:= RIGHT (FileName_string,1);
+
+(*Convert file name to ascii characters*)
+		LoadChar[1]:= F_ToASC(FileChar[1]);
+		LoadChar[2]:= F_ToASC(FileChar[2]);
+		LoadChar[3]:= F_ToASC(FileChar[3]);
+		LoadChar[4]:= 13;
+		LoadChar[5]:= 10;
+		LoadChar[6]:= 0;
+
+ELSIF StringLength =2
+	THEN
+(*Shift String based on string length*)
+		FileChar[1]:= RIGHT (FileName_string,2);
+		FileChar[2]:= RIGHT (FileName_string,1);
+
+(*Convert file name to ascii characters*)
+		LoadChar[1]:= F_ToASC(FileChar[1]);
+		LoadChar[2]:= F_ToASC(FileChar[2]);
+		LoadChar[3]:= 13;
+		LoadChar[4]:= 10;
+		LoadChar[5]:= 0;
+		LoadChar[6]:= 0;
+
+ELSIF StringLength =1
+	THEN
+(*Shift String based on string length*)
+		FileChar[1]:= RIGHT (FileName_string,1);
+
+(*Convert file name to ascii characters*)
+		LoadChar[1]:= F_ToASC(FileChar[1]);
+		LoadChar[2]:= 13;
+		LoadChar[3]:= 10;
+		LoadChar[4]:= 0;
+		LoadChar[5]:= 0;
+		LoadChar[6]:= 0;
+
+ELSE
+(*Set all to 0*)
+		LoadChar[1]:= 0;
+		LoadChar[2]:= 0;
+		LoadChar[3]:= 0;
+		LoadChar[4]:= 0;
+		LoadChar[5]:= 0;
+
+END_IF;
+
+2:
+
+(*------------------------------------------------------------------------------------------------------------------------------------------------*)
+
+(*Start Signal to SIC Marker*)
+	IF Start_bool AND NOT Bypass_bool AND NOT Retry_TMR.Q THEN
+		SICMarker_Outputs.Output1_1[0].0 := TRUE;
+	ELSE
+		SICMarker_Outputs.Output1_1[0].0 := FALSE;
+	END_IF
+
+(*Reset Signal to SIC Marker*)
+	IF (ResetError_bool OR CompleteReset_bool) AND NOT Start_bool AND NOT SIC_Running_bool THEN
+		SICMarker_Outputs.Output1_1[0].1 := TRUE;
+	ELSE
+		SICMarker_Outputs.Output1_1[0].1 := FALSE;
+	END_IF
+
+(*Load File Signal to SIC Marker*)
+	IF LoadFile_bool AND NOT Start_bool THEN
+		SICMarker_Outputs.Output1_1[1].7 := TRUE;
+	ELSE
+		SICMarker_Outputs.Output1_1[1].7 := FALSE;
+	END_IF
+
+
+
+(*--------------------------------------------------------------------------------------------------------------------------------------------------*)
+(*Capture Responses to RUN command*)
+	StartRtrig(CLK:=SICMarker_Inputs.Input0_1[1].0);
+	IF StartRtrig.Q
+		THEN
+			SIC_Running_bool:= TRUE;
+	END_IF;
+
+(*Capture Last Dot Marked Signal*)
+	LastDotRtrig(CLK:=SICMarker_Inputs.Input0_1[0].4 AND SIC_Running_bool);
+	IF LastDotRtrig.Q
+	THEN
+		LastDot_bool:= TRUE;
+	END_IF;
+
+IF SICMarker_inputs.Input0_1[0].7 THEN
+	LoadFileOK := TRUE;
+END_IF
+
+
+(*Capture Marker At Home Signal*)
+	AtHomeRTrig(CLK:=SICMarker_Inputs.Input0_1[0].5 AND SIC_Running_bool);
+	IF AtHomeRTrig.Q
+		THEN
+			BackHome_bool:= TRUE;
+	END_IF;
+
+
+(*-------------------------------------------------------------------------------------------------------------------------------------------------*)
+(*Retry Handling*)
+	(*Enable Retry IF Start with SIC Running bool*)
+	IF Enable_Motion AND (Start_bool AND NOT BackHome_bool AND NOT SIC_Running_bool) AND Retry_Enable
+		THEN
+			Retry:=TRUE;
+	ELSIF (SIC_Running_bool OR BackHome_bool OR Complete_bool) OR NOT Retry_Enable
+		THEN
+			Retry:= FALSE;
+	END_IF;
+	Retry_TMR.PT:= T#2s;
+	Retry_TMR.IN:= Retry;
+	Retry_TMR();
+
+(*-------------------------------------------------------------------------------------------------------------------------------------------------*)
+(*Complete handling*)
+(*Complete*)
+IF SIC_Running_bool AND LastDot_bool AND BackHome_bool
+	THEN
+		Complete_bool:= TRUE;
+
+ELSIF Bypass_bool AND Start_bool
+	THEN
+		Complete_bool:= TRUE;
+
+END_IF;
+
+(*Reset*)
+IF CompleteReset_bool OR NOT Enable_Motion
+	THEN
+		SIC_Running_bool:= FALSE;
+		LastDot_bool:= FALSE;
+		BackHome_bool:= FALSE;
+		Complete_bool:= FALSE;
+		Retry:= FALSE;
+END_IF;
+
+
+(*------------------------------------------------------------------------------------------------------------------------------------------------*)
+(*--------------------------------------------------------------File Load--------------------------------------------------------------------*)
+(*------------------------------------------------------------------------------------------------------------------------------------------------*)
+(*Get Length of string*)
+StringLength:= LEN (FileName_string);
+
+	FOR x := 0 TO 11 DO
+		IF X <= StringLength THEN
+			FileChar[x]:= RIGHT (FileName_string,StringLength-x);
+		END_IF
+	END_FOR
+
+
+(*Convert file name to ascii characters*)
+
+	FOR X:= 0 TO 11 DO
+		IF X<= Stringlength THEN
+			LoadChar[X]:= F_ToASC(FileChar[X]);
+		END_IF
+		IF X >Stringlength THEN
+			LoadChar[X] :=0;
+		END_IF
+	END_FOR
+
+(*Moves Filename to Proper Register*)
+
+	SICMarker_Outputs.Output1_1[8]:=	LoadChar[0];
+	SICMarker_Outputs.Output1_1[9]:=	LoadChar[1];
+	SICMarker_Outputs.Output1_1[10]:=	LoadChar[2];
+	SICMarker_Outputs.Output1_1[11]:=	LoadChar[3];
+	SICMarker_Outputs.Output1_1[12]:=	LoadChar[4];
+	SICMarker_Outputs.Output1_1[13]:=	LoadChar[5];
+	SICMarker_Outputs.Output1_1[14]:=	LoadChar[6];
+	SICMarker_Outputs.Output1_1[15]:=	LoadChar[7];
+	SICMarker_Outputs.Output1_2[0]:=	LoadChar[8];
+	SICMarker_Outputs.Output1_2[1]:=	LoadChar[9];
+	SICMarker_Outputs.Output1_2[2]:=	LoadChar[10];
+	SICMarker_Outputs.Output1_2[3]:=	LoadChar[11];
+
+
+(*------------------------------------------------------------------------------------------------------------------------------------------------*)
+(*-----------------------------------------------------Variable Transfer-----------------------------------------------------------------*)
+(*------------------------------------------------------------------------------------------------------------------------------------------------*)
+
+(*Get Length of string*)
+
+
+	IF Y > 11 OR Y <1 THEN
+		Y:=1;
+	END_IF
+
+(*Convert Variables name to ascii characters*)
+
+
+		StringLength:= LEN (Variables[Y]);
+
+		FOR x := 0 TO 11 DO
+			IF X <= StringLength THEN
+				VarChar[x]:= RIGHT (Variables[Y],StringLength-x);
+			END_IF
+		END_FOR
+
+		FOR X:= 0 TO 11 DO
+			IF X<= Stringlength THEN
+				VarByte[X]:= F_ToASC(VarChar[X]);
+			END_IF
+			IF X >Stringlength THEN
+				VarByte[X] :=0;
+			END_IF
+		END_FOR
+
+	CASE Y OF
+
+	1: (*Set Variable Register PLC01 *)
+	SICMarker_Outputs.Output1_3[0]:=	VarByte[0];
+	SICMarker_Outputs.Output1_3[1]:=	VarByte[1];
+	SICMarker_Outputs.Output1_3[2]:=	VarByte[2];
+	SICMarker_Outputs.Output1_3[3]:=	VarByte[3];
+	SICMarker_Outputs.Output1_3[4]:=	VarByte[4];
+	SICMarker_Outputs.Output1_3[5]:=	VarByte[5];
+	SICMarker_Outputs.Output1_3[6]:=	VarByte[6];
+	SICMarker_Outputs.Output1_3[7]:=	VarByte[7];
+	SICMarker_Outputs.Output1_3[8]:=	VarByte[8];
+	SICMarker_Outputs.Output1_3[9]:=	VarByte[9];
+	SICMarker_Outputs.Output1_3[10]:=	VarByte[10];
+	SICMarker_Outputs.Output1_3[11]:=	VarByte[11];
+	SICMarker_Outputs.Output1_3[12]:=	VarByte[12];
+	SICMarker_Outputs.Output1_3[13]:=	VarByte[13];
+	SICMarker_Outputs.Output1_3[14]:=	VarByte[14];
+	SICMarker_Outputs.Output1_3[15]:=	VarByte[15];
+	SICMarker_Outputs.Output1_1[4].0 :=TRUE;
+
+	2:  (*Set Variable Register PLC02 *)
+	SICMarker_Outputs.Output1_4[0]:=	VarByte[0];
+	SICMarker_Outputs.Output1_4[1]:=	VarByte[1];
+	SICMarker_Outputs.Output1_4[2]:=	VarByte[2];
+	SICMarker_Outputs.Output1_4[3]:=	VarByte[3];
+	SICMarker_Outputs.Output1_4[4]:=	VarByte[4];
+	SICMarker_Outputs.Output1_4[5]:=	VarByte[5];
+	SICMarker_Outputs.Output1_4[6]:=	VarByte[6];
+	SICMarker_Outputs.Output1_4[7]:=	VarByte[7];
+	SICMarker_Outputs.Output1_4[8]:=	VarByte[8];
+	SICMarker_Outputs.Output1_4[9]:=	VarByte[9];
+	SICMarker_Outputs.Output1_4[10]:=	VarByte[10];
+	SICMarker_Outputs.Output1_4[11]:=	VarByte[11];
+	SICMarker_Outputs.Output1_4[12]:=	VarByte[12];
+	SICMarker_Outputs.Output1_4[13]:=	VarByte[13];
+	SICMarker_Outputs.Output1_4[14]:=	VarByte[14];
+	SICMarker_Outputs.Output1_4[15]:=	VarByte[15];
+	SICMarker_Outputs.Output1_1[4].1 :=TRUE;
+
+	3:  (*Set Variable Register PLC03 *)
+	SICMarker_Outputs.Output1_5[0]:=	VarByte[1];
+	SICMarker_Outputs.Output1_5[1]:=	VarByte[2];
+	SICMarker_Outputs.Output1_5[2]:=	VarByte[3];
+	SICMarker_Outputs.Output1_5[3]:=	VarByte[4];
+	SICMarker_Outputs.Output1_5[4]:=	VarByte[5];
+	SICMarker_Outputs.Output1_5[5]:=	VarByte[6];
+	SICMarker_Outputs.Output1_5[6]:=	VarByte[7];
+	SICMarker_Outputs.Output1_5[7]:=	VarByte[8];
+	SICMarker_Outputs.Output1_5[8]:=	VarByte[9];
+	SICMarker_Outputs.Output1_5[9]:=	VarByte[10];
+	SICMarker_Outputs.Output1_5[10]:=	VarByte[11];
+	SICMarker_Outputs.Output1_5[11]:=	VarByte[12];
+	SICMarker_Outputs.Output1_5[12]:=	VarByte[13];
+	SICMarker_Outputs.Output1_5[13]:=	VarByte[14];
+	SICMarker_Outputs.Output1_5[14]:=	VarByte[15];
+	SICMarker_Outputs.Output1_5[15]:=	VarByte[15];
+	SICMarker_Outputs.Output1_1[4].2 :=TRUE;
+
+	4: (*Set Variable Register PLC04 *)
+	SICMarker_Outputs.Output1_6[0]:=	VarByte[1];
+	SICMarker_Outputs.Output1_6[1]:=	VarByte[2];
+	SICMarker_Outputs.Output1_6[2]:=	VarByte[3];
+	SICMarker_Outputs.Output1_6[3]:=	VarByte[4];
+	SICMarker_Outputs.Output1_6[4]:=	VarByte[5];
+	SICMarker_Outputs.Output1_6[5]:=	VarByte[6];
+	SICMarker_Outputs.Output1_6[6]:=	VarByte[7];
+	SICMarker_Outputs.Output1_6[7]:=	VarByte[8];
+	SICMarker_Outputs.Output1_6[8]:=	VarByte[9];
+	SICMarker_Outputs.Output1_6[9]:=	VarByte[10];
+	SICMarker_Outputs.Output1_6[10]:=	VarByte[11];
+	SICMarker_Outputs.Output1_6[11]:=	VarByte[12];
+	SICMarker_Outputs.Output1_6[12]:=	VarByte[13];
+	SICMarker_Outputs.Output1_6[13]:=	VarByte[14];
+	SICMarker_Outputs.Output1_6[14]:=	VarByte[15];
+	SICMarker_Outputs.Output1_6[15]:=	VarByte[15];
+	SICMarker_Outputs.Output1_1[4].3 :=TRUE;
+
+	5: (*Set Variable Register PLC05 *)
+	SICMarker_Outputs.Output1_7[0]:=	VarByte[1];
+	SICMarker_Outputs.Output1_7[1]:=	VarByte[2];
+	SICMarker_Outputs.Output1_7[2]:=	VarByte[3];
+	SICMarker_Outputs.Output1_7[3]:=	VarByte[4];
+	SICMarker_Outputs.Output1_7[4]:=	VarByte[5];
+	SICMarker_Outputs.Output1_7[5]:=	VarByte[6];
+	SICMarker_Outputs.Output1_7[6]:=	VarByte[7];
+	SICMarker_Outputs.Output1_7[7]:=	VarByte[8];
+	SICMarker_Outputs.Output1_7[8]:=	VarByte[9];
+	SICMarker_Outputs.Output1_7[9]:=	VarByte[10];
+	SICMarker_Outputs.Output1_7[10]:=	VarByte[11];
+	SICMarker_Outputs.Output1_7[11]:=	VarByte[12];
+	SICMarker_Outputs.Output1_7[12]:=	VarByte[13];
+	SICMarker_Outputs.Output1_7[13]:=	VarByte[14];
+	SICMarker_Outputs.Output1_7[14]:=	VarByte[15];
+	SICMarker_Outputs.Output1_7[15]:=	VarByte[15];
+	SICMarker_Outputs.Output1_1[4].4 :=TRUE;
+
+	6: (*Set Variable Register PLC06 *)
+	SICMarker_Outputs.Output1_8[0]:=	VarByte[1];
+	SICMarker_Outputs.Output1_8[1]:=	VarByte[2];
+	SICMarker_Outputs.Output1_8[2]:=	VarByte[3];
+	SICMarker_Outputs.Output1_8[3]:=	VarByte[4];
+	SICMarker_Outputs.Output1_8[4]:=	VarByte[5];
+	SICMarker_Outputs.Output1_8[5]:=	VarByte[6];
+	SICMarker_Outputs.Output1_8[6]:=	VarByte[7];
+	SICMarker_Outputs.Output1_8[7]:=	VarByte[8];
+	SICMarker_Outputs.Output1_8[8]:=	VarByte[9];
+	SICMarker_Outputs.Output1_8[9]:=	VarByte[10];
+	SICMarker_Outputs.Output1_8[10]:=	VarByte[11];
+	SICMarker_Outputs.Output1_8[11]:=	VarByte[12];
+	SICMarker_Outputs.Output1_8[12]:=	VarByte[13];
+	SICMarker_Outputs.Output1_8[13]:=	VarByte[14];
+	SICMarker_Outputs.Output1_8[14]:=	VarByte[15];
+	SICMarker_Outputs.Output1_8[15]:=	VarByte[15];
+	SICMarker_Outputs.Output1_1[4].5 :=TRUE;
+
+	7:  (*Set Variable Register PLC07 *)
+	SICMarker_Outputs.Output1_9[0]:=	VarByte[1];
+	SICMarker_Outputs.Output1_9[1]:=	VarByte[2];
+	SICMarker_Outputs.Output1_9[2]:=	VarByte[3];
+	SICMarker_Outputs.Output1_9[3]:=	VarByte[4];
+	SICMarker_Outputs.Output1_9[4]:=	VarByte[5];
+	SICMarker_Outputs.Output1_9[5]:=	VarByte[6];
+	SICMarker_Outputs.Output1_9[6]:=	VarByte[7];
+	SICMarker_Outputs.Output1_9[7]:=	VarByte[8];
+	SICMarker_Outputs.Output1_9[8]:=	VarByte[9];
+	SICMarker_Outputs.Output1_9[9]:=	VarByte[10];
+	SICMarker_Outputs.Output1_9[10]:=	VarByte[11];
+	SICMarker_Outputs.Output1_9[11]:=	VarByte[12];
+	SICMarker_Outputs.Output1_9[12]:=	VarByte[13];
+	SICMarker_Outputs.Output1_9[13]:=	VarByte[14];
+	SICMarker_Outputs.Output1_9[14]:=	VarByte[15];
+	SICMarker_Outputs.Output1_9[15]:=	VarByte[15];
+	SICMarker_Outputs.Output1_1[4].6 :=TRUE;
+
+	8: (*Set Variable Register PLC08 *)
+	SICMarker_Outputs.Output1_10[0]:=	VarByte[1];
+	SICMarker_Outputs.Output1_10[1]:=	VarByte[2];
+	SICMarker_Outputs.Output1_10[2]:=	VarByte[3];
+	SICMarker_Outputs.Output1_10[3]:=	VarByte[4];
+	SICMarker_Outputs.Output1_10[4]:=	VarByte[5];
+	SICMarker_Outputs.Output1_10[5]:=	VarByte[6];
+	SICMarker_Outputs.Output1_10[6]:=	VarByte[7];
+	SICMarker_Outputs.Output1_10[7]:=	VarByte[8];
+	SICMarker_Outputs.Output1_10[8]:=	VarByte[9];
+	SICMarker_Outputs.Output1_10[9]:=	VarByte[10];
+	SICMarker_Outputs.Output1_10[10]:=	VarByte[11];
+	SICMarker_Outputs.Output1_10[11]:=	VarByte[12];
+	SICMarker_Outputs.Output1_10[12]:=	VarByte[13];
+	SICMarker_Outputs.Output1_10[13]:=	VarByte[14];
+	SICMarker_Outputs.Output1_10[14]:=	VarByte[15];
+	SICMarker_Outputs.Output1_10[15]:=	VarByte[15];
+	SICMarker_Outputs.Output1_1[4].7 :=TRUE;
+
+	9: (*Set Variable Register PLC9 *)
+	SICMarker_Outputs.Output1_11[0]:=	VarByte[1];
+	SICMarker_Outputs.Output1_11[1]:=	VarByte[2];
+	SICMarker_Outputs.Output1_11[2]:=	VarByte[3];
+	SICMarker_Outputs.Output1_11[3]:=	VarByte[4];
+	SICMarker_Outputs.Output1_11[4]:=	VarByte[5];
+	SICMarker_Outputs.Output1_11[5]:=	VarByte[6];
+	SICMarker_Outputs.Output1_11[6]:=	VarByte[7];
+	SICMarker_Outputs.Output1_11[7]:=	VarByte[8];
+	SICMarker_Outputs.Output1_11[8]:=	VarByte[9];
+	SICMarker_Outputs.Output1_11[9]:=	VarByte[10];
+	SICMarker_Outputs.Output1_11[10]:=	VarByte[11];
+	SICMarker_Outputs.Output1_11[11]:=	VarByte[12];
+	SICMarker_Outputs.Output1_11[12]:=	VarByte[13];
+	SICMarker_Outputs.Output1_11[13]:=	VarByte[14];
+	SICMarker_Outputs.Output1_11[14]:=	VarByte[15];
+	SICMarker_Outputs.Output1_11[15]:=	VarByte[15];
+	SICMarker_Outputs.Output1_1[5].0 :=TRUE;
+
+	10: (*Set Variable Register PLC10 *)
+	SICMarker_Outputs.Output1_12[0]:=	VarByte[1];
+	SICMarker_Outputs.Output1_12[1]:=	VarByte[2];
+	SICMarker_Outputs.Output1_12[2]:=	VarByte[3];
+	SICMarker_Outputs.Output1_12[3]:=	VarByte[4];
+	SICMarker_Outputs.Output1_12[4]:=	VarByte[5];
+	SICMarker_Outputs.Output1_12[5]:=	VarByte[6];
+	SICMarker_Outputs.Output1_12[6]:=	VarByte[7];
+	SICMarker_Outputs.Output1_12[7]:=	VarByte[8];
+	SICMarker_Outputs.Output1_12[8]:=	VarByte[9];
+	SICMarker_Outputs.Output1_12[9]:=	VarByte[10];
+	SICMarker_Outputs.Output1_12[10]:=	VarByte[11];
+	SICMarker_Outputs.Output1_12[11]:=	VarByte[12];
+	SICMarker_Outputs.Output1_12[12]:=	VarByte[13];
+	SICMarker_Outputs.Output1_12[13]:=	VarByte[14];
+	SICMarker_Outputs.Output1_12[14]:=	VarByte[15];
+	SICMarker_Outputs.Output1_12[15]:=	VarByte[15];
+
+	(*Set Variable in SIC Marker Boolean *)
+	SICMarker_Outputs.Output1_1[5].1 :=TRUE;
+
+	END_CASE
+
+	(*Increase Variable counter *)
+	IF Y < 10 THEN
+		Y:=Y+1;
+	END_IF
+
+	(*Wait for all PLC variables to match their registers *)
+	IF Y > 10 THEN
+		AllVariablesOK := (SICMarker_Inputs.Input0_1[2].0  OR Variables[1] = '')
+					AND (SICMarker_Inputs.Input0_1[2].1 OR Variables[2] = '')
+					AND (SICMarker_Inputs.Input0_1[2].2 OR Variables[3] = '') 
+					AND (SICMarker_Inputs.Input0_1[2].3 OR Variables[4] = '')
+					AND (SICMarker_Inputs.Input0_1[2].4 OR Variables[5] = '') 
+					AND (SICMarker_Inputs.Input0_1[2].5 OR Variables[6] = '')
+					AND (SICMarker_Inputs.Input0_1[2].6 OR Variables[7] = '')
+					AND (SICMarker_Inputs.Input0_1[2].7 OR Variables[8] = '')
+					AND (SICMarker_Inputs.Input0_1[3].0 OR Variables[9] = '') 
+					AND (SICMarker_Inputs.Input0_1[2].1 OR Variables[10] = '');
+	END_IF
+
+	(*Reset the Bits to send Variable changes, and Variable Counter *)
+	IF Y >= 10 AND LoadFile_bool THEN
+		Y:=1;
+		SICMarker_Outputs.Output1_1[4] :=0;
+		SICMarker_Outputs.Output1_1[5] :=0;
+	END_IF
+
+END_CASE]]></ST>
+    </Implementation>
+    <LineIds Name="FB_SIC_MarkProfi_20200727">
+      <LineId Id="71" Count="623" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

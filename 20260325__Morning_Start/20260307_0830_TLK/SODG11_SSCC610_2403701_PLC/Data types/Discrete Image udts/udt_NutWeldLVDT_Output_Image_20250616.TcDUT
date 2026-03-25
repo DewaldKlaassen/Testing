@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_NutWeldLVDT_Output_Image_20250616" Id="{d9dc6b1e-4f3b-4c0c-b52c-f5b83c6a0b47}">
+    <Declaration><![CDATA[(*udt (user defined type) for all Nut Weld based LVDT applications UI ouput interface
+	auth. Brent Lekx-Toniolo of Sodecia GTAC
+
+------------------------------------------------------------------------
+REVISION NOTES:
+	Version 20250616:
+	- initial concept, b.lekx-toniolo
+------------------------------------------------------------------------
+
+*)
+
+
+
+TYPE udt_NutWeldLVDT_Output_Image_20250616 :
+STRUCT
+	LVDT_Saved_ACK: BOOL;
+	Nut_Saved_ACK: BOOL;
+	LVDT_Value_Raw: REAL;
+	LVDT_Value_Scaled: REAL;
+	LVDT_Nut_OK: BOOL;
+	LVDT_Pin_ADVD: BOOL;
+	LVDT_Pin_RETD: BOOL;
+	
+	UpperElectrode_WeldCount: UINT;	
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,231 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_GTAC_NutWeldLVDT_20250612" Id="{d6b80c4f-076c-45a1-8b0e-58f8a855b8dd}" SpecialFunc="None">
+    <Declaration><![CDATA[(*FB for use with Vision Nutwelders
+
+	Original Author(s): Jessy Underhill of Sodecia GTAC.; 
+------------------------------------------------------------------------------------------
+REVISION NOTES:
+	Version 20210216
+		- intial concept, j.underhill
+	Version 20250612
+		- Eliminated hard typed M6/M8 code and reduced to singular generic LVDT functionality, b.lekx-toniolo
+------------------------------------------------------------------------------------------
+*)
+
+FUNCTION_BLOCK FB_GTAC_NutWeldLVDT_20250612
+VAR_INPUT
+
+	Model_ID: UDINT;								(*Model ID Input from Fixture*)
+	Option_InScaledValues: BOOL;							(*True = Used Sclaed LVDT Values, False = use Raw LVDT Values*)
+	Save_LVDT_Conf: BOOL;							(*Input from UI to Save LVDT Values*)
+	Save_Nut_Conf: BOOL;							(*Input from UI to Save Nut Values*)
+
+	Raw_Transducer: REAL;						(*Scaled Value from Transducer EL3255 Channel*)
+
+	Ready_For_Measurement: BOOL;				(*Weld Gun Reached Force - Ready to Measure Transducer/LVDT*)
+	Weld_Complete: BOOL;							(*Used to Reset Nut Orientation OK AFTER Weld Complete*)
+	Reset_NutOK: BOOL;							(*Used to Clear NutOK Bits in Case that Weld Complete is not acheived*)
+
+
+	NutInput_UpperLimit: ARRAY [0..40] OF REAL;	(*Input from UI to adjust the transducer upper limits for each Model*)
+	NutInput_LowerLimit: ARRAY [0..40] OF REAL;	(*Input from UI to adjust the transducer lower limits for each Model*)
+
+END_VAR
+
+VAR PERSISTENT
+
+	Nut_UpperLimit: ARRAY [0..40] OF REAL;		(*Array for storing the Upper Limits for Nut Orientation, for each model*)
+	Nut_LowerLimit: ARRAY [0..40] OF REAL;		(*Array for storing the Lower Limits for Nut Orientation, for each model*)
+
+	Last_Nut_Raw: UINT;
+
+END_VAR
+
+VAR
+	FB_OK: BOOL;
+
+	Trig_NutLVDT: R_TRIG;
+
+	Weld_Dwell: TON;
+	LVDT_Scaled: REAL;
+	
+	Store: R_TRIG;
+
+	NutWeld_Store: ARRAY [0..50] OF REAL;	(*Store Last 50 LVDT Measurements for Welds*)
+
+END_VAR
+
+VAR_OUTPUT
+
+	LVDT_Saved: BOOL;			(*Indicates LVDT Values have been properly saved from HMI settings into PLC*)
+
+	NutPrev_Scaled: REAL;					(*Store the Last LVDT Sclaed Measurement for Nut Weld*)
+	NutPrev_Raw: REAL;					(*Store the Last LVDT Raw Measurement for Nut Weld*)
+
+	NutOK: BOOL;				(*Capture M6 Nut OK for all part models*)
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[FB_OK:= TRUE;
+
+	(*LVDT Scaling*)
+	LVDT_Scaled:= FUN_GTAC_Scaling(
+						Raw_Transducer,					(*Raw Data to Scale*)
+						3570,							(*Unscaled Lower Limit - JAU, WAS 2170, then 12800, then 3800, then 11200, then 3570*)
+						15400,							(*Unscaled Upper Limit - JAU, WAS 14250, then 23000, then 16200, then 21550, then 15400*)
+						0, 								(*Scaled Lower Limit - Pin RETD*)
+						22								(*Scaled Upper Limit - Pin ADVD*)
+						);
+
+
+
+
+	(*Save LVDT Limits from HMI User Input*)
+	IF Save_LVDT_Conf
+		THEN
+			(*Nut Present - upper limit*)
+			Nut_UpperLimit[Model_ID]:= NutInput_UpperLimit[Model_ID];
+			(*Nut Present - lower limit*)
+			Nut_LowerLimit[Model_ID]:= NutInput_LowerLimit[Model_ID];
+	END_IF;
+
+	(*Weld Dwell - Wait for Nut Measurment to Settle*)
+	Weld_Dwell.IN:= Ready_For_Measurement;
+	Weld_Dwell.PT:= T#100ms;
+	Weld_Dwell();
+
+	(*Trigger Capture for Previous LVDT Data*)
+	Trig_NutLVDT.CLK:= Weld_Dwell.Q;
+	Trig_NutLVDT();
+	IF Trig_NutLVDT.Q
+		THEN
+		IF Option_InScaledValues THEN
+			NutPrev_Scaled:= LVDT_Scaled;
+		ELSE
+			NutPrev_Raw:= Raw_Transducer;
+		END_IF;
+	END_IF;
+
+	(*Set Nut LVDT Limits Based on Previous LVDT Measurement*)
+	IF Save_Nut_Conf THEN
+		IF Option_InScaledValues THEN
+			(*Scaled Mode*)
+			IF (NutPrev_Scaled + 0.5) < 22 THEN
+				Nut_UpperLimit[Model_ID]:= NutPrev_Scaled + 0.5;		(*NOTE - JAU - Determined value of 0.5mm by placing M6 nut upside down vs right way up*)
+			END_IF;
+			IF (NutPrev_Scaled - 0.5) > 0 THEN
+				Nut_LowerLimit[Model_ID]:= NutPrev_Scaled -  0.5;
+			END_IF;
+			(*Unscaled Mode*)
+		ELSE	
+			Nut_UpperLimit[Model_ID]:= NutPrev_Raw + 300;			(*NOTE - JAU - Determined value of 300 by placing M6 nut upside down vs right way up*)
+			Nut_LowerLimit[Model_ID]:= NutPrev_Raw -  300;
+		END_IF;
+	END_IF;
+
+
+	(*Creates Prompt and Button Flash on UI IF values between PLC and UI Numeric Inputs do not match*)
+	IF (Nut_UpperLimit[Model_ID] = NutInput_UpperLimit[Model_ID] AND (Nut_UpperLimit[Model_ID] <> 0))
+	AND (Nut_LowerLimit[Model_ID] = NutInput_LowerLimit[Model_ID] AND (Nut_LowerLimit[Model_ID] <>0))
+		THEN
+			LVDT_Saved:= TRUE;
+	ELSE
+			LVDT_Saved:= FALSE;
+	END_IF;
+
+	(*Part Present Limit Checks - Allows Weld Schedule to Proceed with Weld - Nut Orientation OK*)
+	IF (Model_ID<>0) AND Weld_Dwell.Q THEN
+		IF Option_InScaledValues THEN
+		NutOK:= (LVDT_Scaled<= Nut_UpperLimit[Model_ID])
+					AND (LVDT_Scaled>= Nut_LowerLimit[Model_ID]);
+		ELSE		
+		NutOK:= (Raw_Transducer<= Nut_UpperLimit[Model_ID])
+								AND (Raw_Transducer>= Nut_LowerLimit[Model_ID]);
+		END_IF;
+	ELSIF Weld_Complete OR Reset_NutOK
+		THEN
+		NutOK:= FALSE;
+	END_IF;
+
+
+
+
+
+	(*Move Previous LVDT Measurements in Storage Array*)
+	Store.CLK:= Weld_Dwell.Q;
+	Store();
+	IF Store.Q
+		THEN
+			NutWeld_Store[30]:= NutWeld_Store[29];
+			NutWeld_Store[29]:= NutWeld_Store[28];
+			NutWeld_Store[28]:= NutWeld_Store[27];
+			NutWeld_Store[27]:= NutWeld_Store[26];
+			NutWeld_Store[26]:= NutWeld_Store[25];
+			NutWeld_Store[25]:= NutWeld_Store[24];
+			NutWeld_Store[24]:= NutWeld_Store[23];
+			NutWeld_Store[23]:= NutWeld_Store[22];
+			NutWeld_Store[22]:= NutWeld_Store[21];
+			NutWeld_Store[21]:= NutWeld_Store[20];
+			NutWeld_Store[20]:= NutWeld_Store[19];
+			NutWeld_Store[19]:= NutWeld_Store[18];
+			NutWeld_Store[18]:= NutWeld_Store[17];
+			NutWeld_Store[17]:= NutWeld_Store[16];
+			NutWeld_Store[16]:= NutWeld_Store[15];
+			NutWeld_Store[15]:= NutWeld_Store[14];
+			NutWeld_Store[14]:= NutWeld_Store[13];
+			NutWeld_Store[13]:= NutWeld_Store[12];
+			NutWeld_Store[12]:= NutWeld_Store[11];
+			NutWeld_Store[11]:= NutWeld_Store[10];
+			NutWeld_Store[10]:= NutWeld_Store[9];
+			NutWeld_Store[9]:= NutWeld_Store[8];
+			NutWeld_Store[8]:= NutWeld_Store[7];
+			NutWeld_Store[7]:= NutWeld_Store[6];
+			NutWeld_Store[6]:= NutWeld_Store[5];
+			NutWeld_Store[5]:= NutWeld_Store[4];
+			NutWeld_Store[4]:= NutWeld_Store[3];
+			NutWeld_Store[3]:= NutWeld_Store[2];
+			NutWeld_Store[2]:= NutWeld_Store[1];
+			NutWeld_Store[1]:= NutPrev_Raw;
+	END_IF;
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_GTAC_NutWeldLVDT_20250612">
+      <LineId Id="74" Count="0" />
+      <LineId Id="371" Count="0" />
+      <LineId Id="375" Count="7" />
+      <LineId Id="372" Count="2" />
+      <LineId Id="75" Count="7" />
+      <LineId Id="87" Count="11" />
+      <LineId Id="384" Count="0" />
+      <LineId Id="387" Count="0" />
+      <LineId Id="385" Count="0" />
+      <LineId Id="390" Count="0" />
+      <LineId Id="386" Count="0" />
+      <LineId Id="100" Count="0" />
+      <LineId Id="107" Count="2" />
+      <LineId Id="392" Count="0" />
+      <LineId Id="406" Count="0" />
+      <LineId Id="398" Count="0" />
+      <LineId Id="400" Count="2" />
+      <LineId Id="404" Count="1" />
+      <LineId Id="393" Count="0" />
+      <LineId Id="397" Count="0" />
+      <LineId Id="395" Count="1" />
+      <LineId Id="394" Count="0" />
+      <LineId Id="113" Count="1" />
+      <LineId Id="121" Count="3" />
+      <LineId Id="127" Count="7" />
+      <LineId Id="407" Count="0" />
+      <LineId Id="412" Count="1" />
+      <LineId Id="408" Count="1" />
+      <LineId Id="137" Count="0" />
+      <LineId Id="410" Count="0" />
+      <LineId Id="140" Count="2" />
+      <LineId Id="144" Count="10" />
+      <LineId Id="157" Count="29" />
+      <LineId Id="220" Count="2" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

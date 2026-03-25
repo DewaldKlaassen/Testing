@@ -1,0 +1,671 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_Nok_Datagrid" Id="{73f4750e-32fe-4286-92de-5b9621f45ea5}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Nok_Datagrid
+VAR_INPUT
+    
+    In_Auto   : BOOL;
+	In_Manual : BOOL;
+	
+	In_TimeStamp   : STRING;
+	In_Model_ID    : STRING;
+	In_NOK_Faulted : STRING;
+	
+	In_Load_complete_From_Rxx : BOOL;
+	In_Unload_complete_From_Plc : BOOL;
+	
+	
+	In_Manual_PartReset_From_ICxx : INT;
+	Force_Unload_Complete_From_ICxx : ARRAY [0..5] OF BOOL; (*Force Unload Part button : TCHMI > PLC*)
+	
+	In_User_Error_Ack_From_ICxx : BOOL;
+	
+	In_Current_Nok_Data_Reset : BOOL;
+	In_History_Nok_Data_Reset : BOOL;
+	In_Current_History_Reset  : BOOL;
+	
+END_VAR
+VAR_OUTPUT
+	
+	Out_Current_Nok_Data : ARRAY[0..5] OF udt_Generic_Nok_Data_Grid_20251208; // == Max Number
+	Out_History_Nok_Data : ARRAY[0..5] OF udt_Generic_Nok_Data_Grid_20251208;// == Max Number
+	Force_Unload_Part_In_Process_To_ICxx : BOOL; (*Prevents overload reset attempt*)
+	Current_Nok_Data_Error : BOOL;
+	History_Nok_Data_Error : BOOL;
+	Force_Unload_Part_Error : BOOL;
+
+END_VAR
+VAR
+	FB : BOOL;
+	Blank_Data : udt_Generic_Nok_Data_Grid_20251208;
+	Blank_Data1 : ARRAY [0..5] OF udt_Generic_Nok_Data_Grid_20251208;
+	
+	//Variable to cover both load&unload complete trigger issue
+	Temp_Load_Complete_Priority1 : BOOL;
+	Temp_Unload_complete_Priority2 : BOOL;
+	
+	
+	// Variables related to Load complete
+	Current_Nok_Data_Trigger : BOOL;
+	Current_Nok_Data_Update_Completed : BOOL;
+	i_Current_Step : INT;
+	i_Current_Step_MAX : INT := 5; // Fix the value
+	i_Current_nokloop : INT;
+	i_Faulted_Current_Step : INT;
+	Empty_current_array_number : INT ;
+	Current_Nok_Data_Error_buffer : udt_Generic_Nok_Data_Grid_20251208;
+	Current_Nok_Data_R_trig : R_TRIG;
+	//
+	
+	// Variable related to auto unload complete
+	History_Nok_Data_Trigger: BOOL;
+	History_Nok_Data_Update_Completed : BOOL;
+	Current_Nok_Data_Rearrange_Flag : BOOL;
+	i_History_Step : INT;
+	i_History_Step_MAX : INT := 5; // Fix the value
+	i_Faulted_History_Step :INT;
+	i_History_nokloop : INT;
+	Empty_history_array_number : INT;
+	i_Current_Empty : INT;
+	i_Current_Empty_Max : INT := 5; // Fix the value
+	i_Current_Empty_Max_Flag : BOOL;
+	Rearrange_Range : INT;
+	i_Current_nok_rearrangeloop : INT;
+	i_Current_nok_rearrangeloop_Max : INT := 5; // Fix the value
+	i_History_nok_rearrangeloop : INT; 
+	i_History_nok_rearrangeloop_Max : INT := 5; // Fix the value	
+	History_Nok_Data_R_trig : R_TRIG;
+	//
+	
+	// Variable related to Manual unload complete ( Force Unload Part)
+	Manual_Unload_Complete_Trigger : BOOL;
+	Force_Unload_Part_Update_Completed : BOOL;
+    i_Force_Unload_Part_Step : INT;
+	i_Faulted_Force_Unload_Part_Step : INT;
+	Manual_Unload_Complete_R_trig : R_TRIG;
+	
+END_VAR
+
+VAR PERSISTENT
+	
+	Current_Nok_Data : ARRAY[0..5] OF udt_Generic_Nok_Data_Grid_20251208; // == Max Number
+	History_Nok_Data : ARRAY[0..5] OF udt_Generic_Nok_Data_Grid_20251208;// == Max Number
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[FB := TRUE; (*Check if fb is calling*)
+
+// ==========================================================
+// Data reset commands (HMI → PLC)
+// These resets explicitly clear persistent NOK datagrids.
+// Output arrays mirror internal persistent data so the operator
+// can visually confirm reset completion on the HMI.
+// ==========================================================
+IF In_Current_Nok_Data_Reset
+	THEN
+	Current_Nok_Data := Blank_Data1;
+	Out_Current_Nok_Data := Blank_Data1;
+	Current_Nok_Data_Error :=FALSE;
+END_IF
+IF In_History_Nok_Data_Reset
+	THEN
+	History_Nok_Data := Blank_Data1;
+	Out_History_Nok_Data := Blank_Data1;
+	History_Nok_Data_Error :=FALSE;
+END_IF
+IF In_Current_History_Reset
+	THEN
+	Current_Nok_Data := Blank_Data1;
+	Out_Current_Nok_Data := Blank_Data1;
+	Current_Nok_Data_Error :=FALSE;
+	History_Nok_Data := Blank_Data1;
+	Out_History_Nok_Data := Blank_Data1;
+END_IF
+
+// ==========================================================
+// Output
+// Outputs always reflect internal persistent data.
+// This allows the HMI to show the exact stored state,
+// including after power cycle or PLC restart.
+// ==========================================================
+  Out_Current_Nok_Data := Current_Nok_Data;
+  Out_History_Nok_Data := History_Nok_Data;
+
+// ==========================================================
+// Load / unload priority handling
+// If load and unload complete signals arrive simultaneously,
+// load completion is handled first to avoid data loss.
+// ==========================================================
+// Both load and unload complete active at the same time
+IF In_Load_complete_From_Rxx AND In_Unload_complete_From_Plc
+    THEN	
+    // Default state
+    Temp_Load_Complete_Priority1 := TRUE;
+    Temp_Unload_complete_Priority2 := FALSE;
+	
+END_IF   
+	
+	// Once current NOK data update completes, allow unload processing
+    IF Temp_Load_Complete_Priority1 AND Current_Nok_Data_Update_Completed 
+        THEN
+        Temp_Load_Complete_Priority1 := FALSE;
+        Temp_Unload_complete_Priority2 := TRUE;
+    END_IF
+	// Clear unload priority after history update and rearrangement complete
+    IF Temp_Unload_complete_Priority2
+       AND Current_Nok_Data_Rearrange_Flag
+       AND History_Nok_Data_Update_Completed 
+         THEN
+         Temp_Unload_complete_Priority2 := FALSE;
+		 Temp_Load_Complete_Priority1 := FALSE;
+    END_IF
+// 
+  
+
+// ==========================================================
+// Current NOK data update trigger (AUTO mode)
+// Triggered on load complete while ensuring:
+// - No unload in progress
+// - No manual force unload active
+// - Rising edge detection prevents double writes
+// ==========================================================
+/////////////////////////////////////// 
+Current_Nok_Data_R_trig.CLK := (In_Load_complete_From_Rxx OR Temp_Load_Complete_Priority1) AND in_Auto 
+                               AND NOT In_Unload_complete_From_Plc AND NOT Force_Unload_Complete_From_ICxx[In_Manual_PartReset_From_ICxx];
+Current_Nok_Data_R_trig();
+
+IF Current_Nok_Data_R_trig.Q 
+   THEN
+   Current_Nok_Data_Trigger := TRUE;
+ELSIF Current_Nok_Data_Trigger AND Current_Nok_Data_Update_Completed
+	THEN
+	Current_Nok_Data_Trigger := FALSE;
+	Current_Nok_Data_Update_Completed := FALSE;	
+END_IF
+
+// ==========================================================
+// Current NOK data write state machine
+// Finds first empty slot and stores NOK information.
+// Fault state is entered if no empty slot is available
+// or write verification fails.
+// ==========================================================
+// Current nok data updating : Loading part on conveyor fixture  
+/////////////////////////////////////// 
+IF Current_Nok_Data_Trigger
+	THEN
+	
+	CASE i_Current_Step OF 
+		0: // Step 0: Search for first empty slot in Current_Nok_Data
+		    FOR i_Current_nokloop := 0 TO i_Current_Step_MAX BY 1 DO // Max 0 to 5, if 6 is called, then 'Unload complete error' so the reset did not happen properly  
+			    // 
+			    IF Current_Nok_Data[i_Current_nokloop].TimeStamp = '' AND 
+                   Current_Nok_Data[i_Current_nokloop].Model_ID = '' AND 
+                   Current_Nok_Data[i_Current_nokloop].NOK_Faulted = ''
+                    THEN
+				    Empty_current_array_number := i_Current_nokloop;
+					i_Current_Step := 1;
+					EXIT;
+                 END_IF  	 
+				 //  				
+		    END_FOR
+			
+			 // Fault situation: when the array has no empty but the job is called so it has no where to go 
+				 IF i_Current_nokloop = i_Current_Step_MAX + 1
+					  THEN
+					  Current_Nok_Data_Error_buffer.TimeStamp   := In_TimeStamp;
+					  Current_Nok_Data_Error_buffer.Model_ID    := In_Model_ID;
+					  Current_Nok_Data_Error_buffer.NOK_Faulted := In_NOK_Faulted;//:= Part_Failed_Record ;
+					  
+					  i_Faulted_Current_Step := i_Current_Step;
+					  i_Current_Step := 100;
+					  
+				 END_IF
+			
+		1: // Step 1: Write NOK data into the identified empty slot	
+	        Current_Nok_Data[Empty_current_array_number].TimeStamp := In_TimeStamp;
+		    Current_Nok_Data[Empty_current_array_number].Model_ID := In_Model_ID;
+		    Current_Nok_Data[Empty_current_array_number].NOK_Faulted := In_NOK_Faulted;//Part_Failed_Record;
+			
+			  IF Current_Nok_Data[Empty_current_array_number].Model_ID = In_Model_ID AND
+		         Current_Nok_Data[Empty_current_array_number].NOK_Faulted = In_NOK_Faulted//Part_Failed_Record
+				    THEN
+					i_Current_Step := 2;
+				     
+			  ELSE i_Faulted_Current_Step := i_Current_Step; // Fault: If statment false 
+				   i_Current_Step := 100;
+			  END_IF  
+			 
+        2: // Step 2: Write completed successfully     
+		    Current_Nok_Data_Update_Completed := TRUE;
+	   
+        100: // Step 100: Fault state
+             // Captures step where failure occurred and waits for user acknowledgment
+		      i_Faulted_Current_Step; //Visualized where the fault occured
+ 
+              Current_Nok_Data_Error := TRUE;  
+              IF In_User_Error_Ack_From_ICxx
+				  THEN
+				  Current_Nok_Data_Error :=FALSE;
+				  i_Current_Step := 2;
+			  END_IF 
+                          	    
+	END_CASE
+	
+ELSE i_Current_Step := 0;	
+	 i_Faulted_Current_Step := 0;
+END_IF
+ ///////////////////////////////////////
+ 
+// ==========================================================
+// History NOK processing (AUTO unload)
+// Moves oldest current NOK entry to history on unload complete,
+// then rearranges the current NOK array to maintain order.
+// ========================================================== 
+///////////////////////////////////////
+// only auto situation 		
+History_Nok_Data_R_trig.CLK :=(In_Unload_complete_From_Plc OR Temp_Unload_complete_Priority2) AND in_Auto 
+                               AND NOT In_Load_complete_From_Rxx AND NOT Force_Unload_Complete_From_ICxx[In_Manual_PartReset_From_ICxx] // because when [0] is triggered, unload complete = true; 
+                               AND NOT (Current_Nok_Data[0].TimeStamp = ''); // Prevent from triggering when unload complete is triggered without any data 
+History_Nok_Data_R_trig();
+IF History_Nok_Data_R_trig.Q
+   THEN
+   History_Nok_Data_Trigger := TRUE;
+ELSIF History_Nok_Data_Trigger AND Current_Nok_Data_Rearrange_Flag AND History_Nok_Data_Update_Completed 
+	THEN
+	History_Nok_Data_Trigger         := FALSE;
+	Current_Nok_Data_Rearrange_Flag  := FALSE;
+	History_Nok_Data_Update_Completed:= FALSE;
+	
+END_IF
+ 
+ // History nok array update fetching from Current nok[0] into empty histroy array & Current nok array re arrange  
+ ///////////////////////////////////////
+ // History nok array update fetching from Current nok[0] 
+ IF History_Nok_Data_Trigger
+	 THEN
+     
+	CASE i_History_Step OF 
+		0: // Step 0: Validate that Current_Nok_Data[0] contains valid data
+		   // Fault situation when the unload complete is triggered when there is empty value on 'Current_Nok_Data[0].'
+		   IF Current_Nok_Data[0].TimeStamp = '' AND 
+			  Current_Nok_Data[0].Model_ID = '' AND
+              Current_Nok_Data[0].NOK_Faulted = ''   
+			  THEN
+			   i_Faulted_History_Step := i_History_Step;
+			   i_History_Step := 100;   
+		   ELSE
+			   i_History_Step := 1;	  		   
+		   END_IF
+		   
+		1: // Step 1: Search for empty history slot 
+		   FOR i_History_nokloop := 0 TO i_History_Step_MAX BY 1 DO // maybe having one more value here to cover the situation that covers if data is saved above actual max and adding fault message 
+			 
+			   IF History_Nok_Data[i_History_nokloop].TimeStamp = '' AND 
+                  History_Nok_Data[i_History_nokloop].Model_ID = '' AND
+                  History_Nok_Data[i_History_nokloop].NOK_Faulted = ''
+                    THEN 
+				    Empty_history_array_number := i_History_nokloop;
+				    i_History_Step := 2;
+				    EXIT;		  
+               END_IF 
+	        END_FOR 
+			 
+            //   History_Nok_Data array Full!
+		    IF i_History_nokloop = i_History_Step_MAX + 1 
+			   THEN
+			   i_History_Step := 10;
+			ELSE i_History_Step := 2;	 
+		    END_IF
+    	  
+		2: // Step 2: Copy Current_Nok_Data[0] into history and mark unload complete
+           // auto unload complete always fetch the data from 'Current_Nok_Data[0].'
+		   History_Nok_Data[Empty_history_array_number] := Current_Nok_Data[0];
+	       History_Nok_Data[Empty_history_array_number].Unload_Completed := TRUE;
+		   
+		   IF History_Nok_Data[Empty_history_array_number].TimeStamp = Current_Nok_Data[0].TimeStamp AND 
+			  History_Nok_Data[Empty_history_array_number].Model_ID = Current_Nok_Data[0].Model_ID AND 
+              History_Nok_Data[Empty_history_array_number].NOK_Faulted = Current_Nok_Data[0].NOK_Faulted AND 
+              History_Nok_Data[Empty_history_array_number].Unload_Completed = TRUE			
+				THEN
+				 i_History_Step := 3;
+           ELSE i_Faulted_History_Step := i_History_Step; // Fault: If statment false 
+			      i_History_Step := 100;			
+		   END_IF
+			 
+		3: // Step 3–5: Rearrange Current_Nok_Data array after unload
+           // 'Current_Nok_Data' array check      
+           FOR i_Current_Empty := 0 TO i_Current_Empty_Max BY 1 DO
+				  
+               IF (Current_Nok_Data[i_Current_Empty].TimeStamp = '' )AND 
+				  (Current_Nok_Data[i_Current_Empty].Model_ID   = '' )AND 
+				  (Current_Nok_Data[i_Current_Empty].NOK_Faulted  = '' ) 
+                      THEN
+					  Rearrange_Range := i_Current_Empty + 1;
+					  EXIT; 
+			   END_IF      
+           END_FOR
+						 
+			IF i_Current_Empty = i_Current_Empty_Max + 1
+				THEN
+				Rearrange_Range := i_Current_Empty_Max + 1;
+				i_Current_Empty_Max_Flag := TRUE;	
+			END_IF
+				
+                i_History_Step := 4;	// next step	
+				 
+	 	4: // Step 3–5: Rearrange Current_Nok_Data array after unload
+           // re arrnage Current 'Current_Nok_Data' array 
+		    FOR i_Current_nok_rearrangeloop := 1 TO i_Current_nok_rearrangeloop_Max BY 1 DO
+                IF i_Current_nok_rearrangeloop < Rearrange_Range
+				   THEN
+				   Current_Nok_Data[i_Current_nok_rearrangeloop-1] := Current_Nok_Data[i_Current_nok_rearrangeloop];					
+		        ELSE Current_Nok_Data[i_Current_nok_rearrangeloop] := Blank_Data;   
+                END_IF
+			END_FOR 
+			
+            IF i_Current_nok_rearrangeloop = i_Current_nok_rearrangeloop_Max + 1
+			    THEN
+				   IF i_Current_Empty_Max_Flag
+					   THEN
+					   i_History_Step := 5;
+				   ELSE  i_History_Step := 6;
+				   END_IF
+			   
+			ELSE i_Faulted_History_Step := i_History_Step; // Fault: for loop issue 
+			      i_History_Step := 100;	 
+			END_IF    
+			   
+		5: // Step 3–5: Rearrange Current_Nok_Data array after unload	
+           // Delete Max array : 'Current_Nok_Data[5]'   
+		     IF i_Current_Empty_Max_Flag
+				 THEN
+				 Current_Nok_Data[i_Current_Step_MAX] := Blank_Data;
+				   IF Current_Nok_Data[i_Current_Step_MAX].TimeStamp = '' AND 
+					  Current_Nok_Data[i_Current_Step_MAX].Model_ID = '' AND 
+                      Current_Nok_Data[i_Current_Step_MAX].NOK_Faulted = ''
+                       THEN
+                       i_Current_Empty_Max_Flag := FALSE;
+				   ELSE i_Faulted_History_Step := i_History_Step; // Fault: if statment false
+			            i_History_Step := 100;
+				   END_IF	 
+			 END_IF
+		   	  
+			 i_History_Step := 6; // complete step
+			  
+        6:  // Step 6: Auto unload processing completed
+		    Current_Nok_Data_Rearrange_Flag := TRUE;
+  	        History_Nok_Data_Update_Completed := TRUE;
+	
+	     10: // Step 10: History array full – shift history and retry
+             FOR i_History_nok_rearrangeloop := 1 TO i_History_nok_rearrangeloop_Max BY 1 DO 
+				  History_Nok_Data[i_History_nok_rearrangeloop-1] := History_Nok_Data[i_History_nok_rearrangeloop];   
+		     END_FOR 
+			 
+			 IF i_History_nok_rearrangeloop = i_History_nok_rearrangeloop_Max + 1
+				THEN
+				Empty_history_array_number := i_History_nok_rearrangeloop_Max;
+				i_History_Step := 2;
+			 ELSE i_Faulted_History_Step := i_History_Step; // Fauilt: for loop	issue
+				  i_History_Step := 100;
+			 END_IF  
+
+          100: // Step 100: Faults: Unload complete is triggered when there is no value on 'Current_Nok_Data[0].'
+		      i_Faulted_History_Step;
+			  
+              History_Nok_Data_Error := TRUE;
+			  IF In_User_Error_Ack_From_ICxx
+				  THEN
+				  History_Nok_Data_Error :=FALSE;
+				  i_History_Step := 6;
+			  END_IF
+                 	                    
+	END_CASE
+ELSE i_History_Step := 0; 
+	 i_Faulted_History_Step := 0;
+END_IF	 
+///////////////////////////////////////
+
+
+// ==========================================================
+// Manual force unload processing (HMI-triggered)
+// Allows operator to remove a specific NOK entry by index.
+// During this process, other load/unload actions are blocked
+// to prevent data corruption.
+// ==========================================================
+///////////////////////////////////////
+// Manual History nok array update 
+Manual_Unload_Complete_R_trig.CLK := (Force_Unload_Complete_From_ICxx[In_Manual_PartReset_From_ICxx])
+                                     AND NOT (Current_Nok_Data[In_Manual_PartReset_From_ICxx].TimeStamp = '') ; // last condition is to prevent from running when there is no value but triggered
+Manual_Unload_Complete_R_trig();
+
+IF Manual_Unload_Complete_R_trig.Q 
+    THEN
+		Manual_Unload_Complete_Trigger  := TRUE; 
+ELSIF Manual_Unload_Complete_Trigger AND Force_Unload_Part_Update_Completed
+	THEN 
+	    Force_Unload_Part_Update_Completed := FALSE;
+		Manual_Unload_Complete_Trigger := FALSE;	 
+END_IF 
+///////////////////////////////////////
+
+
+///////////////////////////////////////
+// writing down in order 
+IF Manual_Unload_Complete_Trigger 
+	THEN
+	
+	CASE i_Force_Unload_Part_Step OF 
+		 
+	    0: //check empty history array
+		    Force_Unload_Part_In_Process_To_ICxx := TRUE; // flag to make sure other reset is not triggered while the reset procdure is in process
+			
+		    FOR i_History_nokloop := 0 TO i_History_Step_MAX BY 1 DO // maybe having one more value here to cover the situation that covers if data is saved above actual max and adding fault message 
+			 
+			   IF History_Nok_Data[i_History_nokloop].TimeStamp = '' AND 
+                  History_Nok_Data[i_History_nokloop].Model_ID = '' AND
+                  History_Nok_Data[i_History_nokloop].NOK_Faulted = ''
+                    THEN 
+				    Empty_history_array_number := i_History_nokloop;
+				    i_Force_Unload_Part_Step := 1;
+				    EXIT;		  
+               END_IF 
+	        END_FOR 
+			 
+            //   History_Nok_Data array Full!
+		    IF i_History_nokloop > 5
+			     THEN
+			     i_Force_Unload_Part_Step := 10;
+		    END_IF
+			
+		1: // writing current to history based on empty history empty number 
+		   History_Nok_Data[Empty_history_array_number] := Current_Nok_Data[In_Manual_PartReset_From_ICxx];
+		   History_Nok_Data[Empty_history_array_number].Unload_Completed := TRUE;
+		    
+		   IF History_Nok_Data[Empty_history_array_number].TimeStamp = Current_Nok_Data[In_Manual_PartReset_From_ICxx].TimeStamp AND 
+			  History_Nok_Data[Empty_history_array_number].Model_ID = Current_Nok_Data[In_Manual_PartReset_From_ICxx].Model_ID AND 
+			  History_Nok_Data[Empty_history_array_number].NOK_Faulted = Current_Nok_Data[In_Manual_PartReset_From_ICxx].NOK_Faulted AND
+              History_Nok_Data[Empty_history_array_number].Unload_Completed = TRUE
+			   THEN
+			   i_Force_Unload_Part_Step := 2;
+		   ELSE i_Faulted_Force_Unload_Part_Step := i_Force_Unload_Part_Step; // Fault: If statment false 
+			    i_Force_Unload_Part_Step := 100;
+		   END_IF
+		   
+		 2: // re arrnage Current 'Current_Nok_Data' array : Sixth part reset is triggered 
+		    IF In_Manual_PartReset_From_ICxx = 5
+				THEN
+				Current_Nok_Data[i_Current_Step_MAX] := Blank_Data; // Sixth Part Reset press dont require to re arrange the array
+				   IF Current_Nok_Data[i_Current_Step_MAX].TimeStamp = '' AND Current_Nok_Data[i_Current_Step_MAX].Model_ID = '' AND Current_Nok_Data[i_Current_Step_MAX].NOK_Faulted = '' 
+					   THEN
+					   i_Force_Unload_Part_Step := 4;
+				   ELSE i_Faulted_Force_Unload_Part_Step := i_Force_Unload_Part_Step; // Fault: If statment false 	
+				        i_Force_Unload_Part_Step := 100;
+				   END_IF
+
+			ELSE   i_Force_Unload_Part_Step := 3;     
+			END_IF
+			
+			
+			
+		 3:	
+		    IF In_Manual_PartReset_From_ICxx = 0
+				THEN
+				FOR i_Current_nok_rearrangeloop := 1 TO i_Current_nok_rearrangeloop_Max BY 1 DO
+				    Current_Nok_Data[i_Current_nok_rearrangeloop-1] := Current_Nok_Data[i_Current_nok_rearrangeloop];           
+			    END_FOR
+			ELSE 
+                FOR i_Current_nok_rearrangeloop := In_Manual_PartReset_From_ICxx +1 TO i_Current_nok_rearrangeloop_Max BY 1 DO 
+				    Current_Nok_Data[i_Current_nok_rearrangeloop-1] := Current_Nok_Data[i_Current_nok_rearrangeloop];           
+			    END_FOR
+			END_IF
+			
+				//
+                     IF i_Current_nok_rearrangeloop = 6
+				          THEN
+				          i_Force_Unload_Part_Step := 4;
+				     ELSE i_Faulted_Force_Unload_Part_Step := i_Force_Unload_Part_Step; // Fault: for loop issue	
+				          i_Force_Unload_Part_Step := 100;     					   
+                     END_IF 
+				//
+		 4:  
+		    Current_Nok_Data[i_Current_Step_MAX] := Blank_Data; // Sixth Part Reset press dont require to re arrange the array
+			
+			IF Current_Nok_Data[i_Current_Step_MAX].TimeStamp = '' AND Current_Nok_Data[i_Current_Step_MAX].Model_ID = '' AND Current_Nok_Data[i_Current_Step_MAX].NOK_Faulted = '' 
+				 THEN
+				 i_Force_Unload_Part_Step := 5;
+			ELSE i_Faulted_Force_Unload_Part_Step := i_Force_Unload_Part_Step; // Fault: If statment false 
+				 i_Force_Unload_Part_Step := 100;
+			END_IF
+		    
+
+	
+		 5: // complete
+		    Force_Unload_Part_Update_Completed := TRUE;
+			Force_Unload_Part_In_Process_To_ICxx := FALSE;
+			
+		10: // Histry data array FULL!
+		     FOR i_History_nok_rearrangeloop := 1 TO i_History_nok_rearrangeloop_Max BY 1 DO 
+				  History_Nok_Data[i_History_nok_rearrangeloop-1] := History_Nok_Data[i_History_nok_rearrangeloop];   
+		     END_FOR 
+			 
+			 IF i_History_nok_rearrangeloop = i_History_nok_rearrangeloop_Max + 1
+				THEN
+				    Empty_history_array_number := 5;
+				    i_Force_Unload_Part_Step := 1;
+				
+			 ELSE i_Faulted_Force_Unload_Part_Step := i_Force_Unload_Part_Step; // Issue with for loop	
+				  i_Force_Unload_Part_Step := 100;
+			 END_IF
+		
+	
+    
+		   
+		100: // Faults: Unload complete is triggered when there is no value on 'Current_Nok_Data[0].'
+		      i_Faulted_Force_Unload_Part_Step;
+ 
+              Force_Unload_Part_Error := TRUE;    
+			  IF In_User_Error_Ack_From_ICxx
+				  THEN
+				  Force_Unload_Part_Error :=FALSE;
+				  i_Force_Unload_Part_Step := 5;
+			  END_IF
+	
+	END_CASE
+	
+ELSE i_Force_Unload_Part_Step := 0;	
+	 i_Faulted_Force_Unload_Part_Step:= 0;
+END_IF
+  
+ ]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Nok_Datagrid">
+      <LineId Id="9" Count="0" />
+      <LineId Id="650" Count="0" />
+      <LineId Id="741" Count="4" />
+      <LineId Id="651" Count="2" />
+      <LineId Id="669" Count="0" />
+      <LineId Id="655" Count="0" />
+      <LineId Id="885" Count="0" />
+      <LineId Id="654" Count="0" />
+      <LineId Id="657" Count="1" />
+      <LineId Id="671" Count="0" />
+      <LineId Id="659" Count="0" />
+      <LineId Id="887" Count="0" />
+      <LineId Id="656" Count="0" />
+      <LineId Id="661" Count="1" />
+      <LineId Id="670" Count="0" />
+      <LineId Id="663" Count="0" />
+      <LineId Id="886" Count="0" />
+      <LineId Id="672" Count="0" />
+      <LineId Id="664" Count="0" />
+      <LineId Id="660" Count="0" />
+      <LineId Id="392" Count="0" />
+      <LineId Id="736" Count="4" />
+      <LineId Id="391" Count="0" />
+      <LineId Id="393" Count="0" />
+      <LineId Id="177" Count="0" />
+      <LineId Id="746" Count="4" />
+      <LineId Id="682" Count="0" />
+      <LineId Id="751" Count="0" />
+      <LineId Id="684" Count="1" />
+      <LineId Id="703" Count="1" />
+      <LineId Id="688" Count="0" />
+      <LineId Id="718" Count="0" />
+      <LineId Id="687" Count="0" />
+      <LineId Id="723" Count="2" />
+      <LineId Id="882" Count="0" />
+      <LineId Id="726" Count="1" />
+      <LineId Id="722" Count="0" />
+      <LineId Id="729" Count="3" />
+      <LineId Id="883" Count="0" />
+      <LineId Id="734" Count="0" />
+      <LineId Id="884" Count="0" />
+      <LineId Id="728" Count="0" />
+      <LineId Id="680" Count="1" />
+      <LineId Id="394" Count="0" />
+      <LineId Id="753" Count="4" />
+      <LineId Id="765" Count="1" />
+      <LineId Id="190" Count="0" />
+      <LineId Id="179" Count="0" />
+      <LineId Id="395" Count="0" />
+      <LineId Id="180" Count="1" />
+      <LineId Id="183" Count="6" />
+      <LineId Id="182" Count="0" />
+      <LineId Id="786" Count="5" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="108" Count="49" />
+      <LineId Id="767" Count="0" />
+      <LineId Id="158" Count="13" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="212" Count="0" />
+      <LineId Id="768" Count="3" />
+      <LineId Id="367" Count="3" />
+      <LineId Id="396" Count="0" />
+      <LineId Id="979" Count="0" />
+      <LineId Id="371" Count="7" />
+      <LineId Id="380" Count="0" />
+      <LineId Id="379" Count="0" />
+      <LineId Id="213" Count="1" />
+      <LineId Id="218" Count="36" />
+      <LineId Id="256" Count="1" />
+      <LineId Id="772" Count="0" />
+      <LineId Id="774" Count="0" />
+      <LineId Id="259" Count="13" />
+      <LineId Id="775" Count="0" />
+      <LineId Id="273" Count="19" />
+      <LineId Id="776" Count="0" />
+      <LineId Id="293" Count="20" />
+      <LineId Id="777" Count="0" />
+      <LineId Id="314" Count="44" />
+      <LineId Id="215" Count="0" />
+      <LineId Id="562" Count="0" />
+      <LineId Id="778" Count="7" />
+      <LineId Id="547" Count="8" />
+      <LineId Id="557" Count="4" />
+      <LineId Id="546" Count="0" />
+      <LineId Id="414" Count="127" />
+      <LineId Id="216" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_ISxx_Image_20241121" Id="{935dfbe2-9738-452a-846e-09246f2780db}">
+    <Declaration><![CDATA[(*udt (user defined type) for all generic PD (Power Distribution Cabinet) I/O Required
+	auth. Brent Lekx-Toniolo of Sodecia GTAC
+
+------------------------------------------------------------------------
+REVISION NOTES:
+
+	Version 20150812:
+		- initial concept, b.lekx-toniolo	
+	Version 20170307
+		- added area for N999, b.lexk-toniolo
+		- added Option vars to pass data for UI config automation, b.lekx-toniolo
+	Version 20190924
+		- changed T05 to EL6731, moved EK1110 to T06, j.vandongen
+		- added Option input for EL6731, j.vandongen
+	Version 20220907
+		-Added N1000 and N1001 variables for additional EP9224, C.Drees
+	Version 20241121
+		-PD to IS rename, as per GH SSCC610 repo Issue#162, b.lekx-toniolo		
+------------------------------------------------------------------------
+
+*)
+
+TYPE udt_ISxx_Image_20241121 :
+	STRUCT
+		T01: udt_EK1100;						(*Ecat Bus Coupler*)
+		T02_STAT: udt_EL6900_STAT_20160426;	(*EL Safety CPU*)
+		T02_CMD: udt_EL6900_CMD_20121204;
+		T03: udt_EL1904_v2;					(*EL Safety Inputs*)
+		T04: udt_EL2904RO_v2;				(*EL Safety Outputs, Set to "I" as this terminal is safety rated, therefore read only!*)
+		T05: udt_EL6731;						(*EL Profibus Master*)
+		T06: udt_EK1110_20150812;				(*Ecat Extension Terminal*)
+
+		N01: udt_CU1128_20180507;			(*Ecat Junction Switch*)
+
+		N999_STAT: udt_EP9224_STAT_20161207;	(*EP Power Distribution Box*)
+		N999_CMD: udt_EP9224_CMD_20161207;
+		N1000_STAT: udt_EP9224_STAT_20161207;
+		N1000_CMD:udt_EP9224_CMD_20161207;
+		N1001_STAT:udt_EP9224_STAT_20161207;
+		N1001_CMD:udt_EP9224_CMD_20161207;
+		
+		Option_Enable_SplitRelays: BOOL;
+		Option_EP9224_Count: Int;
+		Option_Enable_Pbus: BOOL;
+
+
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_Schneider_VFD_Image_20180808" Id="{49507f7e-ef9a-4f4e-9bca-1ad2e90d6f46}">
+    <Declaration><![CDATA[(*udt (user defined type) for Schneider Electric VFD I/O Module
+	Author(S): Justin Vandongen of Sodecia GTAC;
+
+------------------------------------------------------------------------
+	REVISION NOTES:
+
+	Version 20180808
+		- Initial Concept, j.vandongen
+		- tested on ATV320 v1.11 ethercat module from schneider, j.vandongen
+	Version 20250828
+		- Added Cable breaks, r.jones
+------------------------------------------------------------------------
+*)
+
+TYPE udt_Schneider_VFD_Image_20180808 :
+	STRUCT
+		
+	VFD_State: udt_Schneider_VFD_20180808;
+	Status_Word: UINT;
+	Control_Word: UINT;
+	Target_Velocity: INT;
+	Move_TIME: TIME;
+	ECAT_Cable_Breaks: UDINT;
+
+	END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

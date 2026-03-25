@@ -1,0 +1,3433 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="MAIN" Id="{84c1c1eb-535c-4ffe-828a-2356a4a2ae04}" SpecialFunc="None">
+    <Declaration><![CDATA[(*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	Original Code Concept By: B.Lekx-Toniolo of Toniolo Research & Development Inc. 
+	all copyright, IP and moral rights apply
+	Date: July 2010.
+	Fort Wisers
+	S.H.H.D.I. 
+	
+	Major Migration from TC2 -> TC3 Platform primarily handled by Chris Drees of Sodecia GTAC 
+	Date: 2020
+	Major Migration from IWS -> TcHmi Platform primarily handled by c.drees and b.lekx-toniolo
+	Date: 2022 - 2024
+	
+	
+----------------------------------------------------------------------------------------------------------------------
+REVISION NOTES: 
+	Date: May 2012
+	- generic functionality mods: Rob Remillard
+	Date: December 2012
+	- Various Updates to accomodate hardware change to SSCCv4.6 and allow Kuka and Motoman use, b.lekx-toniolo
+	Date: May/June 2013
+	- B562 As Commisioned for AB Ring, b.lekx-toniolo and r.remillard
+	Date: July 2014
+	- added robot capability of up to 20 robots, JVD
+	- changed to allow up to 8 ICs wherever it was missing, JVD
+	Date: October 2014
+	- added capability of up to 30 robots maximum (25 recommended), b.lekx-toniolo
+	Date: Summer / Fall 2015
+	- migration to V5.00 machines (Win7 Platform), b.lekx-toniolo
+	Date: Spring 2017
+	- migration to V5.03 machines (Minor changes), b.lekx-toniolo
+	Date: April 2017
+	- Update to Kuka FB for new Safe Space, r.remillard
+	Date: Summer/Fall 2017
+	- migration to v5.04 machines (Minor changes), j.vandongen
+	Date: Fall 2019
+	- migration to v5.05 machines (Minor changes), j.vandongen
+	- revamped the EOAT section, j.vandongen
+	- changed ST from Nelson to Emhart. Nelson instance stored in the FB, j.vandongen
+	Date: Fall/Winter 2019-2020
+	- migration to v5.06 level as follows (also see task list for details)
+		>production code updates per R&D request, b.lekx-toniolo, r.remillard, c.drees
+		>brought in latest servo code, b.lekx-toniolo
+		>various small bug fixes as per bug fix list, b.lekx-toniolo
+		>Emhart code / UI upgrades (developed by j.underhill, imported by blt)
+		>EOAT code / UI upgrades (developed by j.vandongen, imported by blt)
+	Date: Winter 2020-2021
+	- major migration from TC2 -> TC3 platform to create V6.xx level(c.drees, b.lekx-toniolo)
+		>overhaul of safety from old config type to new visual layout (c.drees)
+		>minor and various updates as required by new platform (c.drees, b.lekx-toniolo)
+	Date: May 2021
+	-Relinked all I/O link waterstands (c.drees)
+	-corrected KUKA_FB version to ensure functionality is not missing (c.drees)
+	-Corrected WS_FB version to ensure that functionality is not lost (c.drees)
+	-Added All WCU Stepper reset checks and Any_TipChange_Request (c.drees)
+	
+	Date: 2022, 2023, 2024
+	- IWS to TcHMI (TcUI) migration project, creates new rev level 6.10
+		> various PLC changes as a result of migration work (b.lekx-toniolo / c.drees)
+		> some PLC bug fixes while co-maintaining project PLC copy and SSCC6.01 (working FW package at time) (b.lekx-toniolo / c.drees)
+	   	> Added Swing Arm control FBs to Main
+		> added in various chages for project 90034 (simulation integration) (b.lekx-toniolo)
+
+	
+-----------------------------------------------------------------------------------------------------------------------
+Some Key Notes Common to Project:
+	All FBs and FUNs are 100% generic and thus exportable to other IC's of same version level (5.xx) (6.xx)
+	All Prgs are custom per IPC (should not be exported)
+------------------------------------------------------------------------------------------------------------------------
+Some Notes for general mapping from Process Flow Department:
+Fix#1-99 = Fixtures with Human Interaction
+Fix#101-199 = Fixtures with NO Human Interaction (internal)
+etc etc
+
+------------------------------------------------------------------------------------------------------------------------
+Some notes on Commenting Conventions
+	Please everyone try to comment where you make changes / additions
+	Some comment formats should be used where applicable / possible
+
+	EXAMPLES:
+		(*DEBUG, blah blah blah, your initials*)
+			- this type of comment should be used where you've left something in a state that the end application deployment programmer needs to confirm/check/modify etc
+				once they have done what they need to do, the comment should be deleted unless it's still applicable. The machine should be as free of DE BUG type comments before
+				it ships to the end customer.
+
+		(*NOTE, bling bling bling, your initials*)
+			- this type of comment should be used when a specifc area of code might be of interest or value to the next anticipated person
+				for example, if you've finished off some code as far as you can but know the next user will likely build upon it, a comment like this can be used.
+				you may even co-ordinate with the end user and put their name or a keyword in place so they can search specific notes left for them
+				this comment should not be used if the code is left in an unfinsihed state that may cause the machine to not run, in that case a DE BUG note shall be used
+
+thanks to j.underhill for this comment convention contribution
+------------------------------------------------------------------------------------------------------------------------
+*)
+
+PROGRAM MAIN
+VAR
+
+(*Establish Data Area for Mother Board Status Information*)
+		Mother_Board AT%I*: udt_SMB_Status_20141211;
+(*Establish FB for EtherCAT*)
+		ECAT_Master: FB_GTAC_EtherCATMaster_20250723;
+
+(*Establish Data Area for Ethernet Port*)
+		DevState AT%I*:UINT;
+(*Establish Data Area for System Time*)
+		Get_LocalMachine_TimeFB: NT_GetTime;
+		Local_Time: Timestruct;
+(*Command to write all persistent data to the hard disk*)
+		WritePersistent: WritePersistentData;
+		DebugTime :TIME;
+	
+(*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! STOCK Variables - !!!DO NOT MODIFY !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*)
+		(*Main Scoped Variables*)
+		Stay_Off: BOOL:= FALSE;
+		Starting_Scan_PulseTMR: TON;
+		Starting_Scan_Pulse: BOOL;	(*1.0ms Pulse that Occurs at Boot-Up*)
+
+		All_Estops_OK AT %I*: BOOL;
+		All_SafetyGates_OK AT %I*: BOOL;
+		Control_Power_ON: BOOL;
+		All_EStopRLYs_Off: BOOL;
+		SAFETY_RESET: BOOL;
+		All_RobotsReady_Running: BOOL;
+
+		Safety_Zone_Test AT %Q*: BOOL;
+		Roll_Door01_Enable AT %I*: BOOL;
+		Roll_Door02_Enable AT %I*: BOOL;
+		Access_Violation AT %I*: BOOL;
+		
+		(*ADDED TO RETRIEVE DATA FROM ALL IC's - AB*)
+		Access_Violation_IC01 AT %I*: BOOL;
+		Access_Violation_IC02 AT %I*: BOOL;
+		Access_Violation_IC03 AT %I*: BOOL;
+		
+		(*Verti Guard IO*)
+		VertiGuard_N01 AT %Q*: udt_EP2028_002_v2;
+		VertiGuard_N01_STAT AT %I*: udt_EP2028_002_STAT;
+		VertiGuard_N02 AT %I*: udt_EP1908_002;
+
+		(*Prog OK Status Bits*)
+		Safety_Reset_ProgOK: BOOL;
+		Robot_Interf_Map_ProgOK: BOOL;
+		TipChange_ProgOK: BOOL;
+		Faults_ProgOK: BOOL;
+		UI_ProgOK: BOOL;
+		
+		(*Hardware Diagnostic Data*)
+		HardwareStat:FB_SystemDiags20241206;
+		ApplicationData:PlcAppSystemInfo;
+		Taskdata:PLCTaskSystemInfo;
+		
+		(*TLK ADDED FOR MD DOORS CLOSE FEEDBACK*)
+		MD01_N01_I0 AT %I*: BOOL;
+		MD01_N01_I1 AT %I*: BOOL;
+		MD01_N01_I2 AT %I*: BOOL;
+		MD01_N01_I3 AT %I*: BOOL;
+		
+		MD02_N01_I0 AT %I*: BOOL;
+		MD02_N01_I1 AT %I*: BOOL;
+		MD02_N01_I2 AT %I*: BOOL;
+		MD02_N01_I3 AT %I*: BOOL;
+		
+		
+(*$$$$$$$$$$$$$$$$$$$$$$ NON Stock Variables, Instances etc (add here as you add robots and fixtures) $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+		(*IS Instances*)
+		IS01: FB_GTAC_ISxx_20241121;			(*IS01*)
+
+		(*IC Instances*)
+		IC01: FB_GTAC_ICxx_20181023;				(*IC01*)
+		IC02: FB_GTAC_ICxx_20181023;				(*IC02*)
+		IC03: FB_GTAC_ICxx_20181023;				(*IC03*)
+		IC04: FB_GTAC_ICxx_20181023;				(*IC04*)
+		IC05: FB_GTAC_ICxx_20181023;				(*IC05*)
+		IC06: FB_GTAC_ICxx_20181023;				(*IC06*)
+		IC07: FB_GTAC_ICxx_20181023;				(*IC07*)
+		IC08: FB_GTAC_ICxx_20181023;				(*IC08*)
+
+		(*Robot Instances*)
+		(*R1: FB_GTAC_Motoman_20151105;	*)		(*EXAMPLE!!! Robot is MOTO DX100 32 Byte Type*)
+		R1: FB_GTAC_Kuka_CUSTOM;		(*Robot is KUKA KRC4 Type*)
+		R2: FB_GTAC_Kuka_CUSTOM;		(*Robot is KUKA KRC4 Type*)
+		R3: FB_GTAC_Kuka_CUSTOM;		(*Robot is KUKA KRC4 Type*)
+		R4: FB_GTAC_Kuka_CUSTOM;		(*Robot is KUKA KRC4 Type*)
+		R5: FB_GTAC_Kuka_CUSTOM;		(*Robot is KUKA KRC4 Type*)
+		R6: FB_GTAC_Kuka_CUSTOM;		(*Robot is KUKA KRC4 Type*)
+		R7: FB_GTAC_Kuka_CUSTOM;		(*Robot is KUKA KRC4 Type*)
+		R8: FB_GTAC_Kuka_CUSTOM;		(*Robot is KUKA KRC4 Type*)
+		R9: FB_GTAC_Kuka_CUSTOM;		(*Robot is KUKA KRC4 Type*)
+		R10: FB_GTAC_Kuka_CUSTOM;		(*Robot is KUKA KRC4 Type*)
+		R11: FB_GTAC_Kuka_CUSTOM;		(*Robot is KUKA KRC4 Type*)
+		R12: FB_GTAC_Kuka_CUSTOM;		(*Robot is KUKA KRC4 Type*)
+		R13: FB_GTAC_Kuka_CUSTOM;		(*Robot is KUKA KRC4 Type*)
+		R14: FB_GTAC_Kuka_CUSTOM;		(*Robot is KUKA KRC4 Type*)
+		R15: FB_GTAC_Kuka_CUSTOM;		(*Robot is KUKA KRC4 Type*)
+		R16: FB_GTAC_Kuka_CUSTOM;		(*Robot is KUKA KRC4 Type*)
+		R17: FB_GTAC_Kuka_CUSTOM;		(*Robot is KUKA KRC4 Type*)
+		R18: FB_GTAC_Kuka_CUSTOM;		(*Robot is KUKA KRC4 Type*)
+		R19: FB_GTAC_Kuka_CUSTOM;		(*Robot is KUKA KRC4 Type*)
+		R20: FB_GTAC_Kuka_CUSTOM;		(*Robot is KUKA KRC4 Type*)
+		R21: FB_GTAC_Kuka_CUSTOM;		(*Robot is KUKA KRC4 Type*)
+		R22: FB_GTAC_Kuka_CUSTOM;		(*Robot is KUKA KRC4 Type*)
+		R23: FB_GTAC_Kuka_CUSTOM;		(*Robot is KUKA KRC4 Type*)
+		R24: FB_GTAC_Kuka_CUSTOM;		(*Robot is KUKA KRC4 Type*)
+		R25: FB_GTAC_Kuka_CUSTOM;		(*Robot is KUKA KRC4 Type*)
+		R26: FB_GTAC_Kuka_CUSTOM;		(*Robot is KUKA KRC4 Type*)
+		R27: FB_GTAC_Kuka_CUSTOM;		(*Robot is KUKA KRC4 Type*)
+		R28: FB_GTAC_Kuka_CUSTOM;		(*Robot is KUKA KRC4 Type*)
+		R29: FB_GTAC_Kuka_CUSTOM;		(*Robot is KUKA KRC4 Type*)
+		R30: FB_GTAC_Kuka_CUSTOM;		(*Robot is KUKA KRC4 Type*)
+
+		
+		
+		
+		SS01: FB_GTAC_SS_20250407;										(*Large Type Services Stand*)
+		SS02: FB_GTAC_SS_20250407;										(*Large Type Services Stand*)
+		SS03: FB_GTAC_SS_20250407;										(*Large Type Services Stand*)
+
+		ESW01: FB_GTAC_ESW_20150814;									(*Enabling Switch Option Plate*)
+		ESW02: FB_GTAC_ESW_20150814;									(*Enabling Switch Option Plate*)
+		ESW03: FB_GTAC_ESW_20150814;									(*Enabling Switch Option Plate*)
+		ESW04: FB_GTAC_ESW_20150814;									(*Enabling Switch Option Plate*)
+
+		ST01: FB_Emhart_20200113;										(*Stud Contoller*)
+		ST02: FB_Emhart_20200113;										(*Stud Contoller*)
+		ST03: FB_Emhart_20200113;										(*Stud Contoller*)
+		ST04: FB_Emhart_20200113;										(*Stud Contoller*)
+		ST05: FB_Emhart_20200113;										(*Stud Contoller*)
+
+		SL01: FB_Graco_Seal_20200716;								(*Sealant Controller*)
+		SL02: FB_Graco_Seal_20200716;								(*Sealant Controller*)
+		SL03: FB_Graco_Seal_20200716;								(*Sealant Controller*)
+		SL04: FB_Graco_Seal_20200716;								(*Sealant Controller*)
+
+		NutWeld_LVDT: ARRAY [0..5] OF FB_GTAC_NutWeldLVDT_20250612;		(*Nut Weld Based LVDT Systems*)
+		
+				SIC01: FB_SIC_MarkProfi_20200727;
+		SIC02: FB_SIC_MarkProfi_20200727;
+
+		Laser01: FB_Trumpf_20180125;								(*Laser Controller*)
+
+		RollDoor01: FB_GTAC_RollDoor_20190108;						(*Roll Up Door - Old Style*)
+		MD01: FB_GTAC_MDxx_20251008;								(*Motorized Roll Up Door - New Style*)
+		MD02: FB_GTAC_MDxx_20251008;								(*Motorized Roll Up Door - New Style*)
+		MD03: FB_GTAC_MDxx_20251008;								(*Motorized Roll Up Door - New Style*)
+		MD04: FB_GTAC_MDxx_20251008;								(*Motorized Roll Up Door - New Style*)
+		MD05: FB_GTAC_MDxx_20251008;								(*Motorized Roll Up Door - New Style*)
+
+		Conveyor01: FB_GTAC_Conveyor_20210303;						(*Conveyor*)
+		VFD01: FB_SCHNEIDERVFD_20180808;							(*Stand alone VFD*)
+		VFD02: FB_SCHNEIDERVFD_20180808;							(*Stand alone VFD*)
+		VFD03: FB_SCHNEIDERVFD_20180808;							(*Stand alone VFD*)
+		VFD04: FB_SCHNEIDERVFD_20180808;							(*Stand alone VFD*)
+		VFD05: FB_SCHNEIDERVFD_20180808;							(*Stand alone VFD*)
+		
+		(*FB Ok Status Bits*)
+		IC01_FBOK: BOOL;
+		IC02_FBOK: BOOL;
+		IC03_FBOK: BOOL;
+		IC04_FBOK: BOOL;
+		IC05_FBOK: BOOL;
+		IC06_FBOK: BOOL;
+		IC07_FBOK: BOOL;
+		IC08_FBOK: BOOL;
+
+		R1_FBOK: BOOL;
+		R2_FBOK: BOOL;
+		R3_FBOK: BOOL;
+		R4_FBOK: BOOL;
+		R5_FBOK: BOOL;
+		R6_FBOK: BOOL;
+		R7_FBOK: BOOL;
+		R8_FBOK: BOOL;
+		R9_FBOK: BOOL;
+		R10_FBOK: BOOL;
+		R11_FBOK: BOOL;
+		R12_FBOK: BOOL;
+		R13_FBOK: BOOL;
+		R14_FBOK: BOOL;
+		R15_FBOK: BOOL;
+		R16_FBOK: BOOL;
+		R17_FBOK: BOOL;
+		R18_FBOK: BOOL;
+		R19_FBOK: BOOL;
+		R20_FBOK: BOOL;
+		R21_FBOK: BOOL;
+		R22_FBOK: BOOL;
+		R23_FBOK: BOOL;
+		R24_FBOK: BOOL;
+		R25_FBOK: BOOL;
+		R26_FBOK: BOOL;
+		R27_FBOK: BOOL;
+		R28_FBOK: BOOL;
+		R29_FBOK: BOOL;
+		R30_FBOK: BOOL;
+
+		(*Ped Stations*)
+		Ped: ARRAY [0..30] OF  FB_GTAC_Ped_20240808;
+ 	
+		(*Rising Edge Triggers*)
+		RPulse: ARRAY [0..31] OF  R_TRIG;
+	
+	
+	(*temp debug bits*)
+	debug_test1: BOOL;
+	debug_test2: BOOL;
+	
+	TEST1: BOOL;
+	test2: UINT;
+	
+	VertiGuard_1: FB_VertiGuard_20260310;
+	
+	
+END_VAR
+
+
+(*VAR_INPUT
+	(*OPC / Simulation Vars*)
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_StartRobots: BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_StartFix01: BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_StartFix02: BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_StartFix03: BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_StartFix04: BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_StartFix05: BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_StartFix06: BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_StartFix07: BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_StartFix08: BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_StartFix09: BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_StartFix10: BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_StartFix11: BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_StartFix12: BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_StartFix13: BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_StartFix14: BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_StartFix15: BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_StartFix16: BOOL;
+
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_StartFix101: BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_StartFix102: BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_StartFix103: BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_StartFix104: BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_StartFix105: BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_StartFix106: BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_StartFix107: BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_StartFix108: BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_StartFix109: BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_StartFix110: BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_StartFix111: BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_StartFix112: BOOL;
+
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_GeneralInputs: ARRAY[0..31] OF BOOL;
+	
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_TT01_Position_Index: ARRAY[0..1] OF BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_TT02_Position_Index: ARRAY[0..1] OF BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_TT03_Position_Index: ARRAY[0..1] OF BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_TT04_Position_Index: ARRAY[0..1] OF BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_TT05_Position_Index: ARRAY[0..1] OF BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_TT06_Position_Index: ARRAY[0..1] OF BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_TT07_Position_Index: ARRAY[0..1] OF BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_TT08_Position_Index: ARRAY[0..1] OF BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_TT09_Position_Index: ARRAY[0..1] OF BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_TT10_Position_Index: ARRAY[0..1] OF BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_FixXx_LoadParts: ARRAY[0..112] OF ARRAY[0..15] OF BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_FixXx_OpPower: ARRAY[0..112] OF BOOL;
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_FixNumberAndModel: ARRAY[1..112] OF ARRAY[0..15] OF BOOL;
+	(*Used for setting model in above array - See SIM Action under GTAC_CONFIG*)
+	i: INT;
+	j: INT;
+	Fix01PrevModelId: INT:= 0; 
+	Fix02PrevModelId: INT:= 0; 
+	Fix03PrevModelId: INT:= 0; 
+	Fix04PrevModelId: INT:= 0; 
+	{attribute 'OPC.UA.DA':='1'}
+	SIM_WorkAround_FixXx_HandClamp: ARRAY[0..112] OF BOOL;
+
+	(*Added Custom for this machine for R04 Linear Rail animation, blt (Will's code*)
+	SIM_ExternalAxis_Control: INT;
+
+END_VAR*)
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Develop 5.0ms Pulse for Reseting System During Boot-Up*)
+	Starting_Scan_PulseTMR.PT:= T#5MS;
+	Starting_Scan_PulseTMR.IN:= TRUE;
+	Starting_Scan_PulseTMR();
+	Starting_Scan_Pulse:= NOT Starting_Scan_PulseTMR.Q;
+
+(*Send Mother Board Status, Task Data and Application Data to UI*)
+	Out_To_ICxx.Appdata:= _AppInfo;
+	Out_To_ICxx.TaskData:= _TaskInfo[1];
+	
+	(*Call TC3 required HW diag FB (not previouslly required in TC2)*)
+	HardwareStat();
+	Out_To_ICxx.MboardData:= HardwareStat.HardwareDiag;		
+
+	
+(*EtherCAT Master*)
+	(*Inputs*)
+	ECAT_Master.Blank_Config_Trigger:= Starting_Scan_Pulse;	 																(*Upon first start, blank config array*)
+	ECAT_Master.Read_Config_Trigger:= NOT Starting_Scan_Pulse AND Pulse_CoERead AND NOT Out_To_ICxx.ControlPower1_OK;		(*When machine is past first scan, read config (except if runnng)*)
+	ECAT_Master.Read_States_Trigger:= NOT Starting_Scan_Pulse AND Pulse_1S;
+	ECAT_Master.Machine_Running:= Out_To_ICxx.ControlPower1_OK;									(*Stop Config Reads when Machne is ready to run*)
+		(*Overrides may be placed immediatly after components automatically found in EtherCAT configuration
+		the overrides are used to force display of Components created manually in the UIs but are not part of the standard set
+		of components coded in the EtherCAT Master FB*)
+		ECAT_Master.ComponentConfig_Overrides[41]:='SL01';
+		ECAT_Master.ComponentConfig_Overrides[42]:='SL02';
+		ECAT_Master.ComponentConfig_Overrides[43]:='SL03';
+		ECAT_Master.ComponentConfig_Overrides[44]:='SL04';
+		ECAT_Master.ComponentConfig_Overrides[45]:='LSR01';		
+		ECAT_Master.ComponentConfig_Overrides[46]:='LSR02';		
+	(*Actual Call*)
+	ECAT_Master();
+	(*Outputs*)
+	(*Send Ecat Master Status to UIs*)
+	Out_To_ICxx.EtherCat_Master_Image:= ECAT_Master.Discrete_Image;
+
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ The Main Progam $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+(*--------------------------------------------------------------------------------------- GTAC CONFIG -----------------------------------------------------------------------------------------------*)
+	(*Run the Config to retreive Data for Code Re-action*)
+	GTAC_CONFIG();
+
+		Out_To_ICxx.Machine_Serial:= GTAC_CONFIG.Machine_Serial;
+		Out_To_ICxx.Machine_Common_Name:= GTAC_CONFIG.Machine_Common_Name;
+		Out_To_ICxx.Machine_Build_Used:= GTAC_Config.Machine_Build_Used;
+		Out_To_ICxx.Machine_Appl_Dev:= GTAC_Config.Machine_Appl_Dev;
+		(*Production Related Configuration Data to UI*)
+		Out_To_ICxx.ProdConfig_Target_CycleTime:= GTAC_CONFIG.ProdConfig_Target_CycleTime;
+		Out_To_ICxx.ProdConfig_Common:= GTAC_CONFIG.ProdConfig_Common;
+		Out_To_ICxx.ProdConfig_Day:= FUN_GTAC_TODtoUDINT(GTAC_CONFIG.ProdConfig_Day);
+		Out_To_ICxx.ProdConfig_Aft:= FUN_GTAC_TODtoUDINT(GTAC_CONFIG.ProdConfig_Aft);
+		Out_To_ICxx.ProdConfig_Mid:= FUN_GTAC_TODtoUDINT(GTAC_CONFIG.ProdConfig_Mid);
+		(*Machine Related Configuration Data to UI*)
+		Out_To_ICxx.Option_Air1:= GTAC_CONFIG.Option_Air1;
+		Out_To_ICxx.Option_Air2:= GTAC_CONFIG.Option_Air2;
+		Out_To_ICxx.Option_Water1:= GTAC_CONFIG.Option_Water1;
+		Out_To_ICxx.Option_Water2:= GTAC_CONFIG.Option_Water2;
+		Out_To_ICxx.Option_WaterTimeOut_Enable:= GTAC_CONFIG.Option_WaterTimeOut_Enable;
+		Out_To_ICxx.Option_WaterFlowTimeOut_SP:= GTAC_CONFIG.Option_WaterFlowTimeOut_SP;
+		Out_To_ICxx.Option_WaterTempHighLimit1:= GTAC_CONFIG.Option_WaterTempHighLimit1;
+		Out_To_ICxx.Option_WaterTempHighLimit2:= GTAC_CONFIG.Option_WaterTempHighLimit2;
+		Out_To_ICxx.Option_WaterFlowLowLimit1:= GTAC_CONFIG.Option_WaterFlowLowLimit1;
+		Out_To_ICxx.Option_WaterFlowLowLimit2:= GTAC_CONFIG.Option_WaterFlowLowLimit2;
+		Out_To_ICxx.Option_ESW_Count:= GTAC_CONFIG.Option_ESW_Count;
+		Out_To_ICxx.Option_MD_Count:= GTAC_CONFIG.Option_MD_Count;
+		Out_To_ICxx.Option_IS_Count:= GTAC_CONFIG.Option_IS_Count;
+		Out_To_ICxx.Option_IC_Count:= GTAC_CONFIG.Option_IC_Count;
+		Out_To_ICxx.Option_HumanFix_Enables:= GTAC_CONFIG.Option_HumanFix_Enables;
+		Out_To_ICxx.Option_InternalFix_Count:= GTAC_CONFIG.Option_InternalFix_Count;
+		Out_To_ICxx.Option_Robot_Count:= GTAC_CONFIG.Option_Robot_Count;
+		Out_To_ICxx.Option_Ped_Count:= GTAC_CONFIG.Option_Ped_Count;
+		Out_To_ICxx.Option_SealController_Count:= GTAC_CONFIG.Option_SealController_Count;
+		Out_To_ICxx.Option_StudController_Count:= GTAC_CONFIG.Option_StudController_Count;
+		Out_To_ICxx.Option_NutWelder_Count:= GTAC_CONFIG.Option_NutWelder_Count;
+		Out_To_ICxx.Option_SD_Count:= GTAC_CONFIG.Option_SD_Count;
+		Out_To_ICxx.Option_VFD_Count:= GTAC_CONFIG.Option_VFD_Count;
+		Out_To_ICxx.Config_Fault:= GTAC_CONFIG.Fault;
+
+		(*Various Development States to UI*)
+		Out_To_ICxx.InDryCycle:= GTAC_CONFIG.Dry_Cycle_Enabled;
+		IF NOT GTAC_CONFIG.Dry_Cycle_Enabled
+			THEN
+			Out_To_ICxx.In_Local_DryCycle:= GTAC_CONFIG.Local_DryCycle_Enables;
+		ELSIF GTAC_CONFIG.Dry_Cycle_Enabled
+			THEN
+			Out_To_ICxx.In_Local_DryCycle:= 131070;		(*Set Bits .1 through .16 high to annunciate dry cycle on those tools*)
+		END_IF;
+
+		Out_To_ICxx.In_Low_Speed:=GTAC_CONFIG.Low_Speed_Enabled;
+		Out_To_ICxx.Under_Construction:= GTAC_CONFIG.Under_Construction;
+		Out_To_ICxx.In_Sim_Mode:= GTAC_CONFIG.In_SIM_Mode;
+		Out_To_ICxx.CycleHold_OK:=  In_From_ICxx.Cycle_Hold;
+
+		(*This Overrides the T1 zone disable so robot programmers can verify the monitoring space dimensions*)
+		Safety_Zone_Test:= In_From_ICxx.T1_Zone_Test;
+		Out_To_ICxx.T1_Zone_Test_ACK:= Safety_Zone_Test;
+
+(*----------------------------------------------------------------------------- Main Status Of Machine Control Power-------------------------------------------------------------------------*)
+	(*Estops*)
+	Out_To_ICxx.Estops_OK:= All_Estops_OK; (*All_Estops_OK is a linked var in System Manager and is to be linked to Output of TwinSAFE FB in IC01 Called "Gather All Estops" (FB20)*)
+
+	(*!!!All_EstopRLYs_Off is left to configure at Application Deployment time and not auto configured by GTAC Options!!!*)
+	All_EstopRLYs_Off:=
+						IS01.Estop_Relays_Off AND
+						SS01.Valves_Off AND
+						R1.Estop_Relays_Off AND R2.Estop_Relays_Off AND
+						R3.Estop_Relays_Off AND R4.Estop_Relays_Off AND
+						R5.Estop_Relays_Off AND R6.Estop_Relays_Off AND
+						R7.Estop_Relays_Off AND R8.Estop_Relays_Off AND
+						R9.Estop_Relays_Off AND R10.Estop_Relays_Off AND
+						R11.Estop_Relays_Off;
+
+
+	(*Safety Gates*)
+	IC01.FB_In.Output_Req1:= In_From_ICxx.LockSGK1;
+	Out_To_ICxx.Safety_Gates_OK:= All_SafetyGates_OK; (*All_SafetyGates_OK is a linked var in System Manager and is to be linked to Output of TwinSAFE FB in IC01 Called "Gather All Gates (FB35)*)
+
+	(*OverAll Control Power Status*)
+	Control_Power_ON:= All_Estops_Ok AND All_SafetyGates_OK AND
+						((IS01.Estop_Relays_On AND IS01.Gate_Relays_On) OR GTAC_CONFIG.Option_IS_Count<1);
+
+	Out_To_ICxx.ControlPower1_OK:= Control_Power_ON;
+
+(*------------------------------------------------------------------------ Develop Safety Reset ---------------------------------------------------------------------------------------------------*)
+
+	IF All_Estops_OK
+		THEN
+			SAFETY_RESET:= In_From_ICxx.ControlPower1;
+	ELSIF NOT All_Estops_Ok AND All_EstopRLYs_Off
+		THEN
+			SAFETY_RESET:= In_From_ICxx.ControlPower1;                               (*Ensure no Estop Relays Are Stuck In On Position*)
+	END_IF (*NOTE*)
+
+(*!!!!!!!!!! use this to do the first reset !!!!!!!!!!!!!!!!!!*)
+	SAFETY_RESET;
+
+(*
+NOTE - You should note that this is the one and only location that the semi colon is NOT used to close a conditional block of code.
+That should lead you to note that the TCAT compiler will accept both cases (with and without semi colon closure).
+So, which is more correct? There are two frames of thought:
+	1. The semi is used to close every other piece of code outside of conditional statement blocks, therefore, for consistency, the semi is correct.
+		Also, most documents pertaining to ST show the semi in place, offering more validity to the consistency argument.
+		The semi was also required in legacy compilers such as Turbo Pascal, so the semi at the end of conditional code blocks also has historical value. 
+	2. Syntactically, the semi is not required by the compiler. A semi found in this position by the compiler results in no actual CPU instruction generation so it's simply
+		one more line the compiler must scan and "throw away".  So if we don't want to use it from a syntax perspective, then we should not be using it on any closure of a conditional
+		block of code for consistency sake. However, please keep in mind that a semi not found in other places will be considered an error.
+		So, if consistency is to be our driving force then, from a global syntax point of view, a semi is more valid as all other lines of code require semi closure (IE digression to point 1).
+		So the only reason left is to avoid extra compiler load, which does hold some value. 
+		However, I timed the compiler both with and without the semi and found no real difference (accurate to maybe +- 1  sec).
+
+In this case both answers have some merit in "correctness". 
+However I believe the argument clearly favors the points brought up in frame of thought 1.
+The real value of this note is to spark an idea of digging deeper to find out the truth behind things and always ask "WHY".
+Kudos to anyone who actually noticed the "semi colon paradox"
+*)
+
+
+	
+(*------------------------------------------------------------------------- General Status Of Robots Within Machine -----------------------------------------------------------------------*)
+	All_RobotsReady_Running:= (R1.Ready AND R1.Operating AND NOT R1.Faulted) AND
+								(R2.Ready AND R2.Operating AND NOT R2.Faulted) AND
+								(R3.Ready AND R3.Operating AND NOT R3.Faulted) AND
+								(R4.Ready AND R4.Operating AND NOT R4.Faulted) AND
+								(R5.Ready AND R5.Operating AND NOT R5.Faulted) AND
+								(R6.Ready AND R6.Operating AND NOT R6.Faulted) AND
+								(R7.Ready AND R7.Operating AND NOT R7.Faulted) AND
+								(R8.Ready AND R8.Operating AND NOT R8.Faulted) AND
+								(R9.Ready AND R9.Operating AND NOT R9.Faulted) AND
+								(R10.Ready AND R10.Operating AND NOT R10.Faulted) AND
+								(R11.Ready AND R11.Operating AND NOT R11.Faulted);
+
+
+(*---------------------------------------------------------------------------------- Some General Purpose Code -------------------------------------------------------------------------------*)
+	(*Pulse Generators*)
+		(*1 Second On and Off Time*)
+		Pulse_1S_FB.On_Time:=T#1.0S;
+		Pulse_1S_FB.Off_Time:=T#1.0S;
+		Pulse_1S_FB();
+		Pulse_1S:=Pulse_1S_FB.Wave;
+		(*0.5 Second On and Off Time*)
+		Pulse_500ms_FB.On_Time:=T#500MS;
+		Pulse_500ms_FB.Off_Time:=T#500MS;
+		Pulse_500ms_FB();
+		Pulse_500ms:=Pulse_500ms_FB.Wave;
+		(*Pulse to Set Interval of CoE Reads*)
+		Pulse_CoERead_FB.On_Time:=T#1S;
+		Pulse_CoERead_FB.Off_Time:=T#30S;
+		Pulse_CoERead_FB();
+		Pulse_CoERead:=Pulse_CoERead_FB.Wave;
+
+		(*Status Of PLC Running to UI (User Interface) "PLC Running" Indicator on all UI "IC01 Controls Overview" Screens*)
+		Out_To_ICxx.Spare1:= TRUE;
+
+(*--------------------------------------------------------------------------- Call Programs ---------------------------------------------------------------*)
+(*Get Windows Time From Local Machine for Generating Production Report Frame Work*)
+	Get_LocalMachine_TimeFB.START:= Pulse_500mS;
+	Get_LocalMachine_TimeFB();
+	Local_Time:= Get_LocalMachine_TimeFB.TIMESTR;
+
+(*Call Fault Routine*)
+	Faults();
+	Out_To_ICxx.Faults_OK:= NOT Faults.System_Major_Fault; 					(*Pass Status to UI to drive Fault Warning Icon on General Status Object*)
+	Out_To_ICxx.Overall_Controls_Fault.0:= Faults.General_Controls_Fault; 	(*Pass Status to UI to drive Red Flashing Prompt on Controls Icon*)
+	
+(*Call Robot InterLock_Map*)
+	Robot_InterLock_Map();
+(*Generate Task_ID Record*)
+	Task_ID_Record();
+(*Cell Services (Master Test, Brake Test, Tip Change, Tip Dress)*)
+	(*Input Data*)
+	Cell_Services_Prog.Enable_Motion:= All_Estops_OK;
+	Cell_Services_Prog.Discrete_In.ModelData:= 1; (*Override to have single point selection*)
+	Cell_Services_Prog.Discrete_In.ResetProd:= In_From_ICxx.Reset_ChangeCount;
+	(*Call PROGRAM*)
+	Cell_Services_Prog();
+	(*Output Data*)
+	Out_To_ICxx.MasterTest_Req_OK:= Cell_Services_Prog.Start_All_MTRobots;
+	Out_To_ICxx.BrakeTest_Req_OK:= Cell_Services_Prog.Start_All_BTRobots;
+	Out_To_ICxx.TipChangeReq_OK:= Cell_Services_Prog.Start_All_TCRobots;
+	//Out_To_ICxx.Change_Count:= Cell_Services_Prog.Prod_Count_Out;
+	Out_To_ICxx.Rxx_ReadyFor_TipChange:= Cell_Services_Prog.Rxx_ReadyAt_TipChangePosition;
+Out_To_ICxx.Change_Count.2:= TRUE;
+(* ------------------------------------------------------------------------------------- Ancillary Devices --------------------------------------------------------------------------------------------*)
+(*Ped Stations*)
+	Ped_Stations();
+
+(*Ancillary Equipment such as Stud and Sealant Controllers*)
+	Ancillary_Equipment();
+
+(*Servo Motion Devices*)
+IF GTAC_CONFIG.Option_SD_Count>0
+	THEN
+	Servo_Motion();
+END_IF;
+
+MAIN.VertiGuard_N01.Q.0:= MAIN.VertiGuard_1.GateClose_CMD;
+MAIN.VertiGuard_N01.Q.1:= MAIN.VertiGuard_1.GateOpen_CMD;
+(*-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*)
+(*----------------------------------------------------------------------- Invoke and Call Function Blocks -----------------------------------------------------------*)
+(*-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*)
+
+(*----------------------------------------------------------------------------------------------------------------------------------------*)
+(*Invoke IS FB*)
+(*----------------------------------------------------------------------------------------------------------------------------------------*)
+	(*IPC(IC) Supply Cabinet 01*)
+	(*Input Data*)
+	IS01.FB_In.Safety_RST:= SAFETY_RESET;
+	IS01.FB_In.Enable_Motion:= All_Estops_OK AND All_SafetyGates_OK;
+	IS01.FB_In.CoE_Read_Trigger:= (GTAC_CONFIG.Option_IC_Count>=1) AND Pulse_CoERead;	(*Global Interval of CoE Reads*)
+	IS01.FB_In.Ecat_Master_AmsNetID:= MAIN.ECAT_Master.AmsID;
+	IS01.FB_In.Prev_EcatNode_Present:= NOT ESW02.EP1908_NotPresent; 					(*Ensure Previous Node Exists to determine Ecat Cable Break of this Devices Input Cable*)
+	IS01.FB_In.Option_Enable_SplitRelays:= TRUE;									(*Enable Split Relays Option, otherwise only power relays will be expected*)
+	IS01.FB_In.Option_Enable_Pbus:= TRUE;											(*Enable EL6731 in PD if a profibus master is present. if not set to false*)
+	(*Call FUNCTION*)
+	IS01();
+	(*Output Data*)
+	Out_To_ICxx.IS[1].Discrete_Image:= IS01.Discrete_Image;
+	Out_To_ICxx.IS[1].ECAT_Cable_Breaks:= IS01.EcatSlave_Cable_Breaks;
+	
+		
+
+(*----------------------------------------------------------------------------------------------------------------------------------------*)
+(*Invoke Large Type Services Stand (Pnuematic I/O)*)
+(*----------------------------------------------------------------------------------------------------------------------------------------*)
+	(*Input Data*)
+	SS01.Prev_EcatNode_Present:= NOT IS01.EK1100_NotPresent; (*Ensure Previous Node Exists to determine Ecat Cable Break of this Devices Input Cable*)
+	SS01.Output_Req.0:= All_Estops_OK AND GTAC_CONFIG.Option_Air1; (*air valve 1*)
+	SS01.Output_Req.1:= All_Estops_OK AND GTAC_CONFIG.Option_Air1; (*air valve 2*)
+	SS01.Output_REQ.2:= RollDoor01.DoorClose_CMD;
+	SS01.Output_REQ.3:= RollDoor01.DoorOpen_CMD;
+	SS01.Output_REQ.4:= FALSE;
+	SS01.Output_REQ.5:= FALSE;
+	SS01.Output_REQ.6:= FALSE;
+	SS01.Output_REQ.7:= FALSE;
+	SS01.FB_In.Option_EP9214_Count:= GTAC_CONFIG.Option_EP9214_Count;
+	(*Call Actual Function*)
+	SS01();
+	(*Output Data*)
+	Out_To_ICxx.SS[1].Discrete_Image:= SS01.Discrete_Image;
+	Out_To_ICxx.SS[1].ECAT_Cable_Breaks:= SS01.EcatSlave_Cable_Breaks;
+
+	(*Input Data*)
+	(*SS02.Prev_EcatNode_Present:= NOT SS01.EP1008_NotPresent; (*Ensure Previous Node Exists to determine Ecat Cable Break of this Devices Input Cable*)
+	SS02.Output_Req.0:= All_Estops_OK AND GTAC_CONFIG.Option_Air2; (*air valve 1*)
+	SS02.Output_Req.1:= All_Estops_OK AND GTAC_CONFIG.Option_Air2; (*air valve 2*)
+	SS02.Output_REQ.2:= FALSE;
+	SS02.Output_REQ.3:= FALSE;
+	SS02.Output_REQ.4:= FALSE;
+	SS02.Output_REQ.5:= FALSE;
+	SS02.Output_REQ.6:= FALSE;
+	SS02.Output_REQ.7:= FALSE;
+	(*Call Actual Function*)
+	SS02();
+	(*Output Data*)
+	Out_To_ICxx.SS[2].Discrete_Image:= SS02.Discrete_Image;
+	Out_To_ICxx.SS[2].ECAT_Cable_Breaks:= SS02.EcatSlave_Cable_Breaks;*)
+
+
+(*----------------------------------------------------------------------------------------------------------------------------------------*)
+(* Invoke Enabling Swtich Plates*)
+(*----------------------------------------------------------------------------------------------------------------------------------------*)
+	(*Input Data*)
+	ESW01.Prev_EcatNode_Present:= NOT MAIN.R3.EL6695_PortC_MissingLink; (*Ensure Previous Node Exists to determine Ecat Cable Break of this Devices Input Cable*)
+	(*Call Actual Function*)
+	ESW01();
+	(*Output Data*)
+	Out_To_ICxx.ESW[1].Discrete_Image:= ESW01.Discrete_Image;
+	Out_To_ICxx.ESW[1].ECAT_Cable_Breaks:= ESW01.EcatSlave_Cable_Breaks;
+	
+	(*Input Data*)
+	ESW02.Prev_EcatNode_Present:= NOT MAIN.IC03.EK1100_NotPresent; (*Ensure Previous Node Exists to determine Ecat Cable Break of this Devices Input Cable*)
+	(*Call Actual Function*)
+	ESW02();
+	(*Output Data*)
+	Out_To_ICxx.ESW[2].Discrete_Image:= ESW02.Discrete_Image;
+	Out_To_ICxx.ESW[2].ECAT_Cable_Breaks:= ESW02.EcatSlave_Cable_Breaks;
+
+	(*Input Data*)
+	ESW03.Prev_EcatNode_Present:= NOT MAIN.IC02.EK1100_NotPresent; (*Ensure Previous Node Exists to determine Ecat Cable Break of this Devices Input Cable*)
+	(*Call Actual Function*)
+	ESW03();
+	(*Output Data*)
+	Out_To_ICxx.ESW[3].Discrete_Image:= ESW03.Discrete_Image;
+	Out_To_ICxx.ESW[3].ECAT_Cable_Breaks:= ESW03.EcatSlave_Cable_Breaks;
+
+(*----------------------------------------------------------------------------------------------------------------------------------------*)
+(*Invoke EOAT FBs and Subordinate Fixtures*)
+(*----------------------------------------------------------------------------------------------------------------------------------------*)
+	(*EOATs Action*)
+	EOATs();
+
+(*----------------------------------------------------------------------------------------------------------------------------------------*)
+(*Invoke IC FBs and Subordinate Fixtures*)
+(*----------------------------------------------------------------------------------------------------------------------------------------*)
+	(*ICs Action*)
+	ICs();
+	
+(*----------------------------------------------------------------------------------------------------------------------------------------*)
+(*Invoke Product Tracking Action*)
+(*----------------------------------------------------------------------------------------------------------------------------------------*)
+	(*Product Tracking Action*)
+	Product_Tracking();
+
+(*-------------------------------------------------------------------------------------------------------------------------------------*)
+(*Invoke Robot FBs*)
+(*-------------------------------------------------------------------------------------------------------------------------------------*)
+	(*Robots Action*)
+	Robots();
+
+	
+(*-------------------------------------------------------------------------------------------------------------------------------------*)
+(*-------------------------------------------------------------------------------------------------------------------------------------*)
+(*---------------------------------------------------- End of MAIN---------------------------------------------------------------------*)
+(*-------------------------------------------------------------------------------------------------------------------------------------*)
+(*-------------------------------------------------------------------------------------------------------------------------------------*)
+
+
+
+
+
+
+
+
+
+
+]]></ST>
+    </Implementation>
+    <Action Name="EOATs" Id="{74536ccf-3a76-4949-acf9-11e995ae86cc}">
+      <Implementation>
+        <ST><![CDATA[
+
+
+	(*R04 - EOAT 04*)
+		EOAT04(
+
+			Enable_Motion:= R4.Servos_Are_On,
+			Dry_Cycle:= GTAC_CONFIG.Dry_Cycle_Enabled,
+			Robot_WorkingOK:= ((R4.Task_ID_Ack=PickUP_Fix01) OR (R4.Task_ID_Ack=Work_PED01)) AND R4.Operating,
+
+			(*Set Configuration Data Here*)
+			ID:= 4,							(*Set EOAT ID*)
+			NodeLayout:= Main.ECAT_Master.EOATNodeLayout[4],	(*Pass in Assembled Node layout for UI*)
+			Input_Node_Count:= 5,				(*Set Expected Input Node Count(Current Limit is 9*)
+			VB_Node_Count:= 1,				(*Set Expected Input Node Count(Current Limit is 3*)
+	
+			(*Input Data*)
+			(*Use Command All Sensors if your gripper has common part for the entire gripper.*)
+			(*Use Command Sensors Group1/Group 2 if your gripper has multiple parts for the entire gripper. EX: LH and RH part*)
+			CMD_CheckAllSensors_OFF:= FALSE, 
+			CMD_CheckSensorsOFF_Grp1:= R4.EOAT_Req.0, (*129*) (*Sensors 1-2*)
+			CMD_CheckSensorsOFF_Grp2:= R4.EOAT_Req.2, (*131*) (*Sensors 3-4*)
+			CMD_CheckSensorsOFF_Grp3:= FALSE,
+			CMD_CheckSensorsOFF_Grp4:= FALSE,
+			CMD_CheckSensorsOFF_Grp5:= FALSE,
+
+			CMD_CheckAllSensors_ON:= FALSE,
+			CMD_CheckSensorsON_Grp1:= R4.EOAT_Req.1, (*130*) (*Sensors 1-2*)
+			CMD_CheckSensorsON_Grp2:= R4.EOAT_Req.3, (*132*) (*Sensors 3-4*)
+			CMD_CheckSensorsON_Grp3:= FALSE,
+			CMD_CheckSensorsON_Grp4:= FALSE,
+			CMD_CheckSensorsON_Grp5:= FALSE,
+
+			(*Use Command Tool to Work/HOME if your gripper has common part for the entire gripper.*)
+			(*Use Clamps Groups if your gripper has a LH/RH part for the gripper.*)
+			CMD_Tool_To_WORK:= FALSE,
+			CMD_CylToWORK_Grp1:= R4.EOAT_Req.4, (*133*) (*Clamps 1-4*)
+			CMD_CylToWORK_Grp2:= R4.EOAT_Req.6, (*135*) (*Clamps 5-8*)
+			CMD_CylToWORK_Grp3:= R4.EOAT_Req.8, (*137*) (*Pins 1-2*)
+			CMD_CylToWORK_Grp4:= R4.EOAT_Req.10, (*139*) (*Pins 3-4*)
+			CMD_CylToWORK_Grp5:= FALSE,
+
+			CMD_Tool_To_HOME:= FALSE,
+			CMD_CylToHOME_Grp1:= R4.EOAT_Req.5, (*134*) (*Clamps 1-4*)
+			CMD_CylToHOME_Grp2:= R4.EOAT_Req.7, (*136*) (*Clamps 5-8*)
+			CMD_CylToHOME_Grp3:= R4.EOAT_Req.9, (*138*) (*Pins 1-2*)
+			CMD_CylToHOME_Grp4:= R4.EOAT_Req.11, (*140*) (*Pins 3-4*)
+			CMD_CylToHOME_Grp5:= FALSE
+			);
+		(*Output Data*)
+		Out_To_ICxx.EOAT04_Discrete_Image:= EOAT04.Discrete_Image;
+		Out_To_ICxx.ProductReport[34]:= EOAT04_1_ProductData_Pers; 	(*Transfer Product Data to UI*)
+		Out_To_ICxx.ProductReport[35]:= EOAT04_2_ProductData_Pers; 	(*Transfer Product Data to UI*)
+
+		(*Output Data - Send ACKs bak to Robot*)
+		(*Sensor ACKs*)
+		R4.FB_In.EOATReq_Ack.0:= EOAT04.EOAT_Part1_Empty;	(*129*) //R4.EOAT_Req.0 AND DEBUG - removed to make more automated. delete if tested good
+		R4.FB_In.EOATReq_Ack.1:= EOAT04.Part1_In_EOAT;		(*130*) //R4.EOAT_Req.1 AND DEBUG
+		R4.FB_In.EOATReq_Ack.2:= EOAT04.EOAT_Part2_Empty;	(*131*) //R4.EOAT_Req.2 AND DEBUG 
+		R4.FB_In.EOATReq_Ack.3:= EOAT04.Part2_In_EOAT;		(*132*) //R4.EOAT_Req.3 AND DEBUG
+		
+		(*CLAMP ACKs*)
+		R4.FB_In.EOATReq_Ack.4:= R4.EOAT_Req.4 AND EOAT04.ACK_CylAtWORK_Grp1;	(*133*)
+		R4.FB_In.EOATReq_Ack.5:= R4.EOAT_Req.5 AND EOAT04.ACK_CylAtHOME_Grp1;	(*134*)		
+		R4.FB_In.EOATReq_Ack.6:= R4.EOAT_Req.6 AND EOAT04.ACK_CylAtWORK_Grp2;	(*135*)
+		R4.FB_In.EOATReq_Ack.7:= R4.EOAT_Req.7 AND EOAT04.ACK_CylAtHOME_Grp2;	(*136*)
+		
+		(*Pin ACKs*)
+		R4.FB_In.EOATReq_Ack.8:= R4.EOAT_Req.8 AND EOAT04.ACK_CylAtWORK_Grp3;	(*137*)
+		R4.FB_In.EOATReq_Ack.9:= R4.EOAT_Req.9 AND EOAT04.ACK_CylAtHOME_Grp3;	(*138*)		
+		R4.FB_In.EOATReq_Ack.10:= R4.EOAT_Req.10 AND EOAT04.ACK_CylAtWORK_Grp4;	(*139*)
+		R4.FB_In.EOATReq_Ack.11:= R4.EOAT_Req.11 AND EOAT04.ACK_CylAtHOME_Grp4;	(*140*)
+
+	(*Additional EOAT can be added here. Up to 30*)
+	(*Please update the faults if you add additional EOAT*)
+
+
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="ICs" Id="{deccbd85-5f42-4b64-8e81-375e56a63756}">
+      <Implementation>
+        <ST><![CDATA[
+
+
+	(*Industrial Controller 01*)
+	(*Input Data*)
+	IC01.FB_In.Safety_RST:=SAFETY_RESET;
+	IC01.FB_In.Enable_Motion:= All_Estops_OK AND All_SafetyGates_OK;
+	IC01.FB_In.Estops_OK:= All_Estops_OK;
+	IC01.FB_In.Safety_Gates_Ok:= All_SafetyGates_OK;
+	IC01.FB_In.CoE_Read_Trigger:= (GTAC_CONFIG.Option_IC_Count>=1) AND Pulse_CoERead;	(*Global Interval of CoE Reads*)
+	IC01.FB_In.Ecat_Master_AmsNetID:= MAIN.ECAT_Master.AmsID;
+	IC01.FB_In.Prev_EcatNode_Present:= TRUE; 												(*Ensure Previous Node Exists to determine Ecat Cable Break of this Devices Input Cable*)
+	IC01.FB_In.Output_Req1:= In_From_ICxx.LockSGK1;
+	IC01.Turntable_Type:= TRUE;	(*Debug - Set to true if using a turntable. this will change the status light based on table position. set to false if no turntable.*)
+	IC01.Op1_At_Operator:= Fix01.TurntableB_At_Robot OR (MAIN.R1.Task_ID_Ack=Sweep_Fix01) OR (MAIN.R2.Task_ID_Ack=Sweep_Fix01) OR (MAIN.R1.Task_ID_Ack=Sweep_Fix02) OR (MAIN.R2.Task_ID_Ack=Sweep_Fix02);
+	IC01.Op2_At_Operator:= Fix01.TurntableA_At_Robot OR (MAIN.R1.Task_ID_Ack=Sweep_Fix01) OR (MAIN.R2.Task_ID_Ack=Sweep_Fix01) OR (MAIN.R1.Task_ID_Ack=Sweep_Fix02) OR (MAIN.R2.Task_ID_Ack=Sweep_Fix02);
+	IC01.FB_In.OP1_Green_LampReq:= Fix01.Ready_To_Load;
+	IC01.FB_In.OP2_Green_LampReq:= Fix03.Ready_To_Load;
+	IC01.FB_In.OP1_Yellow_LampReq:= TRUE;
+	IC01.FB_In.OP2_Yellow_LampReq:= TRUE;
+	IC01.FB_In.OP1_Red_LampReq:= Fix01.Red_Lamp_Req OR Faults.System_Major_Fault;
+	IC01.FB_In.OP2_Red_LampReq:= Fix03.Red_Lamp_Req OR Faults.System_Major_Fault;
+	IC01.OP1_LC_Clear:= IC01.OP1_HumanVertLC_Clear AND IC01.OP1_HumanHorizLC_Clear AND IC01.OP1_RobotVertLC_Clear AND IC01.OP2_HumanVertLC_Clear AND IC01.OP2_HumanHorizLC_Clear;
+	IC01.OP2_LC_Clear:= IC01.OP1_HumanVertLC_Clear AND IC01.OP1_HumanHorizLC_Clear AND IC01.OP1_RobotVertLC_Clear AND IC01.OP2_HumanVertLC_Clear AND IC01.OP2_HumanHorizLC_Clear;
+	(*Call FUNCTION*)
+	IC01();
+	(*Output IC Data to All ICs*)
+	Out_To_ICxx.IC[1].Discrete_Image:= IC01.Discrete_Image;
+	Out_To_ICxx.IC[1].ECAT_Cable_Breaks:= IC01.ECatSlave_Cable_Breaks;
+	Out_To_ICxx.IC01OP1_LCHVR:= IC01.OP1_HumanVertLC_Clear;
+	Out_To_ICxx.IC01OP1_LCHHR:= IC01.OP1_HumanHorizLC_Clear;
+	Out_To_ICxx.IC01OP1_LCRVR:= IC01.OP1_RobotVertLC_Clear; (*DEBUG - ADD OR REMOVE TO OTHER LIGHT CURTAINS. BYPASSES INDICATOR ON UI*)
+	Out_To_ICxx.IC01OP2_LCHVR:= IC01.OP2_HumanVertLC_Clear;
+	Out_To_ICxx.IC01OP2_LCHHR:= IC01.OP2_HumanHorizLC_Clear;
+	Out_To_ICxx.IC01OP2_LCRVR:= IC01.OP2_RobotVertLC_Clear;
+	
+		(*OP1*)
+			(*Fixture 01*)
+			(*Input Data*)
+			Fix01.Enable_Motion:= IC01.OP1_Enable_Motion;
+			Fix01.Discrete_In:= In_From_ICxx.Fix01_Discrete_In;
+			Fix01.Discrete_In.ModelData:= In_From_ICxx.Fix01_Discrete_In.ModelData;
+			Fix01.NodeLayout:= Main.ECAT_Master.FixNodeLayout[1];				(*Pass in Assembled Node layout for UI*)
+			Fix01.Discrete_In.Input_Node_Count:= 29;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix01.Discrete_In.VB_Node_Count:= 2;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix01.Discrete_In.Output_Node_Count:= 0;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix01.Discrete_In.Water_Stand_Count:= 0;							(*Overridden for now, later version will map from UI read config sheet*)
+			Fix01.Dry_Cycle:= GTAC_CONFIG.Dry_Cycle_Enabled OR GTAC_CONFIG.Local_DryCycle_Enables.1;
+			Fix01.Cell_In_Services:= Cell_Services_Prog.Service_Call_ForAllRobots OR In_From_ICxx.Cycle_Hold;
+			Fix01.Flash_Rate:= Pulse_1S;
+
+			(*Call FUNCTION*)
+			Fix01();
+			(*Output Data*)
+			Out_To_ICxx.Fix01_Discrete_Image:= Fix01.Discrete_Image;
+
+		
+			(*Fixture 02*)
+			(*Input Data*)
+			Fix02.Enable_Motion:= IC01.OP2_Enable_Motion;
+			Fix02.Discrete_In:= In_From_ICxx.Fix02_Discrete_In;
+			Fix02.Discrete_In.ModelData:= In_From_ICxx.Fix02_Discrete_In.ModelData;
+			Fix02.NodeLayout:= Main.ECAT_Master.FixNodeLayout[2];				(*Pass in Assembled Node layout for UI*)
+			Fix02.Discrete_In.Input_Node_Count:= 29;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix02.Discrete_In.VB_Node_Count:= 2;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix02.Discrete_In.Output_Node_Count:= 0;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix02.Discrete_In.Water_Stand_Count:= 0;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix02.Dry_Cycle:= GTAC_CONFIG.Dry_Cycle_Enabled OR GTAC_CONFIG.Local_DryCycle_Enables.2;
+			Fix02.Cell_In_Services:= Cell_Services_Prog.Service_Call_ForAllRobots OR In_From_ICxx.Cycle_Hold;
+			Fix02.Flash_Rate:= Pulse_1S;
+			(*Call FUNCTION*)
+			Fix02();
+			(*Output Data*)
+			Out_To_ICxx.Fix02_Discrete_Image:= Fix02.Discrete_Image;
+
+	(*Industrial Controller 02*)
+	(*Input Data*)
+	IC02.FB_In.Safety_RST:=SAFETY_RESET;
+	IC02.FB_In.Enable_Motion:= All_Estops_OK AND All_SafetyGates_OK;
+	IC02.FB_In.Estops_OK:= All_Estops_OK;
+	IC02.FB_In.Safety_Gates_Ok:= All_SafetyGates_OK;
+	IC02.FB_In.CoE_Read_Trigger:= (GTAC_CONFIG.Option_IC_Count>=2) AND Pulse_CoERead;	(*Global Interval of CoE Reads*)
+	IC02.FB_In.Ecat_Master_AmsNetID:= MAIN.ECAT_Master.AmsID;
+	IC02.FB_In.Prev_EcatNode_Present:= NOT MAIN.MD02.EP2624_PortB_MissingLink ; 						(*Ensure Previous Node Exists to determine Ecat Cable Break of this Devices Input Cable*)
+	IC02.FB_In.Output_Req1:= In_From_ICxx.LockSGK1 OR In_From_ICxx.LockSGK2;
+	IC02.Turntable_Type:= TRUE;	(*Debug - Set to true if using a turntable. this will change the status light based on table position. set to false if no turntable.*)
+	IC02.Op1_At_Operator:= Fix03.TurntableB_At_Robot OR (MAIN.R3.Task_ID_Ack=Sweep_Fix03) OR (MAIN.R4.Task_ID_Ack=Sweep_Fix03) OR (MAIN.R3.Task_ID_Ack=Sweep_Fix04) OR (MAIN.R4.Task_ID_Ack=Sweep_Fix04); (*debug - change robot*)
+	IC02.Op2_At_Operator:= Fix03.TurntableA_At_Robot OR (MAIN.R3.Task_ID_Ack=Sweep_Fix03) OR (MAIN.R4.Task_ID_Ack=Sweep_Fix03) OR (MAIN.R3.Task_ID_Ack=Sweep_Fix04) OR (MAIN.R4.Task_ID_Ack=Sweep_Fix04); (*debug - change robot*)
+	IC02.FB_In.OP1_Green_LampReq:= Fix03.Ready_To_Load;
+	IC02.FB_In.OP2_Green_LampReq:= Fix04.Ready_To_Load;
+	IC02.FB_In.OP1_Yellow_LampReq:= TRUE;
+	IC02.FB_In.OP2_Yellow_LampReq:= TRUE;
+	IC02.FB_In.OP1_Red_LampReq:= Fix03.Red_Lamp_Req OR Faults.System_Major_Fault;
+	IC02.FB_In.OP2_Red_LampReq:= Fix04.Red_Lamp_Req OR Faults.System_Major_Fault;
+	IC02.OP1_LC_Clear:= IC02.OP1_HumanVertLC_Clear AND IC02.OP1_HumanHorizLC_Clear AND IC02.OP1_RobotVertLC_Clear AND IC02.OP2_HumanVertLC_Clear AND IC02.OP2_HumanHorizLC_Clear;
+	IC02.OP2_LC_Clear:= IC02.OP1_HumanVertLC_Clear AND IC02.OP1_HumanHorizLC_Clear AND IC02.OP1_RobotVertLC_Clear AND IC02.OP2_HumanVertLC_Clear AND IC02.OP2_HumanHorizLC_Clear;
+	(*Call FUNCTION*)
+	IC02();
+	(*Output IC Data to all ICs*)
+	Out_To_ICxx.IC[2].Discrete_Image:= IC02.Discrete_Image;
+	Out_To_ICxx.IC[2].ECAT_Cable_Breaks:= IC02.ECatSlave_Cable_Breaks;
+	Out_To_ICxx.IC02OP1_LCHVR:= IC02.OP1_HumanVertLC_Clear;
+	Out_To_ICxx.IC02OP1_LCHHR:= IC02.OP1_HumanHorizLC_Clear;
+	Out_To_ICxx.IC02OP1_LCRVR:= IC02.OP1_RobotVertLC_Clear;
+	Out_To_ICxx.IC02OP2_LCHVR:= IC02.OP2_HumanVertLC_Clear;
+	Out_To_ICxx.IC02OP2_LCHHR:= IC02.OP2_HumanHorizLC_Clear;
+	Out_To_ICxx.IC02OP2_LCRVR:= IC02.OP2_RobotVertLC_Clear;
+
+		(*OP1*)
+			(*Fixture 03*)
+			(*Input Data*)
+			Fix03.Enable_Motion:= IC02.OP1_Enable_Motion;
+			Fix03.Discrete_In:= In_From_ICxx.Fix03_Discrete_In;
+			(*Perform Look ahead for Model data depending on line loading*)
+			
+				(*Valid part For this Fix in EOAT04_1, so use EOAT_1 model*)
+				IF ((EOAT04.Part1_In_EOAT AND NOT Fix03.Load_Complete) OR Fix03.Repo_REQS.0) AND Fix03.Part_InEOAT04_1_ReadyforThisFix 
+					THEN
+					Fix03.Discrete_In.ModelData:= EOAT04_1_ProductData_Pers.Product_Model_ID;
+	
+				(*Valid part For this Fix in EOAT04_2, so use EOAT_2 model*)
+				ELSIF ((EOAT04.Part2_In_EOAT AND NOT Fix03.Load_Complete) OR Fix03.Repo_REQS.0) AND Fix03.Part_InEOAT04_2_ReadyforThisFix
+					THEN
+					Fix03.Discrete_In.ModelData:= EOAT04_2_ProductData_Pers.Product_Model_ID;
+	
+				(*No valid part in EOAT04, but valid part in Fix101, so use Fix101 model*)
+				ELSIF (((NOT Fix03.Load_Complete OR Fix03.Unload_Complete) AND Fix101.Load_Complete) OR (MAIN.R4.Task_ID_Ack = PickUp_Fix101)) AND 
+						NOT Fix03.Part_InEOAT04_1_ReadyforThisFix AND NOT Fix03.Part_InEOAT04_2_ReadyforThisFix AND (MAIN.R4.Task_ID_Ack <> DropOff_Fix03)
+					THEN
+					Fix03.Discrete_In.ModelData:= Fix101_ProductData_Pers.Product_Model_ID;
+	
+				(*No valid part in Fix101 but valid part in EOAT04_1 for Fix101, so use EOAT04_1 model*)
+				ELSIF NOT Fix03.Load_Complete AND NOT Fix101.Load_Complete AND (MAIN.R4.Task_ID_Ack <> PickUp_Fix101) AND Fix101.Part_InEOAT04_1_ReadyforThisFix 
+					THEN
+					Fix03.Discrete_In.ModelData:= EOAT04_1_ProductData_Pers.Product_Model_ID;
+	
+				(*No valid part in Fix101 but valid part in EOAT04_2 for Fix101, so use EOAT04_1 model*)
+				ELSIF NOT Fix03.Load_Complete AND NOT Fix101.Load_Complete AND (MAIN.R4.Task_ID_Ack <> PickUp_Fix101) AND Fix101.Part_InEOAT04_2_ReadyforThisFix 
+					THEN
+					Fix03.Discrete_In.ModelData:= EOAT04_2_ProductData_Pers.Product_Model_ID;
+	
+				(*No valid part in Fix101, no Valid part in EOAT04 but model in Fix01 / 02 AND Fix03 empty*)
+				ELSIF (NOT Fix03.Load_Complete OR Fix03.Unload_Complete) AND NOT Fix101.Load_Complete AND (MAIN.R4.Task_ID_Ack <> PickUp_Fix101) AND 
+							NOT Fix101.Part_InEOAT04_1_ReadyforThisFix AND NOT Fix101.Part_InEOAT04_2_ReadyforThisFix AND 
+							NOT Fix03.Part_InEOAT04_1_ReadyforThisFix AND NOT Fix03.Part_InEOAT04_2_ReadyforThisFix 
+					THEN
+					(*Fix01 Faces Weld Robots*)
+					IF (Out_To_ICxx.TT01_Location_Index = 1) AND NOT Fix01.All_Sensors_Off AND (MAIN.R4.Task_ID_Ack <> DropOff_Fix03)
+						THEN
+						Fix03.Discrete_In.ModelData:= Fix01_ProductData_Pers.Product_Model_ID;
+					(*Fix02 Faces Weld Robots*)	
+					ELSIF (Out_To_ICxx.TT01_Location_Index = 2) AND NOT Fix02.All_Sensors_Off AND (MAIN.R4.Task_ID_Ack <> DropOff_Fix03)
+						THEN	
+						Fix03.Discrete_In.ModelData:= Fix02_ProductData_Pers.Product_Model_ID;
+					ELSIF
+						((Out_To_ICxx.TT01_Location_Index = 1) OR (Out_To_ICxx.TT01_Location_Index = 2)) AND Fix01.All_Sensors_Off AND Fix02.All_Sensors_Off
+						THEN
+						Fix03.Discrete_In.ModelData:= Fix01_ProductData_Pers.Product_Model_ID;
+					END_IF;
+				END_IF;
+(*
+				(*FINALLY, if part has been loaded onto this Fix, so use local model data *)
+				ELSIF   (Fix03.Load_Complete AND (MAIN.R4.Task_ID_Ack <> DropOff_Fix03)) OR Fix03.Repo_REQS.0
+					THEN
+						test1:= TRUE;
+						Fix03.Discrete_In.ModelData:= Fix03_ProductData_Pers.Product_Model_ID;
+				END_IF;  DEBUG - this partially works... not a clue why  - rj*)
+				
+				(*FINALLY, if part has been loaded onto this Fix, so use local model data *)
+				IF   (Fix03.Load_Complete OR Fix03.Repo_REQS.0) AND ((MAIN.R4.Task_ID_Ack <> DropOff_Fix03) OR Fix03.Load_Robots_Complete1)
+					 AND NOT Fix03.Unload_Complete
+					THEN
+						test1:= TRUE;
+						Fix03.Discrete_In.ModelData:= Fix03_ProductData_Pers.Product_Model_ID;
+				END_IF;
+				
+			Fix03.NodeLayout:= Main.ECAT_Master.FixNodeLayout[3];				(*Pass in Assembled Node layout for UI*)
+			Fix03.Discrete_In.Input_Node_Count:= 21;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix03.Discrete_In.VB_Node_Count:= 1;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix03.Discrete_In.Output_Node_Count:= 0;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix03.Discrete_In.Water_Stand_Count:= 0;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix03.Dry_Cycle:= GTAC_CONFIG.Dry_Cycle_Enabled OR GTAC_CONFIG.Local_DryCycle_Enables.3;
+			Fix03.Cell_In_Services:= Cell_Services_Prog.Service_Call_ForAllRobots OR In_From_ICxx.Cycle_Hold;
+			Fix03.Flash_Rate:= Pulse_1S;
+			(*Call FUNCTION*)
+			Fix03();
+			(*Output Data*)
+			Out_To_ICxx.Fix03_Discrete_Image:= Fix03.Discrete_Image;
+
+
+		(*OP2*)
+			(*Fixture 04*)
+			(*Input Data*)
+			Fix04.Enable_Motion:= IC02.OP2_Enable_Motion;
+			Fix04.Discrete_In:= In_From_ICxx.Fix04_Discrete_In;
+			
+				(*Perform Look ahead for Model data depending on line loading*)
+			
+				(*Valid part For this Fix in EOAT04_1, so use EOAT_1 model*)
+				IF ((EOAT04.Part1_In_EOAT AND NOT Fix04.Load_Complete) OR Fix04.Repo_REQS.0) AND Fix04.Part_InEOAT04_1_ReadyforThisFix
+					THEN
+					Fix04.Discrete_In.ModelData:= EOAT04_1_ProductData_Pers.Product_Model_ID;
+	
+				(*Valid part For this Fix in EOAT04_2, so use EOAT_2 model*)
+				ELSIF ((EOAT04.Part2_In_EOAT AND NOT Fix04.Load_Complete) OR Fix04.Repo_REQS.0) AND Fix04.Part_InEOAT04_2_ReadyforThisFix
+					THEN
+					Fix04.Discrete_In.ModelData:= EOAT04_2_ProductData_Pers.Product_Model_ID;
+	
+				(*No valid part in EOAT04, but valid part in Fix101, so use Fix101 model*)
+				ELSIF NOT Fix04.Load_Complete AND Fix101.Load_Complete OR (MAIN.R4.Task_ID_Ack = PickUp_Fix101) AND 
+						NOT Fix04.Part_InEOAT04_1_ReadyforThisFix AND NOT Fix04.Part_InEOAT04_2_ReadyforThisFix
+					THEN
+					Fix04.Discrete_In.ModelData:= Fix101_ProductData_Pers.Product_Model_ID;
+	
+				(*No valid part in Fix101 but valid part in EOAT04_1 for Fix101, so use EOAT04_1 model*)
+				ELSIF NOT Fix04.Load_Complete AND NOT Fix101.Load_Complete AND (MAIN.R4.Task_ID_Ack <> PickUp_Fix101) AND Fix101.Part_InEOAT04_1_ReadyforThisFix
+					THEN
+					Fix04.Discrete_In.ModelData:= EOAT04_1_ProductData_Pers.Product_Model_ID;
+	
+				(*No valid part in Fix101 but valid part in EOAT04_2 for Fix101, so use EOAT04_1 model*)
+				ELSIF NOT Fix04.Load_Complete AND NOT Fix101.Load_Complete AND (MAIN.R4.Task_ID_Ack <> PickUp_Fix101) AND Fix101.Part_InEOAT04_2_ReadyforThisFix
+					THEN
+					Fix04.Discrete_In.ModelData:= EOAT04_2_ProductData_Pers.Product_Model_ID;
+	
+				(*No valid part in Fix101, no Valid part in EOAT04 but model in Fix01 / 02*)
+				ELSIF NOT Fix04.Load_Complete and NOT Fix101.Load_Complete AND (MAIN.R4.Task_ID_Ack <> PickUp_Fix101) AND 
+							NOT Fix101.Part_InEOAT04_1_ReadyforThisFix AND NOT Fix101.Part_InEOAT04_2_ReadyforThisFix AND 
+							NOT Fix04.Part_InEOAT04_1_ReadyforThisFix AND NOT Fix04.Part_InEOAT04_2_ReadyforThisFix
+					THEN
+					(*Fix01 Faces Weld Robots*)
+					IF (Out_To_ICxx.TT01_Location_Index = 1)
+						THEN
+						Fix04.Discrete_In.ModelData:= Fix01_ProductData_Pers.Product_Model_ID;
+					(*Fix02 Faces Weld Robots*)	
+					ELSIF (Out_To_ICxx.TT01_Location_Index = 2)
+						THEN	
+						Fix04.Discrete_In.ModelData:= Fix02_ProductData_Pers.Product_Model_ID;
+					END_IF;
+	
+				(*FINALLY, if part has been loaded onto this Fix, so use local model data*)
+				ELSIF (Fix04.Load_Complete OR Fix04.Repo_REQS.1) AND (MAIN.R4.Task_ID_Ack <> DropOff_Fix04)
+					THEN
+					Fix04.Discrete_In.ModelData:= Fix04_ProductData_Pers.Product_Model_ID;
+				END_IF;
+				
+			Fix04.NodeLayout:= Main.ECAT_Master.FixNodeLayout[4];				(*Pass in Assembled Node layout for UI*)
+			Fix04.Discrete_In.Input_Node_Count:= 22;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix04.Discrete_In.VB_Node_Count:= 1;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix04.Discrete_In.Output_Node_Count:= 0;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix04.Discrete_In.Water_Stand_Count:= 0;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix04.Dry_Cycle:= GTAC_CONFIG.Dry_Cycle_Enabled OR GTAC_CONFIG.Local_DryCycle_Enables.4;
+			Fix04.Cell_In_Services:= Cell_Services_Prog.Service_Call_ForAllRobots OR In_From_ICxx.Cycle_Hold;
+			Fix04.Flash_Rate:= Pulse_1S;
+			(*Call FUNCTION*)
+			Fix04();
+			(*Output Data*)
+			Out_To_ICxx.Fix04_Discrete_Image:= Fix04.Discrete_Image;
+
+	(*Industrial Controller 03*)
+	(*Input Data*)
+	IC03.FB_In.Safety_RST:=SAFETY_RESET;
+	IC03.FB_In.Enable_Motion:= All_Estops_OK AND All_SafetyGates_OK;
+	IC03.FB_In.Estops_OK:= All_Estops_OK;
+	IC03.FB_In.Safety_Gates_Ok:= All_SafetyGates_OK;
+	IC03.FB_In.CoE_Read_Trigger:= (GTAC_CONFIG.Option_IC_Count>=3) AND Pulse_CoERead;	(*Global Interval of CoE Reads*)
+	IC03.FB_In.Ecat_Master_AmsNetID:= MAIN.ECAT_Master.AmsID;
+	IC03.FB_In.Prev_EcatNode_Present:= NOT MAIN.R11.EL6695_PortC_MissingLink; 						(*Ensure Previous Node Exists to determine Ecat Cable Break of this Devices Input Cable*)
+	IC03.FB_In.Output_Req1:= In_From_ICxx.LockSGK1;
+	IC03.Turntable_Type:= FALSE;	(*Debug - Set to true if using a turntable. this will change the status light based on table position. set to false if no turntable.*)
+	IC03.Op1_At_Operator:= Fix05.TurntableB_At_Robot OR (MAIN.R1.Task_ID_Ack=Sweep_Fix05) OR (MAIN.R2.Task_ID_Ack=Sweep_Fix05); (*debug - change robot*)
+	IC03.Op2_At_Operator:= Fix05.TurntableA_At_Robot OR (MAIN.R1.Task_ID_Ack=Sweep_Fix05) OR (MAIN.R2.Task_ID_Ack=Sweep_Fix05); (*debug - change robot*)
+	IC03.FB_In.OP1_Green_LampReq:= Fix05.Ready_To_Load;
+	IC03.FB_In.OP2_Green_LampReq:= Fix05.Ready_To_Load;
+	IC03.FB_In.OP1_Yellow_LampReq:= TRUE;
+	IC03.FB_In.OP2_Yellow_LampReq:= TRUE;
+	IC03.FB_In.OP1_Red_LampReq:= Fix05.Red_Lamp_Req OR Faults.System_Major_Fault;
+	IC03.FB_In.OP2_Red_LampReq:= Fix06.Red_Lamp_Req OR Faults.System_Major_Fault;
+	IC03.OP1_LC_Clear:= IC03.OP1_HumanVertLC_Clear AND IC03.OP1_HumanHorizLC_Clear (*AND IC03.OP1_RobotVertLC_Clear*);
+	IC03.OP2_LC_Clear:= IC03.OP1_HumanVertLC_Clear AND IC03.OP1_HumanHorizLC_Clear (*IC03.OP2_HumanVertLC_Clear AND IC03.OP2_HumanHorizLC_Clear AND IC03.OP2_RobotVertLC_Clear*);
+	(*Call FUNCTION*)
+	IC03();
+	(*Output IC Data to all ICs*)
+	Out_To_ICxx.IC[3].Discrete_Image:= IC03.Discrete_Image;
+	Out_To_ICxx.IC[3].ECAT_Cable_Breaks:= IC03.ECatSlave_Cable_Breaks;
+	Out_To_ICxx.IC03OP1_LCHVR:= IC03.OP1_HumanVertLC_Clear;
+	Out_To_ICxx.IC03OP1_LCHHR:= IC03.OP1_HumanHorizLC_Clear;
+	Out_To_ICxx.IC03OP1_LCRVR:= IC03.OP1_RobotVertLC_Clear;
+	Out_To_ICxx.IC03OP2_LCHVR:= IC03.OP2_HumanVertLC_Clear;
+	Out_To_ICxx.IC03OP2_LCHHR:= IC03.OP2_HumanHorizLC_Clear;
+	Out_To_ICxx.IC03OP2_LCRVR:= IC03.OP2_RobotVertLC_Clear;
+
+		(*OP1*)
+			(*Fixture 05*)
+			(*Input Data*)
+			Fix05.Enable_Motion:= IC03.OP1_Enable_Motion;
+			Fix05.Discrete_In:= In_From_ICxx.Fix05_Discrete_In;
+			Fix05.Discrete_In.ModelData:= In_From_ICxx.Fix05_Discrete_In.ModelData; (*DEBUG, will have to be finalized once Fix05 redesign is complete, blt*)
+			Fix05.NodeLayout:= Main.ECAT_Master.FixNodeLayout[5];				(*Pass in Assembled Node layout for UI*)
+			Fix05.Discrete_In.Input_Node_Count:= 4;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix05.Discrete_In.VB_Node_Count:= 1;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix05.Discrete_In.Output_Node_Count:= 0;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix05.Discrete_In.Water_Stand_Count:= 0;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix05.Dry_Cycle:= GTAC_CONFIG.Dry_Cycle_Enabled OR GTAC_CONFIG.Local_DryCycle_Enables.5;
+			Fix05.Cell_In_Services:= Cell_Services_Prog.Service_Call_ForAllRobots OR In_From_ICxx.Cycle_Hold;
+			Fix05.Flash_Rate:= Pulse_1S;
+			(*Call FUNCTION*)
+			Fix05();
+			(*Output Data*)
+			Out_To_ICxx.Fix05_Discrete_Image:= Fix05.Discrete_Image;
+
+
+(*Internal Fixtures*)
+
+			(*Fixture 101*)
+			(*Input Data*)
+			Fix101.Enable_Motion:= Main.Control_Power_ON;								(*ENSURE to bind proper Relay Bank*)
+			Fix101.Discrete_In:= In_From_ICxx.Fix101_Discrete_In;
+			IF ((EOAT04.Part1_In_EOAT AND NOT Fix101.Load_Complete) OR Fix101.Repo_REQS.0) AND Fix101.Part_InEOAT04_1_ReadyforThisFix
+				THEN
+				Fix101.Discrete_In.ModelData:= EOAT04_1_ProductData_Pers.Product_Model_ID;
+			ELSIF (EOAT04_2_ProductData_Pers.Generic_PassFail_Notes[1] = '') // weld fix101 complete
+					AND ((EOAT04.Part2_In_EOAT AND NOT Fix101.Load_Complete) OR Fix101.Repo_REQS.0) AND Fix101.Part_InEOAT04_2_ReadyforThisFix
+				THEN
+				Fix101.Discrete_In.ModelData:= EOAT04_2_ProductData_Pers.Product_Model_ID; 
+			ELSIF (Fix101.Load_Complete OR Fix101.Repo_REQS.1) AND (MAIN.R4.Task_ID_Ack <> DropOff_Fix101) AND NOT Fix101.Unload_Complete
+				THEN
+				Fix101.Discrete_In.ModelData:= Fix101_ProductData_Pers.Product_Model_ID;
+			ELSIF (Fix101.Unload_Complete AND Fix101.All_Sensors_Off AND NOT Main.R1.TT_at_Dropoff_Pos)
+				THEN
+				Fix101.Discrete_In.ModelData:= 1;
+			ELSIF Fix101.All_Sensors_Off AND NOT Fix101.Part_InEOAT04_1_ReadyforThisFix AND NOT Fix101.Part_InEOAT04_2_ReadyforThisFix AND (MAIN.R4.Task_ID_Ack <> DropOff_Fix101)
+				THEN 
+				 IF 	(*Fix01 Faces Weld Robots*)
+						Fix01.TurntableA_At_Robot AND (Fix01.Model_ID <> 0)
+					THEN
+						Fix101.Discrete_In.ModelData:= Fix01_ProductData_Pers.Product_Model_ID;
+						(*Fix02 Faces Weld Robots*)	
+				ELSIF 	Fix02.TurntableB_At_Robot AND (Fix02.Model_ID <> 0)
+					THEN	
+						Fix101.Discrete_In.ModelData:= Fix02_ProductData_Pers.Product_Model_ID;
+				END_IF
+			END_IF;
+			Fix101.NodeLayout:= Main.ECAT_Master.FixNodeLayout[101];				(*Pass in Assembled Node layout for UI*)
+			Fix101.Discrete_In.Input_Node_Count:= 4;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix101.Discrete_In.VB_Node_Count:= 1;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix101.Discrete_In.Output_Node_Count:= 0;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix101.Discrete_In.Water_Stand_Count:= 0;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix101.Dry_Cycle:= GTAC_CONFIG.Dry_Cycle_Enabled;
+			Fix101.Cell_In_Services:= Cell_Services_Prog.Service_Call_ForAllRobots OR In_From_ICxx.Cycle_Hold;
+			Fix101.Flash_Rate:= Pulse_1S;
+			(*Call FUNCTION*)
+			Fix101();
+			(*Output Data*)
+			Out_To_ICxx.Fix101_Discrete_Image:= Fix101.Discrete_Image;
+			(*------------------------- Nutweld Based LVDT system -----------------------------------*)
+				(*Debug example only, using Fix101 as Nutwelder host*)
+
+				(*Nutweld LVDT1*)
+				(*Input Data*).
+				MAIN.NutWeld_LVDT[1].Model_ID:= Fix101.Model_ID;
+				MAIN.NutWeld_LVDT[1].Option_InScaledValues:= TRUE;		(*Sets if the system is working in scalled or raw values*) 
+				MAIN.NutWeld_LVDT[1].Save_LVDT_Conf:= In_From_ICxx.NutWeld_LVDT_Discrete_In[1].Save_LVDT_REQ; 
+				MAIN.NutWeld_LVDT[1].Save_Nut_Conf:= In_From_ICxx.NutWeld_LVDT_Discrete_In[1].Save_Nut_REQ; 
+				MAIN.NutWeld_LVDT[1].Raw_Transducer:= 0; (*DEBUG,  map analog card Channel here*) 
+				MAIN.NutWeld_LVDT[1].Ready_For_Measurement:= MAIN.R1.In_From_ECAT.Robot_OUT[172]; (*DEBUG,  confirm this is the proper output for "Weld ServoGun at Force"*)
+				MAIN.NutWeld_LVDT[1].Weld_Complete:= MAIN.R1.WCU1_Weld_Complete; 
+				MAIN.NutWeld_LVDT[1].Reset_NutOK:= NOT MAIN.R1.In_AutoExt
+												OR Fix101.Reset_All_Completes
+												OR (Fix101.In_Manual AND Fix101.Discrete_In.Go_Home); 
+				MAIN.NutWeld_LVDT[1].NutInput_UpperLimit[Fix101.Model_ID]:= In_From_ICxx_Pers.Config_NutWeld_LVDT[1].Nut_UpperLimit;
+				MAIN.NutWeld_LVDT[1].NutInput_LowerLimit[Fix101.Model_ID]:= In_From_ICxx_Pers.Config_NutWeld_LVDT[1].Nut_LowerLimit;
+
+
+				(*Call FB Instance*)
+				MAIN.NutWeld_LVDT[1]();
+				(*Output Data*)
+				Out_To_ICxx.NutWeld_LVDT_Discrete_Image[1].LVDT_Saved_ACK:= MAIN.NutWeld_LVDT[1].LVDT_Saved;
+				Out_To_ICxx.NutWeld_LVDT_Discrete_Image[1].LVDT_Value_Scaled:= MAIN.NutWeld_LVDT[1].NutPrev_Scaled;
+				Out_To_ICxx.NutWeld_LVDT_Discrete_Image[1].LVDT_Value_Raw:= MAIN.NutWeld_LVDT[1].NutPrev_Raw;
+				Out_To_ICxx.NutWeld_LVDT_Discrete_Image[1].LVDT_Nut_OK:= MAIN.NutWeld_LVDT[1].NutOK;
+				
+				(*----------------*)
+				(*Outputs to Nutweld LVDT Discrete Image Area from Fix101 Pin13 (See Fix101.Cylinders.Pin13 example)*)
+				Out_To_ICxx.NutWeld_LVDT_Discrete_Image[1].LVDT_Pin_RETD:= Fix101.Pin13RETD;
+				Out_To_ICxx.NutWeld_LVDT_Discrete_Image[1].LVDT_Pin_ADVD:= Fix101.Pin13ADVD;
+	
+			(*-------------------------------------------------------------------------*)	
+				
+				
+				
+			(*Fixture 102*)
+			(*Input Data*)
+			Fix102.Enable_Motion:= Main.Control_Power_ON;								(*ENSURE to bind proper Relay Bank*)
+			Fix102.Discrete_In:= In_From_ICxx.Fix102_Discrete_In;
+			IF ((EOAT04.Part1_In_EOAT AND NOT Fix102.Load_Complete) OR Fix102.Repo_REQS.0) AND Fix102.Part_InEOAT04_1_ReadyforThisFix
+				THEN
+				Fix102.Discrete_In.ModelData:= EOAT04_1_ProductData_Pers.Product_Model_ID;
+			ELSIF ((EOAT04.Part2_In_EOAT AND NOT Fix102.Load_Complete) OR Fix102.Repo_REQS.0) AND Fix102.Part_InEOAT04_2_ReadyforThisFix
+				THEN
+				Fix102.Discrete_In.ModelData:= EOAT04_2_ProductData_Pers.Product_Model_ID;
+			ELSIF (Fix102.Load_Complete OR Fix102.Repo_REQS.0) AND (MAIN.R4.Task_ID_Ack <> DropOff_Fix102) AND NOT Fix102.Unload_Complete
+				THEN
+				Fix102.Discrete_In.ModelData:= Fix102_ProductData_Pers.Product_Model_ID;
+				(*If nothing else is loaded, we need a model number to finish 102 sequance*)
+			ELSIF (NOT Fix102.Load_Complete AND (NOT Fix03.Load_Complete OR NOT Fix04.Load_Complete) AND NOT Fix101.Load_Complete AND EOAT04.EOAT_Part1_Empty) 
+				THEN
+				Fix102.Discrete_In.ModelData:= Fix01_ProductData_Pers.Product_Model_ID;
+			END_IF;
+ 			Fix102.NodeLayout:= Main.ECAT_Master.FixNodeLayout[102];				(*Pass in Assembled Node layout for UI*)
+			Fix102.Discrete_In.Input_Node_Count:= 4;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix102.Discrete_In.VB_Node_Count:= 1;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix102.Discrete_In.Output_Node_Count:= 0;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix102.Discrete_In.Water_Stand_Count:= 0;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix102.Dry_Cycle:= GTAC_CONFIG.Dry_Cycle_Enabled;
+			Fix102.Cell_In_Services:= Cell_Services_Prog.Service_Call_ForAllRobots OR In_From_ICxx.Cycle_Hold;
+			Fix102.Flash_Rate:= Pulse_1S;
+			(*Call FUNCTION*)
+			Fix102();
+			(*Output Data*)
+			Out_To_ICxx.Fix102_Discrete_Image:= Fix102.Discrete_Image;
+
+
+			(*Fixture 101*)
+			(*Input Data*)
+			Fix103.Enable_Motion:= Main.Control_Power_ON;							(*ENSURE to bind proper Relay Bank*)
+			Fix103.Discrete_In:= In_From_ICxx.Fix103_Discrete_In;
+			IF ((EOAT04.Part1_In_EOAT AND NOT Fix103.Load_Complete) OR Fix103.Repo_REQS.0) AND Fix103.Part_InEOAT04_1_ReadyforThisFix
+				THEN
+				Fix103.Discrete_In.ModelData:= EOAT04_1_ProductData_Pers.Product_Model_ID;
+			ELSIF ((EOAT04.Part2_In_EOAT AND NOT Fix103.Load_Complete) OR Fix103.Repo_REQS.0) AND Fix103.Part_InEOAT04_2_ReadyforThisFix
+				THEN
+				Fix103.Discrete_In.ModelData:= EOAT04_2_ProductData_Pers.Product_Model_ID;
+			ELSIF (Fix103.Load_Complete OR Fix103.Repo_REQS.1) AND (MAIN.R4.Task_ID_Ack <> DropOff_Fix103)
+				THEN
+				Fix103.Discrete_In.ModelData:= Fix103_ProductData_Pers.Product_Model_ID;
+			END_IF;
+ 			Fix103.NodeLayout:= Main.ECAT_Master.FixNodeLayout[103];				(*Pass in Assembled Node layout for UI*)
+			Fix103.Discrete_In.Input_Node_Count:= 2;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix103.Discrete_In.VB_Node_Count:= 0;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix103.Discrete_In.Output_Node_Count:= 0;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix103.Discrete_In.Water_Stand_Count:= 0;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix103.Dry_Cycle:= GTAC_CONFIG.Dry_Cycle_Enabled;
+			Fix103.Cell_In_Services:= Cell_Services_Prog.Service_Call_ForAllRobots OR In_From_ICxx.Cycle_Hold;
+			Fix103.Flash_Rate:= Pulse_1S;
+			(*Call FUNCTION*)
+			Fix103();
+			(*Output Data*)
+			Out_To_ICxx.Fix103_Discrete_Image:= Fix103.Discrete_Image;
+
+
+			(*Fixture 101*)
+			(*Input Data*)
+			Fix104.Enable_Motion:= Main.Control_Power_ON;								(*ENSURE to bind proper Relay Bank*)
+			Fix104.Discrete_In:= In_From_ICxx.Fix104_Discrete_In;
+			IF ((EOAT04.Part1_In_EOAT AND NOT Fix104.Load_Complete) OR Fix104.Repo_REQS.0) AND Fix104.Part_InEOAT04_1_ReadyforThisFix
+				THEN
+				Fix104.Discrete_In.ModelData:= EOAT04_1_ProductData_Pers.Product_Model_ID;
+			ELSIF ((EOAT04.Part2_In_EOAT AND NOT Fix104.Load_Complete) OR Fix104.Repo_REQS.0) AND Fix104.Part_InEOAT04_2_ReadyforThisFix
+				THEN
+				Fix104.Discrete_In.ModelData:= EOAT04_2_ProductData_Pers.Product_Model_ID;
+			ELSIF (Fix104.Load_Complete OR Fix104.Repo_REQS.1) AND (MAIN.R4.Task_ID_Ack <> DropOff_Fix104)
+				THEN
+				Fix104.Discrete_In.ModelData:= Fix104_ProductData_Pers[0].Product_Model_ID;
+			END_IF;
+ 			Fix104.NodeLayout:= Main.ECAT_Master.FixNodeLayout[104];				(*Pass in Assembled Node layout for UI*)
+			Fix104.Discrete_In.Input_Node_Count:= 2;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix104.Discrete_In.VB_Node_Count:= 0;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix104.Discrete_In.Output_Node_Count:= 0;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix104.Discrete_In.Water_Stand_Count:= 0;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix104.Dry_Cycle:= GTAC_CONFIG.Dry_Cycle_Enabled;
+			Fix104.Cell_In_Services:= Cell_Services_Prog.Service_Call_ForAllRobots OR In_From_ICxx.Cycle_Hold;
+			Fix104.Flash_Rate:= Pulse_1S;
+			(*Call FUNCTION*)
+			Fix104();
+			(*Output Data*)
+			Out_To_ICxx.Fix104_Discrete_Image:= Fix104.Discrete_Image;
+
+
+			(*Fixture 105*)
+			(*Input Data*)
+			Fix105.Enable_Motion:= Main.Control_Power_ON;								(*ENSURE to bind proper Relay Bank*)
+			Fix105.Discrete_In:= In_From_ICxx.Fix105_Discrete_In;
+			IF ((EOAT04.Part1_In_EOAT AND NOT Fix105.Load_Complete) OR Fix105.Repo_REQS.0) AND Fix105.Part_InEOAT04_1_ReadyforThisFix
+				THEN
+				Fix105.Discrete_In.ModelData:= EOAT04_1_ProductData_Pers.Product_Model_ID;
+			ELSIF ((EOAT04.Part2_In_EOAT AND NOT Fix105.Load_Complete) OR Fix105.Repo_REQS.0) AND Fix105.Part_InEOAT04_2_ReadyforThisFix
+				THEN
+				Fix105.Discrete_In.ModelData:= EOAT04_2_ProductData_Pers.Product_Model_ID;
+			ELSIF (Fix105.Load_Complete OR Fix105.Repo_REQS.1) AND (MAIN.R4.Task_ID_Ack <> DropOff_Fix105)
+				THEN
+				Fix105.Discrete_In.ModelData:= Fix105_ProductData_Pers.Product_Model_ID;
+			END_IF;
+			Fix105.NodeLayout:= Main.ECAT_Master.FixNodeLayout[105];				(*Pass in Assembled Node layout for UI*)
+			Fix105.Discrete_In.Input_Node_Count:= 2;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix105.Discrete_In.VB_Node_Count:= 0;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix105.Discrete_In.Output_Node_Count:= 0;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix105.Discrete_In.Water_Stand_Count:= 0;								(*Overridden for now, later version will map from UI read config sheet*)
+			Fix105.Dry_Cycle:= GTAC_CONFIG.Dry_Cycle_Enabled;
+			Fix105.Cell_In_Services:= Cell_Services_Prog.Service_Call_ForAllRobots OR In_From_ICxx.Cycle_Hold;
+			Fix105.Flash_Rate:= Pulse_1S;
+			(*Call FUNCTION*)
+			Fix105();
+			(*Output Data*)
+			Out_To_ICxx.Fix105_Discrete_Image:= Fix105.Discrete_Image;]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Product_Tracking" Id="{b180e8a1-2952-497b-b976-b2c524bb6089}">
+      <Implementation>
+        <ST><![CDATA[(*Custom Product Trackng code for this machine (Bumpers Main 2403701), primarily used to transfer model and task status*)
+
+
+
+
+(*------------- Transfer Data from Fix01 or 02 to EOAT04 Upon Pickup ----------------*)
+(*Fix01 / 02 are 1st Geo Set fixtures on TT01*)
+	(*Picked up with EOAT Side 1*)
+	RPulse[1].CLK:= Fix01.Unload_Complete1_Ack;
+	RPulse[1]();
+	IF RPulse[1].Q
+		THEN
+			EOAT04_1_ProductData_Pers:= Fix01_ProductData_Pers;
+			Fix01_ProductData_Pers:= Blank_ProductData_Pers;
+	END_IF;
+
+	(*Picked up with EOAT Side 1*)
+	RPulse[3].CLK:= Fix02.Unload_Complete1_Ack;
+	RPulse[3]();
+	IF RPulse[3].Q
+		THEN
+			EOAT04_1_ProductData_Pers:= Fix02_ProductData_Pers;
+			Fix02_ProductData_Pers:= Blank_ProductData_Pers;
+	END_IF;
+(*--------------------------------------------------------------------------------*)
+
+
+
+	
+	
+(*------------- Transfer Data from EOAT04 to Fix101 Upon Dropoff ----------------*)
+(*Fix101 is 1st Finishing Fixture*) 
+	(*Placed with EOAT Side 1*)
+	RPulse[5].CLK:= Fix101.Load_Complete1_Ack;
+	RPulse[5]();
+	IF RPulse[5].Q
+		THEN
+			Fix101_ProductData_Pers:= EOAT04_1_ProductData_Pers;
+			EOAT04_1_ProductData_Pers:= Blank_ProductData_Pers;
+	END_IF;
+	(*Placed with EOAT Side 2*)
+	RPulse[6].CLK:= Fix101.Load_Complete2_Ack;
+	RPulse[6]();
+	IF RPulse[6].Q
+		THEN
+			Fix101_ProductData_Pers:= EOAT04_2_ProductData_Pers;
+			EOAT04_2_ProductData_Pers:= Blank_ProductData_Pers;
+	END_IF;
+(*------------- Transfer Data from Fix101 to EOAT04 Upon Pickup ----------------*)
+	(*Picked up with EOAT Side 2*)
+	RPulse[8].CLK:= Fix101.Unload_Complete1_Ack;
+	RPulse[8]();
+	IF RPulse[8].Q
+		THEN
+			EOAT04_2_ProductData_Pers:= Fix101_ProductData_Pers;
+			Fix101_ProductData_Pers:= Blank_ProductData_Pers;
+	END_IF;
+	
+	(*Blank Data in Fix101 if required by UI*)
+	IF (In_From_ICxx.CustomApplication_REQS.17 AND Fix101.Tool_At_Home AND Fix101.All_Sensors_Off AND Fix101.In_Manual) 
+		OR Fix101.Reset_All_Completes
+		THEN
+			Fix101_ProductData_Pers:= Blank_ProductData_Pers;
+	END_IF;
+
+(*--------------------------------------------------------------------------------*)
+
+
+	
+	
+	
+(*------------- Transfer Data from EOAT04 to Fix03 or Fix04 Upon Dropff ----------------*)
+(*Fix03 / 04 are 2nd Geo Set + Finishing fixtures on TT02*)
+	(*Placed with EOAT Side 2*)
+	RPulse[10].CLK:= Fix03.Load_Robots_Complete1;
+	RPulse[10]();
+	IF RPulse[10].Q
+		THEN
+			Fix03_ProductData_Pers:= EOAT04_2_ProductData_Pers;
+			EOAT04_2_ProductData_Pers:= Blank_ProductData_Pers;
+	END_IF;
+
+	(*Placed with EOAT Side 2*)
+	RPulse[12].CLK:= Fix04.Load_Complete1_Ack;
+	RPulse[12]();
+	IF RPulse[12].Q
+		THEN
+			Fix04_ProductData_Pers:= EOAT04_2_ProductData_Pers;
+			EOAT04_2_ProductData_Pers:= Blank_ProductData_Pers;
+	END_IF;
+
+	(*Blank Data in EOAT04 Side 1*)
+	IF In_From_ICxx.CustomApplication_REQS.29 AND MAIN.R4.At_Home AND EOAT04.EOAT_Part1_Empty
+		THEN
+			EOAT04_1_ProductData_Pers:= Blank_ProductData_Pers;
+	END_IF;
+
+	(*Blank Data in EOAT04 Side 2*)
+	IF In_From_ICxx.CustomApplication_REQS.30 AND MAIN.R4.At_Home AND EOAT04.EOAT_Part2_Empty
+		THEN
+			EOAT04_2_ProductData_Pers:= Blank_ProductData_Pers;
+	END_IF;
+
+	(*Blank EOAT04 Data in event of a full empty check*)
+	RPulse[13].CLK:= EOAT04.CMD_CheckAllSensors_OFF AND EOAT04.EOAT_Part1_Empty AND EOAT04.EOAT_Part2_Empty;
+	RPulse[13]();
+	IF RPulse[13].Q
+		THEN
+			EOAT04_1_ProductData_Pers:= Blank_ProductData_Pers;
+			EOAT04_2_ProductData_Pers:= Blank_ProductData_Pers;
+	END_IF;
+	
+(*--------------------------------------------------------------------------------*)
+
+
+(*------------- Transfer Data from Fix03 or 04 to EOAT04 Pickup ----------------*)
+	(*Picked up with EOAT Side 1*)
+	RPulse[14].CLK:= Fix03.Unload_Complete1_Ack;
+	RPulse[14]();
+	IF RPulse[14].Q
+		THEN
+			EOAT04_1_ProductData_Pers:= Fix03_ProductData_Pers;
+			Fix03_ProductData_Pers:= Blank_ProductData_Pers;
+	END_IF;
+
+	(*Picked up with EOAT Side 1*)
+	RPulse[16].CLK:= Fix04.Unload_Complete1_Ack;
+	RPulse[16]();
+	IF RPulse[16].Q
+		THEN
+			EOAT04_1_ProductData_Pers:= Fix04_ProductData_Pers;
+			Fix04_ProductData_Pers:= Blank_ProductData_Pers;
+	END_IF;
+	
+   (*Blank Data in Fix03*)
+	IF (In_From_ICxx.CustomApplication_REQS.3 AND Fix03.Tool_At_Home AND Fix03.All_Sensors_Off AND Fix03.In_Manual) 
+		THEN
+			Fix03_ProductData_Pers:= Blank_ProductData_Pers;
+	END_IF;
+
+	(*Blank Data in Fix04*)
+	IF (In_From_ICxx.CustomApplication_REQS.4 AND Fix04.Tool_At_Home AND Fix04.All_Sensors_Off AND Fix04.In_Manual) 
+		THEN
+			Fix04_ProductData_Pers:= Blank_ProductData_Pers;
+	END_IF;
+
+(*--------------------------------------------------------------------------------*)
+	
+	
+	
+	
+	
+(*------------- Transfer Data from EOAT04 to Fix102 Upon Dropoff ----------------*)
+(*Fix102 is Insepction Area*)
+	(*Placed with EOAT Side 1*)
+	RPulse[18].CLK:= Fix102.Load_Complete1_Ack;
+	RPulse[18]();
+	IF RPulse[18].Q
+		THEN
+			Fix102_ProductData_Pers:= EOAT04_1_ProductData_Pers;
+			EOAT04_1_ProductData_Pers:= Blank_ProductData_Pers;
+	END_IF;
+	
+(*------------- Transfer Data from FIX102 to EOAT04 Upon Pickup ----------------*)
+	(*Picked up with EOAT Side 2*)
+	RPulse[20].CLK:= Fix102.Unload_Complete1_Ack;
+	RPulse[20]();
+	IF RPulse[20].Q
+		THEN
+			EOAT04_2_ProductData_Pers:= Fix102_ProductData_Pers;
+			Fix102_ProductData_Pers:= Blank_ProductData_Pers;
+	END_IF;
+	(*Picked up with EOAT Side 1*)
+	RPulse[21].CLK:= Fix102.Unload_Complete2_Ack;
+	RPulse[21]();
+	IF RPulse[21].Q
+		THEN
+			EOAT04_1_ProductData_Pers:= Fix102_ProductData_Pers;
+			Fix102_ProductData_Pers:= Blank_ProductData_Pers;
+	END_IF;
+		
+	(*Blank Data in Fix102*)
+	IF (In_From_ICxx.CustomApplication_REQS.18 AND Fix102.Tool_At_Home AND Fix102.All_Sensors_Off AND Fix102.In_Manual) 
+		OR Fix102.Reset_All_Completes
+			THEN
+			Fix102_ProductData_Pers:= Blank_ProductData_Pers;
+	END_IF;
+
+(*--------------------------------------------------------------------------------*)
+
+	
+	
+	
+	
+(*------------- Transfer Data from Fix05 to EOAT04 Upon Pickup ----------------*)
+(*Fix05 is Rework Insert only station*)
+	(*Picked up with EOAT Side 1*)
+	RPulse[22].CLK:= Fix05.Unload_Complete1_Ack;
+	RPulse[22]();
+	IF RPulse[22].Q
+		THEN
+			EOAT04_1_ProductData_Pers:= Fix05_ProductData_Pers;
+			Fix05_ProductData_Pers:= Blank_ProductData_Pers;
+	END_IF;
+	(*Picked up with EOAT Side 2*)
+	RPulse[23].CLK:= Fix05.Unload_Complete2_Ack;
+	RPulse[23]();
+	IF RPulse[23].Q
+		THEN
+			EOAT04_2_ProductData_Pers:= Fix05_ProductData_Pers;
+			Fix05_ProductData_Pers:= Blank_ProductData_Pers;
+	END_IF;
+(*--------------------------------------------------------------------------------*)
+	
+	
+	
+
+(*------------- Transfer Data from EOAT04 to Fix103 Upon Dropoff ----------------*)
+(*Fix103 is QA Request / NOK Offload only station*)
+	(*Placed with EOAT Side 1*)
+	RPulse[24].CLK:= Fix103.Load_Complete1_Ack;
+	RPulse[24]();
+	IF RPulse[24].Q
+		THEN
+			Fix103_ProductData_Pers:= EOAT04_2_ProductData_Pers;
+			EOAT04_2_ProductData_Pers:= Blank_ProductData_Pers;
+	END_IF;
+	(*Placed with EOAT Side 2*)
+	RPulse[25].CLK:= Fix103.Load_Complete2_Ack;
+	RPulse[25]();
+	IF RPulse[25].Q
+		THEN
+			Fix103_ProductData_Pers:= EOAT04_2_ProductData_Pers;
+			EOAT04_1_ProductData_Pers:= Blank_ProductData_Pers;
+	END_IF;
+	
+	(*Blank Data in Fix103*)
+	IF (In_From_ICxx.CustomApplication_REQS.19 AND Fix103.Tool_At_Home AND Fix103.All_Sensors_Off AND Fix103.In_Manual) 
+		OR Fix103.Reset_All_Completes
+			THEN
+			Fix103_ProductData_Pers:= Blank_ProductData_Pers;
+	END_IF;
+
+(*--------------------------------------------------------------------------------*)
+
+	
+	
+	
+(*------------- Transfer Data from EOAT04 to Fix104 Upon Dropoff ----------------*)
+(*Fix104 is Buffer to load finished parts on if Paint is down*)
+	(*Placed with EOAT Side 1*)
+	RPulse[26].CLK:= Fix104.Load_Complete1_Ack;
+	RPulse[26]();
+	IF RPulse[26].Q
+		THEN
+			IF (Fix104.Fix_ID >=1 AND  Fix104.Fix_ID<=5)
+				THEN
+					Fix104_ProductData_Pers[Fix104.Fix_ID]:= EOAT04_1_ProductData_Pers;
+					EOAT04_1_ProductData_Pers:= Blank_ProductData_Pers;
+				END_IF
+	END_IF;	
+	(*Placed with EOAT Side 2*)
+	RPulse[27].CLK:= Fix104.Load_Complete2_Ack;
+	RPulse[27]();
+	IF RPulse[27].Q
+		THEN
+			IF (Fix104.Fix_ID >=1 AND  Fix104.Fix_ID<=5)
+				THEN
+					Fix104_ProductData_Pers[Fix104.Fix_ID]:= EOAT04_2_ProductData_Pers;
+					EOAT04_2_ProductData_Pers:= Blank_ProductData_Pers;
+				END_IF
+	END_IF;	
+	
+	(*Blank Data in Fix104*)
+	IF (In_From_ICxx.CustomApplication_REQS.20 AND Fix104.Tool_At_Home AND Fix104.All_Sensors_Off AND Fix104.In_Manual) 
+		OR Fix104.Reset_All_Completes
+			THEN
+			Fix104_ProductData_Pers[0]:= Blank_ProductData_Pers;
+	END_IF;
+
+(*--------------------------------------------------------------------------------*)
+
+
+
+
+	
+(*------------- Transfer Data from EOAT04 to Fix105 Upon Dropoff ----------------*)
+(*Fix105 is final offload to Paint*)
+	(*Placed with EOAT Side 1*)
+	RPulse[28].CLK:= Fix105.Load_Complete1_Ack;
+	RPulse[28]();
+	IF RPulse[28].Q
+		THEN
+			Fix105_ProductData_Pers:= EOAT04_1_ProductData_Pers;
+			EOAT04_1_ProductData_Pers:= Blank_ProductData_Pers;
+	END_IF;	
+	(*Placed with EOAT Side 2*)
+	RPulse[29].CLK:= Fix105.Load_Complete2_Ack;
+	RPulse[29]();
+	IF RPulse[29].Q
+		THEN
+			Fix105_ProductData_Pers:= EOAT04_2_ProductData_Pers;
+			EOAT04_2_ProductData_Pers:= Blank_ProductData_Pers;
+	END_IF;	
+	
+	(*Blank Data in Fix105*)
+	IF (In_From_ICxx.CustomApplication_REQS.21 AND Fix105.Tool_At_Home AND Fix105.All_Sensors_Off AND Fix105.In_Manual) 
+		OR Fix105.Reset_All_Completes
+			THEN
+			Fix105_ProductData_Pers:= Blank_ProductData_Pers;
+	END_IF;
+
+(*--------------------------------------------------------------------------------*)
+	
+	
+
+	
+	
+	
+	
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Robots" Id="{24524792-0aca-4eae-af81-38966ec4ed01}">
+      <Implementation>
+        <ST><![CDATA[
+
+
+(*R1 ------------------------*)
+		(*Input Data*)
+		R1.FB_In.Robot_Type:=KUKA_KRC4_SAFEOP_TurnTable;
+		R1.FB_In.Install_Zero_Orientation:= 180; 	(*Set this value between 0 and 359 to set the zero position of the robot physical install with reference to 12 o'clock symbol on UI screens*)
+		R1.FB_In.Under_Construction:= GTAC_CONFIG.Under_Construction;
+		R1.FB_In.In_SIM_Mode:= GTAC_CONFIG.In_SIM_Mode;
+		R1.FB_In.SIM_StartWorkAround:= FALSE;  (*Main.SIM_WorkAround_StartRobots*)
+		R1.FB_In.CoE_Read_Trigger:= (GTAC_CONFIG.Option_Robot_Count>=1) AND Pulse_CoERead;
+		R1.FB_In.Ecat_Master_AmsNetID:= MAIN.ECAT_Master.AmsID;
+		R1.FB_In.Prev_EcatNode_Present:= NOT MD01.EP1918_NotPresent; (*Ensure Previous Node Exists to determine Ecat Cable Break of this Devices Input Cable*)
+		R1.FB_In.Safety_RST:=SAFETY_RESET;
+		R1.FB_In.Enable_Motion:= All_Estops_OK OR GTAC_CONFIG.Under_Construction;
+		R1.FB_In.Alarm_RST:=In_From_ICxx.ControlPower1;
+		R1.FB_In.Select_Play:=FALSE;
+		R1.FB_In.Select_Teach:=FALSE;
+		R1.FB_In.Select_Remote:=FALSE;
+		R1.FB_In.Start_Scan:=In_From_ICxx.StartRobots;
+		R1.FB_In.Stop_Scan:=In_From_ICxx.StopRobots;
+		R1.FB_In.Stop_Scan2:=FALSE;
+		R1.FB_In.In_DryCycle:= GTAC_CONFIG.Dry_Cycle_Enabled;
+		R1.FB_In.Low_Speed:= GTAC_CONFIG.Low_Speed_Enabled;
+		R1.FB_In.Speed_Request:= In_From_ICxx.Global_Robot_Speed;
+		R1.FB_In.Force_MasterTest_Req:= Cell_Services_Prog.Human_Reqs_MasterTest OR Cell_Services_Prog.A_Robot_Reqs_MasterTest;
+		R1.FB_In.Force_BrakeTest_Req:= Cell_Services_Prog.Human_Reqs_BrakeTest OR Cell_Services_Prog.A_Robot_Reqs_BrakeTest;
+		R1.FB_In.Major_Faults:= Faults.System_Major_Fault;
+		R1.FB_In.Teach_Interlock:=R1_Data.Teach_Interlock;
+		R1.FB_In.Weld_Inhibit:=In_From_ICxx.Rxx_Weld_Inhibit;
+		R1.FB_In.Option_Disable_WaterFLT:= FALSE AND GTAC_CONFIG.Under_Construction OR (MAIN.R1.Task_ID_Ack=Tip_Change_EXT); (*Used to disable water fault if no water is present. use with caution*)
+		R1.FB_In.OK_ToEnter_EquipInterf1:=R1_Data.OK_ToEnter_EquipInterf1;
+		R1.FB_In.OK_ToEnter_EquipInterf2:=R1_Data.OK_ToEnter_EquipInterf2;
+		R1.FB_In.OK_ToEnter_EquipInterf3:=R1_Data.OK_ToEnter_EquipInterf3;
+		R1.FB_In.OK_ToEnter_EquipInterf4:=R1_Data.OK_ToEnter_EquipInterf4;
+		R1.FB_In.OK_ToEnter_EquipInterf5:=R1_Data.OK_ToEnter_EquipInterf5;
+		R1.FB_In.OK_ToEnter_EquipInterf6:=R1_Data.OK_ToEnter_EquipInterf6;
+		R1.FB_In.OK_ToEnter_EquipInterf7:=R1_Data.OK_ToEnter_EquipInterf7;
+		R1.FB_In.OK_ToEnter_EquipInterf8:=R1_Data.OK_ToEnter_EquipInterf8;
+		R1.FB_In.OK_ToEnter_EquipInterf9:=R1_Data.OK_ToEnter_EquipInterf9;
+		R1.FB_In.OK_ToEnter_HumanInterf1:=R1_Data.OK_ToEnter_HumanInterf1;
+		R1.FB_In.OK_ToEnter_HumanInterf2:=R1_Data.OK_ToEnter_HumanInterf2;
+		R1.FB_In.OK_ToEnter_HumanInterf3:=R1_Data.OK_ToEnter_HumanInterf3;
+		R1.FB_In.OK_ToEnter_HumanInterf4:=R1_Data.OK_ToEnter_HumanInterf4;
+		R1.FB_In.OK_ToEnter_HumanInterf5:=R1_Data.OK_ToEnter_HumanInterf5;
+		R1.FB_In.OK_ToEnter_HumanInterf6:=R1_Data.OK_ToEnter_HumanInterf6;
+		R1.FB_In.OK_ToEnter_HumanInterf7:=R1_Data.OK_ToEnter_HumanInterf7;
+		R1.FB_In.OK_ToEnter_HumanInterf8:=R1_Data.OK_ToEnter_HumanInterf8;
+		R1.FB_In.OK_ToEnter_RobotInterfs:= R1_Data.OK_ToEnter_RobotInterfs;
+		R1.FB_In.Fix_ID:= R1_Data.Fix_ID[R1.Location_Index];
+		R1.FB_In.Model_ID:= R1_Data.Model_ID[R1.Location_Index];
+		R1.FB_In.Task_ID:= R1_Data.Task_ID[R1.Location_Index];
+		R1.FB_In.Proceed_From_Pounce:= R1_Data.Proceed_From_Pounce[R1.Location_Index];
+		R1.FB_In.Complete_Ack:= R1_Data.Complete_Ack[R1.Location_Index];
+		R1.FB_In.PeripheralReq_Ack:= R1_Data.PeripheralReq_Ack[R1.Location_Index];
+		R1.FB_In.AuxReq_Ack:= R1_Data.AuxReq_Ack[R1.Location_Index];
+		R1.FB_In.User_Inputs.0:= R2.User_Outputs.0 AND R3.User_Outputs.0; (*confirm table position to weld main*)
+		R1.FB_In.User_Inputs.1:= NOT R2.User_Outputs.1 AND R3.User_Outputs.1; (*confirm table position to weld subs*)
+		R1.FB_In.User_Inputs.2:= R2.User_Outputs.2 AND R3.User_Outputs.2;
+		R1.FB_In.User_Inputs.3:= R2.User_Outputs.2 AND R3.User_Outputs.2 AND R2.User_Outputs.3;
+		R1.FB_In.User_Inputs.4:= FALSE;
+		R1.FB_In.User_Inputs.5:= FALSE;
+		R1.FB_In.User_Inputs.6:= FALSE;
+		R1.FB_In.User_Inputs.7:= FALSE;
+			(*Configure Options Amounts*)
+			R1.FB_In.Options.WeldCont_Amount:=0; 					(*Select amount of Spot Type Weld Controllers here (0 min, 4 max)*)
+			R1.FB_In.Options.WaterStand_Amount:= 0;				(*Select amount of Water Stands here (0 min, 2 max)*)
+			R1.FB_In.Options.MIGCont_Amount:= 1;					(*Select amount of MIG Type Weld Controllers here (0 min, 1 max)*)
+			R1.FB_In.Options.Reamer_Amount:= 1;					(*Select amount of Tip Reamers here (0 min, 1 max)*)
+			R1.FB_In.Options.EOAT_Amount:= 0;						(*Assign EOAT number to robot (0 min, 10 max)*)
+			(*Configure Options Parameters*)
+			
+			(*R1.Reamer[1](
+				(*FB Inputs*)
+					Enable_Motion:= All_Estops_OK,
+					Fronius_Ream:= TRUE,
+                    Binzel_Ream:= FALSE,  (*optional*)
+					Ream_REQ:= R1.Peripheral_Req.5 AND (R1.Task_ID_Ack=Tip_Dress),
+
+				(*FB Outputs*)
+					Reaming_Complete=> ,(*mapped in cell services*)
+					);*)
+					
+			R1.Reamer[1](
+				(*FB Inputs*)
+					Enable_Motion:= All_Estops_OK,
+					Fronius_Ream:= TRUE,
+                    Binzel_Ream:= FALSE,  (*optional*)
+					
+					Ream_REQ:= R1.Peripheral_Req.1 AND ((R1.Task_ID_Ack=Tip_Dress)OR (R1.In_T1 AND R1.Peripheral_Req.5)),
+					Ream_Time:= T#2S,
+					Ream_Clamp_Open:= R1.Reamer[1].N01.I.1,
+					Spray_REQ:= R1.Peripheral_Req.2 AND ((R1.Task_ID_Ack=Tip_Dress)OR (R1.In_T1 AND R1.Peripheral_Req.5)),
+					Spray_Time:= T#2S,
+					F_WireCutter_REQ:= R1.Peripheral_Req.4 AND ((R1.Task_ID_Ack=Tip_Dress)OR (R1.In_T1 AND R1.Peripheral_Req.5)),
+					F_WireCutter_Time:= T#1S,
+					
+				(*FB Outputs*)
+					Reaming_Complete=> ,(*mapped in cell services*)
+					(*The following are for Binzel type reamers only*)
+					LifterUp_ACK=> , (*mapped in cell services*)
+					Clamp_ACK=>,(*mapped in cell services*)
+					Injector_ACK=> ,(*mapped in cell services*)
+					WireCutter_ACK=> (*mapped in cell services*)
+					);		
+		(*Call Actual Object*)
+		R1();
+		(*Output Data*)
+		Out_To_ICxx.Robot[1].Robot_Type:= R1.FB_In.Robot_Type;
+		Out_To_ICxx.Robot[1].Status:= R1.Status;
+		Out_To_ICxx.Robot[1].Axis_Data[1]:= R1.S_Axis_Pos_Raw; 
+		Out_To_ICxx.Robot[1].In_Image:= R1.Input_Image;
+		Out_To_ICxx.Robot[1].Out_Image:= R1.Output_Image;
+		Out_To_ICxx.Robot[1].Discrete_ImageFSOE:= R1.Discrete_Image_FSoE;
+		Out_To_ICxx.Robot[1].Options:= R1.FB_In.Options;
+			Out_To_ICxx.Robot[1].WS_Discrete_Image[1]:= R1.WS[1].Discrete_Image;
+			Out_To_ICxx.Robot[1].WS_Discrete_Image[2]:= R1.WS[2].Discrete_Image;
+ 			Out_To_ICxx.Robot[1].ATI_Discrete_Image:= R1.ATI[1].Discrete_Image;
+			Out_To_ICxx.Robot[1].Reamer_Discrete_Image:= R1.Reamer[1].Discrete_Image;
+			Out_To_ICxx.Robot[1].Fronius_Status:= R1.Fronius_Status;
+		Out_To_ICxx.Robot[1].Ped_IO_ToShow[1]:= 0;			(*Set to Ped value if this robots ecat string contains the Ped's IO*)
+		Out_To_ICxx.Robot[1].Ped_IO_ToShow[2]:= 0;			(*Set to Ped value if this robots ecat string contains the Ped's IO*)
+		Out_To_ICxx.Robot[1].ECAT_Cable_Breaks:= R1.ECatSlave_Cable_Breaks;
+		Out_To_ICxx.Robot[1].CT:= R1.CT;
+		(*Example of passing Turntable Axis Data*)
+		//Out_To_ICxx.TT01_Location_Index:= R1.TT_Axis_Location_Index; (*Pass Turntable location*) DEBUG - RESTORE AFTER SIM - RJ
+		
+		(*IF (MAIN.SIM_WorkAround_TT01_Position_Index[0] = TRUE)
+			THEN Out_To_ICxx.TT01_Location_Index:= 1;
+		ELSIF (MAIN.SIM_WorkAround_TT01_Position_Index[1] = TRUE)
+			THEN Out_To_ICxx.TT01_Location_Index:= 2;
+		ELSE
+			Out_To_ICxx.TT01_Location_Index:= 0;
+		END_IF*)	//DEBUG - RJ - REMOVE ABOVE AFTER SIM, RESTORE original
+		Out_To_ICxx.TT01_Location_Index:= R1.TT_Axis_Location_Index;
+
+
+(*R2 ------------------------*)
+		(*Input Data*)
+		R2.FB_In.Robot_Type:=KUKA_KRC4_SAFEOP;
+		R2.FB_In.Install_Zero_Orientation:= 180; 	(*Set this value between 0 and 359 to set the zero position of the robot physical install with reference to 12 o'clock symbol on UI screens*)
+		R2.FB_In.Under_Construction:= GTAC_CONFIG.Under_Construction;
+		R2.FB_In.In_SIM_Mode:= GTAC_CONFIG.In_SIM_Mode;
+		R2.FB_In.SIM_StartWorkAround:= FALSE;  (*Main.SIM_WorkAround_StartRobots*)
+		R2.FB_In.CoE_Read_Trigger:= (GTAC_CONFIG.Option_Robot_Count>=2) AND Pulse_CoERead;
+		R2.FB_In.Ecat_Master_AmsNetID:= MAIN.ECAT_Master.AmsID;
+		R2.FB_In.Prev_EcatNode_Present:= NOT R1.EK1100_NotPresent; (*Ensure Previous Node Exists to determine Ecat Cable Break of this Devices Input Cable*)
+		R2.FB_In.Safety_RST:=SAFETY_RESET;
+		R2.FB_In.Enable_Motion:= All_Estops_OK OR GTAC_CONFIG.Under_Construction;
+		R2.FB_In.Alarm_RST:=In_From_ICxx.ControlPower1;
+		R2.FB_In.Select_Play:=FALSE;
+		R2.FB_In.Select_Teach:=FALSE;
+		R2.FB_In.Select_Remote:=FALSE;
+		R2.FB_In.Start_Scan:=In_From_ICxx.StartRobots;
+		R2.FB_In.Stop_Scan:=In_From_ICxx.StopRobots;
+		R2.FB_In.Stop_Scan2:=FALSE;
+		R2.FB_In.In_DryCycle:= GTAC_CONFIG.Dry_Cycle_Enabled;
+		R2.FB_In.Low_Speed:= GTAC_CONFIG.Low_Speed_Enabled;
+		R2.FB_In.Speed_Request:= In_From_ICxx.Global_Robot_Speed;
+		R2.FB_In.Force_MasterTest_Req:= Cell_Services_Prog.Human_Reqs_MasterTest OR Cell_Services_Prog.A_Robot_Reqs_MasterTest;
+		R2.FB_In.Force_BrakeTest_Req:= Cell_Services_Prog.Human_Reqs_BrakeTest OR Cell_Services_Prog.A_Robot_Reqs_BrakeTest;
+		R2.FB_In.Major_Faults:= Faults.System_Major_Fault;
+		R2.FB_In.Teach_Interlock:=R2_Data.Teach_Interlock;
+		R2.FB_In.Weld_Inhibit:=In_From_ICxx.Rxx_Weld_Inhibit;
+		R2.FB_In.Option_Disable_WaterFLT:= FALSE AND GTAC_CONFIG.Under_Construction OR (MAIN.R2.Task_ID_Ack=Tip_Change_EXT); (*Used to disable water fault if no water is present. use with caution*)
+		R2.FB_In.OK_ToEnter_EquipInterf1:=R2_Data.OK_ToEnter_EquipInterf1;
+		R2.FB_In.OK_ToEnter_EquipInterf2:=R2_Data.OK_ToEnter_EquipInterf2;
+		R2.FB_In.OK_ToEnter_EquipInterf3:=R2_Data.OK_ToEnter_EquipInterf3;
+		R2.FB_In.OK_ToEnter_EquipInterf4:=R2_Data.OK_ToEnter_EquipInterf4;
+		R2.FB_In.OK_ToEnter_EquipInterf5:=R2_Data.OK_ToEnter_EquipInterf5;
+		R2.FB_In.OK_ToEnter_EquipInterf6:=R2_Data.OK_ToEnter_EquipInterf6;
+		R2.FB_In.OK_ToEnter_EquipInterf7:=R2_Data.OK_ToEnter_EquipInterf7;
+		R2.FB_In.OK_ToEnter_EquipInterf8:=R2_Data.OK_ToEnter_EquipInterf8;
+		R2.FB_In.OK_ToEnter_EquipInterf9:=R2_Data.OK_ToEnter_EquipInterf9;
+		R2.FB_In.OK_ToEnter_HumanInterf1:=R2_Data.OK_ToEnter_HumanInterf1;
+		R2.FB_In.OK_ToEnter_HumanInterf2:=R2_Data.OK_ToEnter_HumanInterf2;
+		R2.FB_In.OK_ToEnter_HumanInterf3:=R2_Data.OK_ToEnter_HumanInterf3;
+		R2.FB_In.OK_ToEnter_HumanInterf4:=R2_Data.OK_ToEnter_HumanInterf4;
+		R2.FB_In.OK_ToEnter_HumanInterf5:=R2_Data.OK_ToEnter_HumanInterf5;
+		R2.FB_In.OK_ToEnter_HumanInterf6:=R2_Data.OK_ToEnter_HumanInterf6;
+		R2.FB_In.OK_ToEnter_HumanInterf7:=R2_Data.OK_ToEnter_HumanInterf7;
+		R2.FB_In.OK_ToEnter_HumanInterf8:=R2_Data.OK_ToEnter_HumanInterf8;
+		R2.FB_In.OK_ToEnter_RobotInterfs:= R2_Data.OK_ToEnter_RobotInterfs;
+		R2.FB_In.Fix_ID:=R2_Data.Fix_ID[R2.Location_Index];
+		R2.FB_In.Model_ID:=R2_Data.Model_ID[R2.Location_Index];
+		R2.FB_In.Task_ID:=R2_Data.Task_ID[R2.Location_Index];
+		R2.FB_In.Proceed_From_Pounce:=R2_Data.Proceed_From_Pounce[R2.Location_Index];
+		R2.FB_In.Complete_Ack:=R2_Data.Complete_Ack[R2.Location_Index];
+		R2.FB_In.PeripheralReq_Ack:=R2_Data.PeripheralReq_Ack[R2.Location_Index];
+		R2.FB_In.AuxReq_Ack:= R2_Data.AuxReq_Ack[R2.Location_Index];
+		R2.FB_In.User_Inputs.0:= R1.User_Outputs.0;
+		R2.FB_In.User_Inputs.1:= FALSE;
+		R2.FB_In.User_Inputs.2:= R1.User_Outputs.2;
+		R2.FB_In.User_Inputs.3:= R1.User_Outputs.3;
+		R2.FB_In.User_Inputs.4:= FALSE;
+		R2.FB_In.User_Inputs.5:= FALSE;
+		R2.FB_In.User_Inputs.6:= FALSE;
+		R2.FB_In.User_Inputs.7:= FALSE;
+			(*Configure Options Amounts*)
+			R2.FB_In.Options.WeldCont_Amount:=0; 					(*Select amount of Spot Type Weld Controllers here (0 min, 4 max)*)
+			R2.FB_In.Options.WaterStand_Amount:= 0;				(*Select amount of Water Stands here (0 min, 2 max)*)
+			R2.FB_In.Options.MIGCont_Amount:= 1;					(*Select amount of MIG Type Weld Controllers here (0 min, 1 max)*)
+			R2.FB_In.Options.Reamer_Amount:= 1;					(*Select amount of Tip Reamers here (0 min, 1 max)*)
+			R2.FB_In.Options.EOAT_Amount:= 0;						(*Assign EOAT number to robot (0 min, 10 max)*)
+			(*Configure Options Parameters*)
+
+			R2.Reamer[1](
+				(*FB Inputs*)
+					Enable_Motion:= All_Estops_OK,
+					Fronius_Ream:= TRUE,
+                    Binzel_Ream:= FALSE,  (*optional*)
+					
+					Ream_REQ:= R2.Peripheral_Req.1 AND ((R2.Task_ID_Ack=Tip_Dress)OR (R2.In_T1 AND R2.Peripheral_Req.5)),
+					Ream_Time:= T#2S,
+					Ream_Clamp_Open:= R2.Reamer[1].N01.I.1,
+					Spray_REQ:= R2.Peripheral_Req.2 AND ((R2.Task_ID_Ack=Tip_Dress)OR (R2.In_T1 AND R2.Peripheral_Req.5)),
+					Spray_Time:= T#2S,
+					F_WireCutter_REQ:= R2.Peripheral_Req.4 AND ((R2.Task_ID_Ack=Tip_Dress)OR (R2.In_T1 AND R2.Peripheral_Req.5)),
+					F_WireCutter_Time:= T#1S,
+					
+				(*FB Outputs*)
+					Reaming_Complete=> ,(*mapped in cell services*)
+					(*The following are for Binzel type reamers only*)
+					LifterUp_ACK=> , (*mapped in cell services*)
+					Clamp_ACK=>,(*mapped in cell services*)
+					Injector_ACK=> ,(*mapped in cell services*)
+					WireCutter_ACK=> (*mapped in cell services*)
+					);
+			
+			(*R2.Reamer[1](
+				(*FB Inputs*)
+					Enable_Motion:= All_Estops_OK,
+					Fronius_Ream:= TRUE,
+                    Binzel_Ream:= FALSE,  (*optional*)
+					Ream_REQ:= R2.Peripheral_Req.5 AND (R2.Task_ID_Ack=Tip_Dress),
+
+				(*FB Outputs*)
+					Reaming_Complete=> ,(*mapped in cell services*)
+					);*)
+		(*Call Actual Object*)
+		R2();
+		(*Output Data*)
+		Out_To_ICxx.Robot[2].Robot_Type:= R2.FB_In.Robot_Type;
+		Out_To_ICxx.Robot[2].Status:= R2.Status;
+		Out_To_ICxx.Robot[2].Axis_Data[1]:= R2.S_Axis_Pos_Raw;
+		Out_To_ICxx.Robot[2].In_Image:= R2.Input_Image;
+		Out_To_ICxx.Robot[2].Out_Image:= R2.Output_Image;
+		Out_To_ICxx.Robot[2].Discrete_ImageFSOE:= R2.Discrete_Image_FSoE;
+		Out_To_ICxx.Robot[2].Options:= R2.FB_In.Options;
+			Out_To_ICxx.Robot[2].WS_Discrete_Image[1]:= R2.WS[1].Discrete_Image;
+			Out_To_ICxx.Robot[2].WS_Discrete_Image[2]:= R2.WS[2].Discrete_Image;
+ 			Out_To_ICxx.Robot[2].ATI_Discrete_Image:= R2.ATI[1].Discrete_Image;
+			Out_To_ICxx.Robot[2].Reamer_Discrete_Image:= R2.Reamer[1].Discrete_Image;
+			Out_To_ICxx.Robot[2].Fronius_Status:= R2.Fronius_Status;
+		Out_To_ICxx.Robot[2].Ped_IO_ToShow[1]:= 0;			(*Set to Ped value if this robots ecat string contains the Ped's IO*)
+		Out_To_ICxx.Robot[2].Ped_IO_ToShow[2]:= 0;			(*Set to Ped value if this robots ecat string contains the Ped's IO*)
+		Out_To_ICxx.Robot[2].ECAT_Cable_Breaks:= R2.ECatSlave_Cable_Breaks;
+		Out_To_ICxx.Robot[2].CT:= R2.CT;
+
+
+
+(*R3 ------------------------*)
+		(*Input Data*)
+		R3.FB_In.Robot_Type:=KUKA_KRC4_SAFEOP;
+		R3.FB_In.Install_Zero_Orientation:= 180; 	(*Set this value between 0 and 359 to set the zero position of the robot physical install with reference to 12 o'clock symbol on UI screens*)
+		R3.FB_In.Under_Construction:= GTAC_CONFIG.Under_Construction;
+		R3.FB_In.In_SIM_Mode:= GTAC_CONFIG.In_SIM_Mode;
+		R3.FB_In.SIM_StartWorkAround:= FALSE;  (*Main.SIM_WorkAround_StartRobots*)
+		R3.FB_In.CoE_Read_Trigger:= (GTAC_CONFIG.Option_Robot_Count>=3) AND Pulse_CoERead;
+		R3.FB_In.Ecat_Master_AmsNetID:= MAIN.ECAT_Master.AmsID;
+		R3.FB_In.Prev_EcatNode_Present:= NOT R2.EK1100_NotPresent; (*Ensure Previous Node Exists to determine Ecat Cable Break of this Devices Input Cable*)
+		R3.FB_In.Safety_RST:=SAFETY_RESET;
+		R3.FB_In.Enable_Motion:= All_Estops_OK OR GTAC_CONFIG.Under_Construction;
+		R3.FB_In.Alarm_RST:=In_From_ICxx.ControlPower1;
+		R3.FB_In.Select_Play:=FALSE;
+		R3.FB_In.Select_Teach:=FALSE;
+		R3.FB_In.Select_Remote:=FALSE;
+		R3.FB_In.Start_Scan:=In_From_ICxx.StartRobots;
+		R3.FB_In.Stop_Scan:=In_From_ICxx.StopRobots;
+		R3.FB_In.Stop_Scan2:=FALSE;
+		R3.FB_In.In_DryCycle:= GTAC_CONFIG.Dry_Cycle_Enabled;
+		R3.FB_In.Low_Speed:= GTAC_CONFIG.Low_Speed_Enabled;
+		R3.FB_In.Speed_Request:= In_From_ICxx.Global_Robot_Speed;
+		R3.FB_In.Force_MasterTest_Req:= Cell_Services_Prog.Human_Reqs_MasterTest OR Cell_Services_Prog.A_Robot_Reqs_MasterTest;
+		R3.FB_In.Force_BrakeTest_Req:= Cell_Services_Prog.Human_Reqs_BrakeTest OR Cell_Services_Prog.A_Robot_Reqs_BrakeTest;
+		R3.FB_In.Major_Faults:= Faults.System_Major_Fault;
+		R3.FB_In.Teach_Interlock:=R3_Data.Teach_Interlock;
+		R3.FB_In.Weld_Inhibit:=In_From_ICxx.Rxx_Weld_Inhibit;
+		R3.FB_In.Option_Disable_WaterFLT:= FALSE AND GTAC_CONFIG.Under_Construction OR (MAIN.R3.Task_ID_Ack=Tip_Change_EXT); (*Used to disable water fault if no water is present. use with caution*)
+		R3.FB_In.OK_ToEnter_EquipInterf1:=R3_Data.OK_ToEnter_EquipInterf1;
+		R3.FB_In.OK_ToEnter_EquipInterf2:=R3_Data.OK_ToEnter_EquipInterf2;
+		R3.FB_In.OK_ToEnter_EquipInterf3:=R3_Data.OK_ToEnter_EquipInterf3;
+		R3.FB_In.OK_ToEnter_EquipInterf4:=R3_Data.OK_ToEnter_EquipInterf4;
+		R3.FB_In.OK_ToEnter_EquipInterf5:=R3_Data.OK_ToEnter_EquipInterf5;
+		R3.FB_In.OK_ToEnter_EquipInterf6:=R3_Data.OK_ToEnter_EquipInterf6;
+		R3.FB_In.OK_ToEnter_EquipInterf7:=R3_Data.OK_ToEnter_EquipInterf7;
+		R3.FB_In.OK_ToEnter_EquipInterf8:=R3_Data.OK_ToEnter_EquipInterf8;
+		R3.FB_In.OK_ToEnter_EquipInterf9:=R3_Data.OK_ToEnter_EquipInterf9;
+		R3.FB_In.OK_ToEnter_HumanInterf1:=R3_Data.OK_ToEnter_HumanInterf1;
+		R3.FB_In.OK_ToEnter_HumanInterf2:=R3_Data.OK_ToEnter_HumanInterf2;
+		R3.FB_In.OK_ToEnter_HumanInterf3:=R3_Data.OK_ToEnter_HumanInterf3;
+		R3.FB_In.OK_ToEnter_HumanInterf4:=R3_Data.OK_ToEnter_HumanInterf4;
+		R3.FB_In.OK_ToEnter_HumanInterf5:=R3_Data.OK_ToEnter_HumanInterf5;
+		R3.FB_In.OK_ToEnter_HumanInterf6:=R3_Data.OK_ToEnter_HumanInterf6;
+		R3.FB_In.OK_ToEnter_HumanInterf7:=R3_Data.OK_ToEnter_HumanInterf7;
+		R3.FB_In.OK_ToEnter_HumanInterf8:=R3_Data.OK_ToEnter_HumanInterf8;
+		R3.FB_In.OK_ToEnter_RobotInterfs:= R3_Data.OK_ToEnter_RobotInterfs;
+		R3.FB_In.Fix_ID:=R3_Data.Fix_ID[R3.Location_Index];
+		R3.FB_In.Model_ID:=R3_Data.Model_ID[R3.Location_Index];
+		R3.FB_In.Task_ID:=R3_Data.Task_ID[R3.Location_Index];
+		R3.FB_In.Proceed_From_Pounce:=R3_Data.Proceed_From_Pounce[R3.Location_Index];
+		R3.FB_In.Complete_Ack:=R3_Data.Complete_Ack[R3.Location_Index];
+		R3.FB_In.PeripheralReq_Ack:=R3_Data.PeripheralReq_Ack[R3.Location_Index];
+		R3.FB_In.AuxReq_Ack:=R3_Data.AuxReq_Ack[R3.Location_Index];
+		R3.FB_In.User_Inputs.0:= R1.User_Outputs.0;
+		R3.FB_In.User_Inputs.1:= R1.User_Outputs.1;
+		R3.FB_In.User_Inputs.2:= R1.User_Outputs.2;
+		R3.FB_In.User_Inputs.3:= FALSE;
+		R3.FB_In.User_Inputs.4:= FALSE;
+		R3.FB_In.User_Inputs.5:= FALSE;
+		R3.FB_In.User_Inputs.6:= FALSE;
+		R3.FB_In.User_Inputs.7:= FALSE;
+			(*Configure Options Amounts*)
+			R3.FB_In.Options.WeldCont_Amount:=0; 					(*Select amount of Spot Type Weld Controllers here (0 min, 4 max)*)
+			R3.FB_In.Options.WaterStand_Amount:= 0;				(*Select amount of Water Stands here (0 min, 2 max)*)
+			R3.FB_In.Options.MIGCont_Amount:= 1;					(*Select amount of MIG Type Weld Controllers here (0 min, 1 max)*)
+			R3.FB_In.Options.Reamer_Amount:= 1;					(*Select amount of Tip Reamers here (0 min, 1 max)*)
+			R3.FB_In.Options.EOAT_Amount:= 0;						(*Assign EOAT number to robot (0 min, 10 max)*)
+			(*Configure Options Parameters*)
+			
+			R3.Reamer[1](
+				(*FB Inputs*)
+					Enable_Motion:= All_Estops_OK,
+					Fronius_Ream:= TRUE,
+                    Binzel_Ream:= FALSE,  (*optional*)
+					
+					Ream_REQ:= R3.Peripheral_Req.1 AND ((R3.Task_ID_Ack=Tip_Dress)OR (R3.In_T1 AND R3.Peripheral_Req.5)),
+					Ream_Time:= T#2S,
+					Ream_Clamp_Open:= R3.Reamer[1].N01.I.1,
+					Spray_REQ:= R3.Peripheral_Req.2 AND ((R3.Task_ID_Ack=Tip_Dress)OR (R3.In_T1 AND R3.Peripheral_Req.5)),
+					Spray_Time:= T#2S,
+					F_WireCutter_REQ:= R3.Peripheral_Req.4 AND ((R3.Task_ID_Ack=Tip_Dress)OR (R3.In_T1 AND R3.Peripheral_Req.5)),
+					F_WireCutter_Time:= T#1S,
+					
+				(*FB Outputs*)
+					Reaming_Complete=> ,(*mapped in cell services*)
+					(*The following are for Binzel type reamers only*)
+					LifterUp_ACK=> , (*mapped in cell services*)
+					Clamp_ACK=>,(*mapped in cell services*)
+					Injector_ACK=> ,(*mapped in cell services*)
+					WireCutter_ACK=> (*mapped in cell services*)
+					);
+			
+			(*R3.Reamer[1](
+				(*FB Inputs*)
+					Enable_Motion:= All_Estops_OK,
+					Fronius_Ream:= TRUE,
+                    Binzel_Ream:= FALSE,  (*optional*)
+					Ream_REQ:= R3.Peripheral_Req.5 AND (R3.Task_ID_Ack=Tip_Dress),
+
+				(*FB Outputs*)
+					Reaming_Complete=> ,(*mapped in cell services*)
+					);*)
+		(*Call Actual Object*)
+		R3();
+		(*Output Data*)
+		Out_To_ICxx.Robot[3].Robot_Type:= R3.FB_In.Robot_Type;
+		Out_To_ICxx.Robot[3].Status:= R3.Status;
+		Out_To_ICxx.Robot[3].Axis_Data[1]:= R3.S_Axis_Pos_Raw;
+		Out_To_ICxx.Robot[3].In_Image:= R3.Input_Image;
+		Out_To_ICxx.Robot[3].Out_Image:= R3.Output_Image;
+		Out_To_ICxx.Robot[3].Discrete_ImageFSOE:= R3.Discrete_Image_FSoE;
+		Out_To_ICxx.Robot[3].Options:= R3.FB_In.Options;
+			Out_To_ICxx.Robot[3].WS_Discrete_Image[1]:= R3.WS[1].Discrete_Image;
+			Out_To_ICxx.Robot[3].WS_Discrete_Image[2]:= R3.WS[2].Discrete_Image;
+ 			Out_To_ICxx.Robot[3].ATI_Discrete_Image:= R3.ATI[1].Discrete_Image;
+			Out_To_ICxx.Robot[3].Reamer_Discrete_Image:= R3.Reamer[1].Discrete_Image;
+			Out_To_ICxx.Robot[3].Fronius_Status:= R3.Fronius_Status;
+		Out_To_ICxx.Robot[3].Ped_IO_ToShow[1]:= 0;			(*Set to Ped value if this robots ecat string contains the Ped's IO*)
+		Out_To_ICxx.Robot[3].Ped_IO_ToShow[2]:= 0;			(*Set to Ped value if this robots ecat string contains the Ped's IO*)
+		Out_To_ICxx.Robot[3].ECAT_Cable_Breaks:= R3.ECatSlave_Cable_Breaks;
+		Out_To_ICxx.Robot[3].CT:= R3.CT;
+
+
+(*R4 ------------------------*)
+		(*Input Data*)
+		R4.FB_In.Robot_Type:=KUKA_KRC4_SAFEOP;
+		R4.FB_In.Install_Zero_Orientation:= 0; 	(*Set this value between 0 and 359 to set the zero position of the robot physical install with reference to 12 o'clock symbol on UI screens*)
+		R4.FB_In.Under_Construction:= GTAC_CONFIG.Under_Construction;
+		R4.FB_In.In_SIM_Mode:= GTAC_CONFIG.In_SIM_Mode;
+		R4.FB_In.SIM_StartWorkAround:= FALSE;  (*Main.SIM_WorkAround_StartRobots*)
+		R4.FB_In.CoE_Read_Trigger:= (GTAC_CONFIG.Option_Robot_Count>=4) AND Pulse_CoERead;
+		R4.FB_In.Ecat_Master_AmsNetID:= MAIN.ECAT_Master.AmsID;
+		R4.FB_In.Prev_EcatNode_Present:= NOT R3.EK1100_NotPresent; (*Ensure Previous Node Exists to determine Ecat Cable Break of this Devices Input Cable*)
+		R4.FB_In.Safety_RST:=SAFETY_RESET;
+		R4.FB_In.Enable_Motion:= All_Estops_OK OR GTAC_CONFIG.Under_Construction;
+		R4.FB_In.Alarm_RST:=In_From_ICxx.ControlPower1;
+		R4.FB_In.Select_Play:=FALSE;
+		R4.FB_In.Select_Teach:=FALSE;
+		R4.FB_In.Select_Remote:=FALSE;
+		R4.FB_In.Start_Scan:=In_From_ICxx.StartRobots;
+		R4.FB_In.Stop_Scan:=In_From_ICxx.StopRobots;
+		R4.FB_In.Stop_Scan2:=FALSE;
+		R4.FB_In.In_DryCycle:= GTAC_CONFIG.Dry_Cycle_Enabled;
+		R4.FB_In.Low_Speed:= GTAC_CONFIG.Low_Speed_Enabled;
+		R4.FB_In.Speed_Request:= In_From_ICxx.Global_Robot_Speed;
+		R4.FB_In.Force_MasterTest_Req:= Cell_Services_Prog.Human_Reqs_MasterTest OR Cell_Services_Prog.A_Robot_Reqs_MasterTest;
+		R4.FB_In.Force_BrakeTest_Req:= Cell_Services_Prog.Human_Reqs_BrakeTest OR Cell_Services_Prog.A_Robot_Reqs_BrakeTest;
+		R4.FB_In.Major_Faults:= Faults.System_Major_Fault;
+		R4.FB_In.Teach_Interlock:=R4_Data.Teach_Interlock;
+		R4.FB_In.Weld_Inhibit:=In_From_ICxx.Rxx_Weld_Inhibit;
+		R4.FB_In.Option_Disable_WaterFLT:= FALSE AND GTAC_CONFIG.Under_Construction OR (MAIN.R4.Task_ID_Ack=Tip_Change_EXT); (*Used to disable water fault if no water is present. use with caution*)
+		R4.FB_In.OK_ToEnter_EquipInterf1:=R4_Data.OK_ToEnter_EquipInterf1;
+		R4.FB_In.OK_ToEnter_EquipInterf2:=R4_Data.OK_ToEnter_EquipInterf2;
+		R4.FB_In.OK_ToEnter_EquipInterf3:=R4_Data.OK_ToEnter_EquipInterf3;
+		R4.FB_In.OK_ToEnter_EquipInterf4:=R4_Data.OK_ToEnter_EquipInterf4;
+		R4.FB_In.OK_ToEnter_EquipInterf5:=R4_Data.OK_ToEnter_EquipInterf5;
+		R4.FB_In.OK_ToEnter_EquipInterf6:=R4_Data.OK_ToEnter_EquipInterf6;
+		R4.FB_In.OK_ToEnter_EquipInterf7:=R4_Data.OK_ToEnter_EquipInterf7;
+		R4.FB_In.OK_ToEnter_EquipInterf8:=R4_Data.OK_ToEnter_EquipInterf8;
+		R4.FB_In.OK_ToEnter_EquipInterf9:=R4_Data.OK_ToEnter_EquipInterf9;
+		R4.FB_In.OK_ToEnter_HumanInterf1:=R4_Data.OK_ToEnter_HumanInterf1;
+		R4.FB_In.OK_ToEnter_HumanInterf2:=R4_Data.OK_ToEnter_HumanInterf2;
+		R4.FB_In.OK_ToEnter_HumanInterf3:=R4_Data.OK_ToEnter_HumanInterf3;
+		R4.FB_In.OK_ToEnter_HumanInterf4:=R4_Data.OK_ToEnter_HumanInterf4;
+		R4.FB_In.OK_ToEnter_HumanInterf5:=R4_Data.OK_ToEnter_HumanInterf5;
+		R4.FB_In.OK_ToEnter_HumanInterf6:=R4_Data.OK_ToEnter_HumanInterf6;
+		R4.FB_In.OK_ToEnter_HumanInterf7:=R4_Data.OK_ToEnter_HumanInterf7;
+		R4.FB_In.OK_ToEnter_RobotInterfs:= R4_Data.OK_ToEnter_RobotInterfs;
+		R4.FB_In.Fix_ID:=R4_Data.Fix_ID[R4.Location_Index];
+		R4.FB_In.Model_ID:=R4_Data.Model_ID[R4.Location_Index];
+		R4.FB_In.Task_ID:=R4_Data.Task_ID[R4.Location_Index];
+		R4.FB_In.Proceed_From_Pounce:=R4_Data.Proceed_From_Pounce[R4.Location_Index];
+		R4.FB_In.Complete_Ack:=R4_Data.Complete_Ack[R4.Location_Index];
+		R4.FB_In.PeripheralReq_Ack:=R4_Data.PeripheralReq_Ack[R4.Location_Index];
+		R4.FB_In.AuxReq_Ack:=R4_Data.AuxReq_Ack[R4.Location_Index];
+		R4.FB_In.User_Inputs.0:= FALSE;
+		R4.FB_In.User_Inputs.1:= FALSE;
+		R4.FB_In.User_Inputs.2:= FALSE;
+		R4.FB_In.User_Inputs.3:= FALSE;
+		R4.FB_In.User_Inputs.4:= FALSE;
+		R4.FB_In.User_Inputs.5:= FALSE;
+		R4.FB_In.User_Inputs.6:= FALSE;
+		R4.FB_In.User_Inputs.7:= FALSE;
+			(*Configure Options Amounts*)
+			R4.FB_In.Options.WeldCont_Amount:=0; 					(*Select amount of Spot Type Weld Controllers here (0 min, 4 max)*)
+			R4.FB_In.Options.WaterStand_Amount:= 0;				(*Select amount of Water Stands here (0 min, 2 max)*)
+			R4.FB_In.Options.MIGCont_Amount:= 0;					(*Select amount of MIG Type Weld Controllers here (0 min, 1 max)*)
+			R4.FB_In.Options.Reamer_Amount:= 0;					(*Select amount of Tip Reamers here (0 min, 1 max)*)
+			R4.FB_In.Options.EOAT_Amount:= 1;						(*Assign EOAT number to robot (0 min, 10 max)*)
+			(*Configure Options Parameters*)
+
+		(*Call Actual Object*)
+		R4();
+		(*Output Data*)
+		Out_To_ICxx.Robot[4].Robot_Type:= R4.FB_In.Robot_Type;
+		Out_To_ICxx.Robot[4].Status:= R4.Status;
+		Out_To_ICxx.Robot[4].Axis_Data[1]:= R4.S_Axis_Pos_Raw;
+		Out_To_ICxx.Robot[4].Axis_Data[7]:= R4.External_Axis_Pos_Raw; (*Actual value coming from robot*)
+		Out_To_ICxx.Robot[4].In_Image:= R4.Input_Image;
+		Out_To_ICxx.Robot[4].Out_Image:= R4.Output_Image;
+		Out_To_ICxx.Robot[4].Discrete_ImageFSOE:= R4.Discrete_Image_FSoE;
+		Out_To_ICxx.Robot[4].Options:= R4.FB_In.Options;
+			Out_To_ICxx.Robot[4].WS_Discrete_Image[1]:= R4.WS[1].Discrete_Image;
+			Out_To_ICxx.Robot[4].WS_Discrete_Image[2]:= R4.WS[2].Discrete_Image;
+ 			Out_To_ICxx.Robot[4].ATI_Discrete_Image:= R4.ATI[1].Discrete_Image;
+			Out_To_ICxx.Robot[4].Reamer_Discrete_Image:= R4.Reamer[1].Discrete_Image;
+			Out_To_ICxx.Robot[4].Fronius_Status:= R4.Fronius_Status;
+		Out_To_ICxx.Robot[4].Ped_IO_ToShow[1]:= 0;			(*Set to Ped value if this robots ecat string contains the Ped's IO*)
+		Out_To_ICxx.Robot[4].Ped_IO_ToShow[2]:= 0;			(*Set to Ped value if this robots ecat string contains the Ped's IO*)
+		Out_To_ICxx.Robot[4].ECAT_Cable_Breaks:= R4.ECatSlave_Cable_Breaks;
+		Out_To_ICxx.Robot[4].CT:= R4.CT;
+
+
+
+(*R5 ------------------------*)
+		(*Input Data*)
+		R5.FB_In.Robot_Type:=KUKA_KRC4_SAFEOP_Turntable;
+		R5.FB_In.Install_Zero_Orientation:= 0; 	(*Set this value between 0 and 359 to set the zero position of the robot physical install with reference to 12 o'clock symbol on UI screens*)
+		R5.FB_In.Under_Construction:= GTAC_CONFIG.Under_Construction;
+		R5.FB_In.In_SIM_Mode:= GTAC_CONFIG.In_SIM_Mode;
+		R5.FB_In.SIM_StartWorkAround:= FALSE;  (*Main.SIM_WorkAround_StartRobots*)
+		R5.FB_In.CoE_Read_Trigger:= (GTAC_CONFIG.Option_Robot_Count>=5) AND Pulse_CoERead;
+		R5.FB_In.Ecat_Master_AmsNetID:= MAIN.ECAT_Master.AmsID;
+		R5.FB_In.Prev_EcatNode_Present:= NOT R4.EK1100_NotPresent; (*Ensure Previous Node Exists to determine Ecat Cable Break of this Devices Input Cable*)
+		R5.FB_In.Safety_RST:=SAFETY_RESET;
+		R5.FB_In.Enable_Motion:= All_Estops_OK OR GTAC_CONFIG.Under_Construction;
+		R5.FB_In.Alarm_RST:=In_From_ICxx.ControlPower1;
+		R5.FB_In.Select_Play:=FALSE;
+		R5.FB_In.Select_Teach:=FALSE;
+		R5.FB_In.Select_Remote:=FALSE;
+		R5.FB_In.Start_Scan:=In_From_ICxx.StartRobots;
+		R5.FB_In.Stop_Scan:=In_From_ICxx.StopRobots;
+		R5.FB_In.Stop_Scan2:=FALSE;
+		R5.FB_In.In_DryCycle:= GTAC_CONFIG.Dry_Cycle_Enabled;
+		R5.FB_In.Low_Speed:= GTAC_CONFIG.Low_Speed_Enabled;
+		R5.FB_In.Speed_Request:= In_From_ICxx.Global_Robot_Speed;
+		R5.FB_In.Force_MasterTest_Req:= Cell_Services_Prog.Human_Reqs_MasterTest OR Cell_Services_Prog.A_Robot_Reqs_MasterTest;
+		R5.FB_In.Force_BrakeTest_Req:= Cell_Services_Prog.Human_Reqs_BrakeTest OR Cell_Services_Prog.A_Robot_Reqs_BrakeTest;
+		R5.FB_In.Major_Faults:= Faults.System_Major_Fault;
+		R5.FB_In.Teach_Interlock:=R5_Data.Teach_Interlock;
+		R5.FB_In.Weld_Inhibit:=In_From_ICxx.Rxx_Weld_Inhibit;
+		R5.FB_In.Option_Disable_WaterFLT:= FALSE AND GTAC_CONFIG.Under_Construction OR (MAIN.R5.Task_ID_Ack=Tip_Change_EXT); (*Used to disable water fault if no water is present. use with caution*)
+		R5.FB_In.OK_ToEnter_EquipInterf1:=R5_Data.OK_ToEnter_EquipInterf1;
+		R5.FB_In.OK_ToEnter_EquipInterf2:=R5_Data.OK_ToEnter_EquipInterf2;
+		R5.FB_In.OK_ToEnter_EquipInterf3:=R5_Data.OK_ToEnter_EquipInterf3;
+		R5.FB_In.OK_ToEnter_EquipInterf4:=R5_Data.OK_ToEnter_EquipInterf4;
+		R5.FB_In.OK_ToEnter_EquipInterf5:=R5_Data.OK_ToEnter_EquipInterf5;
+		R5.FB_In.OK_ToEnter_EquipInterf6:=R5_Data.OK_ToEnter_EquipInterf6;
+		R5.FB_In.OK_ToEnter_EquipInterf7:=R5_Data.OK_ToEnter_EquipInterf7;
+		R5.FB_In.OK_ToEnter_EquipInterf8:=R5_Data.OK_ToEnter_EquipInterf8;
+		R5.FB_In.OK_ToEnter_EquipInterf9:=R5_Data.OK_ToEnter_EquipInterf9;
+		R5.FB_In.OK_ToEnter_HumanInterf1:=R5_Data.OK_ToEnter_HumanInterf1;
+		R5.FB_In.OK_ToEnter_HumanInterf2:=R5_Data.OK_ToEnter_HumanInterf2;
+		R5.FB_In.OK_ToEnter_HumanInterf3:=R5_Data.OK_ToEnter_HumanInterf3;
+		R5.FB_In.OK_ToEnter_HumanInterf4:=R5_Data.OK_ToEnter_HumanInterf4;
+		R5.FB_In.OK_ToEnter_HumanInterf5:=R5_Data.OK_ToEnter_HumanInterf5;
+		R5.FB_In.OK_ToEnter_HumanInterf6:=R5_Data.OK_ToEnter_HumanInterf6;
+		R5.FB_In.OK_ToEnter_HumanInterf7:=R5_Data.OK_ToEnter_HumanInterf7;
+		R5.FB_In.OK_ToEnter_HumanInterf8:=R5_Data.OK_ToEnter_HumanInterf8;
+		R5.FB_In.OK_ToEnter_RobotInterfs:= R5_Data.OK_ToEnter_RobotInterfs;
+		R5.FB_In.Fix_ID:=R5_Data.Fix_ID[R5.Location_Index];
+		R5.FB_In.Model_ID:=R5_Data.Model_ID[R5.Location_Index];
+		R5.FB_In.Task_ID:=R5_Data.Task_ID[R5.Location_Index];
+		R5.FB_In.Proceed_From_Pounce:=R5_Data.Proceed_From_Pounce[R5.Location_Index];
+		R5.FB_In.Complete_Ack:=R5_Data.Complete_Ack[R5.Location_Index];
+		R5.FB_In.PeripheralReq_Ack:=R5_Data.PeripheralReq_Ack[R5.Location_Index];
+		R5.FB_In.AuxReq_Ack:=R5_Data.AuxReq_Ack[R5.Location_Index];
+		R5.FB_In.User_Inputs.0:= FALSE;
+		R5.FB_In.User_Inputs.1:= FALSE;
+		R5.FB_In.User_Inputs.2:= FALSE;
+		R5.FB_In.User_Inputs.3:= FALSE;
+		R5.FB_In.User_Inputs.4:= FALSE;
+		R5.FB_In.User_Inputs.5:= FALSE;
+		R5.FB_In.User_Inputs.6:= FALSE;
+		R5.FB_In.User_Inputs.7:= FALSE;
+			(*Configure Options Amounts*)
+			R5.FB_In.Options.WeldCont_Amount:= 0; 					(*Select amount of Spot Type Weld Controllers here (0 min, 4 max)*)
+			R5.FB_In.Options.WaterStand_Amount:= 0;				(*Select amount of Water Stands here (0 min, 2 max)*)
+			R5.FB_In.Options.MIGCont_Amount:= 1;					(*Select amount of MIG Type Weld Controllers here (0 min, 1 max)*)
+			R5.FB_In.Options.Reamer_Amount:= 1;					(*Select amount of Tip Reamers here (0 min, 1 max)*)
+			R5.FB_In.Options.EOAT_Amount:= 0;						(*Assign EOAT number to robot (0 min, 10 max)*)
+			(*Configure Options Parameters*)
+			
+			R5.Reamer[1](
+				(*FB Inputs*)
+					Enable_Motion:= All_Estops_OK,
+					Fronius_Ream:= TRUE,
+                    Binzel_Ream:= FALSE,  (*optional*)
+					
+					Ream_REQ:= R5.Peripheral_Req.1 AND ((R5.Task_ID_Ack=Tip_Dress)OR (R5.In_T1 AND R5.Peripheral_Req.5)),
+					Ream_Time:= T#2S,
+					Ream_Clamp_Open:= R5.Reamer[1].N01.I.1,
+					Spray_REQ:= R5.Peripheral_Req.2 AND ((R5.Task_ID_Ack=Tip_Dress)OR (R5.In_T1 AND R5.Peripheral_Req.5)),
+					Spray_Time:= T#2S,
+					F_WireCutter_REQ:= R5.Peripheral_Req.4 AND ((R5.Task_ID_Ack=Tip_Dress)OR (R5.In_T1 AND R5.Peripheral_Req.5)),
+					F_WireCutter_Time:= T#1S,
+					
+				(*FB Outputs*)
+					Reaming_Complete=> ,(*mapped in cell services*)
+					(*The following are for Binzel type reamers only*)
+					LifterUp_ACK=> , (*mapped in cell services*)
+					Clamp_ACK=>,(*mapped in cell services*)
+					Injector_ACK=> ,(*mapped in cell services*)
+					WireCutter_ACK=> (*mapped in cell services*)
+					);
+			(*R5.Reamer[1](
+				(*FB Inputs*)
+					Enable_Motion:= All_Estops_OK,
+					Fronius_Ream:= TRUE,
+                    Binzel_Ream:= FALSE,  (*optional*)
+					Ream_REQ:= R5.Peripheral_Req.5 AND (R5.Task_ID_Ack=Tip_Dress),
+
+				(*FB Outputs*)
+					Reaming_Complete=> ,(*mapped in cell services*)
+					);*)
+		(*Call Actual Object*)
+		R5();
+		(*Output Data*)
+		Out_To_ICxx.Robot[5].Robot_Type:= R5.FB_In.Robot_Type;
+		Out_To_ICxx.Robot[5].Status:= R5.Status;
+		Out_To_ICxx.Robot[5].Axis_Data[1]:= R5.S_Axis_Pos_Raw;
+		Out_To_ICxx.Robot[5].In_Image:= R5.Input_Image;
+		Out_To_ICxx.Robot[5].Out_Image:= R5.Output_Image;
+		Out_To_ICxx.Robot[5].Discrete_ImageFSOE:= R5.Discrete_Image_FSoE;
+		Out_To_ICxx.Robot[5].Options:= R5.FB_In.Options;
+			Out_To_ICxx.Robot[5].WS_Discrete_Image[1]:= R5.WS[1].Discrete_Image;
+			Out_To_ICxx.Robot[5].WS_Discrete_Image[2]:= R5.WS[2].Discrete_Image;
+ 			Out_To_ICxx.Robot[5].ATI_Discrete_Image:= R5.ATI[1].Discrete_Image;
+			Out_To_ICxx.Robot[5].Reamer_Discrete_Image:= R5.Reamer[1].Discrete_Image;
+			Out_To_ICxx.Robot[5].Fronius_Status:= R5.Fronius_Status;
+		Out_To_ICxx.Robot[5].Ped_IO_ToShow[1]:= 0;			(*Set to Ped value if this robots ecat string contains the Ped's IO*)
+		Out_To_ICxx.Robot[5].Ped_IO_ToShow[2]:= 0;			(*Set to Ped value if this robots ecat string contains the Ped's IO*)
+		Out_To_ICxx.Robot[5].ECAT_Cable_Breaks:= R5.ECatSlave_Cable_Breaks;
+		Out_To_ICxx.Robot[5].CT:= R5.CT;
+		(*Example of passing Turntable Axis Data*)
+		//Out_To_ICxx.TT02_Location_Index:= R5.TT_Axis_Location_Index; (*Pass Turntable location*) DEBUG - RESTORE AFTER SIM - RJ
+		
+		(*IF (MAIN.SIM_WorkAround_TT02_Position_Index[0] = TRUE)
+			THEN Out_To_ICxx.TT02_Location_Index:= 1;
+		ELSIF (MAIN.SIM_WorkAround_TT02_Position_Index[1] = TRUE)
+			THEN Out_To_ICxx.TT02_Location_Index:= 2;
+		ELSE
+			Out_To_ICxx.TT02_Location_Index:= 0;
+		END_IF*)	//DEBUG - RJ - REMOVE ABOVE AFTER SIM, RESTORE original Out_To_ICxx.TT01_Location_Index:= R1.TT_Axis_Location_Index;
+		Out_To_ICxx.TT02_Location_Index:= R5.TT_Axis_Location_Index;
+
+
+
+(*R6 ------------------------*)
+		(*Input Data*)
+		R6.FB_In.Robot_Type:=KUKA_KRC4_SAFEOP;
+		R6.FB_In.Install_Zero_Orientation:= 0; 	(*Set this value between 0 and 359 to set the zero position of the robot physical install with reference to 12 o'clock symbol on UI screens*)
+		R6.FB_In.Under_Construction:= GTAC_CONFIG.Under_Construction;
+		R6.FB_In.In_SIM_Mode:= GTAC_CONFIG.In_SIM_Mode;
+		R6.FB_In.SIM_StartWorkAround:= FALSE;  (*Main.SIM_WorkAround_StartRobots*)
+		R6.FB_In.CoE_Read_Trigger:= (GTAC_CONFIG.Option_Robot_Count>=6) AND Pulse_CoERead;
+		R6.FB_In.Ecat_Master_AmsNetID:= MAIN.ECAT_Master.AmsID;
+		R6.FB_In.Prev_EcatNode_Present:= NOT R5.EK1100_NotPresent; (*Ensure Previous Node Exists to determine Ecat Cable Break of this Devices Input Cable*)
+		R6.FB_In.Safety_RST:=SAFETY_RESET;
+		R6.FB_In.Enable_Motion:= All_Estops_OK OR GTAC_CONFIG.Under_Construction;
+		R6.FB_In.Alarm_RST:=In_From_ICxx.ControlPower1;
+		R6.FB_In.Select_Play:=FALSE;
+		R6.FB_In.Select_Teach:=FALSE;
+		R6.FB_In.Select_Remote:=FALSE;
+		R6.FB_In.Start_Scan:=In_From_ICxx.StartRobots;
+		R6.FB_In.Stop_Scan:=In_From_ICxx.StopRobots;
+		R6.FB_In.Stop_Scan2:=FALSE;
+		R6.FB_In.In_DryCycle:= GTAC_CONFIG.Dry_Cycle_Enabled;
+		R6.FB_In.Low_Speed:= GTAC_CONFIG.Low_Speed_Enabled;
+		R6.FB_In.Speed_Request:= In_From_ICxx.Global_Robot_Speed;
+		R6.FB_In.Force_MasterTest_Req:= Cell_Services_Prog.Human_Reqs_MasterTest OR Cell_Services_Prog.A_Robot_Reqs_MasterTest;
+		R6.FB_In.Force_BrakeTest_Req:= Cell_Services_Prog.Human_Reqs_BrakeTest OR Cell_Services_Prog.A_Robot_Reqs_BrakeTest;
+		R6.FB_In.Major_Faults:= Faults.System_Major_Fault;
+		R6.FB_In.Teach_Interlock:=R6_Data.Teach_Interlock;
+		R6.FB_In.Weld_Inhibit:=In_From_ICxx.Rxx_Weld_Inhibit;
+		R6.FB_In.Option_Disable_WaterFLT:= FALSE AND GTAC_CONFIG.Under_Construction OR (MAIN.R6.Task_ID_Ack=Tip_Change_EXT); (*Used to disable water fault if no water is present. use with caution*)
+		R6.FB_In.OK_ToEnter_EquipInterf1:=R6_Data.OK_ToEnter_EquipInterf1;
+		R6.FB_In.OK_ToEnter_EquipInterf2:=R6_Data.OK_ToEnter_EquipInterf2;
+		R6.FB_In.OK_ToEnter_EquipInterf3:=R6_Data.OK_ToEnter_EquipInterf3;
+		R6.FB_In.OK_ToEnter_EquipInterf4:=R6_Data.OK_ToEnter_EquipInterf4;
+		R6.FB_In.OK_ToEnter_EquipInterf5:=R6_Data.OK_ToEnter_EquipInterf5;
+		R6.FB_In.OK_ToEnter_EquipInterf6:=R6_Data.OK_ToEnter_EquipInterf6;
+		R6.FB_In.OK_ToEnter_EquipInterf7:=R6_Data.OK_ToEnter_EquipInterf7;
+		R6.FB_In.OK_ToEnter_EquipInterf8:=R6_Data.OK_ToEnter_EquipInterf8;
+		R6.FB_In.OK_ToEnter_EquipInterf9:=R6_Data.OK_ToEnter_EquipInterf9;
+		R6.FB_In.OK_ToEnter_HumanInterf1:=R6_Data.OK_ToEnter_HumanInterf1;
+		R6.FB_In.OK_ToEnter_HumanInterf2:=R6_Data.OK_ToEnter_HumanInterf2;
+		R6.FB_In.OK_ToEnter_HumanInterf3:=R6_Data.OK_ToEnter_HumanInterf3;
+		R6.FB_In.OK_ToEnter_HumanInterf4:=R6_Data.OK_ToEnter_HumanInterf4;
+		R6.FB_In.OK_ToEnter_HumanInterf5:=R6_Data.OK_ToEnter_HumanInterf5;
+		R6.FB_In.OK_ToEnter_HumanInterf6:=R6_Data.OK_ToEnter_HumanInterf6;
+		R6.FB_In.OK_ToEnter_HumanInterf7:=R6_Data.OK_ToEnter_HumanInterf7;
+		R6.FB_In.OK_ToEnter_HumanInterf8:=R6_Data.OK_ToEnter_HumanInterf8;
+		R6.FB_In.OK_ToEnter_RobotInterfs:= R6_Data.OK_ToEnter_RobotInterfs;
+		R6.FB_In.Fix_ID:=R6_Data.Fix_ID[R6.Location_Index];
+		R6.FB_In.Model_ID:=R6_Data.Model_ID[R6.Location_Index];
+		R6.FB_In.Task_ID:=R6_Data.Task_ID[R6.Location_Index];
+		R6.FB_In.Proceed_From_Pounce:=R6_Data.Proceed_From_Pounce[R6.Location_Index];
+		R6.FB_In.Complete_Ack:=R6_Data.Complete_Ack[R6.Location_Index];
+		R6.FB_In.PeripheralReq_Ack:=R6_Data.PeripheralReq_Ack[R6.Location_Index];
+		R6.FB_In.AuxReq_Ack:=R6_Data.AuxReq_Ack[R6.Location_Index];
+		R6.FB_In.User_Inputs.0:= FALSE;
+		R6.FB_In.User_Inputs.1:= FALSE;
+		R6.FB_In.User_Inputs.2:= FALSE;
+		R6.FB_In.User_Inputs.3:= FALSE;
+		R6.FB_In.User_Inputs.4:= FALSE;
+		R6.FB_In.User_Inputs.5:= FALSE;
+		R6.FB_In.User_Inputs.6:= FALSE;
+		R6.FB_In.User_Inputs.7:= FALSE;
+			(*Configure Options Amounts*)
+			R6.FB_In.Options.WeldCont_Amount:= 0; 					(*Select amount of Spot Type Weld Controllers here (0 min, 4 max)*)
+			R6.FB_In.Options.WaterStand_Amount:= 0;				(*Select amount of Water Stands here (0 min, 2 max)*)
+			R6.FB_In.Options.MIGCont_Amount:= 1;					(*Select amount of MIG Type Weld Controllers here (0 min, 1 max)*)
+			R6.FB_In.Options.Reamer_Amount:= 1;					(*Select amount of Tip Reamers here (0 min, 1 max)*)
+			R6.FB_In.Options.EOAT_Amount:= 0;						(*Assign EOAT number to robot (0 min, 10 max)*)
+			(*Configure Options Parameters*)
+			
+			R6.Reamer[1](
+				(*FB Inputs*)
+					Enable_Motion:= All_Estops_OK,
+					Fronius_Ream:= TRUE,
+                    Binzel_Ream:= FALSE,  (*optional*)
+					
+					Ream_REQ:= R6.Peripheral_Req.1 AND ((R6.Task_ID_Ack=Tip_Dress)OR (R6.In_T1 AND R6.Peripheral_Req.5)),
+					Ream_Time:= T#2S,
+					Ream_Clamp_Open:= R6.Reamer[1].N01.I.1,
+					Spray_REQ:= R6.Peripheral_Req.2 AND ((R6.Task_ID_Ack=Tip_Dress)OR (R6.In_T1 AND R6.Peripheral_Req.5)),
+					Spray_Time:= T#2S,
+					F_WireCutter_REQ:= R6.Peripheral_Req.4 AND ((R6.Task_ID_Ack=Tip_Dress)OR (R6.In_T1 AND R6.Peripheral_Req.5)),
+					F_WireCutter_Time:= T#1S,
+					
+				(*FB Outputs*)
+					Reaming_Complete=> ,(*mapped in cell services*)
+					(*The following are for Binzel type reamers only*)
+					LifterUp_ACK=> , (*mapped in cell services*)
+					Clamp_ACK=>,(*mapped in cell services*)
+					Injector_ACK=> ,(*mapped in cell services*)
+					WireCutter_ACK=> (*mapped in cell services*)
+					);
+			(*R6.Reamer[1](
+				(*FB Inputs*)
+					Enable_Motion:= All_Estops_OK,
+					Fronius_Ream:= TRUE,
+                    Binzel_Ream:= FALSE,  (*optional*)
+					Ream_REQ:= R6.Peripheral_Req.5 AND (R6.Task_ID_Ack=Tip_Dress),
+
+				(*FB Outputs*)
+					Reaming_Complete=> ,(*mapped in cell services*)
+					);*)
+		(*Call Actual Object*)
+		R6();
+		(*Output Data*)
+		Out_To_ICxx.Robot[6].Robot_Type:= R6.FB_In.Robot_Type;
+		Out_To_ICxx.Robot[6].Status:= R6.Status;
+		Out_To_ICxx.Robot[6].Axis_Data[1]:= R6.S_Axis_Pos_Raw;
+		Out_To_ICxx.Robot[6].In_Image:= R6.Input_Image;
+		Out_To_ICxx.Robot[6].Out_Image:= R6.Output_Image;
+		Out_To_ICxx.Robot[6].Discrete_ImageFSOE:= R6.Discrete_Image_FSoE;
+		Out_To_ICxx.Robot[6].Options:= R6.FB_In.Options;
+			Out_To_ICxx.Robot[6].WS_Discrete_Image[1]:= R6.WS[1].Discrete_Image;
+			Out_To_ICxx.Robot[6].WS_Discrete_Image[2]:= R6.WS[2].Discrete_Image;
+ 			Out_To_ICxx.Robot[6].ATI_Discrete_Image:= R6.ATI[1].Discrete_Image;
+			Out_To_ICxx.Robot[6].Reamer_Discrete_Image:= R6.Reamer[1].Discrete_Image;
+			Out_To_ICxx.Robot[6].Fronius_Status:= R6.Fronius_Status;
+		Out_To_ICxx.Robot[6].Ped_IO_ToShow[1]:= 0;			(*Set to Ped value if this robots ecat string contains the Ped's IO*)
+		Out_To_ICxx.Robot[6].Ped_IO_ToShow[2]:= 0;			(*Set to Ped value if this robots ecat string contains the Ped's IO*)
+		Out_To_ICxx.Robot[6].ECAT_Cable_Breaks:= R6.ECatSlave_Cable_Breaks;
+		Out_To_ICxx.Robot[6].CT:= R6.CT;
+
+
+
+(*R7 ------------------------*)
+		(*Input Data*)
+		R7.FB_In.Robot_Type:=KUKA_KRC4_SAFEOP;
+		R7.FB_In.Install_Zero_Orientation:= 0; 	(*Set this value between 0 and 359 to set the zero position of the robot physical install with reference to 12 o'clock symbol on UI screens*)
+		R7.FB_In.Under_Construction:= GTAC_CONFIG.Under_Construction;
+		R7.FB_In.In_SIM_Mode:= GTAC_CONFIG.In_SIM_Mode;
+		R7.FB_In.SIM_StartWorkAround:= FALSE;  (*Main.SIM_WorkAround_StartRobots*)
+		R7.FB_In.CoE_Read_Trigger:= (GTAC_CONFIG.Option_Robot_Count>=7) AND Pulse_CoERead;
+		R7.FB_In.Ecat_Master_AmsNetID:= MAIN.ECAT_Master.AmsID;
+		R7.FB_In.Prev_EcatNode_Present:= NOT R6.EK1100_NotPresent; (*Ensure Previous Node Exists to determine Ecat Cable Break of this Devices Input Cable*)
+		R7.FB_In.Safety_RST:=SAFETY_RESET;
+		R7.FB_In.Enable_Motion:= All_Estops_OK OR GTAC_CONFIG.Under_Construction;
+		R7.FB_In.Alarm_RST:=In_From_ICxx.ControlPower1;
+		R7.FB_In.Select_Play:=FALSE;
+		R7.FB_In.Select_Teach:=FALSE;
+		R7.FB_In.Select_Remote:=FALSE;
+		R7.FB_In.Start_Scan:=In_From_ICxx.StartRobots;
+		R7.FB_In.Stop_Scan:=In_From_ICxx.StopRobots;
+		R7.FB_In.Stop_Scan2:=FALSE;
+		R7.FB_In.In_DryCycle:= GTAC_CONFIG.Dry_Cycle_Enabled;
+		R7.FB_In.Low_Speed:= GTAC_CONFIG.Low_Speed_Enabled;
+		R7.FB_In.Speed_Request:= In_From_ICxx.Global_Robot_Speed;
+		R7.FB_In.Force_MasterTest_Req:= Cell_Services_Prog.Human_Reqs_MasterTest OR Cell_Services_Prog.A_Robot_Reqs_MasterTest;
+		R7.FB_In.Force_BrakeTest_Req:= Cell_Services_Prog.Human_Reqs_BrakeTest OR Cell_Services_Prog.A_Robot_Reqs_BrakeTest;
+		R7.FB_In.Major_Faults:= Faults.System_Major_Fault;
+		R7.FB_In.Teach_Interlock:=R7_Data.Teach_Interlock;
+		R7.FB_In.Weld_Inhibit:=In_From_ICxx.Rxx_Weld_Inhibit;
+		R7.FB_In.Option_Disable_WaterFLT:= FALSE AND GTAC_CONFIG.Under_Construction OR (MAIN.R7.Task_ID_Ack=Tip_Change_EXT); (*Used to disable water fault if no water is present. use with caution*)
+		R7.FB_In.OK_ToEnter_EquipInterf1:=R7_Data.OK_ToEnter_EquipInterf1;
+		R7.FB_In.OK_ToEnter_EquipInterf2:=R7_Data.OK_ToEnter_EquipInterf2;
+		R7.FB_In.OK_ToEnter_EquipInterf3:=R7_Data.OK_ToEnter_EquipInterf3;
+		R7.FB_In.OK_ToEnter_EquipInterf4:=R7_Data.OK_ToEnter_EquipInterf4;
+		R7.FB_In.OK_ToEnter_EquipInterf5:=R7_Data.OK_ToEnter_EquipInterf5;
+		R7.FB_In.OK_ToEnter_EquipInterf6:=R7_Data.OK_ToEnter_EquipInterf6;
+		R7.FB_In.OK_ToEnter_EquipInterf7:=R7_Data.OK_ToEnter_EquipInterf7;
+		R7.FB_In.OK_ToEnter_EquipInterf8:=R7_Data.OK_ToEnter_EquipInterf8;
+		R7.FB_In.OK_ToEnter_EquipInterf9:=R7_Data.OK_ToEnter_EquipInterf9;
+		R7.FB_In.OK_ToEnter_HumanInterf1:=R7_Data.OK_ToEnter_HumanInterf1;
+		R7.FB_In.OK_ToEnter_HumanInterf2:=R7_Data.OK_ToEnter_HumanInterf2;
+		R7.FB_In.OK_ToEnter_HumanInterf3:=R7_Data.OK_ToEnter_HumanInterf3;
+		R7.FB_In.OK_ToEnter_HumanInterf4:=R7_Data.OK_ToEnter_HumanInterf4;
+		R7.FB_In.OK_ToEnter_HumanInterf5:=R7_Data.OK_ToEnter_HumanInterf5;
+		R7.FB_In.OK_ToEnter_HumanInterf6:=R7_Data.OK_ToEnter_HumanInterf6;
+		R7.FB_In.OK_ToEnter_HumanInterf7:=R7_Data.OK_ToEnter_HumanInterf7;
+		R7.FB_In.OK_ToEnter_HumanInterf8:=R7_Data.OK_ToEnter_HumanInterf8;
+		R7.FB_In.OK_ToEnter_RobotInterfs:= R7_Data.OK_ToEnter_RobotInterfs;
+		R7.FB_In.Fix_ID:=R7_Data.Fix_ID[R7.Location_Index];
+		R7.FB_In.Model_ID:=R7_Data.Model_ID[R7.Location_Index];
+		R7.FB_In.Task_ID:=R7_Data.Task_ID[R7.Location_Index];
+		R7.FB_In.Proceed_From_Pounce:=R7_Data.Proceed_From_Pounce[R7.Location_Index];
+		R7.FB_In.Complete_Ack:=R7_Data.Complete_Ack[R7.Location_Index];
+		R7.FB_In.PeripheralReq_Ack:=R7_Data.PeripheralReq_Ack[R7.Location_Index];
+		R7.FB_In.AuxReq_Ack:=R7_Data.AuxReq_Ack[R7.Location_Index];
+		R7.FB_In.User_Inputs.0:= FALSE;
+		R7.FB_In.User_Inputs.1:= FALSE;
+		R7.FB_In.User_Inputs.2:= FALSE;
+		R7.FB_In.User_Inputs.3:= FALSE;
+		R7.FB_In.User_Inputs.4:= FALSE;
+		R7.FB_In.User_Inputs.5:= FALSE;
+		R7.FB_In.User_Inputs.6:= FALSE;
+		R7.FB_In.User_Inputs.7:= FALSE;
+			(*Configure Options Amounts*)
+			R7.FB_In.Options.WeldCont_Amount:= 0; 					(*Select amount of Spot Type Weld Controllers here (0 min, 4 max)*)
+			R7.FB_In.Options.WaterStand_Amount:= 0;				(*Select amount of Water Stands here (0 min, 2 max)*)
+			R7.FB_In.Options.MIGCont_Amount:= 1;					(*Select amount of MIG Type Weld Controllers here (0 min, 1 max)*)
+			R7.FB_In.Options.Reamer_Amount:= 1;					(*Select amount of Tip Reamers here (0 min, 1 max)*)
+			R7.FB_In.Options.EOAT_Amount:= 0;						(*Assign EOAT number to robot (0 min, 10 max)*)
+			(*Configure Options Parameters*)
+			
+			R7.Reamer[1](
+				(*FB Inputs*)
+					Enable_Motion:= All_Estops_OK,
+					Fronius_Ream:= TRUE,
+                    Binzel_Ream:= FALSE,  (*optional*)
+					
+					Ream_REQ:= R7.Peripheral_Req.1 AND ((R7.Task_ID_Ack=Tip_Dress)OR (R7.In_T1 AND R7.Peripheral_Req.5)),
+					Ream_Time:= T#2S,
+					Ream_Clamp_Open:= R7.Reamer[1].N01.I.1,
+					Spray_REQ:= R7.Peripheral_Req.2 AND ((R7.Task_ID_Ack=Tip_Dress)OR (R7.In_T1 AND R7.Peripheral_Req.5)),
+					Spray_Time:= T#2S,
+					F_WireCutter_REQ:= R7.Peripheral_Req.4 AND ((R7.Task_ID_Ack=Tip_Dress)OR (R7.In_T1 AND R7.Peripheral_Req.5)),
+					F_WireCutter_Time:= T#1S,
+					
+				(*FB Outputs*)
+					Reaming_Complete=> ,(*mapped in cell services*)
+					(*The following are for Binzel type reamers only*)
+					LifterUp_ACK=> , (*mapped in cell services*)
+					Clamp_ACK=>,(*mapped in cell services*)
+					Injector_ACK=> ,(*mapped in cell services*)
+					WireCutter_ACK=> (*mapped in cell services*)
+					);
+			(*R7.Reamer[1](
+				(*FB Inputs*)
+					Enable_Motion:= All_Estops_OK,
+					Fronius_Ream:= TRUE,
+                    Binzel_Ream:= FALSE,  (*optional*)
+					Ream_REQ:= R7.Peripheral_Req.5 AND (R7.Task_ID_Ack=Tip_Dress),
+
+				(*FB Outputs*)
+					Reaming_Complete=> ,(*mapped in cell services*)
+					);*)
+		(*Call Actual Object*)
+		R7();
+		(*Output Data*)
+		Out_To_ICxx.Robot[7].Robot_Type:= R7.FB_In.Robot_Type;
+		Out_To_ICxx.Robot[7].Status:= R7.Status;
+		Out_To_ICxx.Robot[7].Axis_Data[1]:= R7.S_Axis_Pos_Raw;
+		Out_To_ICxx.Robot[7].In_Image:= R7.Input_Image;
+		Out_To_ICxx.Robot[7].Out_Image:= R7.Output_Image;
+		Out_To_ICxx.Robot[7].Discrete_ImageFSOE:= R7.Discrete_Image_FSoE;
+		Out_To_ICxx.Robot[7].Options:= R7.FB_In.Options;
+			Out_To_ICxx.Robot[7].WS_Discrete_Image[1]:= R7.WS[1].Discrete_Image;
+			Out_To_ICxx.Robot[7].WS_Discrete_Image[2]:= R7.WS[2].Discrete_Image;
+ 			Out_To_ICxx.Robot[7].ATI_Discrete_Image:= R7.ATI[1].Discrete_Image;
+			Out_To_ICxx.Robot[7].Reamer_Discrete_Image:= R7.Reamer[1].Discrete_Image;
+			Out_To_ICxx.Robot[7].Fronius_Status:= R7.Fronius_Status;
+		Out_To_ICxx.Robot[7].Ped_IO_ToShow[1]:= 0;			(*Set to Ped value if this robots ecat string contains the Ped's IO*)
+		Out_To_ICxx.Robot[7].Ped_IO_ToShow[2]:= 0;			(*Set to Ped value if this robots ecat string contains the Ped's IO*)
+		Out_To_ICxx.Robot[7].ECAT_Cable_Breaks:= R7.ECatSlave_Cable_Breaks;
+		Out_To_ICxx.Robot[7].CT:= R7.CT;
+
+
+
+(*R8 ------------------------*)
+		(*Input Data*)
+		R8.FB_In.Robot_Type:=KUKA_KRC4_SAFEOP;
+		R8.FB_In.Install_Zero_Orientation:= 0; 	(*Set this value between 0 and 359 to set the zero position of the robot physical install with reference to 12 o'clock symbol on UI screens*)
+		R8.FB_In.Under_Construction:= GTAC_CONFIG.Under_Construction;
+		R8.FB_In.In_SIM_Mode:= GTAC_CONFIG.In_SIM_Mode;
+		R8.FB_In.SIM_StartWorkAround:= FALSE;  (*Main.SIM_WorkAround_StartRobots*)
+		R8.FB_In.CoE_Read_Trigger:= (GTAC_CONFIG.Option_Robot_Count>=8) AND Pulse_CoERead;
+		R8.FB_In.Ecat_Master_AmsNetID:= MAIN.ECAT_Master.AmsID;
+		R8.FB_In.Prev_EcatNode_Present:= NOT R7.EK1100_NotPresent; (*Ensure Previous Node Exists to determine Ecat Cable Break of this Devices Input Cable*)
+		R8.FB_In.Safety_RST:=SAFETY_RESET;
+		R8.FB_In.Enable_Motion:= All_Estops_OK OR GTAC_CONFIG.Under_Construction;
+		R8.FB_In.Alarm_RST:=In_From_ICxx.ControlPower1;
+		R8.FB_In.Select_Play:=FALSE;
+		R8.FB_In.Select_Teach:=FALSE;
+		R8.FB_In.Select_Remote:=FALSE;
+		R8.FB_In.Start_Scan:=In_From_ICxx.StartRobots;
+		R8.FB_In.Stop_Scan:=In_From_ICxx.StopRobots;
+		R8.FB_In.Stop_Scan2:=FALSE;
+		R8.FB_In.In_DryCycle:= GTAC_CONFIG.Dry_Cycle_Enabled;
+		R8.FB_In.Low_Speed:= GTAC_CONFIG.Low_Speed_Enabled;
+		R8.FB_In.Speed_Request:= In_From_ICxx.Global_Robot_Speed;
+		R8.FB_In.Force_MasterTest_Req:= Cell_Services_Prog.Human_Reqs_MasterTest OR Cell_Services_Prog.A_Robot_Reqs_MasterTest;
+		R8.FB_In.Force_BrakeTest_Req:= Cell_Services_Prog.Human_Reqs_BrakeTest OR Cell_Services_Prog.A_Robot_Reqs_BrakeTest;
+		R8.FB_In.Major_Faults:= Faults.System_Major_Fault;
+		R8.FB_In.Teach_Interlock:=R8_Data.Teach_Interlock;
+		R8.FB_In.Weld_Inhibit:=In_From_ICxx.Rxx_Weld_Inhibit;
+		R8.FB_In.Option_Disable_WaterFLT:= FALSE AND GTAC_CONFIG.Under_Construction OR (MAIN.R8.Task_ID_Ack=Tip_Change_EXT); (*Used to disable water fault if no water is present. use with caution*)
+		R8.FB_In.OK_ToEnter_EquipInterf1:=R8_Data.OK_ToEnter_EquipInterf1;
+		R8.FB_In.OK_ToEnter_EquipInterf2:=R8_Data.OK_ToEnter_EquipInterf2;
+		R8.FB_In.OK_ToEnter_EquipInterf3:=R8_Data.OK_ToEnter_EquipInterf3;
+		R8.FB_In.OK_ToEnter_EquipInterf4:=R8_Data.OK_ToEnter_EquipInterf4;
+		R8.FB_In.OK_ToEnter_EquipInterf5:=R8_Data.OK_ToEnter_EquipInterf5;
+		R8.FB_In.OK_ToEnter_EquipInterf6:=R8_Data.OK_ToEnter_EquipInterf6;
+		R8.FB_In.OK_ToEnter_EquipInterf7:=R8_Data.OK_ToEnter_EquipInterf7;
+		R8.FB_In.OK_ToEnter_EquipInterf8:=R8_Data.OK_ToEnter_EquipInterf8;
+		R8.FB_In.OK_ToEnter_EquipInterf9:=R8_Data.OK_ToEnter_EquipInterf9;
+		R8.FB_In.OK_ToEnter_HumanInterf1:=R8_Data.OK_ToEnter_HumanInterf1;
+		R8.FB_In.OK_ToEnter_HumanInterf2:=R8_Data.OK_ToEnter_HumanInterf2;
+		R8.FB_In.OK_ToEnter_HumanInterf3:=R8_Data.OK_ToEnter_HumanInterf3;
+		R8.FB_In.OK_ToEnter_HumanInterf4:=R8_Data.OK_ToEnter_HumanInterf4;
+		R8.FB_In.OK_ToEnter_HumanInterf5:=R8_Data.OK_ToEnter_HumanInterf5;
+		R8.FB_In.OK_ToEnter_HumanInterf6:=R8_Data.OK_ToEnter_HumanInterf6;
+		R8.FB_In.OK_ToEnter_HumanInterf7:=R8_Data.OK_ToEnter_HumanInterf7;
+		R8.FB_In.OK_ToEnter_HumanInterf8:=R8_Data.OK_ToEnter_HumanInterf8;
+		R8.FB_In.OK_ToEnter_RobotInterfs:= R8_Data.OK_ToEnter_RobotInterfs;
+		R8.FB_In.Fix_ID:=R8_Data.Fix_ID[R8.Location_Index];
+		R8.FB_In.Model_ID:=R8_Data.Model_ID[R8.Location_Index];
+		R8.FB_In.Task_ID:=R8_Data.Task_ID[R8.Location_Index];
+		R8.FB_In.Proceed_From_Pounce:=R8_Data.Proceed_From_Pounce[R8.Location_Index];
+		R8.FB_In.Complete_Ack:=R8_Data.Complete_Ack[R8.Location_Index];
+		R8.FB_In.PeripheralReq_Ack:=R8_Data.PeripheralReq_Ack[R8.Location_Index];
+		R8.FB_In.AuxReq_Ack:=R8_Data.AuxReq_Ack[R8.Location_Index];
+		R8.FB_In.User_Inputs.0:= FALSE;
+		R8.FB_In.User_Inputs.1:= FALSE;
+		R8.FB_In.User_Inputs.2:= FALSE;
+		R8.FB_In.User_Inputs.3:= FALSE;
+		R8.FB_In.User_Inputs.4:= FALSE;
+		R8.FB_In.User_Inputs.5:= FALSE;
+		R8.FB_In.User_Inputs.6:= FALSE;
+		R8.FB_In.User_Inputs.7:= FALSE;
+			(*Configure Options Amounts*)
+			R8.FB_In.Options.WeldCont_Amount:= 0; 					(*Select amount of Spot Type Weld Controllers here (0 min, 4 max)*)
+			R8.FB_In.Options.WaterStand_Amount:= 0;				(*Select amount of Water Stands here (0 min, 2 max)*)
+			R8.FB_In.Options.MIGCont_Amount:= 1;					(*Select amount of MIG Type Weld Controllers here (0 min, 1 max)*)
+			R8.FB_In.Options.Reamer_Amount:= 1;					(*Select amount of Tip Reamers here (0 min, 1 max)*)
+			R8.FB_In.Options.EOAT_Amount:= 0;						(*Assign EOAT number to robot (0 min, 10 max)*)
+			(*Configure Options Parameters*)
+			
+			R8.Reamer[1](
+				(*FB Inputs*)
+					Enable_Motion:= All_Estops_OK,
+					Fronius_Ream:= TRUE,
+                    Binzel_Ream:= FALSE,  (*optional*)
+					
+					Ream_REQ:= R8.Peripheral_Req.1 AND ((R8.Task_ID_Ack=Tip_Dress)OR (R8.In_T1 AND R8.Peripheral_Req.5)),
+					Ream_Time:= T#2S,
+					Ream_Clamp_Open:= R8.Reamer[1].N01.I.1,
+					Spray_REQ:= R8.Peripheral_Req.2 AND ((R8.Task_ID_Ack=Tip_Dress)OR (R8.In_T1 AND R8.Peripheral_Req.5)),
+					Spray_Time:= T#2S,
+					F_WireCutter_REQ:= R8.Peripheral_Req.4 AND ((R8.Task_ID_Ack=Tip_Dress)OR (R8.In_T1 AND R8.Peripheral_Req.5)),
+					F_WireCutter_Time:= T#1S,
+					
+				(*FB Outputs*)
+					Reaming_Complete=> ,(*mapped in cell services*)
+					(*The following are for Binzel type reamers only*)
+					LifterUp_ACK=> , (*mapped in cell services*)
+					Clamp_ACK=>,(*mapped in cell services*)
+					Injector_ACK=> ,(*mapped in cell services*)
+					WireCutter_ACK=> (*mapped in cell services*)
+					);
+			(*R8.Reamer[1](
+				(*FB Inputs*)
+					Enable_Motion:= All_Estops_OK,
+					Fronius_Ream:= TRUE,
+                    Binzel_Ream:= FALSE,  (*optional*)
+					Ream_REQ:= R8.Peripheral_Req.5 AND (R8.Task_ID_Ack=Tip_Dress),
+
+				(*FB Outputs*)
+					Reaming_Complete=> ,(*mapped in cell services*)
+					);*)
+		(*Call Actual Object*)
+		R8();
+		(*Output Data*)
+		Out_To_ICxx.Robot[8].Robot_Type:= R8.FB_In.Robot_Type;
+		Out_To_ICxx.Robot[8].Status:= R8.Status;
+		Out_To_ICxx.Robot[8].Axis_Data[1]:= R8.S_Axis_Pos_Raw;
+		Out_To_ICxx.Robot[8].In_Image:= R8.Input_Image;
+		Out_To_ICxx.Robot[8].Out_Image:= R8.Output_Image;
+		Out_To_ICxx.Robot[8].Discrete_ImageFSOE:= R8.Discrete_Image_FSoE;
+		Out_To_ICxx.Robot[8].Options:= R8.FB_In.Options;
+			Out_To_ICxx.Robot[8].WS_Discrete_Image[1]:= R8.WS[1].Discrete_Image;
+			Out_To_ICxx.Robot[8].WS_Discrete_Image[2]:= R8.WS[2].Discrete_Image;
+ 			Out_To_ICxx.Robot[8].ATI_Discrete_Image:= R8.ATI[1].Discrete_Image;
+			Out_To_ICxx.Robot[8].Reamer_Discrete_Image:= R8.Reamer[1].Discrete_Image;
+			Out_To_ICxx.Robot[8].Fronius_Status:= R8.Fronius_Status;
+		Out_To_ICxx.Robot[8].Ped_IO_ToShow[1]:= 0;			(*Set to Ped value if this robots ecat string contains the Ped's IO*)
+		Out_To_ICxx.Robot[8].Ped_IO_ToShow[2]:= 0;			(*Set to Ped value if this robots ecat string contains the Ped's IO*)
+		Out_To_ICxx.Robot[8].ECAT_Cable_Breaks:= R8.ECatSlave_Cable_Breaks;
+		Out_To_ICxx.Robot[8].CT:= R8.CT;
+
+
+
+(*R9 ------------------------*)
+		(*Input Data*)
+		R9.FB_In.Robot_Type:=KUKA_KRC4_SAFEOP;
+		R9.FB_In.Install_Zero_Orientation:= 0; 	(*Set this value between 0 and 359 to set the zero position of the robot physical install with reference to 12 o'clock symbol on UI screens*)
+		R9.FB_In.Under_Construction:= GTAC_CONFIG.Under_Construction;
+		R9.FB_In.In_SIM_Mode:= GTAC_CONFIG.In_SIM_Mode;
+		R9.FB_In.SIM_StartWorkAround:= FALSE;  (*Main.SIM_WorkAround_StartRobots*)
+		R9.FB_In.CoE_Read_Trigger:= (GTAC_CONFIG.Option_Robot_Count>=9) AND Pulse_CoERead;
+		R9.FB_In.Ecat_Master_AmsNetID:= MAIN.ECAT_Master.AmsID;
+		R9.FB_In.Prev_EcatNode_Present:= NOT R8.EK1100_NotPresent; (*Ensure Previous Node Exists to determine Ecat Cable Break of this Devices Input Cable*)
+		R9.FB_In.Safety_RST:=SAFETY_RESET;
+		R9.FB_In.Enable_Motion:= All_Estops_OK OR GTAC_CONFIG.Under_Construction;
+		R9.FB_In.Alarm_RST:=In_From_ICxx.ControlPower1;
+		R9.FB_In.Select_Play:=FALSE;
+		R9.FB_In.Select_Teach:=FALSE;
+		R9.FB_In.Select_Remote:=FALSE;
+		R9.FB_In.Start_Scan:=In_From_ICxx.StartRobots;
+		R9.FB_In.Stop_Scan:=In_From_ICxx.StopRobots;
+		R9.FB_In.Stop_Scan2:=FALSE;
+		R9.FB_In.In_DryCycle:= GTAC_CONFIG.Dry_Cycle_Enabled;
+		R9.FB_In.Low_Speed:= GTAC_CONFIG.Low_Speed_Enabled;
+		R9.FB_In.Speed_Request:= In_From_ICxx.Global_Robot_Speed;
+		R9.FB_In.Force_MasterTest_Req:= Cell_Services_Prog.Human_Reqs_MasterTest OR Cell_Services_Prog.A_Robot_Reqs_MasterTest;
+		R9.FB_In.Force_BrakeTest_Req:= Cell_Services_Prog.Human_Reqs_BrakeTest OR Cell_Services_Prog.A_Robot_Reqs_BrakeTest;
+		R9.FB_In.Major_Faults:= Faults.System_Major_Fault;
+		R9.FB_In.Teach_Interlock:=R9_Data.Teach_Interlock;
+		R9.FB_In.Weld_Inhibit:=In_From_ICxx.Rxx_Weld_Inhibit;
+		R9.FB_In.Option_Disable_WaterFLT:= FALSE AND GTAC_CONFIG.Under_Construction OR (MAIN.R9.Task_ID_Ack=Tip_Change_EXT); (*Used to disable water fault if no water is present. use with caution*)
+		R9.FB_In.OK_ToEnter_EquipInterf1:=R9_Data.OK_ToEnter_EquipInterf1;
+		R9.FB_In.OK_ToEnter_EquipInterf2:=R9_Data.OK_ToEnter_EquipInterf2;
+		R9.FB_In.OK_ToEnter_EquipInterf3:=R9_Data.OK_ToEnter_EquipInterf3;
+		R9.FB_In.OK_ToEnter_EquipInterf4:=R9_Data.OK_ToEnter_EquipInterf4;
+		R9.FB_In.OK_ToEnter_EquipInterf5:=R9_Data.OK_ToEnter_EquipInterf5;
+		R9.FB_In.OK_ToEnter_EquipInterf6:=R9_Data.OK_ToEnter_EquipInterf6;
+		R9.FB_In.OK_ToEnter_EquipInterf7:=R9_Data.OK_ToEnter_EquipInterf7;
+		R9.FB_In.OK_ToEnter_EquipInterf8:=R9_Data.OK_ToEnter_EquipInterf8;
+		R9.FB_In.OK_ToEnter_EquipInterf9:=R9_Data.OK_ToEnter_EquipInterf9;
+		R9.FB_In.OK_ToEnter_HumanInterf1:=R9_Data.OK_ToEnter_HumanInterf1;
+		R9.FB_In.OK_ToEnter_HumanInterf2:=R9_Data.OK_ToEnter_HumanInterf2;
+		R9.FB_In.OK_ToEnter_HumanInterf3:=R9_Data.OK_ToEnter_HumanInterf3;
+		R9.FB_In.OK_ToEnter_HumanInterf4:=R9_Data.OK_ToEnter_HumanInterf4;
+		R9.FB_In.OK_ToEnter_HumanInterf5:=R9_Data.OK_ToEnter_HumanInterf5;
+		R9.FB_In.OK_ToEnter_HumanInterf6:=R9_Data.OK_ToEnter_HumanInterf6;
+		R9.FB_In.OK_ToEnter_HumanInterf7:=R9_Data.OK_ToEnter_HumanInterf7;
+		R9.FB_In.OK_ToEnter_HumanInterf8:=R9_Data.OK_ToEnter_HumanInterf8;
+		R9.FB_In.OK_ToEnter_RobotInterfs:= R9_Data.OK_ToEnter_RobotInterfs;
+		R9.FB_In.Fix_ID:=R9_Data.Fix_ID[R9.Location_Index];
+		R9.FB_In.Model_ID:=R9_Data.Model_ID[R9.Location_Index];
+		R9.FB_In.Task_ID:=R9_Data.Task_ID[R9.Location_Index];
+		R9.FB_In.Proceed_From_Pounce:=R9_Data.Proceed_From_Pounce[R9.Location_Index];
+		R9.FB_In.Complete_Ack:=R9_Data.Complete_Ack[R9.Location_Index];
+		R9.FB_In.PeripheralReq_Ack:=R9_Data.PeripheralReq_Ack[R9.Location_Index];
+		R9.FB_In.AuxReq_Ack:=R9_Data.AuxReq_Ack[R9.Location_Index];
+		R9.FB_In.User_Inputs.0:= FALSE;
+		R9.FB_In.User_Inputs.1:= FALSE;
+		R9.FB_In.User_Inputs.2:= FALSE;
+		R9.FB_In.User_Inputs.3:= FALSE;
+		R9.FB_In.User_Inputs.4:= FALSE;
+		R9.FB_In.User_Inputs.5:= FALSE;
+		R9.FB_In.User_Inputs.6:= FALSE;
+		R9.FB_In.User_Inputs.7:= FALSE;
+			(*Configure Options Amounts*)
+			R9.FB_In.Options.WeldCont_Amount:= 0; 					(*Select amount of Spot Type Weld Controllers here (0 min, 4 max)*)
+			R9.FB_In.Options.WaterStand_Amount:= 0;				(*Select amount of Water Stands here (0 min, 2 max)*)
+			R9.FB_In.Options.MIGCont_Amount:= 1;					(*Select amount of MIG Type Weld Controllers here (0 min, 1 max)*)
+			R9.FB_In.Options.Reamer_Amount:= 1;					(*Select amount of Tip Reamers here (0 min, 1 max)*)
+			R9.FB_In.Options.EOAT_Amount:= 0;						(*Assign EOAT number to robot (0 min, 10 max)*)
+			(*Configure Options Parameters*)
+			
+			R9.Reamer[1](
+				(*FB Inputs*)
+					Enable_Motion:= All_Estops_OK,
+					Fronius_Ream:= TRUE,
+                    Binzel_Ream:= FALSE,  (*optional*)
+					
+					Ream_REQ:= R9.Peripheral_Req.1 AND ((R9.Task_ID_Ack=Tip_Dress)OR (R9.In_T1 AND R9.Peripheral_Req.5)),
+					Ream_Time:= T#2S,
+					Ream_Clamp_Open:= R9.Reamer[1].N01.I.1,
+					Spray_REQ:= R9.Peripheral_Req.2 AND ((R9.Task_ID_Ack=Tip_Dress)OR (R9.In_T1 AND R9.Peripheral_Req.5)),
+					Spray_Time:= T#2S,
+					F_WireCutter_REQ:= R9.Peripheral_Req.4 AND ((R9.Task_ID_Ack=Tip_Dress)OR (R9.In_T1 AND R9.Peripheral_Req.5)),
+					F_WireCutter_Time:= T#1S,
+					
+				(*FB Outputs*)
+					Reaming_Complete=> ,(*mapped in cell services*)
+					(*The following are for Binzel type reamers only*)
+					LifterUp_ACK=> , (*mapped in cell services*)
+					Clamp_ACK=>,(*mapped in cell services*)
+					Injector_ACK=> ,(*mapped in cell services*)
+					WireCutter_ACK=> (*mapped in cell services*)
+					);
+			(*R9.Reamer[1](
+				(*FB Inputs*)
+					Enable_Motion:= All_Estops_OK,
+					Fronius_Ream:= TRUE,
+                    Binzel_Ream:= FALSE,  (*optional*)
+					Ream_REQ:= R9.Peripheral_Req.5 AND (R9.Task_ID_Ack=Tip_Dress),
+
+				(*FB Outputs*)
+					Reaming_Complete=> ,(*mapped in cell services*)
+					);*)
+		(*Call Actual Object*)
+		R9();
+		(*Output Data*)
+		Out_To_ICxx.Robot[9].Robot_Type:= R9.FB_In.Robot_Type;
+		Out_To_ICxx.Robot[9].Status:= R9.Status;
+		Out_To_ICxx.Robot[9].Axis_Data[1]:= R9.S_Axis_Pos_Raw;
+		Out_To_ICxx.Robot[9].In_Image:= R9.Input_Image;
+		Out_To_ICxx.Robot[9].Out_Image:= R9.Output_Image;
+		Out_To_ICxx.Robot[9].Discrete_ImageFSOE:= R9.Discrete_Image_FSoE;
+		Out_To_ICxx.Robot[9].Options:= R9.FB_In.Options;
+			Out_To_ICxx.Robot[9].WS_Discrete_Image[1]:= R9.WS[1].Discrete_Image;
+			Out_To_ICxx.Robot[9].WS_Discrete_Image[2]:= R9.WS[2].Discrete_Image;
+ 			Out_To_ICxx.Robot[9].ATI_Discrete_Image:= R9.ATI[1].Discrete_Image;
+			Out_To_ICxx.Robot[9].Reamer_Discrete_Image:= R9.Reamer[1].Discrete_Image;
+			Out_To_ICxx.Robot[9].Fronius_Status:= R9.Fronius_Status;
+		Out_To_ICxx.Robot[9].Ped_IO_ToShow[1]:= 0;			(*Set to Ped value if this robots ecat string contains the Ped's IO*)
+		Out_To_ICxx.Robot[9].Ped_IO_ToShow[2]:= 0;			(*Set to Ped value if this robots ecat string contains the Ped's IO*)
+		Out_To_ICxx.Robot[9].ECAT_Cable_Breaks:= R9.ECatSlave_Cable_Breaks;
+		Out_To_ICxx.Robot[9].CT:= R9.CT;
+
+
+
+(*R10 ------------------------*)
+		(*Input Data*)
+		R10.FB_In.Robot_Type:=KUKA_KRC4_SAFEOP;
+		R10.FB_In.Install_Zero_Orientation:= 0; 	(*Set this value between 0 and 359 to set the zero position of the robot physical install with reference to 12 o'clock symbol on UI screens*)
+		R10.FB_In.Under_Construction:= GTAC_CONFIG.Under_Construction;
+		R10.FB_In.In_SIM_Mode:= GTAC_CONFIG.In_SIM_Mode;
+		R10.FB_In.SIM_StartWorkAround:= FALSE;  (*Main.SIM_WorkAround_StartRobots*)
+		R10.FB_In.CoE_Read_Trigger:= (GTAC_CONFIG.Option_Robot_Count>=10) AND Pulse_CoERead;
+		R10.FB_In.Ecat_Master_AmsNetID:= MAIN.ECAT_Master.AmsID;
+		R10.FB_In.Prev_EcatNode_Present:= NOT R9.EK1100_NotPresent; (*Ensure Previous Node Exists to determine Ecat Cable Break of this Devices Input Cable*)
+		R10.FB_In.Safety_RST:=SAFETY_RESET;
+		R10.FB_In.Enable_Motion:= All_Estops_OK OR GTAC_CONFIG.Under_Construction;
+		R10.FB_In.Alarm_RST:=In_From_ICxx.ControlPower1;
+		R10.FB_In.Select_Play:=FALSE;
+		R10.FB_In.Select_Teach:=FALSE;
+		R10.FB_In.Select_Remote:=FALSE;
+		R10.FB_In.Start_Scan:=In_From_ICxx.StartRobots;
+		R10.FB_In.Stop_Scan:=In_From_ICxx.StopRobots;
+		R10.FB_In.Stop_Scan2:=FALSE;
+		R10.FB_In.In_DryCycle:= GTAC_CONFIG.Dry_Cycle_Enabled;
+		R10.FB_In.Low_Speed:= GTAC_CONFIG.Low_Speed_Enabled;
+		R10.FB_In.Speed_Request:= In_From_ICxx.Global_Robot_Speed;
+		R10.FB_In.Force_MasterTest_Req:= Cell_Services_Prog.Human_Reqs_MasterTest OR Cell_Services_Prog.A_Robot_Reqs_MasterTest;
+		R10.FB_In.Force_BrakeTest_Req:= Cell_Services_Prog.Human_Reqs_BrakeTest OR Cell_Services_Prog.A_Robot_Reqs_BrakeTest;
+		R10.FB_In.Major_Faults:= Faults.System_Major_Fault;
+		R10.FB_In.Teach_Interlock:=R10_Data.Teach_Interlock;
+		R10.FB_In.Weld_Inhibit:=In_From_ICxx.Rxx_Weld_Inhibit;
+		R10.FB_In.Option_Disable_WaterFLT:= FALSE AND GTAC_CONFIG.Under_Construction OR (MAIN.R10.Task_ID_Ack=Tip_Change_EXT); (*Used to disable water fault if no water is present. use with caution*)
+		R10.FB_In.OK_ToEnter_EquipInterf1:=R10_Data.OK_ToEnter_EquipInterf1;
+		R10.FB_In.OK_ToEnter_EquipInterf2:=R10_Data.OK_ToEnter_EquipInterf2;
+		R10.FB_In.OK_ToEnter_EquipInterf3:=R10_Data.OK_ToEnter_EquipInterf3;
+		R10.FB_In.OK_ToEnter_EquipInterf4:=R10_Data.OK_ToEnter_EquipInterf4;
+		R10.FB_In.OK_ToEnter_EquipInterf5:=R10_Data.OK_ToEnter_EquipInterf5;
+		R10.FB_In.OK_ToEnter_EquipInterf6:=R10_Data.OK_ToEnter_EquipInterf6;
+		R10.FB_In.OK_ToEnter_EquipInterf7:=R10_Data.OK_ToEnter_EquipInterf7;
+		R10.FB_In.OK_ToEnter_EquipInterf8:=R10_Data.OK_ToEnter_EquipInterf8;
+		R10.FB_In.OK_ToEnter_EquipInterf9:=R10_Data.OK_ToEnter_EquipInterf9;
+		R10.FB_In.OK_ToEnter_HumanInterf1:=R10_Data.OK_ToEnter_HumanInterf1;
+		R10.FB_In.OK_ToEnter_HumanInterf2:=R10_Data.OK_ToEnter_HumanInterf2;
+		R10.FB_In.OK_ToEnter_HumanInterf3:=R10_Data.OK_ToEnter_HumanInterf3;
+		R10.FB_In.OK_ToEnter_HumanInterf4:=R10_Data.OK_ToEnter_HumanInterf4;
+		R10.FB_In.OK_ToEnter_HumanInterf5:=R10_Data.OK_ToEnter_HumanInterf5;
+		R10.FB_In.OK_ToEnter_HumanInterf6:=R10_Data.OK_ToEnter_HumanInterf6;
+		R10.FB_In.OK_ToEnter_HumanInterf7:=R10_Data.OK_ToEnter_HumanInterf7;
+		R10.FB_In.OK_ToEnter_HumanInterf8:=R10_Data.OK_ToEnter_HumanInterf8;
+		R10.FB_In.OK_ToEnter_RobotInterfs:= R10_Data.OK_ToEnter_RobotInterfs;
+		R10.FB_In.Fix_ID:=R10_Data.Fix_ID[R10.Location_Index];
+		R10.FB_In.Model_ID:=R10_Data.Model_ID[R10.Location_Index];
+		R10.FB_In.Task_ID:=R10_Data.Task_ID[R10.Location_Index];
+		R10.FB_In.Proceed_From_Pounce:=R10_Data.Proceed_From_Pounce[R10.Location_Index];
+		R10.FB_In.Complete_Ack:=R10_Data.Complete_Ack[R10.Location_Index];
+		R10.FB_In.PeripheralReq_Ack:=R10_Data.PeripheralReq_Ack[R10.Location_Index];
+		R10.FB_In.AuxReq_Ack:=R10_Data.AuxReq_Ack[R10.Location_Index];
+		R10.FB_In.User_Inputs.0:= FALSE;
+		R10.FB_In.User_Inputs.1:= FALSE;
+		R10.FB_In.User_Inputs.2:= FALSE;
+		R10.FB_In.User_Inputs.3:= FALSE;
+		R10.FB_In.User_Inputs.4:= FALSE;
+		R10.FB_In.User_Inputs.5:= FALSE;
+		R10.FB_In.User_Inputs.6:= FALSE;
+		R10.FB_In.User_Inputs.7:= FALSE;
+			(*Configure Options Amounts*)
+			R10.FB_In.Options.WeldCont_Amount:= 0; 					(*Select amount of Spot Type Weld Controllers here (0 min, 4 max)*)
+			R10.FB_In.Options.WaterStand_Amount:= 0;				(*Select amount of Water Stands here (0 min, 2 max)*)
+			R10.FB_In.Options.MIGCont_Amount:= 1;					(*Select amount of MIG Type Weld Controllers here (0 min, 1 max)*)
+			R10.FB_In.Options.Reamer_Amount:= 1;					(*Select amount of Tip Reamers here (0 min, 1 max)*)
+			R10.FB_In.Options.EOAT_Amount:= 0;					(*Assign EOAT number to robot (0 min, 10 max)*)
+			(*Configure Options Parameters*)
+			(*R10.Reamer[1](
+				(*FB Inputs*)
+					Enable_Motion:= All_Estops_OK,
+					Fronius_Ream:= TRUE,
+                    Binzel_Ream:= FALSE,  (*optional*)
+					Ream_REQ:= R10.Peripheral_Req.5 AND (R10.Task_ID_Ack=Tip_Dress),
+
+				(*FB Outputs*)
+					Reaming_Complete=> ,(*mapped in cell services*)
+					);*)
+		(*Call Actual Object*)
+		R10();
+		(*Output Data*)
+		Out_To_ICxx.Robot[10].Robot_Type:= R10.FB_In.Robot_Type;
+		(*To create less work, since there is no welding, changeing this number to 307 so we dont have to mess with the kuka FB, just screens. "us_Rxx_Status" - added 307 "inspecting"*)
+		IF (R10.Status = 305) THEN
+		Out_To_ICxx.Robot[10].Status:= 307; 
+		ELSE
+		Out_To_ICxx.Robot[10].Status:= R10.Status;
+		END_IF
+		Out_To_ICxx.Robot[10].Axis_Data[1]:= R10.S_Axis_Pos_Raw;
+		Out_To_ICxx.Robot[10].In_Image:= R10.Input_Image;
+		Out_To_ICxx.Robot[10].Out_Image:= R10.Output_Image;
+		Out_To_ICxx.Robot[10].Discrete_ImageFSOE:= R10.Discrete_Image_FSoE;
+		Out_To_ICxx.Robot[10].Options:= R10.FB_In.Options;
+			Out_To_ICxx.Robot[10].WS_Discrete_Image[1]:= R10.WS[1].Discrete_Image;
+			Out_To_ICxx.Robot[10].WS_Discrete_Image[2]:= R10.WS[2].Discrete_Image;
+ 			Out_To_ICxx.Robot[10].ATI_Discrete_Image:= R10.ATI[1].Discrete_Image;
+			Out_To_ICxx.Robot[10].Reamer_Discrete_Image:= R10.Reamer[1].Discrete_Image;
+			Out_To_ICxx.Robot[10].Fronius_Status:= R10.Fronius_Status;
+		Out_To_ICxx.Robot[10].Ped_IO_ToShow[1]:= 0;			(*Set to Ped value if this robots ecat string contains the Ped's IO*)
+		Out_To_ICxx.Robot[10].Ped_IO_ToShow[2]:= 0;			(*Set to Ped value if this robots ecat string contains the Ped's IO*)
+		Out_To_ICxx.Robot[10].ECAT_Cable_Breaks:= R10.ECatSlave_Cable_Breaks;
+		Out_To_ICxx.Robot[10].CT:= R10.CT;
+
+
+
+(*R11 ------------------------*)
+		(*Input Data*)
+		R11.FB_In.Robot_Type:=KUKA_KRC4_SAFEOP;
+		R11.FB_In.Install_Zero_Orientation:= 0; 	(*Set this value between 0 and 359 to set the zero position of the robot physical install with reference to 12 o'clock symbol on UI screens*)
+		R11.FB_In.Under_Construction:= GTAC_CONFIG.Under_Construction;
+		R11.FB_In.In_SIM_Mode:= GTAC_CONFIG.In_SIM_Mode;
+		R11.FB_In.SIM_StartWorkAround:= FALSE;  (*Main.SIM_WorkAround_StartRobots*)
+		R11.FB_In.CoE_Read_Trigger:= (GTAC_CONFIG.Option_Robot_Count>=11) AND Pulse_CoERead;
+		R11.FB_In.Ecat_Master_AmsNetID:= MAIN.ECAT_Master.AmsID;
+		R11.FB_In.Prev_EcatNode_Present:= NOT R10.EK1100_NotPresent; (*Ensure Previous Node Exists to determine Ecat Cable Break of this Devices Input Cable*)
+		R11.FB_In.Safety_RST:=SAFETY_RESET;
+		R11.FB_In.Enable_Motion:= All_Estops_OK OR GTAC_CONFIG.Under_Construction;
+		R11.FB_In.Alarm_RST:=In_From_ICxx.ControlPower1;
+		R11.FB_In.Select_Play:=FALSE;
+		R11.FB_In.Select_Teach:=FALSE;
+		R11.FB_In.Select_Remote:=FALSE;
+		R11.FB_In.Start_Scan:=In_From_ICxx.StartRobots;
+		R11.FB_In.Stop_Scan:=In_From_ICxx.StopRobots;
+		R11.FB_In.Stop_Scan2:=FALSE;
+		R11.FB_In.In_DryCycle:= GTAC_CONFIG.Dry_Cycle_Enabled;
+		R11.FB_In.Low_Speed:= GTAC_CONFIG.Low_Speed_Enabled;
+		R11.FB_In.Speed_Request:= In_From_ICxx.Global_Robot_Speed;
+		R11.FB_In.Force_MasterTest_Req:= Cell_Services_Prog.Human_Reqs_MasterTest OR Cell_Services_Prog.A_Robot_Reqs_MasterTest;
+		R11.FB_In.Force_BrakeTest_Req:= Cell_Services_Prog.Human_Reqs_BrakeTest OR Cell_Services_Prog.A_Robot_Reqs_BrakeTest;
+		R11.FB_In.Major_Faults:= Faults.System_Major_Fault;
+		R11.FB_In.Teach_Interlock:=R11_Data.Teach_Interlock;
+		R11.FB_In.Weld_Inhibit:=In_From_ICxx.Rxx_Weld_Inhibit;
+		R11.FB_In.Option_Disable_WaterFLT:= FALSE AND GTAC_CONFIG.Under_Construction OR (MAIN.R11.Task_ID_Ack=Tip_Change_EXT); (*Used to disable water fault if no water is present. use with caution*)
+		R11.FB_In.OK_ToEnter_EquipInterf1:=R11_Data.OK_ToEnter_EquipInterf1;
+		R11.FB_In.OK_ToEnter_EquipInterf2:=R11_Data.OK_ToEnter_EquipInterf2;
+		R11.FB_In.OK_ToEnter_EquipInterf3:=R11_Data.OK_ToEnter_EquipInterf3;
+		R11.FB_In.OK_ToEnter_EquipInterf4:=R11_Data.OK_ToEnter_EquipInterf4;
+		R11.FB_In.OK_ToEnter_EquipInterf5:=R11_Data.OK_ToEnter_EquipInterf5;
+		R11.FB_In.OK_ToEnter_EquipInterf6:=R11_Data.OK_ToEnter_EquipInterf6;
+		R11.FB_In.OK_ToEnter_EquipInterf7:=R11_Data.OK_ToEnter_EquipInterf7;
+		R11.FB_In.OK_ToEnter_EquipInterf8:=R11_Data.OK_ToEnter_EquipInterf8;
+		R11.FB_In.OK_ToEnter_EquipInterf9:=R11_Data.OK_ToEnter_EquipInterf9;
+		R11.FB_In.OK_ToEnter_HumanInterf1:=R11_Data.OK_ToEnter_HumanInterf1;
+		R11.FB_In.OK_ToEnter_HumanInterf2:=R11_Data.OK_ToEnter_HumanInterf2;
+		R11.FB_In.OK_ToEnter_HumanInterf3:=R11_Data.OK_ToEnter_HumanInterf3;
+		R11.FB_In.OK_ToEnter_HumanInterf4:=R11_Data.OK_ToEnter_HumanInterf4;
+		R11.FB_In.OK_ToEnter_HumanInterf5:=R11_Data.OK_ToEnter_HumanInterf5;
+		R11.FB_In.OK_ToEnter_HumanInterf6:=R11_Data.OK_ToEnter_HumanInterf6;
+		R11.FB_In.OK_ToEnter_HumanInterf7:=R11_Data.OK_ToEnter_HumanInterf7;
+		R11.FB_In.OK_ToEnter_HumanInterf8:=R11_Data.OK_ToEnter_HumanInterf8;
+		R11.FB_In.OK_ToEnter_RobotInterfs:= R11_Data.OK_ToEnter_RobotInterfs;
+		R11.FB_In.Fix_ID:=R11_Data.Fix_ID[R11.Location_Index];
+		R11.FB_In.Model_ID:=R11_Data.Model_ID[R11.Location_Index];
+		R11.FB_In.Task_ID:=R11_Data.Task_ID[R11.Location_Index];
+		R11.FB_In.Proceed_From_Pounce:=R11_Data.Proceed_From_Pounce[R11.Location_Index];
+		R11.FB_In.Complete_Ack:=R11_Data.Complete_Ack[R11.Location_Index];
+		R11.FB_In.PeripheralReq_Ack:=R11_Data.PeripheralReq_Ack[R11.Location_Index];
+		R11.FB_In.AuxReq_Ack:=R11_Data.AuxReq_Ack[R11.Location_Index];
+		R11.FB_In.User_Inputs.0:= FALSE;
+		R11.FB_In.User_Inputs.1:= FALSE;
+		R11.FB_In.User_Inputs.2:= FALSE;
+		R11.FB_In.User_Inputs.3:= FALSE;
+		R11.FB_In.User_Inputs.4:= FALSE;
+		R11.FB_In.User_Inputs.5:= FALSE;
+		R11.FB_In.User_Inputs.6:= FALSE;
+		R11.FB_In.User_Inputs.7:= FALSE;
+			(*Configure Options Amounts*)
+			R11.FB_In.Options.WeldCont_Amount:= 0; 					(*Select amount of Spot Type Weld Controllers here (0 min, 4 max)*)
+			R11.FB_In.Options.WaterStand_Amount:= 0;				(*Select amount of Water Stands here (0 min, 2 max)*)
+			R11.FB_In.Options.MIGCont_Amount:= 1;					(*Select amount of MIG Type Weld Controllers here (0 min, 1 max)*)
+			R11.FB_In.Options.Reamer_Amount:= 1;					(*Select amount of Tip Reamers here (0 min, 1 max)*)
+			R11.FB_In.Options.EOAT_Amount:= 0;					(*Assign EOAT number to robot (0 min, 10 max)*)
+			(*Configure Options Parameters*)
+			(*R11.Reamer[1](
+				(*FB Inputs*)
+					Enable_Motion:= All_Estops_OK,
+					Fronius_Ream:= TRUE,
+                    Binzel_Ream:= FALSE,  (*optional*)
+					Ream_REQ:= R11.Peripheral_Req.5 AND (R11.Task_ID_Ack=Tip_Dress),
+
+				(*FB Outputs*)
+					Reaming_Complete=> ,(*mapped in cell services*)
+					);*)
+		(*Call Actual Object*)
+		R11();
+		(*Output Data*)
+		Out_To_ICxx.Robot[11].Robot_Type:= R11.FB_In.Robot_Type;
+		(*To create less work, since there is no welding, changeing this number to 307 so we dont have to mess with the kuka FB, just screens. "us_Rxx_Status" - added 307 "inspecting"*)
+		IF (R11.Status = 305) THEN
+		Out_To_ICxx.Robot[11].Status:= 307; 
+		ELSE
+		Out_To_ICxx.Robot[11].Status:= R11.Status;
+		END_IF
+		Out_To_ICxx.Robot[11].Axis_Data[1]:= R11.S_Axis_Pos_Raw;
+		Out_To_ICxx.Robot[11].In_Image:= R11.Input_Image;
+		Out_To_ICxx.Robot[11].Out_Image:= R11.Output_Image;
+		Out_To_ICxx.Robot[11].Discrete_ImageFSOE:= R11.Discrete_Image_FSoE;
+		Out_To_ICxx.Robot[11].Options:= R11.FB_In.Options;
+			Out_To_ICxx.Robot[11].WS_Discrete_Image[1]:= R11.WS[1].Discrete_Image;
+			Out_To_ICxx.Robot[11].WS_Discrete_Image[2]:= R11.WS[2].Discrete_Image;
+ 			Out_To_ICxx.Robot[11].ATI_Discrete_Image:= R11.ATI[1].Discrete_Image;
+			Out_To_ICxx.Robot[11].Reamer_Discrete_Image:= R11.Reamer[1].Discrete_Image;
+			Out_To_ICxx.Robot[11].Fronius_Status:= R11.Fronius_Status;
+		Out_To_ICxx.Robot[11].Ped_IO_ToShow[1]:= 0;			(*Set to Ped value if this robots ecat string contains the Ped's IO*)
+		Out_To_ICxx.Robot[11].Ped_IO_ToShow[2]:= 0;			(*Set to Ped value if this robots ecat string contains the Ped's IO*)
+		Out_To_ICxx.Robot[11].ECAT_Cable_Breaks:= R11.ECatSlave_Cable_Breaks;
+		Out_To_ICxx.Robot[11].CT:= R11.CT;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(*end*)]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="MAIN">
+      <LineId Id="11608" Count="235" />
+      <LineId Id="13541" Count="0" />
+      <LineId Id="11844" Count="15" />
+      <LineId Id="11861" Count="21" />
+      <LineId Id="12342" Count="0" />
+      <LineId Id="11883" Count="60" />
+      <LineId Id="12726" Count="0" />
+      <LineId Id="12728" Count="3" />
+      <LineId Id="12727" Count="0" />
+      <LineId Id="11944" Count="5" />
+      <LineId Id="13126" Count="0" />
+      <LineId Id="11951" Count="15" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="MAIN.EOATs">
+      <LineId Id="0" Count="0" />
+      <LineId Id="168" Count="10" />
+      <LineId Id="610" Count="0" />
+      <LineId Id="179" Count="37" />
+      <LineId Id="624" Count="1" />
+      <LineId Id="217" Count="1" />
+      <LineId Id="623" Count="0" />
+      <LineId Id="219" Count="0" />
+      <LineId Id="611" Count="1" />
+      <LineId Id="220" Count="1" />
+      <LineId Id="622" Count="0" />
+      <LineId Id="222" Count="1" />
+      <LineId Id="614" Count="1" />
+      <LineId Id="620" Count="1" />
+      <LineId Id="617" Count="2" />
+      <LineId Id="613" Count="0" />
+      <LineId Id="576" Count="3" />
+      <LineId Id="592" Count="2" />
+    </LineIds>
+    <LineIds Name="MAIN.ICs">
+      <LineId Id="1345" Count="330" />
+      <LineId Id="1838" Count="1" />
+      <LineId Id="1843" Count="6" />
+      <LineId Id="1841" Count="0" />
+      <LineId Id="1676" Count="161" />
+      <LineId Id="762" Count="0" />
+    </LineIds>
+    <LineIds Name="MAIN.Product_Tracking">
+      <LineId Id="1" Count="0" />
+      <LineId Id="3" Count="0" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="171" Count="0" />
+      <LineId Id="37" Count="1" />
+      <LineId Id="445" Count="0" />
+      <LineId Id="41" Count="4" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="447" Count="0" />
+      <LineId Id="206" Count="0" />
+      <LineId Id="224" Count="6" />
+      <LineId Id="325" Count="0" />
+      <LineId Id="278" Count="0" />
+      <LineId Id="321" Count="1" />
+      <LineId Id="207" Count="0" />
+      <LineId Id="186" Count="0" />
+      <LineId Id="232" Count="1" />
+      <LineId Id="450" Count="0" />
+      <LineId Id="234" Count="6" />
+      <LineId Id="451" Count="7" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="461" Count="7" />
+      <LineId Id="360" Count="0" />
+      <LineId Id="362" Count="1" />
+      <LineId Id="406" Count="0" />
+      <LineId Id="364" Count="2" />
+      <LineId Id="361" Count="0" />
+      <LineId Id="242" Count="0" />
+      <LineId Id="280" Count="0" />
+      <LineId Id="323" Count="0" />
+      <LineId Id="281" Count="0" />
+      <LineId Id="324" Count="0" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="260" Count="0" />
+      <LineId Id="469" Count="0" />
+      <LineId Id="479" Count="4" />
+      <LineId Id="577" Count="0" />
+      <LineId Id="575" Count="0" />
+      <LineId Id="486" Count="9" />
+      <LineId Id="346" Count="0" />
+      <LineId Id="339" Count="2" />
+      <LineId Id="344" Count="0" />
+      <LineId Id="342" Count="0" />
+      <LineId Id="427" Count="0" />
+      <LineId Id="426" Count="0" />
+      <LineId Id="421" Count="3" />
+      <LineId Id="428" Count="0" />
+      <LineId Id="396" Count="5" />
+      <LineId Id="420" Count="0" />
+      <LineId Id="402" Count="0" />
+      <LineId Id="405" Count="0" />
+      <LineId Id="404" Count="0" />
+      <LineId Id="395" Count="0" />
+      <LineId Id="345" Count="0" />
+      <LineId Id="244" Count="0" />
+      <LineId Id="496" Count="0" />
+      <LineId Id="246" Count="7" />
+      <LineId Id="505" Count="0" />
+      <LineId Id="254" Count="5" />
+      <LineId Id="243" Count="0" />
+      <LineId Id="353" Count="0" />
+      <LineId Id="348" Count="0" />
+      <LineId Id="408" Count="1" />
+      <LineId Id="351" Count="1" />
+      <LineId Id="354" Count="1" />
+      <LineId Id="410" Count="1" />
+      <LineId Id="358" Count="1" />
+      <LineId Id="347" Count="0" />
+      <LineId Id="326" Count="0" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="282" Count="2" />
+      <LineId Id="133" Count="0" />
+      <LineId Id="61" Count="1" />
+      <LineId Id="514" Count="0" />
+      <LineId Id="63" Count="6" />
+      <LineId Id="523" Count="0" />
+      <LineId Id="71" Count="0" />
+      <LineId Id="524" Count="0" />
+      <LineId Id="73" Count="3" />
+      <LineId Id="285" Count="1" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="525" Count="7" />
+      <LineId Id="368" Count="0" />
+      <LineId Id="373" Count="0" />
+      <LineId Id="412" Count="1" />
+      <LineId Id="370" Count="2" />
+      <LineId Id="367" Count="0" />
+      <LineId Id="327" Count="0" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="126" Count="3" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="319" Count="0" />
+      <LineId Id="533" Count="0" />
+      <LineId Id="84" Count="6" />
+      <LineId Id="534" Count="7" />
+      <LineId Id="328" Count="0" />
+      <LineId Id="4" Count="0" />
+      <LineId Id="287" Count="1" />
+      <LineId Id="330" Count="0" />
+      <LineId Id="92" Count="0" />
+      <LineId Id="320" Count="0" />
+      <LineId Id="542" Count="0" />
+      <LineId Id="94" Count="6" />
+      <LineId Id="543" Count="7" />
+      <LineId Id="374" Count="0" />
+      <LineId Id="376" Count="0" />
+      <LineId Id="414" Count="1" />
+      <LineId Id="377" Count="0" />
+      <LineId Id="379" Count="1" />
+      <LineId Id="375" Count="0" />
+      <LineId Id="329" Count="0" />
+      <LineId Id="120" Count="0" />
+      <LineId Id="101" Count="0" />
+      <LineId Id="121" Count="0" />
+      <LineId Id="299" Count="0" />
+      <LineId Id="305" Count="1" />
+      <LineId Id="551" Count="0" />
+      <LineId Id="307" Count="3" />
+      <LineId Id="314" Count="4" />
+      <LineId Id="313" Count="0" />
+      <LineId Id="552" Count="10" />
+      <LineId Id="381" Count="0" />
+      <LineId Id="383" Count="0" />
+      <LineId Id="416" Count="1" />
+      <LineId Id="384" Count="0" />
+      <LineId Id="386" Count="1" />
+      <LineId Id="382" Count="0" />
+      <LineId Id="300" Count="0" />
+      <LineId Id="332" Count="2" />
+      <LineId Id="331" Count="0" />
+      <LineId Id="289" Count="0" />
+      <LineId Id="291" Count="0" />
+      <LineId Id="336" Count="0" />
+      <LineId Id="563" Count="0" />
+      <LineId Id="293" Count="5" />
+      <LineId Id="290" Count="0" />
+      <LineId Id="564" Count="7" />
+      <LineId Id="388" Count="0" />
+      <LineId Id="390" Count="0" />
+      <LineId Id="418" Count="1" />
+      <LineId Id="391" Count="0" />
+      <LineId Id="393" Count="1" />
+      <LineId Id="389" Count="0" />
+      <LineId Id="335" Count="0" />
+      <LineId Id="122" Count="1" />
+      <LineId Id="301" Count="0" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="302" Count="2" />
+      <LineId Id="91" Count="0" />
+    </LineIds>
+    <LineIds Name="MAIN.Robots">
+      <LineId Id="0" Count="7" />
+      <LineId Id="2954" Count="0" />
+      <LineId Id="2984" Count="0" />
+      <LineId Id="8" Count="28" />
+      <LineId Id="3238" Count="0" />
+      <LineId Id="37" Count="15" />
+      <LineId Id="3249" Count="6" />
+      <LineId Id="60" Count="7" />
+      <LineId Id="3270" Count="0" />
+      <LineId Id="3104" Count="5" />
+      <LineId Id="3115" Count="2" />
+      <LineId Id="76" Count="0" />
+      <LineId Id="3271" Count="0" />
+      <LineId Id="3273" Count="20" />
+      <LineId Id="3272" Count="0" />
+      <LineId Id="77" Count="2" />
+      <LineId Id="2520" Count="1" />
+      <LineId Id="2558" Count="0" />
+      <LineId Id="2517" Count="1" />
+      <LineId Id="2522" Count="1" />
+      <LineId Id="2525" Count="1" />
+      <LineId Id="2524" Count="0" />
+      <LineId Id="2527" Count="0" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="3014" Count="0" />
+      <LineId Id="3016" Count="0" />
+      <LineId Id="2528" Count="1" />
+      <LineId Id="3132" Count="0" />
+      <LineId Id="3199" Count="0" />
+      <LineId Id="3203" Count="2" />
+      <LineId Id="3207" Count="3" />
+      <LineId Id="3206" Count="0" />
+      <LineId Id="3248" Count="0" />
+      <LineId Id="2952" Count="1" />
+      <LineId Id="85" Count="4" />
+      <LineId Id="2955" Count="0" />
+      <LineId Id="2985" Count="0" />
+      <LineId Id="90" Count="28" />
+      <LineId Id="3239" Count="0" />
+      <LineId Id="119" Count="15" />
+      <LineId Id="3256" Count="6" />
+      <LineId Id="142" Count="7" />
+      <LineId Id="3294" Count="0" />
+      <LineId Id="3296" Count="20" />
+      <LineId Id="158" Count="0" />
+      <LineId Id="3295" Count="0" />
+      <LineId Id="159" Count="5" />
+      <LineId Id="170" Count="1" />
+      <LineId Id="177" Count="4" />
+      <LineId Id="2530" Count="1" />
+      <LineId Id="2559" Count="0" />
+      <LineId Id="2532" Count="8" />
+      <LineId Id="3017" Count="2" />
+      <LineId Id="2542" Count="0" />
+      <LineId Id="184" Count="7" />
+      <LineId Id="2956" Count="0" />
+      <LineId Id="2986" Count="0" />
+      <LineId Id="192" Count="28" />
+      <LineId Id="3240" Count="0" />
+      <LineId Id="221" Count="15" />
+      <LineId Id="3263" Count="6" />
+      <LineId Id="244" Count="7" />
+      <LineId Id="3317" Count="0" />
+      <LineId Id="3320" Count="20" />
+      <LineId Id="3318" Count="1" />
+      <LineId Id="3123" Count="8" />
+      <LineId Id="260" Count="3" />
+      <LineId Id="2543" Count="1" />
+      <LineId Id="2561" Count="0" />
+      <LineId Id="2545" Count="8" />
+      <LineId Id="3020" Count="2" />
+      <LineId Id="2555" Count="0" />
+      <LineId Id="268" Count="6" />
+      <LineId Id="2957" Count="0" />
+      <LineId Id="2987" Count="0" />
+      <LineId Id="275" Count="28" />
+      <LineId Id="3237" Count="0" />
+      <LineId Id="304" Count="6" />
+      <LineId Id="312" Count="22" />
+      <LineId Id="343" Count="3" />
+      <LineId Id="2562" Count="2" />
+      <LineId Id="3225" Count="0" />
+      <LineId Id="2565" Count="8" />
+      <LineId Id="3023" Count="2" />
+      <LineId Id="2575" Count="0" />
+      <LineId Id="349" Count="7" />
+      <LineId Id="2958" Count="0" />
+      <LineId Id="2988" Count="0" />
+      <LineId Id="357" Count="28" />
+      <LineId Id="3241" Count="0" />
+      <LineId Id="386" Count="30" />
+      <LineId Id="3341" Count="0" />
+      <LineId Id="3343" Count="20" />
+      <LineId Id="3342" Count="0" />
+      <LineId Id="3134" Count="8" />
+      <LineId Id="425" Count="3" />
+      <LineId Id="2576" Count="11" />
+      <LineId Id="3026" Count="2" />
+      <LineId Id="2589" Count="0" />
+      <LineId Id="3211" Count="9" />
+      <LineId Id="3198" Count="0" />
+      <LineId Id="431" Count="7" />
+      <LineId Id="2959" Count="0" />
+      <LineId Id="2989" Count="0" />
+      <LineId Id="439" Count="28" />
+      <LineId Id="3242" Count="0" />
+      <LineId Id="468" Count="30" />
+      <LineId Id="3364" Count="0" />
+      <LineId Id="3366" Count="20" />
+      <LineId Id="3365" Count="0" />
+      <LineId Id="3143" Count="8" />
+      <LineId Id="507" Count="3" />
+      <LineId Id="2590" Count="11" />
+      <LineId Id="3029" Count="2" />
+      <LineId Id="2603" Count="0" />
+      <LineId Id="513" Count="7" />
+      <LineId Id="2960" Count="0" />
+      <LineId Id="2990" Count="0" />
+      <LineId Id="521" Count="28" />
+      <LineId Id="3243" Count="0" />
+      <LineId Id="550" Count="30" />
+      <LineId Id="3387" Count="0" />
+      <LineId Id="3389" Count="20" />
+      <LineId Id="3388" Count="0" />
+      <LineId Id="3152" Count="8" />
+      <LineId Id="589" Count="3" />
+      <LineId Id="2604" Count="11" />
+      <LineId Id="3032" Count="2" />
+      <LineId Id="2617" Count="0" />
+      <LineId Id="595" Count="7" />
+      <LineId Id="2961" Count="0" />
+      <LineId Id="2991" Count="0" />
+      <LineId Id="603" Count="28" />
+      <LineId Id="3244" Count="0" />
+      <LineId Id="632" Count="30" />
+      <LineId Id="3410" Count="0" />
+      <LineId Id="3412" Count="20" />
+      <LineId Id="3411" Count="0" />
+      <LineId Id="3161" Count="8" />
+      <LineId Id="671" Count="3" />
+      <LineId Id="2618" Count="11" />
+      <LineId Id="3035" Count="2" />
+      <LineId Id="2631" Count="0" />
+      <LineId Id="677" Count="7" />
+      <LineId Id="2962" Count="0" />
+      <LineId Id="2992" Count="0" />
+      <LineId Id="685" Count="28" />
+      <LineId Id="3245" Count="0" />
+      <LineId Id="714" Count="30" />
+      <LineId Id="3433" Count="0" />
+      <LineId Id="3435" Count="20" />
+      <LineId Id="3434" Count="0" />
+      <LineId Id="3170" Count="8" />
+      <LineId Id="753" Count="3" />
+      <LineId Id="2632" Count="11" />
+      <LineId Id="3038" Count="2" />
+      <LineId Id="2645" Count="0" />
+      <LineId Id="759" Count="7" />
+      <LineId Id="2963" Count="0" />
+      <LineId Id="2993" Count="0" />
+      <LineId Id="767" Count="28" />
+      <LineId Id="3246" Count="0" />
+      <LineId Id="796" Count="30" />
+      <LineId Id="3179" Count="8" />
+      <LineId Id="835" Count="3" />
+      <LineId Id="2646" Count="0" />
+      <LineId Id="3231" Count="0" />
+      <LineId Id="3227" Count="0" />
+      <LineId Id="2647" Count="0" />
+      <LineId Id="3228" Count="2" />
+      <LineId Id="2648" Count="9" />
+      <LineId Id="3041" Count="2" />
+      <LineId Id="2659" Count="0" />
+      <LineId Id="841" Count="7" />
+      <LineId Id="2964" Count="0" />
+      <LineId Id="2994" Count="0" />
+      <LineId Id="849" Count="28" />
+      <LineId Id="3247" Count="0" />
+      <LineId Id="878" Count="30" />
+      <LineId Id="3188" Count="8" />
+      <LineId Id="917" Count="3" />
+      <LineId Id="2660" Count="0" />
+      <LineId Id="3232" Count="4" />
+      <LineId Id="2661" Count="10" />
+      <LineId Id="3044" Count="2" />
+      <LineId Id="2673" Count="0" />
+      <LineId Id="2492" Count="23" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

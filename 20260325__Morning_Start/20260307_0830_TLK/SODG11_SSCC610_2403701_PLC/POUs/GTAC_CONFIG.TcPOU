@@ -1,0 +1,1463 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="GTAC_CONFIG" Id="{d44323b4-811d-47d0-ad8b-70849e7b6c7e}" SpecialFunc="None">
+    <Declaration><![CDATA[(* FOR USE BY SODECIA GTAC ONLY !!!*)
+(* Sodecia GTAC Configuration data for this particular machine*)
+
+(*----------------------------------------------------------------------------------------------------------------------
+REVISION NOTES: 
+	Date: Dec 2019
+	- Added PROD_CONFIG action and modified production code for R&D request, b.lekx-toniolo/r.remillard
+	Date: Jan 2021
+	- Automated Machine Serial Variable, b.lekx-toniolo
+	Date: Oct 2021
+	- Updated serial section for new engineering serial format changes, b.lekx-toniolo
+	Date: Feb 2024
+	- Added In_Sim_Mode for simulation integration, b.lekx-toniolo
+	Date: Sept 2024
+	- Added MD component, b.lekx-toniolo
+	Date: November 2024
+	- PD to IS rename, as per GH SSCC610 repo Issue#162, b.lekx-toniolo
+
+------------------------------------------------------------------------------------------------------------------------*)
+
+
+
+PROGRAM GTAC_CONFIG
+VAR
+		(*Machine Specific Information: Serial Number, Comon Name, Build Level Used, Application Devloper*)
+		Machine_Serial: STRING;
+		Machine_Common_Name: STRING;
+		Machine_Build_Used: STRING;
+		Machine_Appl_Dev: STRING;
+		
+		(*Production Reporting Configuration Data*)
+		ProdConfig_Target_CycleTime: TIME;
+		ProdConfig_Common: udt_Generic_ShiftCommonConfig_20220420;
+		ProdConfig_Day: udt_Generic_ShiftConfigTOD_20160527;
+		ProdConfig_Aft: udt_Generic_ShiftConfigTOD_20160527;
+		ProdConfig_Mid: udt_Generic_ShiftConfigTOD_20160527;
+
+		ProdConfig_OK: BOOL;
+		ProdConfig_Source_FLT: BOOL;
+		ProdConfig_Option_SelectInShiftChange: BOOL;
+
+		(*Config Data (For Use to Configure Code Directives)*)
+		Option_EL6900_TemperatureHighLimit: INT;
+
+		Option_Air1: BOOL;
+		Option_Air2: BOOL;
+
+		Option_Water1: BOOL;
+		Option_Water2: BOOL;
+
+		Option_WaterTimeOut_Enable: BOOL;
+		Option_WaterFlowTimeOut_SP: TIME;
+		Option_WaterTempHighLimit1: REAL;
+		Option_WaterFlowLowLimit1: REAL;
+		Option_WaterTempHighLimit2: REAL;
+		Option_WaterFlowLowLimit2: REAL;
+
+		Option_ESW_Count: UINT;
+
+		Option_IS_Count: UINT;
+		Option_IC_Count: UINT;
+		Option_HumanFix_Enables: UDINT;
+		Option_InternalFix_Count: UINT;
+		Option_Robot_Count: UINT;
+		Option_Ped_Count: UINT;
+		Option_StudController_Count: UINT;
+		Option_SealController_Count: UINT;
+		Option_NutWelder_Count: UINT;
+		(*Option_EOAT_Count: UINT;*)
+		Option_LaserController_Count: UINT;
+		Option_SD_Count: UINT;
+		Option_MD_Count: UINT;
+		Option_VFD_Count: UINT;
+		Option_EP9214_Count: UINT;
+		(*General Development State Modes for Cell*)
+		Dry_Cycle_Enabled: BOOL;			(*Place Machine Into Dry Cycle (Ignore PP Sensors)*)
+		Local_DryCycle_Enables: UDINT;	(*Used to place individual fixtures into Dry Cycle*)
+		Low_Speed_Enabled: BOOL;		(*Set All Robots and Drives to Low Speed Mode*)
+		Under_Construction: BOOL; 			(*Set Machine Into Construction Mode for Easier Teaching Etc !!!! Use with Caution !!!!*)
+		In_SIM_Mode: BOOL;					(*Set machine into Sim mode during simulation development*)
+
+
+		(*Configuration Fault Flag*)
+		Fault: UDINT;
+
+
+	Report_Trigger_ACKS: INT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*$$$$$$$$$$$$ Set Data As required to configure the machine $$$$$$$$$$$$$$$$$$$$*)
+
+(*-----------------------------------------Machine / Application Specific Information-----------------------------------*)
+
+(*NOTE: Machine Serial is now automatically read from the project name, simply rename your project elements for your machine and we'll do the rest!*)
+	Machine_Serial:= FUN_GTAC_ReturnSetLengthSTR(Out_To_ICxx.Appdata.ProjectName, 22);
+
+(*NOTE: Change to a common use name that the customer will recognize*)
+	Machine_Common_Name:= 'Volvo Truck V2004 Front Bumper';
+	
+(*NOTE: When you started with a server copy of the FW the software came in a folder called All_yyymmdd_state*) 
+	(*use this for below and change the value below only once upon creating this application, this takes a snap shot of the FW build level you started with*)
+	Machine_Build_Used:= 'All_20250506_release';
+	
+(*NOTE: Be sure to Enter your name or initials here, if mulitple application developers worked on the project then list all*)
+	Machine_Appl_Dev:= 'w.griffiths, r.jone, b.lekx-toniolo';
+		
+
+(*---------------------------------------Production Report Configuration -----------------------------------*)
+(*Machine Target Cycle Time (can also be set individually at each fixture, see Fixture -> Production Action*)
+(*Changes per Model ID - All controlled by Fixture 01*)
+
+(*504*)
+	IF (Fix01.Model_ID=1) THEN
+		ProdConfig_Target_CycleTime:=T#156S;
+(*524*)
+	ELSIF (Fix01.Model_ID=2) THEN
+		ProdConfig_Target_CycleTime:=T#184.8S;
+(*543*)
+	ELSIF (Fix01.Model_ID=3) THEN
+		ProdConfig_Target_CycleTime:=T#136.1S;
+(*526 OR 536*)
+	ELSIF (Fix01.Model_ID=4) OR (Fix01.Model_ID=5) THEN
+		ProdConfig_Target_CycleTime:=T#221S;
+(*550 OR 571*)
+	ELSIF (Fix01.Model_ID=6) OR (Fix01.Model_ID=7) THEN
+		ProdConfig_Target_CycleTime:= T#251S;
+	END_IF
+	
+	
+
+(*Call Prod_Config_Constraints Action*)
+	PROD_CONFIG_Constraints();
+
+(*Call Prod_Config Action*)
+	PROD_CONFIG();
+	
+(*Call Reports Action*)
+	REPORTS();	
+
+(*Call SIM Action*)
+	SIM();	
+
+(*-----------------------------------------Machine Configuration Options -----------------------------------*)
+(*Select to Check for 1st MAIN Air Manifold Faults*)
+	Option_Air1:= TRUE;
+(*Select to Check for 2nd MAIN Air Manifold Faults*)
+	Option_Air2:= FALSE;
+
+(*Select to Check for 1st MAIN Water Manifold Faults*)
+	Option_Water1:= FALSE;
+(*Select to Check for 2nd MAIN Water Manifold Faults*)
+	Option_Water2:= FALSE;
+
+(*Global Water Setpoints*)
+	Option_WaterTimeOut_Enable:= NOT Under_Construction AND
+									TRUE;		(*Enable Robot Water Flow Timeout Feature (Stop Water flow if flow not achived after setpoint)*)
+	Option_WaterFlowTimeOut_SP:= T#5.5S;			(*Setpoint for Robot Water Flow Timeout feature, 1.0s Min, 10.0s Max*)
+	Option_WaterTempHighLimit1:= 24;
+	Option_WaterTempHighLimit2:= 24;
+
+	Option_WaterFlowLowLimit1:= 5;
+	Option_WaterFlowLowLimit2:= 5;
+
+
+(*Select Amount of Enable Switches will be present in Machine 0 Min, 4 max*)
+	Option_ESW_Count:= 3;
+
+(*Select Amount of IS cabinets for machine 1 min, CURRENTLY, DO NOT EXCEED 1*)
+	Option_IS_Count:= 1;
+(*Select Amount of ICs for machine 1 min, 8 max*)
+	Option_IC_Count:= 3;
+(*Set Enable Bits for  Human Fixtures for machine*)
+	Option_HumanFix_Enables.1:= TRUE; 		(*Enable Human Fix01 on IC01*)
+	Option_HumanFix_Enables.2:= TRUE; 		(*Enable Human Fix02 on IC01*)
+	Option_HumanFix_Enables.3:= TRUE; 		(*Enable Human Fix03 on IC02*)
+	Option_HumanFix_Enables.4:= TRUE; 		(*Enable Human Fix04 on IC02*)
+	Option_HumanFix_Enables.5:= TRUE; 		(*Enable Human Fix05 on IC03*)
+	Option_HumanFix_Enables.6:= FALSE; 		(*Enable Human Fix06 on IC03*)
+	Option_HumanFix_Enables.7:= FALSE; 		(*Enable Human Fix07 on IC04*)
+	Option_HumanFix_Enables.8:= FALSE; 		(*Enable Human Fix08 on IC04*)
+	Option_HumanFix_Enables.9:= FALSE; 		(*Enable Human Fix09 on IC05*)
+	Option_HumanFix_Enables.10:= FALSE; 		(*Enable Human Fix10 on IC05*)
+	Option_HumanFix_Enables.11:= FALSE; 		(*Enable Human Fix11 on IC06*)
+	Option_HumanFix_Enables.12:= FALSE; 		(*Enable Human Fix12 on IC06*)
+	Option_HumanFix_Enables.13:= FALSE; 		(*Enable Human Fix13 on IC07*)
+	Option_HumanFix_Enables.14:= FALSE; 		(*Enable Human Fix14 on IC07*)
+	Option_HumanFix_Enables.15:= FALSE; 		(*Enable Human Fix15 on IC08*)
+	Option_HumanFix_Enables.16:= FALSE; 		(*Enable Human Fix16 on IC08*)
+
+(*Select Amount of Internal Fixtures for machine 0 min, 12 max (check config)*)
+	Option_InternalFix_Count:= 5;
+
+(*Select Amount of Robots for machine 1 min, 30 max*)
+	Option_Robot_Count:= 11;
+
+(*Select Amount of EOAT for machine 0 min, 10 max*)
+	(*Set EOAT Amount under each robot*)
+
+(*Select Amount of Spot Weld Peds for machine 0 min, 30 max*)
+	Option_Ped_Count:= 0;	//Maybe 1 for marking but aiming for Fixture
+
+(*Select Amount of Stud Weld Controllers for machine 0 min, 10 max*)
+	Option_StudController_Count:= 0;
+
+(*Select Amount of Sealant Controllers for machine 0 min, 10 max*)
+	Option_SealController_Count:= 0;
+
+(*Select Amount of Nut Welder Systems for machine 0 min, 5 max*)
+	Option_NutWelder_Count:= 0;
+
+(*Select Amount of Laser Control Systems for machine 0 min, 9 max*)
+	Option_LaserController_Count:= 0;
+
+(*Select Amount of Servo Drives (SD) for machine 0 min, 30 max*)
+	Option_SD_Count:= 0;
+(*Select Amount of Motorized Doors will be present in Machine 0 Min, 5 max*)
+	Option_MD_Count:= 2;
+(*Select Amount of VFDs that will be present in Machine 0 Min, 5 max*)
+	Option_VFD_Count:= 2;
+(*Select Amount of 9214 that will be present in Machine 0 Min, 3 max*)
+	Option_EP9214_Count:= 0;
+
+(*-----------------------------------------Machine Development Operational States-----------------------------------*)
+
+(*Dry Cycle*)
+	Dry_Cycle_Enabled:= In_From_ICxx.Enable_Dry_Cycle;				(*Global Dry Cycle Enable*)
+	Local_DryCycle_Enables:= In_From_ICxx.Local_DryCycle_Enables; 	(*Fixture by Fixture Dry Cycle Enables*)
+
+(*Low Speed Mode*)
+	Low_Speed_Enabled:= In_From_ICxx.Low_Speed_Req;
+
+(*!!!!!!!!!!!Under Construction Bit for Temp Use Only During Integration!!!!!!!!!!!!!!*)
+(*!!!!!!!!!!!Under Construction Bit for Temp Use Only During Integration!!!!!!!!!!!!!!*)
+(*!!!!!!!!!!!Under Construction Bit for Temp Use Only During Integration!!!!!!!!!!!!!!*)
+(* Blanks Robot Water Faults, Bypasses all Robot to Robot Software teach Interlocks and Allows Operation with no Robot TQM or Collision Detect*)
+
+	Under_Construction:= FALSE; (*DEBUG, set to false after finished construction of machine*)
+
+(*!!!!!!!!!!!Under Construction Bit for Temp Use Only During Integration!!!!!!!!!!!!!!*)
+(*!!!!!!!!!!!Under Construction Bit for Temp Use Only During Integration!!!!!!!!!!!!!!*)
+(*!!!!!!!!!!!Under Construction Bit for Temp Use Only During Integration!!!!!!!!!!!!!!*)
+
+
+
+(*!!!!!!!!!!!In Simulation Mode for Temp Use Only During Simulation!!!!!!!!!!!!!!*)
+(*!!!!!!!!!!!In Simulation Mode for Temp Use Only During Simulation!!!!!!!!!!!!!!*)
+(*!!!!!!!!!!!In Simulation Mode for Temp Use Only During Simulation!!!!!!!!!!!!!*)
+(* Reroutes a number of I/O points to be exchanged with Simulation environment (via OPC) instead of physical I/O*) 
+
+	In_SIM_Mode:= FALSE; (*DEBUG, set to false after simulation work is done and you're onto a physical machine*)
+
+(*!!!!!!!!!!!In Simulation Mode for Temp Use Only During Simulation!!!!!!!!!!!!!!*)
+(*!!!!!!!!!!!In Simulation Mode for Temp Use Only During Simulation!!!!!!!!!!!!!!*)
+(*!!!!!!!!!!!In Simulation Mode for Temp Use Only During Simulation!!!!!!!!!!!!!!*)
+
+
+(*---------------------------------------------- Check Configuration Data ------------------------------------------------------*)
+
+	(*Check Shift Time Configuration Basics*)
+
+	Fault.1:= NOT ProdConfig_OK;
+
+	Fault.2:= Option_WaterFlowTimeOut_SP<T#1.0s OR Option_WaterFlowTimeOut_SP>T#10.0s;
+	Fault.3:= Option_WaterTempHighLimit1>30 OR Option_WaterTempHighLimit2>30
+			OR Option_WaterFlowLowLimit1<3 OR Option_WaterFlowLowLimit2<3;
+	Fault.4:= (Option_IS_Count <1 OR Option_IS_Count >1);
+	Fault.5:= (Option_ESW_Count <0 OR Option_ESW_Count >4);
+	Fault.6:= (Option_IC_Count <1 OR Option_IC_Count >8);
+	Fault.7:= (Option_HumanFix_Enables <2 OR Option_HumanFix_Enables >131070);
+	Fault.8:= ((Option_HumanFix_Enables.3 OR Option_HumanFix_Enables.4)  AND (Option_IC_Count <2)) OR
+			((Option_HumanFix_Enables.5 OR Option_HumanFix_Enables.6)  AND (Option_IC_Count <3)) OR
+			((Option_HumanFix_Enables.7 OR Option_HumanFix_Enables.8)  AND (Option_IC_Count <4)) OR
+			((Option_HumanFix_Enables.9 OR Option_HumanFix_Enables.10)  AND (Option_IC_Count <5)) OR
+			((Option_HumanFix_Enables.11 OR Option_HumanFix_Enables.12)  AND (Option_IC_Count <6)) OR
+			((Option_HumanFix_Enables.13 OR Option_HumanFix_Enables.14)  AND (Option_IC_Count <7)) OR
+			((Option_HumanFix_Enables.15 OR Option_HumanFix_Enables.16)  AND (Option_IC_Count <8));
+	Fault.9:= (Option_InternalFix_Count <0 OR Option_InternalFix_Count >9);
+	Fault.10:= (Option_Robot_Count <1 OR Option_Robot_Count >30);
+	Fault.11:= (Option_Ped_Count <0 OR Option_Ped_Count >30);
+	Fault.12:= (Option_StudController_Count <0 OR Option_StudController_Count >10);
+	Fault.13:= (Option_SealController_Count <0 OR Option_SealController_Count >10);
+	Fault.14:= (Option_NutWelder_Count <0 OR Option_NutWelder_Count >5);
+	Fault.15:= FALSE;	(*Used to be EOAT*)
+	Fault.16:= (Option_LaserController_Count <0 OR Option_LaserController_Count >9);
+	Fault.17:= (Option_SD_Count<0 OR Option_SD_Count>30);
+	Fault.18:= (Option_MD_Count<0 OR Option_MD_Count>5);
+	Fault.30:= MAIN.ECAT_Master.Config_SlaveCount_ExceedsMax_FLT; 								(*Check Sys_Man Confgured Slave Count vs Maximum amount permissable in FB_GTAC_EtherCATMaster_yyyymmdd (see brent)*)
+	(*Set General Configuration Faulted Flag*)
+	Fault.0:= Fault.1OR Fault.2 OR Fault.3 OR Fault.4
+			OR Fault.5 OR Fault.6 OR Fault.7 OR Fault.8
+			OR Fault.9 OR Fault.10 OR Fault.11 OR Fault.12
+			OR Fault.13 OR Fault.14 OR Fault.15 OR Fault.16
+			OR Fault.17 OR Fault.18
+			OR Fault.30;
+
+
+
+
+
+
+
+
+
+
+]]></ST>
+    </Implementation>
+    <Action Name="PROD_CONFIG" Id="{27db037d-a1a5-48ea-ba6c-48007939d40b}">
+      <Implementation>
+        <ST><![CDATA[(*------------------------------------------------------------------------------------------------------------------------*)
+(* ------------------------------------------- Production Configuration --------------------------------------*)
+(*------------------------------------------------------------------------------------------------------------------------*)
+
+(*Change Configuration data source depending on user selection on UI*)
+
+(*0 = set production config source as default (GTAC default Config)*)
+IF In_From_ICxx_Pers.ProdConfig_Common.Config_Source = 0
+	OR In_From_ICxx_Pers.ProdConfig_Common.ResetProdConfig_To_Default
+	THEN
+		ProdConfig_Source_FLT:= FALSE;
+		ProdConfig_Common.Shift_Enables:=14; (*bit.0 = not used, bit.1 = Day Enabled, bit.2 = Aft Enabled, bit.3 = Mid Enabled*)
+		ProdConfig_Common.Break_Count:= 3;
+		ProdConfig_Common.Config_Option_Flags.0:= TRUE;	(*Force In_Shift_Change option flag, leave other option flags*)
+		(*Machine Shift and Breaks Setup*)
+			(*Day Shift*)
+			ProdConfig_Day.Shift_StartTime:= TOD#7:00:00;
+				ProdConfig_Day.Break1_StartTime:= TOD#9:00:00;
+				ProdConfig_Day.Break1_EndTime:= TOD#9:10:00;
+				ProdConfig_Day.Break2_StartTime:= TOD#12:00:00;
+				ProdConfig_Day.Break2_EndTime:= TOD#12:30:00;
+				ProdConfig_Day.Break3_StartTime:= TOD#13:30:00;
+				ProdConfig_Day.Break3_EndTime:= TOD#13:40:00;
+			ProdConfig_Day.Shift_EndTime:= TOD#15:00:00;
+
+
+
+			(*Afternoon Shift*)
+			ProdConfig_Aft.Shift_StartTime:= TOD#15:00:00;
+				ProdConfig_Aft.Break1_StartTime:= TOD#17:00:00;
+				ProdConfig_Aft.Break1_EndTime:= TOD#17:10:00;
+				ProdConfig_Aft.Break2_StartTime:= TOD#20:00:00;
+				ProdConfig_Aft.Break2_EndTime:= TOD#20:30:00;
+				ProdConfig_Aft.Break3_StartTime:= TOD#21:30:00;
+				ProdConfig_Aft.Break3_EndTime:= TOD#21:40:00;
+			ProdConfig_Aft.Shift_EndTime:= TOD#23:00:00;
+
+			(*Midnight Shift*)
+			ProdConfig_Mid.Shift_StartTime:= TOD#23:00:00;
+				ProdConfig_Mid.Break1_StartTime:= TOD#1:00:00;
+				ProdConfig_Mid.Break1_EndTime:= TOD#1:10:00;
+				ProdConfig_Mid.Break2_StartTime:= TOD#4:00:00;
+				ProdConfig_Mid.Break2_EndTime:= TOD#4:30:00;
+				ProdConfig_Mid.Break3_StartTime:= TOD#5:30:00;
+				ProdConfig_Mid.Break3_EndTime:= TOD#5:40:00;
+			ProdConfig_Mid.Shift_EndTime:= TOD#7:00:00;
+
+ (*1 = set production config source as via UI (User Set Config)*)
+ELSIF In_From_ICxx_Pers.ProdConfig_Common.Config_Source = 1 AND
+		NOT In_From_ICxx_Pers.ProdConfig_Common.ResetProdConfig_To_Default
+	THEN
+		ProdConfig_Source_FLT:= FALSE;
+		ProdConfig_Common.Shift_Enables:= In_From_ICxx_Pers.ProdConfig_Common.Shift_Enables;
+		ProdConfig_Common.Break_Count:= In_From_ICxx_Pers.ProdConfig_Common.Break_Count;
+		ProdConfig_Common.Config_Option_Flags:= In_From_ICxx_Pers.ProdConfig_Common.Config_Option_Flags;
+		(*Machine Shift and Breaks Setup*)
+			(*Day Shift*)
+			ProdConfig_Day.Shift_StartTime:= UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Day.Shift_StartTime);
+				ProdConfig_Day.Break1_StartTime:= UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Day.Break1_StartTime);
+				ProdConfig_Day.Break1_EndTime:= UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Day.Break1_EndTime);
+				ProdConfig_Day.Break2_StartTime:= UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Day.Break2_StartTime);
+				ProdConfig_Day.Break2_EndTime:= UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Day.Break2_EndTime);
+				ProdConfig_Day.Break3_StartTime:= UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Day.Break3_StartTime);
+				ProdConfig_Day.Break3_EndTime:= UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Day.Break3_EndTime);
+			ProdConfig_Day.Shift_EndTime:= UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Day.Shift_EndTime);
+
+			(*Afternoon Shift*)
+			ProdConfig_Aft.Shift_StartTime:= UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime);
+				ProdConfig_Aft.Break1_StartTime:= UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Aft.Break1_StartTime);
+				ProdConfig_Aft.Break1_EndTime:= UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Aft.Break1_EndTime);
+				ProdConfig_Aft.Break2_StartTime:= UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Aft.Break2_StartTime);
+				ProdConfig_Aft.Break2_EndTime:= UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Aft.Break2_EndTime);
+				ProdConfig_Aft.Break3_StartTime:= UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Aft.Break3_StartTime);
+				ProdConfig_Aft.Break3_EndTime:= UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Aft.Break3_EndTime);
+			ProdConfig_Aft.Shift_EndTime:= UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Aft.Shift_EndTime);
+
+			(*Midnight Shift*)
+			ProdConfig_Mid.Shift_StartTime:= UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Mid.Shift_StartTime);
+				ProdConfig_Mid.Break1_StartTime:= UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Mid.Break1_StartTime);
+				ProdConfig_Mid.Break1_EndTime:= UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Mid.Break1_EndTime);
+				ProdConfig_Mid.Break2_StartTime:= UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Mid.Break2_StartTime);
+				ProdConfig_Mid.Break2_EndTime:= UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Mid.Break2_EndTime);
+				ProdConfig_Mid.Break3_StartTime:= UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Mid.Break3_StartTime);
+				ProdConfig_Mid.Break3_EndTime:= UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Mid.Break3_EndTime);
+			ProdConfig_Mid.Shift_EndTime:= UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Mid.Shift_EndTime);
+ELSE
+	ProdConfig_Source_FLT:= TRUE;
+
+END_IF;
+
+(*--------------------------------------------------------------- Check that config data is ok ---------------------------------------------------*)
+	ProdConfig_OK:= NOT ProdConfig_Source_FLT AND
+					(Fix01.Production_Report.FB_Ok OR NOT Option_HumanFix_Enables.1) AND
+					(Fix02.Production_Report.FB_Ok OR NOT Option_HumanFix_Enables.2) AND
+					(Fix03.Production_Report.FB_Ok OR NOT Option_HumanFix_Enables.3) AND
+					(Fix04.Production_Report.FB_Ok OR NOT Option_HumanFix_Enables.4) AND
+					(Fix05.Production_Report.FB_Ok OR NOT Option_HumanFix_Enables.5) AND
+					(Fix06.Production_Report.FB_Ok OR NOT Option_HumanFix_Enables.6) AND
+					(Fix07.Production_Report.FB_Ok OR NOT Option_HumanFix_Enables.7) AND
+					(Fix07.Production_Report.FB_Ok OR NOT Option_HumanFix_Enables.8) AND
+					(Fix09.Production_Report.FB_Ok OR NOT Option_HumanFix_Enables.9) AND
+					(Fix10.Production_Report.FB_Ok OR NOT Option_HumanFix_Enables.10) AND
+					(Fix11.Production_Report.FB_Ok OR NOT Option_HumanFix_Enables.11) AND
+					(Fix12.Production_Report.FB_Ok OR NOT Option_HumanFix_Enables.12) AND
+					(Fix13.Production_Report.FB_Ok OR NOT Option_HumanFix_Enables.13) AND
+					(Fix14.Production_Report.FB_Ok OR NOT Option_HumanFix_Enables.14) AND
+					(Fix15.Production_Report.FB_Ok OR NOT Option_HumanFix_Enables.15) AND
+					(Fix16.Production_Report.FB_Ok OR NOT Option_HumanFix_Enables.16) AND
+					(Fix101.Production_Report.FB_Ok OR (Option_InternalFix_Count<1)) AND
+					(Fix102.Production_Report.FB_Ok OR (Option_InternalFix_Count<2)) AND
+					(Fix103.Production_Report.FB_Ok OR (Option_InternalFix_Count<3)) AND
+					(Fix104.Production_Report.FB_Ok OR (Option_InternalFix_Count<4)) AND
+					(Fix105.Production_Report.FB_Ok OR (Option_InternalFix_Count<5)) AND
+					(Fix106.Production_Report.FB_Ok OR (Option_InternalFix_Count<6)) AND
+					(Fix107.Production_Report.FB_Ok OR (Option_InternalFix_Count<7)) AND
+					(Fix108.Production_Report.FB_Ok OR (Option_InternalFix_Count<8)) AND
+					(Fix109.Production_Report.FB_Ok OR (Option_InternalFix_Count<9)) AND
+					(Fix110.Production_Report.FB_Ok OR (Option_InternalFix_Count<10)) AND
+					(Fix111.Production_Report.FB_Ok OR (Option_InternalFix_Count<11)) AND
+					(Fix112.Production_Report.FB_Ok OR (Option_InternalFix_Count<12));
+
+(*------------------------------------------------------------------- Map Outputs of Config -------------------------------------------------------*)
+	ProdConfig_Option_SelectInShiftChange:= ProdConfig_Common.Config_Option_Flags.0;
+
+(*-----------------------------------------------------------------------------------------------------------------------------------------------------*)
+(*Load User Config with GTAC Default data if this is the first boot and no user data has been configured or if user selects to reset to defaults*)
+
+
+
+IF	(MAIN.Starting_Scan_Pulse AND
+	In_From_ICxx_Pers.ProdConfig_Common.Config_Source = 0 AND 					(*0 = set production config source as default (GTAC default Config)*)
+	In_From_ICxx_Pers.ProdConfig_Day.Shift_StartTime=0 AND
+	In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime=0 AND
+	In_From_ICxx_Pers.ProdConfig_Mid.Shift_StartTime=0)
+	OR
+	(In_From_ICxx_Pers.ProdConfig_Common.Config_Source = 1 AND				(*1 = set production config source as via UI (User Set Config)*)
+	In_From_ICxx_Pers.ProdConfig_Common.ResetProdConfig_To_Default)
+	THEN
+		(*Set config data common to all shifts*)
+		In_From_ICxx_Pers.ProdConfig_Common.Shift_Enables:= ProdConfig_Common.Shift_Enables;
+		In_From_ICxx_Pers.ProdConfig_Common.Break_Count:= ProdConfig_Common.Break_Count;
+		In_From_ICxx_Pers.ProdConfig_Common.Config_Option_Flags.0:= TRUE; (*Set In_Shift_Change option flag, leave other option flags*)
+		In_From_ICxx_Pers.ProdConfig_Common.Config_Option_Flags.10:= FALSE; (*Reset File save type option flag, leave other option flags*)
+
+		(*Set shift specfic config data*)
+			(*Day Shift*)
+			In_From_ICxx_Pers.ProdConfig_Day.Shift_StartTime:= TOD_TO_UDINT(ProdConfig_Day.Shift_StartTime);
+				In_From_ICxx_Pers.ProdConfig_Day.Break1_StartTime:= TOD_TO_UDINT(ProdConfig_Day.Break1_StartTime);
+				In_From_ICxx_Pers.ProdConfig_Day.Break1_EndTime:= TOD_TO_UDINT(ProdConfig_Day.Break1_EndTime);
+				In_From_ICxx_Pers.ProdConfig_Day.Break2_StartTime:= TOD_TO_UDINT(ProdConfig_Day.Break2_StartTime);
+				In_From_ICxx_Pers.ProdConfig_Day.Break2_EndTime:= TOD_TO_UDINT(ProdConfig_Day.Break2_EndTime);
+				In_From_ICxx_Pers.ProdConfig_Day.Break3_StartTime:= TOD_TO_UDINT(ProdConfig_Day.Break3_StartTime);
+				In_From_ICxx_Pers.ProdConfig_Day.Break3_EndTime:= TOD_TO_UDINT(ProdConfig_Day.Break3_EndTime);
+			In_From_ICxx_Pers.ProdConfig_Day.Shift_EndTime:= TOD_TO_UDINT(ProdConfig_Day.Shift_EndTime);
+			(*Aft Shift*)
+			In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime:= TOD_TO_UDINT(ProdConfig_Aft.Shift_StartTime);
+				In_From_ICxx_Pers.ProdConfig_Aft.Break1_StartTime:= TOD_TO_UDINT(ProdConfig_Aft.Break1_StartTime);
+				In_From_ICxx_Pers.ProdConfig_Aft.Break1_EndTime:= TOD_TO_UDINT(ProdConfig_Aft.Break1_EndTime);
+				In_From_ICxx_Pers.ProdConfig_Aft.Break2_StartTime:= TOD_TO_UDINT(ProdConfig_Aft.Break2_StartTime);
+				In_From_ICxx_Pers.ProdConfig_Aft.Break2_EndTime:= TOD_TO_UDINT(ProdConfig_Aft.Break2_EndTime);
+				In_From_ICxx_Pers.ProdConfig_Aft.Break3_StartTime:= TOD_TO_UDINT(ProdConfig_Aft.Break3_StartTime);
+				In_From_ICxx_Pers.ProdConfig_Aft.Break3_EndTime:= TOD_TO_UDINT(ProdConfig_Aft.Break3_EndTime);
+			In_From_ICxx_Pers.ProdConfig_Aft.Shift_EndTime:= TOD_TO_UDINT(ProdConfig_Aft.Shift_EndTime);
+			(*Mid Shift*)
+			In_From_ICxx_Pers.ProdConfig_Mid.Shift_StartTime:= TOD_TO_UDINT(ProdConfig_Mid.Shift_StartTime);
+				In_From_ICxx_Pers.ProdConfig_Mid.Break1_StartTime:= TOD_TO_UDINT(ProdConfig_Mid.Break1_StartTime);
+				In_From_ICxx_Pers.ProdConfig_Mid.Break1_EndTime:= TOD_TO_UDINT(ProdConfig_Mid.Break1_EndTime);
+				In_From_ICxx_Pers.ProdConfig_Mid.Break2_StartTime:= TOD_TO_UDINT(ProdConfig_Mid.Break2_StartTime);
+				In_From_ICxx_Pers.ProdConfig_Mid.Break2_EndTime:= TOD_TO_UDINT(ProdConfig_Mid.Break2_EndTime);
+				In_From_ICxx_Pers.ProdConfig_Mid.Break3_StartTime:= TOD_TO_UDINT(ProdConfig_Mid.Break3_StartTime);
+				In_From_ICxx_Pers.ProdConfig_Mid.Break3_EndTime:= TOD_TO_UDINT(ProdConfig_Mid.Break3_EndTime);
+			In_From_ICxx_Pers.ProdConfig_Mid.Shift_EndTime:= TOD_TO_UDINT(ProdConfig_Mid.Shift_EndTime);
+
+END_IF;
+
+
+
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="PROD_CONFIG_Constraints" Id="{4cdbd2fe-c573-4916-a4f7-ec16837678d3}">
+      <Implementation>
+        <ST><![CDATA[(*--------------------------------------------------------------------------------------------------------------------------------------------------------*)
+(* ------------------------- Production Configuration Hard Coded Constraints-----------------------------------------------------*)
+(*-- Can be changed if require, by user familiar with inner workings of FB_Production_Report_yyyymmdd --*)
+(*---------------------------------------------------------------------------------------------------------------------------------------------------------*)
+
+
+(*----------- Dat Shift Set Constaints -----------*)
+	(*Day Shift start must fall between 3am -11am*)
+	IF UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Day.Shift_StartTime) < TOD#3:00:00
+		THEN
+				In_From_ICxx_Pers.ProdConfig_Day.Shift_StartTime:= TOD_TO_UDINT(TOD#3:00:00);
+
+	ELSIF UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Day.Shift_StartTime) > TOD#11:00:00
+		THEN
+				In_From_ICxx_Pers.ProdConfig_Day.Shift_StartTime:= TOD_TO_UDINT(TOD#11:00:00);
+
+	(*Set Shift minimum span as 1 hour*)
+	(*Expand towards next shift*)
+	ELSIF (In_From_ICxx_Pers.ProdConfig_Day.Shift_EndTime < (In_From_ICxx_Pers.ProdConfig_Day.Shift_StartTime + 3600000))
+			AND (In_From_ICxx_Pers.ProdConfig_Day.Shift_EndTime < In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime -3600000)
+		THEN
+				In_From_ICxx_Pers.ProdConfig_Day.Shift_EndTime:= In_From_ICxx_Pers.ProdConfig_Day.Shift_StartTime + 3600000;
+	(*Expand towards previous shift*)
+	ELSIF (In_From_ICxx_Pers.ProdConfig_Day.Shift_EndTime < (In_From_ICxx_Pers.ProdConfig_Day.Shift_StartTime + 3600000))
+			AND (In_From_ICxx_Pers.ProdConfig_Day.Shift_StartTime > In_From_ICxx_Pers.ProdConfig_Mid.Shift_EndTime +3600000)
+		THEN
+				In_From_ICxx_Pers.ProdConfig_Day.Shift_StartTime:= In_From_ICxx_Pers.ProdConfig_Day.Shift_EndTime - 3600000;
+
+	(*Set Shift maximum span as 12 hours*)
+	ELSIF In_From_ICxx_Pers.ProdConfig_Day.Shift_EndTime > (In_From_ICxx_Pers.ProdConfig_Day.Shift_StartTime + 43200000)
+		THEN
+				In_From_ICxx_Pers.ProdConfig_Day.Shift_EndTime:= (In_From_ICxx_Pers.ProdConfig_Day.Shift_StartTime + 43200000);
+
+	END_IF;
+
+	(*Break 1 Constraints*)
+		(*Start of Break*)
+		IF In_From_ICxx_Pers.ProdConfig_Day.Break1_StartTime < In_From_ICxx_Pers.ProdConfig_Day.Shift_StartTime + TOD_TO_UDINT(TOD#00:05:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Day.Break1_StartTime:= In_From_ICxx_Pers.ProdConfig_Day.Shift_StartTime + TOD_TO_UDINT(TOD#00:05:00);
+		ELSIF In_From_ICxx_Pers.ProdConfig_Day.Break1_StartTime > In_From_ICxx_Pers.ProdConfig_Day.Shift_EndTime - TOD_TO_UDINT(TOD#00:30:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Day.Break1_StartTime:= In_From_ICxx_Pers.ProdConfig_Day.Shift_EndTime - TOD_TO_UDINT(TOD#00:30:00);
+		(*Allow Break start time to be pushed by break end time*)
+		ELSIF In_From_ICxx_Pers.ProdConfig_Day.Break1_StartTime > In_From_ICxx_Pers.ProdConfig_Day.Break1_EndTime
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Day.Break1_StartTime:= In_From_ICxx_Pers.ProdConfig_Day.Break1_EndTime - TOD_TO_UDINT(TOD#00:05:00);
+		END_IF;
+
+		(*End of Break*)
+		IF In_From_ICxx_Pers.ProdConfig_Day.Break1_EndTime < In_From_ICxx_Pers.ProdConfig_Day.Shift_StartTime + TOD_TO_UDINT(TOD#00:10:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Day.Break1_EndTime:= In_From_ICxx_Pers.ProdConfig_Day.Shift_StartTime + TOD_TO_UDINT(TOD#00:10:00);
+		ELSIF In_From_ICxx_Pers.ProdConfig_Day.Break1_EndTime > In_From_ICxx_Pers.ProdConfig_Day.Shift_EndTime - TOD_TO_UDINT(TOD#00:25:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Day.Break1_EndTime:= In_From_ICxx_Pers.ProdConfig_Day.Shift_EndTime - TOD_TO_UDINT(TOD#00:25:00);
+		(*Allow Break end time to be pushed by break start time*)
+		ELSIF In_From_ICxx_Pers.ProdConfig_Day.Break1_EndTime < In_From_ICxx_Pers.ProdConfig_Day.Break1_StartTime + TOD_TO_UDINT(TOD#00:05:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Day.Break1_EndTime:= In_From_ICxx_Pers.ProdConfig_Day.Break1_StartTime + TOD_TO_UDINT(TOD#00:05:00);
+		ELSIF In_From_ICxx_Pers.ProdConfig_Day.Break1_EndTime > In_From_ICxx_Pers.ProdConfig_Day.Break2_StartTime - TOD_TO_UDINT(TOD#00:05:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Day.Break1_EndTime:= In_From_ICxx_Pers.ProdConfig_Day.Break2_StartTime - TOD_TO_UDINT(TOD#00:05:00);
+		END_IF;
+
+	(*Break 2 Constraints*)
+		(*Start of Break*)
+		IF In_From_ICxx_Pers.ProdConfig_Day.Break2_StartTime < In_From_ICxx_Pers.ProdConfig_Day.Shift_StartTime + TOD_TO_UDINT(TOD#00:15:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Day.Break2_StartTime:= In_From_ICxx_Pers.ProdConfig_Day.Shift_StartTime + TOD_TO_UDINT(TOD#00:15:00);
+		ELSIF In_From_ICxx_Pers.ProdConfig_Day.Break2_StartTime > In_From_ICxx_Pers.ProdConfig_Day.Shift_EndTime - TOD_TO_UDINT(TOD#00:20:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Day.Break2_StartTime:= In_From_ICxx_Pers.ProdConfig_Day.Shift_EndTime - TOD_TO_UDINT(TOD#00:20:00);
+		ELSIF In_From_ICxx_Pers.ProdConfig_Day.Break2_StartTime < In_From_ICxx_Pers.ProdConfig_Day.Break1_EndTime + TOD_TO_UDINT(TOD#00:05:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Day.Break2_StartTime:= In_From_ICxx_Pers.ProdConfig_Day.Break1_EndTime + TOD_TO_UDINT(TOD#00:05:00);
+		(*Allow Break start time to be pushed by break end time*)
+		ELSIF In_From_ICxx_Pers.ProdConfig_Day.Break2_StartTime > In_From_ICxx_Pers.ProdConfig_Day.Break2_EndTime
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Day.Break2_StartTime:= In_From_ICxx_Pers.ProdConfig_Day.Break2_EndTime - TOD_TO_UDINT(TOD#00:05:00);
+		END_IF;
+
+		(*End of Break*)
+		IF In_From_ICxx_Pers.ProdConfig_Day.Break2_EndTime < In_From_ICxx_Pers.ProdConfig_Day.Shift_StartTime + TOD_TO_UDINT(TOD#00:20:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Day.Break2_EndTime:= In_From_ICxx_Pers.ProdConfig_Day.Shift_StartTime + TOD_TO_UDINT(TOD#00:20:00);
+		ELSIF In_From_ICxx_Pers.ProdConfig_Day.Break2_EndTime > In_From_ICxx_Pers.ProdConfig_Day.Shift_EndTime - TOD_TO_UDINT(TOD#00:15:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Day.Break2_EndTime:= In_From_ICxx_Pers.ProdConfig_Day.Shift_EndTime - TOD_TO_UDINT(TOD#00:15:00);
+		(*Allow Break end time to be pushed by break start time*)
+		ELSIF In_From_ICxx_Pers.ProdConfig_Day.Break2_EndTime < In_From_ICxx_Pers.ProdConfig_Day.Break2_StartTime + TOD_TO_UDINT(TOD#00:05:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Day.Break2_EndTime:= In_From_ICxx_Pers.ProdConfig_Day.Break2_StartTime + TOD_TO_UDINT(TOD#00:05:00);
+		ELSIF In_From_ICxx_Pers.ProdConfig_Day.Break2_EndTime > In_From_ICxx_Pers.ProdConfig_Day.Break3_StartTime - TOD_TO_UDINT(TOD#00:05:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Day.Break2_EndTime:= In_From_ICxx_Pers.ProdConfig_Day.Break3_StartTime - TOD_TO_UDINT(TOD#00:05:00);
+		END_IF;
+
+	(*Break 3 Constraints*)
+		(*Start of Break*)
+		IF In_From_ICxx_Pers.ProdConfig_Day.Break3_StartTime < In_From_ICxx_Pers.ProdConfig_Day.Shift_StartTime + TOD_TO_UDINT(TOD#00:20:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Day.Break3_StartTime:= In_From_ICxx_Pers.ProdConfig_Day.Shift_StartTime + TOD_TO_UDINT(TOD#00:20:00);
+		ELSIF In_From_ICxx_Pers.ProdConfig_Day.Break3_StartTime > In_From_ICxx_Pers.ProdConfig_Day.Shift_EndTime - TOD_TO_UDINT(TOD#00:10:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Day.Break3_StartTime:= In_From_ICxx_Pers.ProdConfig_Day.Shift_EndTime - TOD_TO_UDINT(TOD#00:10:00);
+		ELSIF In_From_ICxx_Pers.ProdConfig_Day.Break3_StartTime < In_From_ICxx_Pers.ProdConfig_Day.Break2_EndTime + TOD_TO_UDINT(TOD#00:05:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Day.Break3_StartTime:= In_From_ICxx_Pers.ProdConfig_Day.Break2_EndTime + TOD_TO_UDINT(TOD#00:05:00);
+		(*Allow Break start time to be pushed by break end time*)
+		ELSIF In_From_ICxx_Pers.ProdConfig_Day.Break3_StartTime > In_From_ICxx_Pers.ProdConfig_Day.Break3_EndTime
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Day.Break3_StartTime:= In_From_ICxx_Pers.ProdConfig_Day.Break3_EndTime - TOD_TO_UDINT(TOD#00:05:00);
+		END_IF;
+
+		(*End of Break*)
+		IF In_From_ICxx_Pers.ProdConfig_Day.Break3_EndTime < In_From_ICxx_Pers.ProdConfig_Day.Shift_StartTime + TOD_TO_UDINT(TOD#00:25:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Day.Break3_EndTime:= In_From_ICxx_Pers.ProdConfig_Day.Shift_StartTime + TOD_TO_UDINT(TOD#00:25:00);
+		ELSIF In_From_ICxx_Pers.ProdConfig_Day.Break3_EndTime > In_From_ICxx_Pers.ProdConfig_Day.Shift_EndTime - TOD_TO_UDINT(TOD#00:05:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Day.Break3_EndTime:= In_From_ICxx_Pers.ProdConfig_Day.Shift_EndTime - TOD_TO_UDINT(TOD#00:05:00);
+		(*Allow Break end time to be pushed by break start time*)
+		ELSIF In_From_ICxx_Pers.ProdConfig_Day.Break3_EndTime < In_From_ICxx_Pers.ProdConfig_Day.Break3_StartTime + TOD_TO_UDINT(TOD#00:05:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Day.Break3_EndTime:= In_From_ICxx_Pers.ProdConfig_Day.Break3_StartTime + TOD_TO_UDINT(TOD#00:05:00);
+		END_IF;
+
+
+(*---------- Set Afternoon Shift Constaints -------------*)
+	(*Aft Shift start must fall between 11am -7pm*)
+	IF UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime) < TOD#11:00:00
+		THEN
+				In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime:= TOD_TO_UDINT(TOD#11:00:00);
+
+	ELSIF UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime) > TOD#19:00:00
+		THEN
+				In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime:= TOD_TO_UDINT(TOD#19:00:00);
+
+	(*Set Shift minimum span as 1 hour*)
+	(*Expand towards next shift*)
+	ELSIF (In_From_ICxx_Pers.ProdConfig_Aft.Shift_EndTime < (In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime + 3600000))
+			AND (In_From_ICxx_Pers.ProdConfig_Aft.Shift_EndTime < In_From_ICxx_Pers.ProdConfig_Mid.Shift_StartTime -3600000)
+		THEN
+				In_From_ICxx_Pers.ProdConfig_Aft.Shift_EndTime:= In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime + 3600000;
+	(*Expand towards previous shift*)
+	ELSIF (In_From_ICxx_Pers.ProdConfig_Aft.Shift_EndTime < (In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime + 3600000))
+			AND (In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime > In_From_ICxx_Pers.ProdConfig_Day.Shift_EndTime +3600000)
+		THEN
+				In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime:= In_From_ICxx_Pers.ProdConfig_Aft.Shift_EndTime - 3600000;
+		(*Extra push scenario to avoid Aft shift getting boxed in by Days and Mids scenario*)
+		ELSIF (In_From_ICxx_Pers.ProdConfig_Aft.Shift_EndTime < (In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime + 3600000))
+				AND (In_From_ICxx_Pers.ProdConfig_Aft.Shift_EndTime > In_From_ICxx_Pers.ProdConfig_Mid.Shift_StartTime -3600000)
+				AND In_From_ICxx_Pers.ProdConfig_Mid.Shift_StartTime < (TOD_TO_UDINT(TOD#23:00:00) -3600000)
+			THEN
+					In_From_ICxx_Pers.ProdConfig_Mid.Shift_StartTime:= In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime + 3600000;
+					In_From_ICxx_Pers.ProdConfig_Aft.Shift_EndTime:= In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime + 3600000;
+	(*Set Shift maximum span as 12 hours*)
+	ELSIF In_From_ICxx_Pers.ProdConfig_Aft.Shift_EndTime  >= (In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime + 43200000)
+		THEN
+				In_From_ICxx_Pers.ProdConfig_Aft.Shift_EndTime:= (In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime + 43200000);
+
+	(*Set Aft Shift maximum end time as 23:59:00 (only midnight shift shall roll over midnight)*)
+	ELSIF UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Aft.Shift_EndTime)  > TOD#23:59:00
+		THEN
+				In_From_ICxx_Pers.ProdConfig_Aft.Shift_EndTime:= TOD_TO_UDINT(TOD#23:59:00);
+
+	END_IF;
+
+	(*Break 1 Constraints*)
+		(*Start of Break*)
+		IF In_From_ICxx_Pers.ProdConfig_Aft.Break1_StartTime < In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime + TOD_TO_UDINT(TOD#00:05:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Aft.Break1_StartTime:= In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime + TOD_TO_UDINT(TOD#00:05:00);
+		ELSIF In_From_ICxx_Pers.ProdConfig_Aft.Break1_StartTime > In_From_ICxx_Pers.ProdConfig_Aft.Shift_EndTime - TOD_TO_UDINT(TOD#00:30:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Aft.Break1_StartTime:= In_From_ICxx_Pers.ProdConfig_Aft.Shift_EndTime - TOD_TO_UDINT(TOD#00:30:00);
+		(*Allow Break start time to be pushed by break end time*)
+		ELSIF In_From_ICxx_Pers.ProdConfig_Aft.Break1_StartTime > In_From_ICxx_Pers.ProdConfig_Aft.Break1_EndTime
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Aft.Break1_StartTime:= In_From_ICxx_Pers.ProdConfig_Aft.Break1_EndTime - TOD_TO_UDINT(TOD#00:05:00);
+		END_IF;
+
+		(*End of Break*)
+		IF In_From_ICxx_Pers.ProdConfig_Aft.Break1_EndTime < In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime + TOD_TO_UDINT(TOD#00:10:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Aft.Break1_EndTime:= In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime + TOD_TO_UDINT(TOD#00:10:00);
+		ELSIF In_From_ICxx_Pers.ProdConfig_Aft.Break1_EndTime > In_From_ICxx_Pers.ProdConfig_Aft.Shift_EndTime - TOD_TO_UDINT(TOD#00:25:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Aft.Break1_EndTime:= In_From_ICxx_Pers.ProdConfig_Aft.Shift_EndTime - TOD_TO_UDINT(TOD#00:25:00);
+		(*Allow Break end time to be pushed by break start time*)
+		ELSIF In_From_ICxx_Pers.ProdConfig_Aft.Break1_EndTime < In_From_ICxx_Pers.ProdConfig_Aft.Break1_StartTime + TOD_TO_UDINT(TOD#00:05:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Aft.Break1_EndTime:= In_From_ICxx_Pers.ProdConfig_Aft.Break1_StartTime + TOD_TO_UDINT(TOD#00:05:00);
+		ELSIF In_From_ICxx_Pers.ProdConfig_Aft.Break1_EndTime > In_From_ICxx_Pers.ProdConfig_Aft.Break2_StartTime - TOD_TO_UDINT(TOD#00:05:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Aft.Break1_EndTime:= In_From_ICxx_Pers.ProdConfig_Aft.Break2_StartTime - TOD_TO_UDINT(TOD#00:05:00);
+		END_IF;
+
+	(*Break 2 Constraints*)
+		(*Start of Break*)
+		IF In_From_ICxx_Pers.ProdConfig_Aft.Break2_StartTime < In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime + TOD_TO_UDINT(TOD#00:15:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Aft.Break2_StartTime:= In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime + TOD_TO_UDINT(TOD#00:15:00);
+		ELSIF In_From_ICxx_Pers.ProdConfig_Aft.Break2_StartTime > In_From_ICxx_Pers.ProdConfig_Aft.Shift_EndTime - TOD_TO_UDINT(TOD#00:20:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Aft.Break2_StartTime:= In_From_ICxx_Pers.ProdConfig_Aft.Shift_EndTime - TOD_TO_UDINT(TOD#00:20:00);
+		ELSIF In_From_ICxx_Pers.ProdConfig_Aft.Break2_StartTime < In_From_ICxx_Pers.ProdConfig_Aft.Break1_EndTime + TOD_TO_UDINT(TOD#00:05:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Aft.Break2_StartTime:= In_From_ICxx_Pers.ProdConfig_Aft.Break1_EndTime + TOD_TO_UDINT(TOD#00:05:00);
+		(*Allow Break start time to be pushed by break end time*)
+		ELSIF In_From_ICxx_Pers.ProdConfig_Aft.Break2_StartTime > In_From_ICxx_Pers.ProdConfig_Aft.Break2_EndTime
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Aft.Break2_StartTime:= In_From_ICxx_Pers.ProdConfig_Aft.Break2_EndTime - TOD_TO_UDINT(TOD#00:05:00);
+		END_IF;
+
+		(*End of Break*)
+		IF In_From_ICxx_Pers.ProdConfig_Aft.Break2_EndTime < In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime + TOD_TO_UDINT(TOD#00:20:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Aft.Break2_EndTime:= In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime + TOD_TO_UDINT(TOD#00:20:00);
+		ELSIF In_From_ICxx_Pers.ProdConfig_Aft.Break2_EndTime > In_From_ICxx_Pers.ProdConfig_Aft.Shift_EndTime - TOD_TO_UDINT(TOD#00:15:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Aft.Break2_EndTime:= In_From_ICxx_Pers.ProdConfig_Aft.Shift_EndTime - TOD_TO_UDINT(TOD#00:15:00);
+		(*Allow Break end time to be pushed by break start time*)
+		ELSIF In_From_ICxx_Pers.ProdConfig_Aft.Break2_EndTime < In_From_ICxx_Pers.ProdConfig_Aft.Break2_StartTime + TOD_TO_UDINT(TOD#00:05:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Aft.Break2_EndTime:= In_From_ICxx_Pers.ProdConfig_Aft.Break2_StartTime + TOD_TO_UDINT(TOD#00:05:00);
+		ELSIF In_From_ICxx_Pers.ProdConfig_Aft.Break2_EndTime > In_From_ICxx_Pers.ProdConfig_Aft.Break3_StartTime - TOD_TO_UDINT(TOD#00:05:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Aft.Break2_EndTime:= In_From_ICxx_Pers.ProdConfig_Aft.Break3_StartTime - TOD_TO_UDINT(TOD#00:05:00);
+		END_IF;
+
+	(*Break 3 Constraints*)
+		(*Start of Break*)
+		IF In_From_ICxx_Pers.ProdConfig_Aft.Break3_StartTime < In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime + TOD_TO_UDINT(TOD#00:20:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Aft.Break3_StartTime:= In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime + TOD_TO_UDINT(TOD#00:20:00);
+		ELSIF In_From_ICxx_Pers.ProdConfig_Aft.Break3_StartTime > In_From_ICxx_Pers.ProdConfig_Aft.Shift_EndTime - TOD_TO_UDINT(TOD#00:10:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Aft.Break3_StartTime:= In_From_ICxx_Pers.ProdConfig_Aft.Shift_EndTime - TOD_TO_UDINT(TOD#00:10:00);
+		ELSIF In_From_ICxx_Pers.ProdConfig_Aft.Break3_StartTime < In_From_ICxx_Pers.ProdConfig_Aft.Break2_EndTime + TOD_TO_UDINT(TOD#00:05:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Aft.Break3_StartTime:= In_From_ICxx_Pers.ProdConfig_Aft.Break2_EndTime + TOD_TO_UDINT(TOD#00:05:00);
+		(*Allow Break start time to be pushed by break end time*)
+		ELSIF In_From_ICxx_Pers.ProdConfig_Aft.Break3_StartTime > In_From_ICxx_Pers.ProdConfig_Aft.Break3_EndTime
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Aft.Break3_StartTime:= In_From_ICxx_Pers.ProdConfig_Aft.Break3_EndTime - TOD_TO_UDINT(TOD#00:05:00);
+		END_IF;
+
+		(*End of Break*)
+		IF In_From_ICxx_Pers.ProdConfig_Aft.Break3_EndTime < In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime + TOD_TO_UDINT(TOD#00:25:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Aft.Break3_EndTime:= In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime + TOD_TO_UDINT(TOD#00:25:00);
+		ELSIF In_From_ICxx_Pers.ProdConfig_Aft.Break3_EndTime > In_From_ICxx_Pers.ProdConfig_Aft.Shift_EndTime - TOD_TO_UDINT(TOD#00:05:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Aft.Break3_EndTime:= In_From_ICxx_Pers.ProdConfig_Aft.Shift_EndTime - TOD_TO_UDINT(TOD#00:05:00);
+		(*Allow Break end time to be pushed by break start time*)
+		ELSIF In_From_ICxx_Pers.ProdConfig_Aft.Break3_EndTime < In_From_ICxx_Pers.ProdConfig_Aft.Break3_StartTime + TOD_TO_UDINT(TOD#00:05:00)
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Aft.Break3_EndTime:= In_From_ICxx_Pers.ProdConfig_Aft.Break3_StartTime + TOD_TO_UDINT(TOD#00:05:00);
+		END_IF;
+
+
+(*----------- Set Midnight Shift Constaints-------------*)
+	(*Mid Shift start must fall between3pm -11pm*)
+	IF UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Mid.Shift_StartTime) < TOD#15:00:00
+		THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Shift_StartTime:= TOD_TO_UDINT(TOD#15:00:00);
+
+	ELSIF UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Mid.Shift_StartTime) > TOD#23:00:00
+		THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Shift_StartTime:= TOD_TO_UDINT(TOD#23:00:00);
+
+	(*Midnight shift end time must fall >=1:00am (midnight shift MUST roll over midnight)*)
+	ELSIF UDINT_TO_TOD(In_From_ICxx_Pers.ProdConfig_Mid.Shift_EndTime) < TOD#1:00:00
+		THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Shift_EndTime:= TOD_TO_UDINT(TOD#1:00:00);
+
+	(*Set Shift maximum span as 12 hours*)
+	ELSIF (86400000 - In_From_ICxx_Pers.ProdConfig_Mid.Shift_StartTime + In_From_ICxx_Pers.ProdConfig_Mid.Shift_EndTime) > 43200000 (*12 hours in UDINT form*)
+		THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Shift_EndTime:= (43200000 - (86400000 - In_From_ICxx_Pers.ProdConfig_Mid.Shift_StartTime));
+
+	END_IF;
+
+	(*Break 1 Constraints*)
+		(*Start of Break*)
+		IF (In_From_ICxx_Pers.ProdConfig_Mid.Break1_StartTime < In_From_ICxx_Pers.ProdConfig_Mid.Shift_StartTime + TOD_TO_UDINT(TOD#00:05:00)) AND
+			In_From_ICxx_Pers.ProdConfig_Mid.Break1_StartTime > 43200000
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break1_StartTime:= In_From_ICxx_Pers.ProdConfig_Mid.Shift_StartTime + TOD_TO_UDINT(TOD#00:05:00);
+		ELSIF (In_From_ICxx_Pers.ProdConfig_Mid.Break1_StartTime > In_From_ICxx_Pers.ProdConfig_Mid.Shift_EndTime - TOD_TO_UDINT(TOD#00:30:00)) AND
+				In_From_ICxx_Pers.ProdConfig_Mid.Break1_StartTime < 43200000
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break1_StartTime:= In_From_ICxx_Pers.ProdConfig_Mid.Shift_EndTime - TOD_TO_UDINT(TOD#00:30:00);
+		(*Allow Break start time to be pushed by break end time*)
+		ELSIF (In_From_ICxx_Pers.ProdConfig_Mid.Break1_StartTime > In_From_ICxx_Pers.ProdConfig_Mid.Break1_EndTime - TOD_TO_UDINT(TOD#00:05:00)) AND
+				In_From_ICxx_Pers.ProdConfig_Mid.Break1_StartTime < In_From_ICxx_Pers.ProdConfig_Mid.Shift_StartTime
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break1_StartTime:= In_From_ICxx_Pers.ProdConfig_Mid.Break1_EndTime - TOD_TO_UDINT(TOD#00:05:00);
+			(*Midnight Rollover constraints*)
+			ELSIF In_From_ICxx_Pers.ProdConfig_Mid.Break1_StartTime < 60000
+				THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break1_StartTime:= 86340000;
+			ELSIF In_From_ICxx_Pers.ProdConfig_Mid.Break1_StartTime > 86340000
+				THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break1_StartTime:= 60000;
+		END_IF;
+
+		(*End of Break*)
+		IF (In_From_ICxx_Pers.ProdConfig_Mid.Break1_EndTime < In_From_ICxx_Pers.ProdConfig_Mid.Shift_StartTime + TOD_TO_UDINT(TOD#00:10:00)) AND
+			In_From_ICxx_Pers.ProdConfig_Mid.Break1_EndTime > 43200000
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break1_EndTime:= In_From_ICxx_Pers.ProdConfig_Mid.Shift_StartTime + TOD_TO_UDINT(TOD#00:10:00);
+		ELSIF (In_From_ICxx_Pers.ProdConfig_Mid.Break1_EndTime > In_From_ICxx_Pers.ProdConfig_Mid.Shift_EndTime - TOD_TO_UDINT(TOD#00:25:00)) AND
+			In_From_ICxx_Pers.ProdConfig_Mid.Break1_EndTime < 43200000
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break1_EndTime:= In_From_ICxx_Pers.ProdConfig_Mid.Shift_EndTime - TOD_TO_UDINT(TOD#00:25:00);
+		(*Allow Break end time to be pushed by break start time*)
+		ELSIF (In_From_ICxx_Pers.ProdConfig_Mid.Break1_EndTime < In_From_ICxx_Pers.ProdConfig_Mid.Break1_StartTime + TOD_TO_UDINT(TOD#00:05:00)) AND
+				((In_From_ICxx_Pers.ProdConfig_Mid.Break1_EndTime < 43200000 AND  In_From_ICxx_Pers.ProdConfig_Mid.Break1_StartTime < 43200000)
+				OR
+				(In_From_ICxx_Pers.ProdConfig_Mid.Break1_EndTime > 43200000 AND  In_From_ICxx_Pers.ProdConfig_Mid.Break1_StartTime > 43200000))
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break1_EndTime:= In_From_ICxx_Pers.ProdConfig_Mid.Break1_StartTime + TOD_TO_UDINT(TOD#00:05:00);
+		ELSIF (In_From_ICxx_Pers.ProdConfig_Mid.Break1_EndTime > In_From_ICxx_Pers.ProdConfig_Mid.Break2_StartTime - TOD_TO_UDINT(TOD#00:05:00)) AND
+				((In_From_ICxx_Pers.ProdConfig_Mid.Break1_EndTime < 43200000 AND  In_From_ICxx_Pers.ProdConfig_Mid.Break2_StartTime < 43200000)
+				OR
+				(In_From_ICxx_Pers.ProdConfig_Mid.Break1_EndTime > 43200000 AND  In_From_ICxx_Pers.ProdConfig_Mid.Break2_StartTime > 43200000))
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break1_EndTime:= In_From_ICxx_Pers.ProdConfig_Mid.Break2_StartTime - TOD_TO_UDINT(TOD#00:05:00);
+			(*Midnight Rollover constraints*)
+			ELSIF In_From_ICxx_Pers.ProdConfig_Mid.Break1_EndTime < 60000
+				THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break1_EndTime:= 86340000;
+			ELSIF In_From_ICxx_Pers.ProdConfig_Mid.Break1_EndTime > 86340000
+				THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break1_EndTime:= 60000;
+		END_IF;
+
+	(*Break 2 Constraints*)
+		(*Start of Break*)
+		IF (In_From_ICxx_Pers.ProdConfig_Mid.Break2_StartTime < In_From_ICxx_Pers.ProdConfig_Mid.Shift_StartTime + TOD_TO_UDINT(TOD#00:15:00)) AND
+			In_From_ICxx_Pers.ProdConfig_Mid.Break2_StartTime > 43200000
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break2_StartTime:= In_From_ICxx_Pers.ProdConfig_Mid.Shift_StartTime + TOD_TO_UDINT(TOD#00:15:00);
+		ELSIF (In_From_ICxx_Pers.ProdConfig_Mid.Break2_StartTime > In_From_ICxx_Pers.ProdConfig_Mid.Shift_EndTime - TOD_TO_UDINT(TOD#00:20:00)) AND
+			In_From_ICxx_Pers.ProdConfig_Mid.Break2_StartTime < 43200000
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break2_StartTime:= In_From_ICxx_Pers.ProdConfig_Mid.Shift_EndTime - TOD_TO_UDINT(TOD#00:20:00);
+		ELSIF (In_From_ICxx_Pers.ProdConfig_Mid.Break2_StartTime < In_From_ICxx_Pers.ProdConfig_Mid.Break1_EndTime + TOD_TO_UDINT(TOD#00:05:00)) AND
+				((In_From_ICxx_Pers.ProdConfig_Mid.Break2_StartTime < 43200000 AND  In_From_ICxx_Pers.ProdConfig_Mid.Break1_EndTime < 43200000)
+				OR
+				(In_From_ICxx_Pers.ProdConfig_Mid.Break2_StartTime > 43200000 AND  In_From_ICxx_Pers.ProdConfig_Mid.Break1_EndTime > 43200000))
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break2_StartTime:= In_From_ICxx_Pers.ProdConfig_Mid.Break1_EndTime + TOD_TO_UDINT(TOD#00:05:00);
+		(*Allow Break start time to be pushed by break end time*)
+		ELSIF (In_From_ICxx_Pers.ProdConfig_Mid.Break2_StartTime > In_From_ICxx_Pers.ProdConfig_Mid.Break2_EndTime - TOD_TO_UDINT(TOD#00:05:00)) AND
+				((In_From_ICxx_Pers.ProdConfig_Mid.Break2_StartTime < 43200000 AND  In_From_ICxx_Pers.ProdConfig_Mid.Break2_EndTime < 43200000)
+				OR
+				(In_From_ICxx_Pers.ProdConfig_Mid.Break2_StartTime > 43200000 AND  In_From_ICxx_Pers.ProdConfig_Mid.Break2_EndTime > 43200000))
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break2_StartTime:= In_From_ICxx_Pers.ProdConfig_Mid.Break2_EndTime - TOD_TO_UDINT(TOD#00:05:00);
+			(*Midnight Rollover constraints*)
+			ELSIF In_From_ICxx_Pers.ProdConfig_Mid.Break2_StartTime < 60000
+				THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break2_StartTime:= 86340000;
+			ELSIF In_From_ICxx_Pers.ProdConfig_Mid.Break2_StartTime > 86340000
+				THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break2_StartTime:= 60000;
+		END_IF;
+
+		(*End of Break*)
+		IF (In_From_ICxx_Pers.ProdConfig_Mid.Break2_EndTime < In_From_ICxx_Pers.ProdConfig_Mid.Shift_StartTime + TOD_TO_UDINT(TOD#00:20:00)) AND
+			In_From_ICxx_Pers.ProdConfig_Mid.Break2_EndTime > 43200000
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break2_EndTime:= In_From_ICxx_Pers.ProdConfig_Mid.Shift_StartTime + TOD_TO_UDINT(TOD#00:20:00);
+		ELSIF (In_From_ICxx_Pers.ProdConfig_Mid.Break2_EndTime > In_From_ICxx_Pers.ProdConfig_Mid.Shift_EndTime - TOD_TO_UDINT(TOD#00:15:00)) AND
+			In_From_ICxx_Pers.ProdConfig_Mid.Break2_EndTime < 43200000
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break2_EndTime:= In_From_ICxx_Pers.ProdConfig_Mid.Shift_EndTime - TOD_TO_UDINT(TOD#00:15:00);
+		(*Allow Break end time to be pushed by break start time*)
+		ELSIF (In_From_ICxx_Pers.ProdConfig_Mid.Break2_EndTime < In_From_ICxx_Pers.ProdConfig_Mid.Break2_StartTime + TOD_TO_UDINT(TOD#00:05:00)) AND
+				((In_From_ICxx_Pers.ProdConfig_Mid.Break2_EndTime < 43200000 AND  In_From_ICxx_Pers.ProdConfig_Mid.Break2_StartTime < 43200000)
+				OR
+				(In_From_ICxx_Pers.ProdConfig_Mid.Break2_EndTime > 43200000 AND  In_From_ICxx_Pers.ProdConfig_Mid.Break2_StartTime > 43200000))
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break2_EndTime:= In_From_ICxx_Pers.ProdConfig_Mid.Break2_StartTime + TOD_TO_UDINT(TOD#00:05:00);
+		ELSIF (In_From_ICxx_Pers.ProdConfig_Mid.Break2_EndTime > In_From_ICxx_Pers.ProdConfig_Mid.Break3_StartTime - TOD_TO_UDINT(TOD#00:05:00)) AND
+				((In_From_ICxx_Pers.ProdConfig_Mid.Break2_EndTime < 43200000 AND  In_From_ICxx_Pers.ProdConfig_Mid.Break3_StartTime < 43200000)
+				OR
+				(In_From_ICxx_Pers.ProdConfig_Mid.Break2_EndTime > 43200000 AND  In_From_ICxx_Pers.ProdConfig_Mid.Break3_StartTime > 43200000))
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break2_EndTime:= In_From_ICxx_Pers.ProdConfig_Mid.Break3_StartTime - TOD_TO_UDINT(TOD#00:05:00);
+			(*Midnight Rollover constraints*)
+			ELSIF In_From_ICxx_Pers.ProdConfig_Mid.Break2_EndTime < 60000
+				THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break2_EndTime:= 86340000;
+			ELSIF In_From_ICxx_Pers.ProdConfig_Mid.Break2_EndTime > 86340000
+				THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break2_EndTime:= 60000;
+		END_IF;
+
+	(*Break 3 Constraints*)
+		(*Start of Break*)
+		IF (In_From_ICxx_Pers.ProdConfig_Mid.Break3_StartTime < In_From_ICxx_Pers.ProdConfig_Mid.Shift_StartTime + TOD_TO_UDINT(TOD#00:20:00)) AND
+			In_From_ICxx_Pers.ProdConfig_Mid.Break3_StartTime > 43200000
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break3_StartTime:= In_From_ICxx_Pers.ProdConfig_Mid.Shift_StartTime + TOD_TO_UDINT(TOD#00:20:00);
+		ELSIF (In_From_ICxx_Pers.ProdConfig_Mid.Break3_StartTime > In_From_ICxx_Pers.ProdConfig_Mid.Shift_EndTime - TOD_TO_UDINT(TOD#00:10:00)) AND
+			In_From_ICxx_Pers.ProdConfig_Mid.Break3_StartTime < 43200000
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break3_StartTime:= In_From_ICxx_Pers.ProdConfig_Mid.Shift_EndTime - TOD_TO_UDINT(TOD#00:10:00);
+		ELSIF (In_From_ICxx_Pers.ProdConfig_Mid.Break3_StartTime < In_From_ICxx_Pers.ProdConfig_Mid.Break2_EndTime + TOD_TO_UDINT(TOD#00:05:00)) AND
+				((In_From_ICxx_Pers.ProdConfig_Mid.Break3_StartTime < 43200000 AND  In_From_ICxx_Pers.ProdConfig_Mid.Break2_EndTime < 43200000)
+				OR
+				(In_From_ICxx_Pers.ProdConfig_Mid.Break3_StartTime > 43200000 AND  In_From_ICxx_Pers.ProdConfig_Mid.Break2_EndTime > 43200000))
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break3_StartTime:= In_From_ICxx_Pers.ProdConfig_Mid.Break2_EndTime + TOD_TO_UDINT(TOD#00:05:00);
+		(*Allow Break start time to be pushed by break end time*)
+		ELSIF (In_From_ICxx_Pers.ProdConfig_Mid.Break3_StartTime > In_From_ICxx_Pers.ProdConfig_Mid.Break3_EndTime - TOD_TO_UDINT(TOD#00:05:00)) AND
+				((In_From_ICxx_Pers.ProdConfig_Mid.Break3_StartTime < 43200000 AND  In_From_ICxx_Pers.ProdConfig_Mid.Break3_EndTime < 43200000)
+				OR
+				(In_From_ICxx_Pers.ProdConfig_Mid.Break3_StartTime > 43200000 AND  In_From_ICxx_Pers.ProdConfig_Mid.Break3_EndTime > 43200000))
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break3_StartTime:= In_From_ICxx_Pers.ProdConfig_Mid.Break3_EndTime - TOD_TO_UDINT(TOD#00:05:00);
+			(*Midnight Rollover constraints*)
+			ELSIF In_From_ICxx_Pers.ProdConfig_Mid.Break3_StartTime < 60000
+				THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break3_StartTime:= 86340000;
+			ELSIF In_From_ICxx_Pers.ProdConfig_Mid.Break3_StartTime > 86340000
+				THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break3_StartTime:= 60000;
+		END_IF;
+
+		(*End of Break*)
+		IF (In_From_ICxx_Pers.ProdConfig_Mid.Break3_EndTime < In_From_ICxx_Pers.ProdConfig_Mid.Shift_StartTime + TOD_TO_UDINT(TOD#00:25:00)) AND
+			In_From_ICxx_Pers.ProdConfig_Mid.Break3_EndTime > 43200000
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break3_EndTime:= In_From_ICxx_Pers.ProdConfig_Mid.Shift_StartTime + TOD_TO_UDINT(TOD#00:25:00);
+		ELSIF (In_From_ICxx_Pers.ProdConfig_Mid.Break3_EndTime > In_From_ICxx_Pers.ProdConfig_Mid.Shift_EndTime - TOD_TO_UDINT(TOD#00:05:00)) AND
+				In_From_ICxx_Pers.ProdConfig_Mid.Break3_EndTime < 43200000
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break3_EndTime:= In_From_ICxx_Pers.ProdConfig_Mid.Shift_EndTime - TOD_TO_UDINT(TOD#00:05:00);
+		(*Allow Break end time to be pushed by break start time*)
+		ELSIF (In_From_ICxx_Pers.ProdConfig_Mid.Break3_EndTime < In_From_ICxx_Pers.ProdConfig_Mid.Break3_StartTime + TOD_TO_UDINT(TOD#00:05:00)) AND
+				((In_From_ICxx_Pers.ProdConfig_Mid.Break3_EndTime < 43200000 AND  In_From_ICxx_Pers.ProdConfig_Mid.Break3_StartTime < 43200000)
+				OR
+				(In_From_ICxx_Pers.ProdConfig_Mid.Break3_EndTime > 43200000 AND  In_From_ICxx_Pers.ProdConfig_Mid.Break3_StartTime > 43200000))
+			THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break3_EndTime:= In_From_ICxx_Pers.ProdConfig_Mid.Break3_StartTime + TOD_TO_UDINT(TOD#00:05:00);
+			(*Midnight Rollover constraints*)
+			ELSIF In_From_ICxx_Pers.ProdConfig_Mid.Break3_EndTime < 60000
+				THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break3_EndTime:= 86340000;
+			ELSIF In_From_ICxx_Pers.ProdConfig_Mid.Break3_EndTime > 86340000
+				THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Break3_EndTime:= 60000;
+		END_IF;
+
+(*---------- Set Shift to shift Constraints ---------------*)
+	(* Ensure Day Shift's end time is not overlapping with the Aft Shift's start time*)
+	IF ProdConfig_Common.Shift_Enables.2 AND
+		In_From_ICxx_Pers.ProdConfig_Day.Shift_EndTime > In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime
+		THEN
+				In_From_ICxx_Pers.ProdConfig_Day.Shift_EndTime:= In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime;
+
+	(* Ensure Aft Shift's end time is not overlapping with the Mid Shift's start time*)
+	ELSIF ProdConfig_Common.Shift_Enables.3 AND
+		In_From_ICxx_Pers.ProdConfig_Aft.Shift_EndTime > In_From_ICxx_Pers.ProdConfig_Mid.Shift_StartTime
+		THEN
+				In_From_ICxx_Pers.ProdConfig_Aft.Shift_EndTime:= In_From_ICxx_Pers.ProdConfig_Mid.Shift_StartTime;
+
+	(* Ensure Mid Shift's end time is not overlapping with the Day Shift's start time*)
+	ELSIF ProdConfig_Common.Shift_Enables.1 AND
+		In_From_ICxx_Pers.ProdConfig_Mid.Shift_EndTime > In_From_ICxx_Pers.ProdConfig_Day.Shift_StartTime
+		THEN
+				In_From_ICxx_Pers.ProdConfig_Mid.Shift_EndTime:= In_From_ICxx_Pers.ProdConfig_Day.Shift_StartTime;
+
+	END_IF;
+
+(*------------- Zero Seconds Constraints ---------------*)
+	(*Day Shift*)
+	In_From_ICxx_Pers.ProdConfig_Day.Shift_StartTime:= FUN_GTAC_ZeroSecsInUDINT_Time(In_From_ICxx_Pers.ProdConfig_Day.Shift_StartTime);
+		In_From_ICxx_Pers.ProdConfig_Day.Break1_StartTime:= FUN_GTAC_ZeroSecsInUDINT_Time(In_From_ICxx_Pers.ProdConfig_Day.Break1_StartTime);
+		In_From_ICxx_Pers.ProdConfig_Day.Break1_EndTime:= FUN_GTAC_ZeroSecsInUDINT_Time(In_From_ICxx_Pers.ProdConfig_Day.Break1_EndTime);
+		In_From_ICxx_Pers.ProdConfig_Day.Break2_StartTime:= FUN_GTAC_ZeroSecsInUDINT_Time(In_From_ICxx_Pers.ProdConfig_Day.Break2_StartTime);
+		In_From_ICxx_Pers.ProdConfig_Day.Break2_EndTime:= FUN_GTAC_ZeroSecsInUDINT_Time(In_From_ICxx_Pers.ProdConfig_Day.Break2_EndTime);
+		In_From_ICxx_Pers.ProdConfig_Day.Break3_StartTime:= FUN_GTAC_ZeroSecsInUDINT_Time(In_From_ICxx_Pers.ProdConfig_Day.Break3_StartTime);
+		In_From_ICxx_Pers.ProdConfig_Day.Break3_EndTime:= FUN_GTAC_ZeroSecsInUDINT_Time(In_From_ICxx_Pers.ProdConfig_Day.Break3_EndTime);
+	In_From_ICxx_Pers.ProdConfig_Day.Shift_EndTime:= FUN_GTAC_ZeroSecsInUDINT_Time(In_From_ICxx_Pers.ProdConfig_Day.Shift_EndTime);
+
+	(*Aft Shift*)
+	In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime:= FUN_GTAC_ZeroSecsInUDINT_Time(In_From_ICxx_Pers.ProdConfig_Aft.Shift_StartTime);
+		In_From_ICxx_Pers.ProdConfig_Aft.Break1_StartTime:= FUN_GTAC_ZeroSecsInUDINT_Time(In_From_ICxx_Pers.ProdConfig_Aft.Break1_StartTime);
+		In_From_ICxx_Pers.ProdConfig_Aft.Break1_EndTime:= FUN_GTAC_ZeroSecsInUDINT_Time(In_From_ICxx_Pers.ProdConfig_Aft.Break1_EndTime);
+		In_From_ICxx_Pers.ProdConfig_Aft.Break2_StartTime:= FUN_GTAC_ZeroSecsInUDINT_Time(In_From_ICxx_Pers.ProdConfig_Aft.Break2_StartTime);
+		In_From_ICxx_Pers.ProdConfig_Aft.Break2_EndTime:= FUN_GTAC_ZeroSecsInUDINT_Time(In_From_ICxx_Pers.ProdConfig_Aft.Break2_EndTime);
+		In_From_ICxx_Pers.ProdConfig_Aft.Break3_StartTime:= FUN_GTAC_ZeroSecsInUDINT_Time(In_From_ICxx_Pers.ProdConfig_Aft.Break3_StartTime);
+		In_From_ICxx_Pers.ProdConfig_Aft.Break3_EndTime:= FUN_GTAC_ZeroSecsInUDINT_Time(In_From_ICxx_Pers.ProdConfig_Aft.Break3_EndTime);
+	In_From_ICxx_Pers.ProdConfig_Aft.Shift_EndTime:= FUN_GTAC_ZeroSecsInUDINT_Time(In_From_ICxx_Pers.ProdConfig_Aft.Shift_EndTime);
+
+	(*Mid Shift*)
+	In_From_ICxx_Pers.ProdConfig_Mid.Shift_StartTime:= FUN_GTAC_ZeroSecsInUDINT_Time(In_From_ICxx_Pers.ProdConfig_Mid.Shift_StartTime);
+		In_From_ICxx_Pers.ProdConfig_Mid.Break1_StartTime:= FUN_GTAC_ZeroSecsInUDINT_Time(In_From_ICxx_Pers.ProdConfig_Mid.Break1_StartTime);
+		In_From_ICxx_Pers.ProdConfig_Mid.Break1_EndTime:= FUN_GTAC_ZeroSecsInUDINT_Time(In_From_ICxx_Pers.ProdConfig_Mid.Break1_EndTime);
+		In_From_ICxx_Pers.ProdConfig_Mid.Break2_StartTime:= FUN_GTAC_ZeroSecsInUDINT_Time(In_From_ICxx_Pers.ProdConfig_Mid.Break2_StartTime);
+		In_From_ICxx_Pers.ProdConfig_Mid.Break2_EndTime:= FUN_GTAC_ZeroSecsInUDINT_Time(In_From_ICxx_Pers.ProdConfig_Mid.Break2_EndTime);
+		In_From_ICxx_Pers.ProdConfig_Mid.Break3_StartTime:= FUN_GTAC_ZeroSecsInUDINT_Time(In_From_ICxx_Pers.ProdConfig_Mid.Break3_StartTime);
+		In_From_ICxx_Pers.ProdConfig_Mid.Break3_EndTime:= FUN_GTAC_ZeroSecsInUDINT_Time(In_From_ICxx_Pers.ProdConfig_Mid.Break3_EndTime);
+	In_From_ICxx_Pers.ProdConfig_Mid.Shift_EndTime:= FUN_GTAC_ZeroSecsInUDINT_Time(In_From_ICxx_Pers.ProdConfig_Mid.Shift_EndTime);
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="REPORTS" Id="{a9c92e44-9ac0-434c-9fbb-125b73d2a401}">
+      <Implementation>
+        <ST><![CDATA[(*--------------------------------------------------------------------------------------------------------------------------------------------------------*)
+(* ----------------------------------------------------- Reports Action ----------------------------------------------------------------------------------*)
+(*------------------------- Triggers to the UI to capture Production and Product reports and store to DB -------------------------------------------------*)
+(*--------------------------------------------------------------------------------------------------------------------------------------------------------*)
+
+(*--------- Upon first scan, blank all triggers and Acks -------------*)
+IF Main.Starting_Scan_Pulse 
+	THEN
+	Out_To_ICxx.Production_Report_Trigger_REQS:= 0;
+	In_From_ICxx.Production_Report_Trigger_ACKS:= 0;
+	Out_To_ICxx.Product_Report_Trigger_REQS:= 0;
+	In_From_ICxx.Product_Report_Trigger_ACKS:= 0;
+END_IF;
+
+
+
+
+(*-------------- Current Production Reports: Production Report Data is loaded in Fixture -> Production Action -------------*)
+(*Trigger Bits 1 -16 -> Fix01 - Fix16*)
+(*NOTE: Add / remove / modify as required for application, blt*)
+
+(*Fix01*)
+	IF (GTAC_Config.Option_HumanFix_Enables.1 AND Fix01.Production_Report.End_Shift_Trigger.Q)
+		THEN
+		(*If Fixture is enabled and generates a End of Shift pulse, set Production Report Trigger*)
+		Out_To_ICxx.Production_Report_Trigger_REQS.1:= TRUE; (*Trigger bit is set False in UI script*)
+	END_IF;
+	
+(*Fix02*)
+	IF (GTAC_Config.Option_HumanFix_Enables.2 AND Fix02.Production_Report.End_Shift_Trigger.Q)
+		THEN
+		(*If Fixture is enabled and generates a End of Shift pulse, set Production Report Trigger*)
+		Out_To_ICxx.Production_Report_Trigger_REQS.2:= TRUE; (*Trigger bit is set False in UI script*)
+	END_IF;
+
+(*Fix03*)
+	IF (GTAC_Config.Option_HumanFix_Enables.3 AND Fix03.Production_Report.End_Shift_Trigger.Q)
+		THEN
+		(*If Fixture is enabled and generates a End of Shift pulse, set Production Report Trigger*)
+		Out_To_ICxx.Production_Report_Trigger_REQS.3:= TRUE; (*Trigger bit is set False in UI script*)
+	END_IF;
+	
+(*Fix04*)
+	IF (GTAC_Config.Option_HumanFix_Enables.4 AND Fix04.Production_Report.End_Shift_Trigger.Q)
+		THEN
+		(*If Fixture is enabled and generates a End of Shift pulse, set Production Report Trigger*)
+		Out_To_ICxx.Production_Report_Trigger_REQS.4:= TRUE; (*Trigger bit is set False in UI script*)
+	END_IF;
+
+(*Fix05*)
+	IF (GTAC_Config.Option_HumanFix_Enables.5 AND Fix05.Production_Report.End_Shift_Trigger.Q)
+		THEN
+		(*If Fixture is enabled and generates a End of Shift pulse, set Production Report Trigger*)
+		Out_To_ICxx.Production_Report_Trigger_REQS.5:= TRUE; (*Trigger bit is set False in UI script*)
+	END_IF;
+
+(*Fix06*)
+	IF (GTAC_Config.Option_HumanFix_Enables.6 AND Fix06.Production_Report.End_Shift_Trigger.Q)
+		THEN
+		(*If Fixture is enabled and generates a End of Shift pulse, set Production Report Trigger*)
+		Out_To_ICxx.Production_Report_Trigger_REQS.6:= TRUE; (*Trigger bit is set False in UI script*)
+	END_IF;
+
+(*Fix07*)
+	IF (GTAC_Config.Option_HumanFix_Enables.7 AND Fix07.Production_Report.End_Shift_Trigger.Q)
+		THEN
+		(*If Fixture is enabled and generates a End of Shift pulse, set Production Report Trigger*)
+		Out_To_ICxx.Production_Report_Trigger_REQS.7:= TRUE; (*Trigger bit is set False in UI script*)
+	END_IF;
+
+(*Fix08*)
+	IF (GTAC_Config.Option_HumanFix_Enables.8 AND Fix08.Production_Report.End_Shift_Trigger.Q)
+		THEN
+		(*If Fixture is enabled and generates a End of Shift pulse, set Production Report Trigger*)
+		Out_To_ICxx.Production_Report_Trigger_REQS.8:= TRUE; (*Trigger bit is set False in UI script*)
+	END_IF;
+
+(*Fix09*)
+	IF (GTAC_Config.Option_HumanFix_Enables.9 AND Fix09.Production_Report.End_Shift_Trigger.Q)
+		THEN
+		(*If Fixture is enabled and generates a End of Shift pulse, set Production Report Trigger*)
+		Out_To_ICxx.Production_Report_Trigger_REQS.9:= TRUE; (*Trigger bit is set False in UI script*)
+	END_IF;
+
+(*Fix10*)
+	IF (GTAC_Config.Option_HumanFix_Enables.10 AND Fix10.Production_Report.End_Shift_Trigger.Q)
+		THEN
+		(*If Fixture is enabled and generates a End of Shift pulse, set Production Report Trigger*)
+		Out_To_ICxx.Production_Report_Trigger_REQS.10:= TRUE; (*Trigger bit is set False in UI script*)
+	END_IF;
+
+(*Fix11*)
+	IF (GTAC_Config.Option_HumanFix_Enables.11 AND Fix11.Production_Report.End_Shift_Trigger.Q)
+		THEN
+		(*If Fixture is enabled and generates a End of Shift pulse, set Production Report Trigger*)
+		Out_To_ICxx.Production_Report_Trigger_REQS.11:= TRUE; (*Trigger bit is set False in UI script*)
+	END_IF;
+
+(*Fix12*)
+	IF (GTAC_Config.Option_HumanFix_Enables.12 AND Fix12.Production_Report.End_Shift_Trigger.Q)
+		THEN
+		(*If Fixture is enabled and generates a End of Shift pulse, set Production Report Trigger*)
+		Out_To_ICxx.Production_Report_Trigger_REQS.12:= TRUE; (*Trigger bit is set False in UI script*)
+	END_IF;
+
+(*Fix13*)
+	IF (GTAC_Config.Option_HumanFix_Enables.13 AND Fix13.Production_Report.End_Shift_Trigger.Q)
+		THEN
+		(*If Fixture is enabled and generates a End of Shift pulse, set Production Report Trigger*)
+		Out_To_ICxx.Production_Report_Trigger_REQS.13:= TRUE; (*Trigger bit is set False in UI script*)
+	END_IF;
+
+(*Fix14*)
+	IF (GTAC_Config.Option_HumanFix_Enables.14 AND Fix14.Production_Report.End_Shift_Trigger.Q)
+		THEN
+		(*If Fixture is enabled and generates a End of Shift pulse, set Production Report Trigger*)
+		Out_To_ICxx.Production_Report_Trigger_REQS.14:= TRUE; (*Trigger bit is set False in UI script*)
+	END_IF;
+
+(*Fix15*)
+	IF (GTAC_Config.Option_HumanFix_Enables.15 AND Fix15.Production_Report.End_Shift_Trigger.Q)
+		THEN
+		(*If Fixture is enabled and generates a End of Shift pulse, set Production Report Trigger*)
+		Out_To_ICxx.Production_Report_Trigger_REQS.15:= TRUE; (*Trigger bit is set False in UI script*)
+	END_IF;
+	
+(*Fix16*)
+	IF (GTAC_Config.Option_HumanFix_Enables.16 AND Fix16.Production_Report.End_Shift_Trigger.Q)
+		THEN
+		(*If Fixture is enabled and generates a End of Shift pulse, set Production Report Trigger*)
+		Out_To_ICxx.Production_Report_Trigger_REQS.16:= TRUE; (*Trigger bit is set False in UI script*)
+	END_IF;
+
+	
+(*------------- Customer defined Product Data Reports ---------------*) 
+(*Trigger Bits 1 -16 -> Fix01 - Fix16*)
+(*Trigger Bits 17 -28 -> Fix101 - Fix112*)
+(*NOTE: Unfalseify / Add / Remove / Modify as required for application, blt*)
+
+(*Fix01*)
+	IF (GTAC_Config.Option_HumanFix_Enables.1 AND Fix01.Unload_Complete AND FALSE)	(*May require a different trigger depending on fixture application*)
+		THEN
+		(*If Fixture is enabled and generates an event indicating part is done, set Product Report Trigger*)
+		Out_To_ICxx.Product_Report_Trigger_REQS.1:= TRUE; (*Trigger bit is set False in UI script*)
+	END_IF;
+	
+(*Fix101*)
+	IF ((GTAC_Config.Option_InternalFix_Count > 0) AND Fix101.Unload_Complete AND FALSE)	(*May require a different trigger depending on fixture application*)
+		THEN
+		(*If Fixture is enabled and generates an event indicating part is done, set Product Report Trigger*)
+		Out_To_ICxx.Product_Report_Trigger_REQS.17:= TRUE; (*Trigger bit is set False in UI script*)
+	END_IF;
+	
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="SIM" Id="{82064486-caf9-4b7f-8532-e2128ed771f8}">
+      <Implementation>
+        <ST><![CDATA[(*--------------------------------------------------------------------------------------------------------------------------------------------------------*)
+(* ----------------------------------------------------- SIM Action ----------------------------------------------------------------------------------*)
+(*-------------------------  Area for SIM Specific / Work around code used during Sim based deployment -------------------------------------------------*)
+(*--------------------------------------------------------------------------------------------------------------------------------------------------------*)
+
+(*
+//Sim "Start Robots" work around, used to trigger the start of all robot Master Jobs
+IF GTAC_Config.In_SIM_Mode
+	THEN
+		(*Start all robots Operation Processing (IE Start Master Job operation or any operation called by Master) in SIM*)
+		IF In_From_ICxx.StartRobots 
+					 THEN
+					 Main.SIM_WorkAround_StartRobots:= TRUE;
+		END_IF;
+		
+		(*SStop all robots Operation Processing (IE Stop Master Job operation or any operation called by Master) in SIM*)
+		IF In_From_ICxx.StopRobots 
+					 THEN
+					 Main.SIM_WorkAround_StartRobots:= FALSE;
+		END_IF;
+ELSE
+	Main.SIM_WorkAround_StartRobots:= FALSE;
+END_IF;
+
+
+//Set the Boolean array true so it matches the model number. Then PRS can use this to load proper sub TOOLING based on Model selected. 
+//FIX01
+IF Fix01.Model_ID <> MAIN.Fix01PrevModelId THEN
+    // Clear previous column
+    IF (MAIN.Fix01PrevModelId >= 1) AND (MAIN.Fix01PrevModelId <= 15) THEN
+        FOR MAIN.i := 1 TO 1 DO
+            MAIN.SIM_WorkAround_FixNumberAndModel[MAIN.i][MAIN.Fix01PrevModelId] := FALSE;
+        END_FOR
+    END_IF
+
+    // Set new column
+    IF (Fix01.Model_ID >= 1) AND (Fix01.Model_ID <= 15) THEN
+        FOR MAIN.i := 1 TO 1 DO
+            MAIN.SIM_WorkAround_FixNumberAndModel[MAIN.i][Fix01.Model_ID] := TRUE;
+        END_FOR
+    END_IF
+
+END_IF
+
+//FIX02
+IF Fix02.Model_ID <> MAIN.Fix02PrevModelId THEN
+    // Clear previous column
+    IF (MAIN.Fix02PrevModelId >= 1) AND (MAIN.Fix02PrevModelId <= 15) THEN
+        FOR MAIN.i := 2 TO 2 DO
+            MAIN.SIM_WorkAround_FixNumberAndModel[MAIN.i][MAIN.Fix02PrevModelId] := FALSE;
+        END_FOR
+    END_IF
+
+    // Set new column
+    IF (Fix02.Model_ID >= 1) AND (Fix02.Model_ID <= 15) THEN
+        FOR MAIN.i := 2 TO 2 DO
+            MAIN.SIM_WorkAround_FixNumberAndModel[MAIN.i][Fix02.Model_ID] := TRUE;
+        END_FOR
+    END_IF
+
+END_IF
+
+//Fix03 Set Correct Parts Per Model In Sim
+
+
+	    // Set new column
+    IF (Fix03.Model_ID = 1) AND (MAIN.SIM_WorkAround_FixXx_LoadParts[3][Fix03.Model_ID])THEN
+        MAIN.SIM_WorkAround_FixNumberAndModel[3][0] := TRUE;
+        MAIN.SIM_WorkAround_FixNumberAndModel[3][1] := TRUE;
+	ELSIF (Fix03.Model_ID = 2) AND (MAIN.SIM_WorkAround_FixXx_LoadParts[3][Fix03.Model_ID]) THEN
+        MAIN.SIM_WorkAround_FixNumberAndModel[3][0] := TRUE;
+        MAIN.SIM_WorkAround_FixNumberAndModel[3][1] := TRUE;
+        MAIN.SIM_WorkAround_FixNumberAndModel[3][2] := TRUE;
+	ELSIF (Fix03.Model_ID = 3) AND (MAIN.SIM_WorkAround_FixXx_LoadParts[3][Fix03.Model_ID]) THEN
+        MAIN.SIM_WorkAround_FixNumberAndModel[3][0] := TRUE;
+        MAIN.SIM_WorkAround_FixNumberAndModel[3][3] := TRUE;
+	ELSIF (Fix03.Model_ID = 4) AND (MAIN.SIM_WorkAround_FixXx_LoadParts[3][Fix03.Model_ID]) THEN
+        MAIN.SIM_WorkAround_FixNumberAndModel[3][0] := TRUE;
+        MAIN.SIM_WorkAround_FixNumberAndModel[3][1] := TRUE;
+        MAIN.SIM_WorkAround_FixNumberAndModel[3][4] := TRUE;
+	ELSIF (Fix03.Model_ID = 5) AND (MAIN.SIM_WorkAround_FixXx_LoadParts[3][Fix03.Model_ID]) THEN
+        MAIN.SIM_WorkAround_FixNumberAndModel[3][0] := TRUE;
+        MAIN.SIM_WorkAround_FixNumberAndModel[3][1] := TRUE;
+        MAIN.SIM_WorkAround_FixNumberAndModel[3][5] := TRUE;
+	ELSIF (Fix03.Model_ID = 6) AND (MAIN.SIM_WorkAround_FixXx_LoadParts[3][Fix03.Model_ID]) THEN
+        MAIN.SIM_WorkAround_FixNumberAndModel[3][0] := TRUE;
+        MAIN.SIM_WorkAround_FixNumberAndModel[3][1] := TRUE;
+        MAIN.SIM_WorkAround_FixNumberAndModel[3][6] := TRUE;
+	ELSIF (Fix03.Model_ID = 7) AND (MAIN.SIM_WorkAround_FixXx_LoadParts[3][Fix03.Model_ID]) THEN
+        MAIN.SIM_WorkAround_FixNumberAndModel[3][0] := TRUE;
+        MAIN.SIM_WorkAround_FixNumberAndModel[3][1] := TRUE;
+        MAIN.SIM_WorkAround_FixNumberAndModel[3][7] := TRUE;
+	ELSE
+		MAIN.SIM_WorkAround_FixNumberAndModel[3][0] := FALSE;
+        MAIN.SIM_WorkAround_FixNumberAndModel[3][1] := FALSE;
+        MAIN.SIM_WorkAround_FixNumberAndModel[3][2] := FALSE;
+        MAIN.SIM_WorkAround_FixNumberAndModel[3][3] := FALSE;
+        MAIN.SIM_WorkAround_FixNumberAndModel[3][4] := FALSE;
+        MAIN.SIM_WorkAround_FixNumberAndModel[3][5] := FALSE;
+        MAIN.SIM_WorkAround_FixNumberAndModel[3][6] := FALSE;
+        MAIN.SIM_WorkAround_FixNumberAndModel[3][7] := FALSE;
+		
+    END_IF
+
+	
+	    // Set new column
+    IF (Fix04.Model_ID = 1) AND (MAIN.SIM_WorkAround_FixXx_LoadParts[4][Fix04.Model_ID]) THEN
+        MAIN.SIM_WorkAround_FixNumberAndModel[4][0] := TRUE;
+        MAIN.SIM_WorkAround_FixNumberAndModel[4][1] := TRUE;
+	ELSIF (Fix04.Model_ID = 2) AND (MAIN.SIM_WorkAround_FixXx_LoadParts[4][Fix04.Model_ID]) THEN
+        MAIN.SIM_WorkAround_FixNumberAndModel[4][0] := TRUE;
+        MAIN.SIM_WorkAround_FixNumberAndModel[4][1] := TRUE;
+        MAIN.SIM_WorkAround_FixNumberAndModel[4][2] := TRUE;
+	ELSIF (Fix04.Model_ID = 3) AND (MAIN.SIM_WorkAround_FixXx_LoadParts[4][Fix04.Model_ID]) THEN
+        MAIN.SIM_WorkAround_FixNumberAndModel[4][0] := TRUE;
+        MAIN.SIM_WorkAround_FixNumberAndModel[4][3] := TRUE;
+	ELSIF (Fix04.Model_ID > 3) AND (MAIN.SIM_WorkAround_FixXx_LoadParts[4][Fix04.Model_ID]) THEN
+        MAIN.SIM_WorkAround_FixNumberAndModel[4][0] := TRUE;
+        MAIN.SIM_WorkAround_FixNumberAndModel[4][1] := TRUE;
+        MAIN.SIM_WorkAround_FixNumberAndModel[4][4] := TRUE;
+	ELSE
+		MAIN.SIM_WorkAround_FixNumberAndModel[4][0] := FALSE;
+        MAIN.SIM_WorkAround_FixNumberAndModel[4][1] := FALSE;
+        MAIN.SIM_WorkAround_FixNumberAndModel[4][2] := FALSE;
+        MAIN.SIM_WorkAround_FixNumberAndModel[4][3] := FALSE;
+        MAIN.SIM_WorkAround_FixNumberAndModel[4][4] := FALSE;
+    END_IF
+
+
+MAIN.Fix01PrevModelId := Fix01.Model_ID;
+MAIN.Fix02PrevModelId := Fix02.Model_ID;
+MAIN.Fix03PrevModelId := Fix03.Model_ID;
+MAIN.Fix04PrevModelId := Fix04.Model_ID;
+
+
+
+
+
+*)]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="GTAC_CONFIG">
+      <LineId Id="71" Count="2" />
+      <LineId Id="493" Count="0" />
+      <LineId Id="319" Count="1" />
+      <LineId Id="490" Count="0" />
+      <LineId Id="489" Count="0" />
+      <LineId Id="75" Count="0" />
+      <LineId Id="488" Count="0" />
+      <LineId Id="487" Count="0" />
+      <LineId Id="491" Count="0" />
+      <LineId Id="476" Count="0" />
+      <LineId Id="492" Count="0" />
+      <LineId Id="485" Count="0" />
+      <LineId Id="484" Count="0" />
+      <LineId Id="475" Count="0" />
+      <LineId Id="474" Count="0" />
+      <LineId Id="473" Count="0" />
+      <LineId Id="78" Count="0" />
+      <LineId Id="852" Count="0" />
+      <LineId Id="860" Count="0" />
+      <LineId Id="854" Count="0" />
+      <LineId Id="853" Count="0" />
+      <LineId Id="79" Count="0" />
+      <LineId Id="859" Count="0" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="855" Count="0" />
+      <LineId Id="874" Count="1" />
+      <LineId Id="873" Count="0" />
+      <LineId Id="857" Count="1" />
+      <LineId Id="861" Count="0" />
+      <LineId Id="865" Count="2" />
+      <LineId Id="856" Count="0" />
+      <LineId Id="871" Count="1" />
+      <LineId Id="81" Count="5" />
+      <LineId Id="395" Count="2" />
+      <LineId Id="671" Count="2" />
+      <LineId Id="101" Count="24" />
+      <LineId Id="759" Count="0" />
+      <LineId Id="127" Count="47" />
+      <LineId Id="762" Count="1" />
+      <LineId Id="962" Count="1" />
+      <LineId Id="1050" Count="0" />
+      <LineId Id="175" Count="20" />
+      <LineId Id="586" Count="1" />
+      <LineId Id="575" Count="10" />
+      <LineId Id="196" Count="30" />
+      <LineId Id="761" Count="0" />
+      <LineId Id="227" Count="18" />
+    </LineIds>
+    <LineIds Name="GTAC_CONFIG.PROD_CONFIG">
+      <LineId Id="0" Count="178" />
+    </LineIds>
+    <LineIds Name="GTAC_CONFIG.PROD_CONFIG_Constraints">
+      <LineId Id="0" Count="512" />
+    </LineIds>
+    <LineIds Name="GTAC_CONFIG.REPORTS">
+      <LineId Id="2" Count="3" />
+      <LineId Id="198" Count="0" />
+      <LineId Id="6" Count="0" />
+      <LineId Id="199" Count="0" />
+      <LineId Id="213" Count="0" />
+      <LineId Id="200" Count="0" />
+      <LineId Id="203" Count="2" />
+      <LineId Id="201" Count="0" />
+      <LineId Id="206" Count="3" />
+      <LineId Id="1" Count="0" />
+      <LineId Id="189" Count="0" />
+      <LineId Id="195" Count="0" />
+      <LineId Id="157" Count="0" />
+      <LineId Id="14" Count="2" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="18" Count="0" />
+      <LineId Id="20" Count="0" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="32" Count="5" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="45" Count="6" />
+      <LineId Id="60" Count="5" />
+      <LineId Id="73" Count="6" />
+      <LineId Id="87" Count="6" />
+      <LineId Id="101" Count="6" />
+      <LineId Id="115" Count="6" />
+      <LineId Id="129" Count="6" />
+      <LineId Id="156" Count="0" />
+      <LineId Id="143" Count="5" />
+      <LineId Id="214" Count="6" />
+      <LineId Id="227" Count="0" />
+      <LineId Id="221" Count="5" />
+      <LineId Id="228" Count="6" />
+      <LineId Id="241" Count="0" />
+      <LineId Id="235" Count="5" />
+      <LineId Id="242" Count="6" />
+      <LineId Id="211" Count="0" />
+      <LineId Id="250" Count="5" />
+      <LineId Id="249" Count="0" />
+      <LineId Id="212" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="190" Count="0" />
+      <LineId Id="194" Count="0" />
+      <LineId Id="159" Count="8" />
+      <LineId Id="175" Count="6" />
+      <LineId Id="187" Count="0" />
+    </LineIds>
+    <LineIds Name="GTAC_CONFIG.SIM">
+      <LineId Id="2" Count="3" />
+      <LineId Id="24" Count="1" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="6" Count="1" />
+      <LineId Id="9" Count="13" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="26" Count="1" />
+      <LineId Id="140" Count="0" />
+      <LineId Id="32" Count="13" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="1" Count="0" />
+      <LineId Id="141" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="143" Count="13" />
+      <LineId Id="158" Count="0" />
+      <LineId Id="142" Count="0" />
+      <LineId Id="120" Count="0" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="199" Count="0" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="76" Count="1" />
+      <LineId Id="80" Count="0" />
+      <LineId Id="82" Count="0" />
+      <LineId Id="84" Count="1" />
+      <LineId Id="83" Count="0" />
+      <LineId Id="87" Count="2" />
+      <LineId Id="91" Count="2" />
+      <LineId Id="206" Count="0" />
+      <LineId Id="208" Count="11" />
+      <LineId Id="207" Count="0" />
+      <LineId Id="194" Count="4" />
+      <LineId Id="181" Count="0" />
+      <LineId Id="220" Count="2" />
+      <LineId Id="186" Count="0" />
+      <LineId Id="94" Count="0" />
+      <LineId Id="58" Count="0" />
+      <LineId Id="182" Count="0" />
+      <LineId Id="103" Count="13" />
+      <LineId Id="187" Count="5" />
+      <LineId Id="162" Count="0" />
+      <LineId Id="118" Count="0" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="59" Count="3" />
+      <LineId Id="53" Count="4" />
+      <LineId Id="50" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

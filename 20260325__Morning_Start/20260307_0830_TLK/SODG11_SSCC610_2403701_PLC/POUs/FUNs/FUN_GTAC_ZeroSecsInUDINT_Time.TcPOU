@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FUN_GTAC_ZeroSecsInUDINT_Time" Id="{b50a0ea7-d917-43dc-81ca-8624a9ff429a}" SpecialFunc="None">
+    <Declaration><![CDATA[(*Take a var of UDINT type that is being used to store time, convert to timestruct type to check if seconds are not zero.
+If not zero, round the minutes section and then zero the seconds.
+Convert back to UDINT as return
+
+original author: Brent Lekx-Toniolo of Fort Wisers
+
+----------------------------------------------------------------------------------------------------------------------
+REVISION NOTES: 
+	Date: Jan, 2020:
+	- initial concept, blt
+------------------------------------------------------------------------------------------------------------------------
+*)
+
+
+
+FUNCTION FUN_GTAC_ZeroSecsInUDINT_Time : UDINT
+VAR_INPUT
+
+	Time_In_UDINT: UDINT;
+
+END_VAR
+VAR
+
+	Time_In_Timestruct: Timestruct;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* Convert To Timestruct *)
+
+	Time_In_Timestruct.wHour:= UDINT_TO_WORD(Time_In_UDINT / 3600000);
+	Time_In_Timestruct.wMinute:= UDINT_TO_WORD(Time_In_UDINT / 60000) - (Time_In_Timestruct.wHour*60);
+	Time_In_Timestruct.wSecond:= UDINT_TO_WORD(Time_In_UDINT / 1000) - (Time_In_Timestruct.wHour*60*60) - (Time_In_Timestruct.wMinute*60);
+
+(*Evaluate Seconds Portion*)
+
+	IF 	Time_In_Timestruct.wSecond <>0
+		THEN
+		IF Time_In_Timestruct.wSecond >=30
+			THEN
+			(*Round minute up, then zero seconds*)
+			Time_In_Timestruct.wMinute:= Time_In_Timestruct.wMinute+1;
+			Time_In_Timestruct.wSecond:= 0;
+
+		ELSIF Time_In_Timestruct.wSecond < 30
+			THEN
+			(*Leave Minute and simply zero seconds*)
+			Time_In_Timestruct.wSecond:= 0;
+
+		END_IF;
+	END_IF;
+
+(*Finally Return*)
+
+	FUN_GTAC_ZeroSecsInUDINT_Time:= TOD_TO_UDINT(FUN_GTAC_TIMESTRUCTtoTOD(Time_In_Timestruct));]]></ST>
+    </Implementation>
+    <LineIds Name="FUN_GTAC_ZeroSecsInUDINT_Time">
+      <LineId Id="26" Count="26" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

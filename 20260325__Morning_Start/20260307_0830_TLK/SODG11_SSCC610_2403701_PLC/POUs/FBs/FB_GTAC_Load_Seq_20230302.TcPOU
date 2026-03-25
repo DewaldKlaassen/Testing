@@ -1,0 +1,172 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_GTAC_Load_Seq_20230302" Id="{6757151f-7e19-483d-92f1-e8cc1bbc62fa}" SpecialFunc="None">
+    <Declaration><![CDATA[(*FB for use Fixture Load sequences:
+	Original Author(s): Justin Vandongen of Sodecia GTAC; 
+------------------------------------------------------------------------------------------
+REVISION NOTES:
+	Version 20180305
+		- Initial Concept, j.vandongen
+	Version 20200130
+		- updated fault code, j.vandongen
+	Version
+		- latched on load sequence bits unless timer is elasped, j.vandongen
+	Version 20230302
+		- Changed declaration of Load-Sequence variable to persistent type as per request detailed in GH Issue #8 in 5.06, b.lekx-toniolo
+------------------------------------------------------------------------------------------
+*)
+
+FUNCTION_BLOCK FB_GTAC_Load_Seq_20230302
+	VAR_INPUT
+		Enable_Motion: BOOL;
+		Seq_Steps: UDINT;
+
+		Stage1_Check: BOOL;
+		Stage2_Check: BOOL;
+		Stage3_Check: BOOL;
+
+		Reset: BOOL;
+		Disable_Faults: BOOL;
+	END_VAR
+	
+	
+	VAR_OUTPUT
+		FB_OK: BOOL;
+		Faulted: BOOL;
+		Load_SequenceOK: BOOL;
+
+		Stage1_TMR: TON;
+		Stage2_TMR: TON;
+		Stage3_TMR: TON;
+
+	END_VAR
+	
+
+	VAR PERSISTENT
+		
+	(*Standard Internals*)
+		Load_Sequence: UDINT;
+
+	END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[	(*Set FB_OK to True*)
+	FB_OK:= TRUE;
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Internal Code $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*First Stage*)
+	IF Stage1_Check AND NOT Stage2_Check AND NOT Stage3_Check
+		THEN
+			Load_Sequence.0:= TRUE;
+	ELSIF NOT Stage1_Check AND NOT Disable_Faults AND Stage1_TMR.Q
+		THEN
+			Load_Sequence.0:= FALSE;
+	END_IF;
+
+	(*If Stage 1 shuts off, wait a time and then allow fault. stage check debounce*)
+	Stage1_TMR(
+			IN:= Load_Sequence.0 AND NOT Stage1_Check ,
+			PT:= T#750ms,
+			Q=> ,
+			ET=> );
+
+
+
+	(*Second Stage*)
+	IF Load_Sequence.0 AND Stage2_Check AND NOT Stage3_Check
+		THEN
+			Load_Sequence.1:= TRUE;
+	ELSIF (NOT Stage1_Check OR NOT Stage2_Check) AND NOT Disable_Faults  AND Stage2_TMR.Q
+		THEN
+			Load_Sequence.1:= FALSE;
+	END_IF;
+
+	(*If Stage 2 shuts off, wait a time and then allow fault. stage check debounce*)
+	Stage2_TMR(
+			IN:= Load_Sequence.1 AND NOT Stage2_Check ,
+			PT:= T#750ms,
+			Q=> ,
+			ET=> );
+
+
+
+	(*Third Stage*)
+	IF Load_Sequence.1 AND Stage3_Check
+		THEN
+			Load_Sequence.2:= TRUE;
+	ELSIF (NOT Stage1_Check OR NOT Stage2_Check OR NOT Stage3_Check) AND NOT Disable_Faults AND Stage3_TMR.Q
+		THEN
+			Load_Sequence.2:= FALSE;
+	END_IF;
+
+	(*If Stage 3 shuts off, wait a time and then allow fault. stage check debounce*)
+	Stage3_TMR(
+			IN:= Load_Sequence.2 AND NOT Stage3_Check ,
+			PT:= T#750ms,
+			Q=> ,
+			ET=> );
+
+
+
+(*$$$$$$$$$$$$$$$$Gather all Load Sequences$$$$$$$$$$$$$$$$*)
+	(*Load Sequence OK*)
+	IF (Stage1_Check AND Load_Sequence.0)
+		AND (Stage2_Check AND Load_Sequence.1)
+		AND ((Stage3_Check AND Load_Sequence.2)  OR (Seq_Steps=2))
+		AND NOT Faulted
+		THEN
+			Load_SequenceOK:= TRUE;
+	END_IF;
+
+
+
+(*$$$$$$$$$$$$$$$$Gather all Load Sequence Faults$$$$$$$$$$$$$$$$*)
+	(*Fault Logic*)
+	IF ((NOT Stage1_Check AND (Stage2_Check OR Stage3_Check))
+		OR (Stage1_Check AND (Stage2_Check OR Stage3_Check) AND NOT Load_Sequence.0)
+		OR (Stage1_Check AND NOT Stage2_Check AND Stage3_Check))
+		AND NOT Disable_Faults
+		THEN
+			Load_SequenceOK:= FALSE;
+			Faulted:= TRUE;
+	END_IF;
+
+
+
+(*$$$$$$$$$$$$$$$$Reset all Load Sequences$$$$$$$$$$$$$$$$*)
+	(*Reset Load Sequence*)
+	IF Reset
+		THEN
+			Load_Sequence:= 0;
+			Load_SequenceOK:= FALSE;
+			Faulted:= FALSE;
+	END_IF;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(*end*)]]></ST>
+    </Implementation>
+    <LineIds Name="FB_GTAC_Load_Seq_20230302">
+      <LineId Id="45" Count="114" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

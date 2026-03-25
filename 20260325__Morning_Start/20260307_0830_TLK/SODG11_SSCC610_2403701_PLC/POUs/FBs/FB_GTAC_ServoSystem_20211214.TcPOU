@@ -1,0 +1,1323 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_GTAC_ServoSystem_20211214" Id="{cb57ebd7-98ab-4925-9638-425504a988fd}" SpecialFunc="None">
+    <Declaration><![CDATA[(*
+FB for use with a simple single axis "robot" can be combined for multi axis control:
+(Originally designed for use with EL72xx series servo terminals but may be adopted for other controllers that use type "Axis_Ref" as IN/OUT interface)
+Original Author(S): Brent Lekx-Toniolo OF Sodecia GTAC;
+**NOTE: Re-created for use a FB for a Servo Drive, therefore multi axis can be supported by a single drive.
+------------------------------------------------------------------------------------------
+	REVISION NOTES:
+	Date: Jan 2015
+	- initial concept: b.lekx-toniolo
+
+	Date: Aug 2015
+	- Modifications for restart: r.remillard	
+
+	Date: Sep 2015
+	- Modifications for Jog Function
+	- Added Velocity and Acc to Jog fast and Jog slow
+
+	Date: Feb 17 2016
+	- added extenal program reset bit, JVD
+	- added fb_Drive_Stop.Execute to Manual jog logic to prevent an error being generated if the drive is being told to stop, JVD
+
+	Version 20160805
+		- Modified for full selectable use with EL7xxx series terminals and AX5xxx series drives including dual axis support, b.lekx-toniolo
+		- Re-created interface for use with index image concept (for endless extensibility), b.lekx-toniolo
+	Version 20161124
+		- Seperated out Enable Motion for Each Axis, b.lekx-toniolo
+	Version 20161214
+		- Added In_Start_Position Flags, b.lekx-toniolo
+		- Added Software Limit Inputs, b.lekx-toniolo
+		- Added Home Position Inputs, b.lekx-toniolo
+
+	Version 20180731
+		- Added teach enable function, b.donnell
+		- Added ability to directly enter positional data, velocity, accel, decel, motion type and end flag for each position, b.donnell
+		- Added Teach_Enable state to the discrete image to the screen, b.donnell
+		- Added the ability to home the servo while it is in Auto, b.donnell
+		- Added MoveModulo function to the FB and brokeout FB into some actions, b.donnell
+	Version 20191001
+		- Added In_Standstill and In_Stopping reads, j.underhill & b.lekx-toniolo
+		- Added In-Standstill to over-all ReadyFor_Motion, j.underhill & b.lekx-toniolo
+	Version20200609
+		- Update Instance OF FB_AX5805_Info, d.silva / j.underhill / b.lekx-toniolo
+		- Passed Value OF Axis count TO new the above, d.silva / j.underhill / b.lekx-toniolo
+	Version 20211214
+		- Updates to allow input of Reference Position from outside of FB (GH issue 67), c.drees / b.lekx-toniolo
+		- Updates for better possible reset of AX5805 upon error (GH issue 65), c.drees / b.lekx-toniolo
+------------------------------------------------------------------------------------------
+*)
+FUNCTION_BLOCK FB_GTAC_ServoSystem_20211214
+VAR_INPUT
+	Enable_FB: BOOL;
+	FB_In: udt_Generic_ServoDrive_FBIN_20211214;
+	Corrected_Position: ARRAY[0..2] OF LREAL;
+END_VAR
+VAR
+	///EBUS Power Restoration, may or may not be used
+	T01 AT %I*: udt_EL94xx;
+	///Servo Terminal
+	T03 AT %I*: udt_EL7211_20150115;
+	///AX5000 Series Nodes
+	Drive AT %I*: udt_AX5206_20160804;
+	Drive_AX5805 AT %I*: udt_AX5805_20160804;
+	Drive_AX5805_Reset AT %Q*: BOOL;
+	Drive_BipolarTorque AT %Q*: ARRAY[0..2] OF INT ;
+	FB_AX5805_Info: FB_Ax5805_GetInfo_20200609;
+	/// AX5xxx Series Axis Diag and Reset 
+	FB_Axis_Diag: ARRAY[0..2] OF FB_AxisDiag_20160810;
+	ST_AX5000_Diag: ARRAY[0..2] OF udt_AX5000Diag;
+	ResetReq: ARRAY[0..2] OF BOOL;
+	DiagReq: ARRAY[0..2] OF BOOL;
+	ResetAct: ARRAY[0..2] OF BOOL;
+	DiagAct: ARRAY[0..2] OF BOOL;
+	/// Nodes States
+	DiscreteNode_OK: BOOL;
+	///Cable Break States
+	ECatSlave_Cable_Breaks: UDINT;
+	///Coupler is Not Present on Bus when expected
+	Drive_NotPresent: BOOL;
+	///Port B of AX5xxx is OUT
+	AX5xxx_PortB_MissingLink: BOOL;
+	///Port D of AX5xxx is Safety Slot
+	AX5xxx_PortD_MissingLink: BOOL;
+	///Axis Array Index
+	Axis_Index: INT;
+	///Develop data Area for Interface with the Axis
+	Axis: ARRAY[0..2] OF Axis_REF;
+	///Develop Instances (array types for mulit axis use)
+	fb_Power: ARRAY[0..2] OF MC_Power;
+	fb_Move_Abs: ARRAY[0..2] OF MC_MoveAbsolute;
+	fb_Move_Vel: ARRAY[0..2] OF MC_MoveVelocity;
+	fb_Move_Add: ARRAY[0..2] OF MC_MoveAdditive;
+	fb_Move_Mod: ARRAY[0..2] OF MC_MoveModulo;
+	fb_Jog: ARRAY[0..2] OF MC_Jog;
+	fb_Move_AbsTeach: ARRAY[0..2] OF MC_MoveAbsolute;
+	fb_Stop: ARRAY[0..2] OF MC_Stop;
+	fb_Set_Position: ARRAY[0..2] OF MC_SetPosition;
+	fb_Set_Home: ARRAY[0..2] OF MC_Home;
+	fb_SetBool_EnPosMax: ARRAY[0..2] OF MC_WriteBoolParameter;
+	fb_SetBool_EnPosMin: ARRAY[0..2] OF MC_WriteBoolParameter;
+	fb_Set_PosMax: ARRAY[0..2] OF MC_WriteParameter;
+	fb_Set_PosMin: ARRAY[0..2] OF MC_WriteParameter;
+	fb_ReadBool_EnPosMax: ARRAY[0..2] OF MC_ReadBoolParameter;
+	fb_ReadBool_EnPosMin: ARRAY[0..2] OF MC_ReadBoolParameter;
+	Type_MC_AxisParameter: MC_AxisParameter;
+	fb_Reset: ARRAY[0..2] OF MC_Reset;
+	fb_SoE_Reset: ARRAY[0..2] OF FB_SoEReset;
+	fb_Actual_Position: ARRAY[0..2] OF MC_ReadActualPosition;
+	fb_Read_Status: ARRAY[0..2] OF MC_ReadStatus;
+	///General Internals
+	In_Play: ARRAY[0..2] OF BOOL;
+	In_Teach: ARRAY[0..2] OF BOOL;
+	Auto_Run: ARRAY[0..2] OF BOOL;
+	Auto_Velocity: ARRAY[0..2] OF LREAL;
+	Auto_Accel: ARRAY[0..2] OF LREAL;
+	Auto_Decel: ARRAY[0..2] OF LREAL;
+	Manual_Velocity: ARRAY[0..2] OF LREAL;
+	Manual_Accel: ARRAY[0..2] OF LREAL;
+	Manual_Decel: ARRAY[0..2] OF LREAL;
+	Manual_Distance: ARRAY[0..2] OF LREAL;
+	///Timer for Setting of Home Position
+	SET_HomeTMR: ARRAY[0..2] OF TON;
+	///Timer To Delay Servo Drive Commands Until Enable Has Been Achieved
+	Auto_ABS_DelayTMR: ARRAY[0..2] OF TON;
+	///Inching Variable
+	Inching_Value: ARRAY[0..2] OF REAL;
+	///Misc
+	RPulse: ARRAY[0..10] OF R_TRIG;
+END_VAR
+VAR PERSISTENT
+	///Stored (Taught) Postional Data (IE Programmed Points)
+	Program_Positions: ARRAY[0..2] OF ARRAY[0..15] OF udt_SingleAxis_MoveData_20160908;
+	Current_Step_Pointer: ARRAY[0..2] OF UINT;
+	Step_Running: ARRAY[0..2] OF BOOL;
+	Program_Running: ARRAY[0..2] OF BOOL;
+	Program_Complete: ARRAY[0..2] OF BOOL;
+	Step_Complete: ARRAY[0..2] OF BOOL;
+	test: BOOL;
+END_VAR
+VAR_OUTPUT
+	FB_Ok: BOOL;
+	In_Play_ACK: ARRAY[0..2] OF BOOL;
+	In_Teach_ACK: ARRAY[0..2] OF BOOL;
+	Readyfor_Motion: ARRAY[0..2] OF BOOL;
+	Readyfor_TeachMotion: ARRAY[0..2] OF BOOL;
+	In_Error: ARRAY[0..2] OF BOOL;
+	Error_ID: ARRAY[0..2] OF UDINT;
+	Homed: ARRAY[0..2] OF BOOL;
+	In_Requested_Position: ARRAY[0..2] OF BOOL;
+	In_Standstill: ARRAY[0..2] OF BOOL;
+	In_Stopping: ARRAY[0..2] OF BOOL;
+	In_Motion: ARRAY[0..2] OF BOOL;
+	At_Current_Step: ARRAY[0..2] OF UINT;
+	Cycle_Complete: ARRAY[0..2] OF BOOL;
+	Current_Position: ARRAY[0..2] OF LREAL;
+	Discrete_Image: udt_Drive_Image_20190816;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Set FB_OK to True*)
+		FB_OK:= TRUE;
+(*Set Boundries*)
+IF FB_In.Option_Axis_Count>2
+	THEN FB_In.Option_Axis_Count:=2;
+ELSIF FB_In.Option_Axis_Count<1
+	THEN FB_In.Option_Axis_Count:=1;
+ELSIF FB_In.Option_Type=10
+	THEN FB_In.Option_Axis_Count:=1;
+END_IF;
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$Gather Status Of Hardware $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+(*Discrete I/O Nodes*)
+	IF FB_In.Option_Type=0 AND (Drive.InfoData.State=8)
+		AND (Drive_AX5805.InfoData.State=8)
+		THEN
+			DiscreteNode_OK:=TRUE;
+	ELSIF FB_In.Option_Type=10 AND (T01.InfoData.State=8)
+		AND (T03.InfoData.State=8)
+		THEN
+			DiscreteNode_OK:=TRUE;
+	ELSE
+			DiscreteNode_OK:=FALSE;
+
+	END_IF;
+
+(*EtherCAT Cable Break Detection*)
+	(*Develop Port Connection Warning Flags*)
+	IF Drive.InfoData.State=257  (*State Machine for Slave Not Present*)
+		THEN Drive_NotPresent:= TRUE;
+	ELSE Drive_NotPresent := FALSE;
+	END_IF;
+
+	IF Drive.InfoData.State=16#2408 (*State Machine for Link Missing at Port B*)
+		THEN AX5xxx_PortB_MissingLink:= TRUE; (*PortB is X5 Port*)
+	ELSE AX5xxx_PortB_MissingLink := FALSE;
+	END_IF;
+
+	IF Drive.InfoData.State=17416 (*State Machine for Link Missing at Port D*)
+		THEN AX5xxx_PortD_MissingLink:= TRUE; (*PortD is Safety Slot*)
+	ELSE AX5xxx_PortD_MissingLink := FALSE;
+	END_IF;
+
+	(*Wrap up break Flags to Variable for shipment to UI*)
+	ECatSlave_Cable_Breaks.0:= Drive_NotPresent AND FB_In.Prev_EcatNode_Present;
+	ECatSlave_Cable_Breaks.1:= AX5xxx_PortB_MissingLink; (*X5 Out Port Warning*)
+	ECatSlave_Cable_Breaks.4:= AX5xxx_PortD_MissingLink; (*Warning for AX5805 (safety slot)*)
+	ECatSlave_Cable_Breaks.16:= Discrete_Image.Drive_C1D_ErrorStruct[1].bFeedbackError
+								OR Discrete_Image.Axis_ErrorID[1]=16#4550;			(*Warning for Axis1 Motor Cable*)
+	ECatSlave_Cable_Breaks.17:= Discrete_Image.Drive_C1D_ErrorStruct[2].bFeedbackError
+								OR Discrete_Image.Axis_ErrorID[2]=16#4550;			(*Warning for Axis2 Motor Cable*)
+
+
+(*Get AX5805 Status*)
+	(*Inputs to FB*)
+	FB_Ax5805_Info.Ecat_Master_AmsNetID:= FB_In.ECAT_AmsID;
+	FB_Ax5805_Info.Axis_Count:= FB_In.Option_Axis_Count;
+
+	(*Call actual FB*)
+	FB_AX5805_Info(AX5805_InfoData:= Drive_AX5805.InfoData);
+
+
+(*all items past this point are indexed via Axis Index*)
+FOR Axis_Index:= 1 TO FB_In.Option_Axis_Count
+	DO
+	(*Get Status*)
+		fb_Read_Status[Axis_Index].Enable:= TRUE;
+		fb_Read_Status[Axis_Index](Axis:= Axis[Axis_Index]);
+	(*Get Servo Drive Data*)
+		(*Get Current Position*)
+		fb_Actual_Position[Axis_Index].Enable:= TRUE;
+		fb_Actual_Position[Axis_Index](Axis:= Axis[Axis_Index]);
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Internal Code $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+(*Ensure Postion Data zero is always blank*)
+	Program_Positions[Axis_Index][0].Position:= 0;
+	Program_Positions[Axis_Index][0].Velocity:= 0;
+	Program_Positions[Axis_Index][0].Accel:= 0;
+	Program_Positions[Axis_Index][0].Decel:= 0;
+	Program_Positions[Axis_Index][0].Move_Type:= 0;
+	Program_Positions[Axis_Index][0].End_Flag:= 0;
+
+(*Auto / Manual Mode Code*)
+	IF FB_In.Mode_Select[Axis_Index].0 AND NOT FB_In.Mode_Select[Axis_Index].1
+		THEN
+			In_Play[Axis_Index]:= TRUE;
+	END_IF;
+	IF NOT FB_In.Mode_Select[Axis_Index].0 AND FB_In.Mode_Select[Axis_Index].1
+		THEN
+			In_Play[Axis_Index]:= FALSE;
+	END_IF;
+	In_Teach[Axis_Index]:= NOT In_Play[Axis_Index];
+
+
+(*%%%%%%%%%%%%%%%%%%%%%%%%%%%%% General Enable of Axis %%%%%%%%%%%%%%%%%%%%%%%%*)
+
+	(*Handle General Stop*)
+	IF FB_In.Enable_Motion[Axis_Index] AND NOT FB_In.Stop_PlayBack[Axis_Index]
+		THEN
+			fb_Stop[Axis_Index].Execute:= FALSE;
+	ELSIF (NOT FB_In.Enable_Motion[Axis_Index] AND fb_Power[Axis_Index].Enable) OR FB_In.Stop_PlayBack[Axis_Index]
+		THEN
+			fb_Move_VEL[Axis_Index].Execute:= FALSE;
+			fb_Move_ABS[Axis_Index].Execute:= FALSE;
+			fb_Move_MOD[Axis_Index].Execute:= FALSE;
+			IF FB_In.System_Stop_Decel[Axis_Index] <> 0
+				THEN
+				fb_Stop[Axis_Index].Deceleration:= Fb_In.System_Stop_Decel[Axis_Index]; (*Set User Entered Decel*)
+			ELSE
+				fb_Stop[Axis_Index].Deceleration:= FB_In.System_Max_Velocity[Axis_Index]*10; (*Decel Default*)
+			END_IF;
+			fb_Stop[Axis_Index].Execute:= TRUE;
+
+	END_IF;
+
+	(*Handle General Enable*)
+	IF FB_In.Enable_Motion[Axis_Index]
+		THEN
+		(*Drive Enable and Override*)
+		fb_Power[Axis_Index].Enable:= TRUE;
+		fb_Power[Axis_Index].Enable_Negative:= TRUE;
+		fb_Power[Axis_Index].Enable_Positive:= TRUE;
+		fb_Power[Axis_Index].Override:= 100;
+	ELSIF NOT FB_In.Enable_Motion[Axis_Index] AND fb_Stop[Axis_Index].Done 	(*Once all Absolute Moves are stopped and/or completed then disable Drive*)
+		THEN
+		fb_Power[Axis_Index].Enable:= FALSE;
+		fb_Power[Axis_Index].Enable_Negative:= FALSE;
+		fb_Power[Axis_Index].Enable_Positive:= FALSE;
+		fb_Power[Axis_Index].Override:= 0;
+	END_IF;
+
+	(*Handle Software Limits*)
+	(*Load Read fbs*)
+	fb_ReadBool_EnPosMax[Axis_Index].ParameterNumber:= AxisEnMaxSoftPosLimit;
+	fb_ReadBool_EnPosMax[Axis_Index].ReadMode:= READMODE_CYCLIC;
+	fb_ReadBool_EnPosMax[Axis_Index].Enable:= TRUE;
+	fb_ReadBool_EnPosMax[Axis_Index](Axis:= Axis[Axis_Index]);
+	fb_ReadBool_EnPosMin[Axis_Index].ParameterNumber:= AxisEnMinSoftPosLimit;
+	fb_ReadBool_EnPosMin[Axis_Index].ReadMode:= READMODE_CYCLIC;
+	fb_ReadBool_EnPosMin[Axis_Index].Enable:= TRUE;
+	fb_ReadBool_EnPosMin[Axis_Index](Axis:= Axis[Axis_Index]);
+
+	(*Enable or Disable Softlimits depending on state of Homed*)
+	(*If Axis is not callibrated, and user is not requesting, remove software limits*)
+	IF NOT Homed[Axis_Index] AND NOT FB_IN.Teach_Servo_HomePos[Axis_Index] OR (FB_In.Disable_Soft_Limits[Axis_Index] )
+		AND ((fb_ReadBool_EnPosMax[Axis_Index].Value = TRUE) OR (fb_ReadBool_EnPosMin[Axis_Index].Value = TRUE))
+		AND NOT fb_SetBool_EnPosMin[Axis_Index].Done
+		THEN
+		fb_SetBool_EnPosMax[Axis_Index].ParameterNumber:= AxisEnMaxSoftPosLimit;
+		fb_SetBool_EnPosMax[Axis_Index].Value:= FALSE;
+		fb_SetBool_EnPosMax[Axis_Index].Execute:= TRUE;
+		fb_SetBool_EnPosMax[Axis_Index](Axis:= Axis[Axis_Index]);
+
+		fb_Set_PosMax[Axis_Index].ParameterNumber:= AxisMaxSoftPosLimit;
+		fb_Set_PosMax[Axis_Index].Value:= 0;
+		fb_Set_PosMax[Axis_Index].Execute:= TRUE;
+		fb_Set_PosMax[Axis_Index](Axis:= Axis[Axis_Index]);
+
+		fb_SetBool_EnPosMin[Axis_Index].ParameterNumber:= AxisEnMinSoftPosLimit;
+		fb_SetBool_EnPosMin[Axis_Index].Value:= FALSE;
+		fb_SetBool_EnPosMin[Axis_Index].Execute:= TRUE;
+		fb_SetBool_EnPosMin[Axis_Index](Axis:= Axis[Axis_Index]);
+
+		fb_Set_PosMin[Axis_Index].ParameterNumber:= AxisMinSoftPosLimit;
+		fb_Set_PosMin[Axis_Index].Value:= 0;
+		fb_Set_PosMin[Axis_Index].Execute:= TRUE;
+		fb_Set_PosMin[Axis_Index](Axis:= Axis[Axis_Index]);
+
+	ELSIF Homed[Axis_Index] AND NOT FB_In.Disable_Soft_Limits[Axis_Index]
+		AND ((fb_ReadBool_EnPosMax[Axis_Index].Value = FALSE) OR (fb_ReadBool_EnPosMin[Axis_Index].Value = FALSE))
+		AND NOT fb_SetBool_EnPosMin[Axis_Index].Done
+		THEN
+		fb_SetBool_EnPosMax[Axis_Index].ParameterNumber:= AxisEnMaxSoftPosLimit;
+		fb_SetBool_EnPosMax[Axis_Index].Value:= TRUE;
+		fb_SetBool_EnPosMax[Axis_Index].Execute:= TRUE;
+		fb_SetBool_EnPosMax[Axis_Index](Axis:= Axis[Axis_Index]);
+
+		fb_Set_PosMax[Axis_Index].ParameterNumber:= AxisMaxSoftPosLimit;
+		fb_Set_PosMax[Axis_Index].Value:= FB_In.Soft_Limit_Max[Axis_Index];
+		fb_Set_PosMax[Axis_Index].Execute:= TRUE;
+		fb_Set_PosMax[Axis_Index](Axis:= Axis[Axis_Index]);
+
+		fb_SetBool_EnPosMin[Axis_Index].ParameterNumber:= AxisEnMinSoftPosLimit;
+		fb_SetBool_EnPosMin[Axis_Index].Value:= TRUE;
+		fb_SetBool_EnPosMin[Axis_Index].Execute:= TRUE;
+		fb_SetBool_EnPosMin[Axis_Index](Axis:= Axis[Axis_Index]);
+
+		fb_Set_PosMin[Axis_Index].ParameterNumber:= AxisMinSoftPosLimit;
+		fb_Set_PosMin[Axis_Index].Value:= FB_In.Soft_Limit_Min[Axis_Index];
+		fb_Set_PosMin[Axis_Index].Execute:= TRUE;
+		fb_Set_PosMin[Axis_Index](Axis:= Axis[Axis_Index]);
+	ELSE
+		fb_SetBool_EnPosMax[Axis_Index].Execute:= FALSE;
+		fb_SetBool_EnPosMin[Axis_Index].Execute:= FALSE;
+		fb_Set_PosMax[Axis_Index].Execute:= FALSE;
+		fb_Set_PosMin[Axis_Index].Execute:= FALSE;
+
+	END_IF;
+
+
+
+
+(*General Set-Up Parameters/Function calls for Servo Drive*)
+		fb_Power[Axis_Index](Axis:= Axis[Axis_Index]);
+		fb_Stop[Axis_Index](Axis:=Axis[Axis_Index]);
+
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Auto Cycle Code ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*)
+
+(*Action Calls*)
+Teach_Mode();
+Move_Absolute();
+Move_Modulo();
+Move_Velocity();
+
+
+	(*If Teach_Enable is not true, you cannot teach an axis position from the screen, must be hardcoded with values below - initialized in Servo_Motion*)
+		IF NOT FB_in.Teach_Enable[1] AND FB_In.Rotary_Axis[1]
+			THEN
+			(*Axis 1 Position, Velocity, Accel, Decel, Motion Type and End Flag for each program position*)
+				Program_Positions[1][0].Position:= FB_In.Position[1][0];
+				Program_Positions[1][1].Position:= FB_In.Position[1][1];
+				Program_Positions[1][2].Position:= FB_In.Position[1][2];
+				Program_Positions[1][3].Position:= FB_In.Position[1][3];
+				Program_Positions[1][4].Position:= FB_In.Position[1][4];
+				Program_Positions[1][5].Position:= FB_In.Position[1][5];
+				Program_Positions[1][6].Position:= FB_In.Position[1][6];
+				Program_Positions[1][7].Position:= FB_In.Position[1][7];
+				Program_Positions[1][8].Position:= FB_In.Position[1][8];
+				Program_Positions[1][9].Position:= FB_In.Position[1][9];
+				Program_Positions[1][10].Position:= FB_In.Position[1][10];
+				Program_Positions[1][11].Position:= FB_In.Position[1][11];
+				Program_Positions[1][12].Position:= FB_In.Position[1][12];
+				Program_Positions[1][13].Position:= FB_In.Position[1][13];
+				Program_Positions[1][14].Position:= FB_In.Position[1][14];
+				Program_Positions[1][15].Position:= FB_In.Position[1][15];
+
+				Program_Positions[1][0].Velocity:= FB_In.Auto_Vel[1][0];
+				Program_Positions[1][1].Velocity:= FB_In.Auto_Vel[1][1];
+				Program_Positions[1][2].Velocity:= FB_In.Auto_Vel[1][2];
+				Program_Positions[1][3].Velocity:= FB_In.Auto_Vel[1][3];
+				Program_Positions[1][4].Velocity:= FB_In.Auto_Vel[1][4];
+				Program_Positions[1][5].Velocity:= FB_In.Auto_Vel[1][5];
+				Program_Positions[1][6].Velocity:= FB_In.Auto_Vel[1][6];
+				Program_Positions[1][7].Velocity:= FB_In.Auto_Vel[1][7];
+				Program_Positions[1][8].Velocity:= FB_In.Auto_Vel[1][8];
+				Program_Positions[1][9].Velocity:= FB_In.Auto_Vel[1][9];
+				Program_Positions[1][10].Velocity:= FB_In.Auto_Vel[1][10];
+				Program_Positions[1][11].Velocity:= FB_In.Auto_Vel[1][11];
+				Program_Positions[1][12].Velocity:= FB_In.Auto_Vel[1][12];
+				Program_Positions[1][13].Velocity:= FB_In.Auto_Vel[1][13];
+				Program_Positions[1][14].Velocity:= FB_In.Auto_Vel[1][14];
+				Program_Positions[1][15].Velocity:= FB_In.Auto_Vel[1][15];
+
+				Program_Positions[1][0].Accel:= FB_In.Auto_Accel[1][0];
+				Program_Positions[1][1].Accel:= FB_In.Auto_Accel[1][1];
+				Program_Positions[1][2].Accel:= FB_In.Auto_Accel[1][2];
+				Program_Positions[1][3].Accel:= FB_In.Auto_Accel[1][3];
+				Program_Positions[1][4].Accel:= FB_In.Auto_Accel[1][4];
+				Program_Positions[1][5].Accel:= FB_In.Auto_Accel[1][5];
+				Program_Positions[1][6].Accel:= FB_In.Auto_Accel[1][6];
+				Program_Positions[1][7].Accel:= FB_In.Auto_Accel[1][7];
+				Program_Positions[1][8].Accel:= FB_In.Auto_Accel[1][8];
+				Program_Positions[1][9].Accel:= FB_In.Auto_Accel[1][9];
+				Program_Positions[1][10].Accel:= FB_In.Auto_Accel[1][10];
+				Program_Positions[1][11].Accel:= FB_In.Auto_Accel[1][11];
+				Program_Positions[1][12].Accel:= FB_In.Auto_Accel[1][12];
+				Program_Positions[1][13].Accel:= FB_In.Auto_Accel[1][13];
+				Program_Positions[1][14].Accel:= FB_In.Auto_Accel[1][14];
+				Program_Positions[1][15].Accel:= FB_In.Auto_Accel[1][15];
+
+				Program_Positions[1][0].Decel:= FB_In.Auto_Decel[1][0];
+				Program_Positions[1][1].Decel:= FB_In.Auto_Decel[1][1];
+				Program_Positions[1][2].Decel:= FB_In.Auto_Decel[1][2];
+				Program_Positions[1][3].Decel:= FB_In.Auto_Decel[1][3];
+				Program_Positions[1][4].Decel:= FB_In.Auto_Decel[1][4];
+				Program_Positions[1][5].Decel:= FB_In.Auto_Decel[1][5];
+				Program_Positions[1][6].Decel:= FB_In.Auto_Decel[1][6];
+				Program_Positions[1][7].Decel:= FB_In.Auto_Decel[1][7];
+				Program_Positions[1][8].Decel:= FB_In.Auto_Decel[1][8];
+				Program_Positions[1][9].Decel:= FB_In.Auto_Decel[1][9];
+				Program_Positions[1][10].Decel:= FB_In.Auto_Decel[1][10];
+				Program_Positions[1][11].Decel:= FB_In.Auto_Decel[1][11];
+				Program_Positions[1][12].Decel:= FB_In.Auto_Decel[1][12];
+				Program_Positions[1][13].Decel:= FB_In.Auto_Decel[1][13];
+				Program_Positions[1][14].Decel:= FB_In.Auto_Decel[1][14];
+				Program_Positions[1][15].Decel:= FB_In.Auto_Decel[1][15];
+
+				Program_Positions[1][0].End_Flag:= FB_In.Auto_EndFlag[1][0];
+				Program_Positions[1][1].End_Flag:= FB_In.Auto_EndFlag[1][1];
+				Program_Positions[1][2].End_Flag:= FB_In.Auto_EndFlag[1][2];
+				Program_Positions[1][3].End_Flag:= FB_In.Auto_EndFlag[1][3];
+				Program_Positions[1][4].End_Flag:= FB_In.Auto_EndFlag[1][4];
+				Program_Positions[1][5].End_Flag:= FB_In.Auto_EndFlag[1][5];
+				Program_Positions[1][6].End_Flag:= FB_In.Auto_EndFlag[1][6];
+				Program_Positions[1][7].End_Flag:= FB_In.Auto_EndFlag[1][7];
+				Program_Positions[1][8].End_Flag:= FB_In.Auto_EndFlag[1][8];
+				Program_Positions[1][9].End_Flag:= FB_In.Auto_EndFlag[1][9];
+				Program_Positions[1][10].End_Flag:= FB_In.Auto_EndFlag[1][10];
+				Program_Positions[1][11].End_Flag:= FB_In.Auto_EndFlag[1][11];
+				Program_Positions[1][12].End_Flag:= FB_In.Auto_EndFlag[1][12];
+				Program_Positions[1][13].End_Flag:= FB_In.Auto_EndFlag[1][13];
+				Program_Positions[1][14].End_Flag:= FB_In.Auto_EndFlag[1][14];
+				Program_Positions[1][15].End_Flag:= FB_In.Auto_EndFlag[1][15];
+
+				Program_Positions[1][0].Move_Type:= FB_In.Auto_MoveType[1][0];
+				Program_Positions[1][1].Move_Type:= FB_In.Auto_MoveType[1][1];
+				Program_Positions[1][2].Move_Type:= FB_In.Auto_MoveType[1][2];
+				Program_Positions[1][3].Move_Type:= FB_In.Auto_MoveType[1][3];
+				Program_Positions[1][4].Move_Type:= FB_In.Auto_MoveType[1][4];
+				Program_Positions[1][5].Move_Type:= FB_In.Auto_MoveType[1][5];
+				Program_Positions[1][6].Move_Type:= FB_In.Auto_MoveType[1][6];
+				Program_Positions[1][7].Move_Type:= FB_In.Auto_MoveType[1][7];
+				Program_Positions[1][8].Move_Type:= FB_In.Auto_MoveType[1][8];
+				Program_Positions[1][9].Move_Type:= FB_In.Auto_MoveType[1][9];
+				Program_Positions[1][10].Move_Type:= FB_In.Auto_MoveType[1][10];
+				Program_Positions[1][11].Move_Type:= FB_In.Auto_MoveType[1][11];
+				Program_Positions[1][12].Move_Type:= FB_In.Auto_MoveType[1][12];
+				Program_Positions[1][13].Move_Type:= FB_In.Auto_MoveType[1][13];
+				Program_Positions[1][14].Move_Type:= FB_In.Auto_MoveType[1][14];
+				Program_Positions[1][15].Move_Type:= FB_In.Auto_MoveType[1][15];
+
+		END_IF;
+
+		IF NOT FB_in.Teach_Enable[2] AND FB_In.Rotary_Axis[2]
+			THEN
+			(*Axis 2 Position, Velocity, Accel, Decel, Motion Type and End Flag for each program position*)
+				Program_Positions[2][0].Position:= FB_In.Position[2][0];
+				Program_Positions[2][1].Position:= FB_In.Position[2][1];
+				Program_Positions[2][2].Position:= FB_In.Position[2][2];
+				Program_Positions[2][3].Position:= FB_In.Position[2][3];
+				Program_Positions[2][4].Position:= FB_In.Position[2][4];
+				Program_Positions[2][5].Position:= FB_In.Position[2][5];
+				Program_Positions[2][6].Position:= FB_In.Position[2][6];
+				Program_Positions[2][7].Position:= FB_In.Position[2][7];
+				Program_Positions[2][8].Position:= FB_In.Position[2][8];
+				Program_Positions[2][9].Position:= FB_In.Position[2][9];
+				Program_Positions[2][10].Position:= FB_In.Position[2][10];
+				Program_Positions[2][11].Position:= FB_In.Position[2][11];
+				Program_Positions[2][12].Position:= FB_In.Position[2][12];
+				Program_Positions[2][13].Position:= FB_In.Position[2][13];
+				Program_Positions[2][14].Position:= FB_In.Position[2][14];
+				Program_Positions[2][15].Position:= FB_In.Position[2][15];
+
+				Program_Positions[2][0].Velocity:= FB_In.Auto_Vel[2][0];
+				Program_Positions[2][1].Velocity:= FB_In.Auto_Vel[2][1];
+				Program_Positions[2][2].Velocity:= FB_In.Auto_Vel[2][2];
+				Program_Positions[2][3].Velocity:= FB_In.Auto_Vel[2][3];
+				Program_Positions[2][4].Velocity:= FB_In.Auto_Vel[2][4];
+				Program_Positions[2][5].Velocity:= FB_In.Auto_Vel[2][5];
+				Program_Positions[2][6].Velocity:= FB_In.Auto_Vel[2][6];
+				Program_Positions[2][7].Velocity:= FB_In.Auto_Vel[2][7];
+				Program_Positions[2][8].Velocity:= FB_In.Auto_Vel[2][8];
+				Program_Positions[2][9].Velocity:= FB_In.Auto_Vel[2][9];
+				Program_Positions[2][10].Velocity:= FB_In.Auto_Vel[2][10];
+				Program_Positions[2][11].Velocity:= FB_In.Auto_Vel[2][11];
+				Program_Positions[2][12].Velocity:= FB_In.Auto_Vel[2][12];
+				Program_Positions[2][13].Velocity:= FB_In.Auto_Vel[2][13];
+				Program_Positions[2][14].Velocity:= FB_In.Auto_Vel[2][14];
+				Program_Positions[2][15].Velocity:= FB_In.Auto_Vel[2][15];
+
+				Program_Positions[2][0].Accel:= FB_In.Auto_Accel[2][0];
+				Program_Positions[2][1].Accel:= FB_In.Auto_Accel[2][1];
+				Program_Positions[2][2].Accel:= FB_In.Auto_Accel[2][2];
+				Program_Positions[2][3].Accel:= FB_In.Auto_Accel[2][3];
+				Program_Positions[2][4].Accel:= FB_In.Auto_Accel[2][4];
+				Program_Positions[2][5].Accel:= FB_In.Auto_Accel[2][5];
+				Program_Positions[2][6].Accel:= FB_In.Auto_Accel[2][6];
+				Program_Positions[2][7].Accel:= FB_In.Auto_Accel[2][7];
+				Program_Positions[2][8].Accel:= FB_In.Auto_Accel[2][8];
+				Program_Positions[2][9].Accel:= FB_In.Auto_Accel[2][9];
+				Program_Positions[2][10].Accel:= FB_In.Auto_Accel[2][10];
+				Program_Positions[2][11].Accel:= FB_In.Auto_Accel[2][11];
+				Program_Positions[2][12].Accel:= FB_In.Auto_Accel[2][12];
+				Program_Positions[2][13].Accel:= FB_In.Auto_Accel[2][13];
+				Program_Positions[2][14].Accel:= FB_In.Auto_Accel[2][14];
+				Program_Positions[2][15].Accel:= FB_In.Auto_Accel[2][15];
+
+				Program_Positions[2][0].Decel:= FB_In.Auto_Decel[2][0];
+				Program_Positions[2][1].Decel:= FB_In.Auto_Decel[2][1];
+				Program_Positions[2][2].Decel:= FB_In.Auto_Decel[2][2];
+				Program_Positions[2][3].Decel:= FB_In.Auto_Decel[2][3];
+				Program_Positions[2][4].Decel:= FB_In.Auto_Decel[2][4];
+				Program_Positions[2][5].Decel:= FB_In.Auto_Decel[2][5];
+				Program_Positions[2][6].Decel:= FB_In.Auto_Decel[2][6];
+				Program_Positions[2][7].Decel:= FB_In.Auto_Decel[2][7];
+				Program_Positions[2][8].Decel:= FB_In.Auto_Decel[2][8];
+				Program_Positions[2][9].Decel:= FB_In.Auto_Decel[2][9];
+				Program_Positions[2][10].Decel:= FB_In.Auto_Decel[2][10];
+				Program_Positions[2][11].Decel:= FB_In.Auto_Decel[2][11];
+				Program_Positions[2][12].Decel:= FB_In.Auto_Decel[2][12];
+				Program_Positions[2][13].Decel:= FB_In.Auto_Decel[2][13];
+				Program_Positions[2][14].Decel:= FB_In.Auto_Decel[2][14];
+				Program_Positions[2][15].Decel:= FB_In.Auto_Decel[2][15];
+
+				Program_Positions[2][0].End_Flag:= FB_In.Auto_EndFlag[2][0];
+				Program_Positions[2][1].End_Flag:= FB_In.Auto_EndFlag[2][1];
+				Program_Positions[2][2].End_Flag:= FB_In.Auto_EndFlag[2][2];
+				Program_Positions[2][3].End_Flag:= FB_In.Auto_EndFlag[2][3];
+				Program_Positions[2][4].End_Flag:= FB_In.Auto_EndFlag[2][4];
+				Program_Positions[2][5].End_Flag:= FB_In.Auto_EndFlag[2][5];
+				Program_Positions[2][6].End_Flag:= FB_In.Auto_EndFlag[2][6];
+				Program_Positions[2][7].End_Flag:= FB_In.Auto_EndFlag[2][7];
+				Program_Positions[2][8].End_Flag:= FB_In.Auto_EndFlag[2][8];
+				Program_Positions[2][9].End_Flag:= FB_In.Auto_EndFlag[2][9];
+				Program_Positions[2][10].End_Flag:= FB_In.Auto_EndFlag[2][10];
+				Program_Positions[2][11].End_Flag:= FB_In.Auto_EndFlag[2][11];
+				Program_Positions[2][12].End_Flag:= FB_In.Auto_EndFlag[2][12];
+				Program_Positions[2][13].End_Flag:= FB_In.Auto_EndFlag[2][13];
+				Program_Positions[2][14].End_Flag:= FB_In.Auto_EndFlag[2][14];
+				Program_Positions[2][15].End_Flag:= FB_In.Auto_EndFlag[2][15];
+
+				Program_Positions[2][0].Move_Type:= FB_In.Auto_MoveType[2][0];
+				Program_Positions[2][1].Move_Type:= FB_In.Auto_MoveType[2][1];
+				Program_Positions[2][2].Move_Type:= FB_In.Auto_MoveType[2][2];
+				Program_Positions[2][3].Move_Type:= FB_In.Auto_MoveType[2][3];
+				Program_Positions[2][4].Move_Type:= FB_In.Auto_MoveType[2][4];
+				Program_Positions[2][5].Move_Type:= FB_In.Auto_MoveType[2][5];
+				Program_Positions[2][6].Move_Type:= FB_In.Auto_MoveType[2][6];
+				Program_Positions[2][7].Move_Type:= FB_In.Auto_MoveType[2][7];
+				Program_Positions[2][8].Move_Type:= FB_In.Auto_MoveType[2][8];
+				Program_Positions[2][9].Move_Type:= FB_In.Auto_MoveType[2][9];
+				Program_Positions[2][10].Move_Type:= FB_In.Auto_MoveType[2][10];
+				Program_Positions[2][11].Move_Type:= FB_In.Auto_MoveType[2][11];
+				Program_Positions[2][12].Move_Type:= FB_In.Auto_MoveType[2][12];
+				Program_Positions[2][13].Move_Type:= FB_In.Auto_MoveType[2][13];
+				Program_Positions[2][14].Move_Type:= FB_In.Auto_MoveType[2][14];
+				Program_Positions[2][15].Move_Type:= FB_In.Auto_MoveType[2][15];
+		END_IF;
+
+(*################################################# Home Routine AUTO ###########################################*)
+
+IF ReadyFor_Motion[Axis_Index] AND In_Play_ACK[Axis_Index] AND NOT FB_In.Stop_PlayBack[Axis_Index] AND NOT Cycle_Complete[Axis_Index]
+	THEN
+
+			(*Simple Direct, Delayed Homing Routine*)
+			SET_HomeTMR[Axis_Index].IN:= FB_In.Enable_Motion[Axis_Index] AND
+											FB_In.Teach_Servo_HomePos[Axis_Index] AND
+											FB_In.Home_Position_Switch[Axis_Index] AND NOT
+											FB_In.Quick_Home_REQ[Axis_Index];
+			SET_HomeTMR[Axis_Index]();
+
+			(*User Specified, Non-Delayed Homing Routine*)
+			RPulse[0].CLK:= FB_In.Enable_Motion[Axis_Index] AND
+							FB_In.Quick_Home_REQ[Axis_Index] AND NOT
+							FB_In.Teach_Servo_HomePos[Axis_Index] AND NOT
+							SET_HomeTMR[Axis_Index].Q AND NOT
+							Homed[Axis_Index];
+			RPulse[0]();
+
+			IF SET_HomeTMR[Axis_Index].Q
+				THEN
+					fb_Set_Home[Axis_Index].HomingMode:= MC_Direct;
+					fb_Set_Home[Axis_Index].Position:=0.0;
+					fb_Set_Home[Axis_Index].Execute:= TRUE;
+			ELSIF RPulse[0].Q OR (fb_Set_Home[Axis_Index].Busy AND NOT FB_In.Teach_Servo_HomePos[Axis_Index] AND NOT fb_Set_Home[Axis_Index].Done)
+				THEN
+					fb_Set_Home[Axis_Index].HomingMode:= FB_In.Homing_Type[Axis_Index];
+					fb_Set_Home[Axis_Index].bCalibrationCam:= FB_In.Home_Position_Switch[Axis_Index];
+					fb_Set_Home[Axis_Index].Position:= FB_In.Homing_Offset[Axis_index];
+					fb_Set_Home[Axis_Index].Execute:= TRUE;
+			ELSE
+					fb_Set_Home[Axis_Index].Execute:= FALSE;
+			END_IF;
+
+			IF (NOT FB_In.Axis_Is_Absolute[Axis_Index] AND fb_Set_Home[Axis_Index].Done AND NOT fb_Set_Home[Axis_Index].Error)
+				THEN
+					Homed[Axis_Index]:= TRUE;
+			END_IF;
+
+ELSE
+	fb_Move_ABS[Axis_Index].Execute:= FALSE;
+	fb_Move_VEL[Axis_Index].Execute:= FALSE;
+	Step_Complete[Axis_Index]:= FALSE;
+	Step_Running[Axis_Index]:= FALSE;
+
+END_IF; (*End of AUTO Home Routine*)
+
+		IF FB_In.Axis_Is_Absolute[Axis_Index]
+			THEN
+			Homed[Axis_Index]:= TRUE;
+		END_IF;
+
+
+IF Step_Complete[Axis_Index] AND Step_Running[Axis_Index] AND NOT FB_In.Start_Explicit_StepCall[Axis_Index]
+	THEN
+			Step_Complete[Axis_Index]:= FALSE;
+			Step_Running[Axis_Index]:= FALSE;
+END_IF;
+
+IF NOT FB_In.Start_PlayBack[Axis_Index]
+	THEN
+		Cycle_Complete[Axis_Index]:=FALSE;
+END_IF;
+
+IF ((Current_Step_Pointer[Axis_Index] <1) OR (Current_Step_Pointer[Axis_Index] >15)) AND Homed[Axis_Index]
+	THEN
+		Current_Step_Pointer[Axis_Index]:= 1;
+END_IF;
+
+
+
+(*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Diags and Error Resets !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*)
+	IF FB_In.Option_Type=0
+		THEN
+		ResetReq[Axis_Index]:=FB_In.Error_Reset[Axis_Index];
+		DiagReq[Axis_Index]:= In_Error[Axis_Index];
+		AX5000_DiagReset();	(*Call Action*)
+
+	ELSIF FB_In.Option_Type=10
+		THEN
+		(*Drive Error Reset*)
+		FB_Reset[Axis_Index].Execute:= FB_In.Error_Reset[Axis_Index];
+		FB_Reset[Axis_Index](Axis:= Axis[Axis_Index]);
+		(*Drive Low Level Reset*)
+		FB_SoE_Reset[Axis_Index].Execute:= FB_In.Error_Reset[Axis_Index];
+		FB_SoE_Reset[Axis_Index](Axis:= Axis[Axis_Index]);
+	END_IF;
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Transfer Standard Outputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Send Current Mode*)
+	In_Play_ACK[Axis_Index]:= In_Play[Axis_Index];
+	In_Teach_ACK[Axis_Index]:= In_Teach[Axis_Index];
+	(*Send Maximum Torque values to PDO variables*)
+	Drive_BipolarTorque[Axis_Index]:= FB_In.Max_Torque[Axis_Index];
+
+
+	(*Send Out Status Bit for Drive Ready*)
+		ReadyFor_Motion[Axis_Index]:= FB_In.Enable_Motion[Axis_Index] AND fb_Power[Axis_Index].Active AND NOT In_Error[Axis_Index] AND Homed[Axis_Index] AND
+									fb_Power[Axis_Index].Status AND In_StandStill[Axis_Index] AND NOT fb_Stop[Axis_Index].Execute AND NOT fb_Stop[Axis_Index].Busy;
+		ReadyFor_TeachMotion[Axis_Index]:= FB_In.Enable_Motion[Axis_Index] AND fb_Power[Axis_Index].Active AND NOT In_Error[Axis_Index]
+											AND fb_Power[Axis_Index].Status AND NOT fb_Stop[Axis_Index].Execute AND NOT fb_Stop[Axis_Index].Busy;
+
+	(*Send Drive_Read Information*)
+		IF fb_Read_Status[Axis_Index].Valid
+			THEN
+				In_Error[Axis_Index]:= fb_Read_Status[Axis_Index].Error OR fb_Read_Status[Axis_Index].Status.Error;
+				Error_ID[Axis_Index]:= fb_Read_Status[Axis_Index].ErrorID;
+				In_Motion[Axis_Index]:= fb_Read_Status[Axis_Index].Status.Moving;
+				In_Requested_Position[Axis_Index]:= (fb_Read_Status[Axis_Index].Status.InTargetPosition OR fb_Read_Status[Axis_Index].Status.InPositionArea)
+											AND ((Current_Position[Axis_Index]+0.4)>= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Position)
+											AND ((Current_Position[Axis_Index]-0.4)<= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Position);
+				In_StandStill[Axis_Index]:= fb_Read_Status[Axis_Index].StandStill;
+				In_Stopping[Axis_Index]:= fb_Read_Status[Axis_Index].Stopping;
+
+
+		ELSE
+				In_Motion[Axis_Index]:= FALSE;
+				In_Requested_Position[Axis_Index]:= FALSE;
+
+		END_IF;
+
+
+	 (*Send Confirmation of At Requested Step*)
+		IF In_Requested_Position[Axis_Index] AND NOT In_Motion[Axis_Index]
+			THEN
+			At_Current_Step[Axis_Index]:= Current_Step_Pointer[Axis_Index];
+		ELSE
+			At_Current_Step[Axis_Index]:= 0;
+		END_IF;
+
+
+	(*Send Positional Information*)
+		IF Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Move_Type<>3
+			THEN
+			Current_Position[Axis_Index]:= fb_Actual_Position[Axis_Index].Position;
+		ELSIF (Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Move_Type=3) OR Fb_In.Axis_Is_Absolute[Axis_Index]
+			THEN
+			Current_Position[Axis_Index]:= Axis[Axis_Index].NcToPlc.ModuloActPos;
+		END_IF;
+
+	(*Package Data to Move up to UI*)
+		(*Type selection dependant data tranfer*)
+		IF FB_In.Option_Type = 0	(*Default AX5206 type selected*)
+			THEN
+			Discrete_Image.AX5xxx:= Drive;
+			Discrete_Image.AX5805:= Drive_AX5805;
+			Discrete_Image.Safety_DIAG:= fb_AX5805_Info.Data;
+			(*Drive and Motor Information*)
+			Discrete_Image.Drive_Type_Message[Axis_Index]:= ST_Ax5000_Diag[Axis_Index].strDriveType;
+			Discrete_Image.Axis_Motor_Message[Axis_Index]:= ST_AX5000_Diag[Axis_Index].strMotorType;
+			(*Drive Level Operational State*)
+			Discrete_Image.Drive_OperationalState[Axis_Index]:= ST_AX5000_Diag[Axis_Index].stDriveStatus.eActOpMode;
+			(*Drive Level Errors*)
+			Discrete_Image.Drive_In_Error[Axis_Index]:= NOT ST_AX5000_Diag[Axis_Index].stDriveStatus.bReadyForEnable OR
+													ST_AX5000_Diag[Axis_Index].bC1DError OR NOT Homed[Axis_Index];
+
+			Discrete_Image.Drive_Status[Axis_Index]:= ST_Ax5000_Diag[Axis_Index].wDriveStatus;
+			Discrete_Image.Drive_StatusStruct[Axis_Index]:= ST_Ax5000_Diag[Axis_Index].stDriveStatus;
+			Discrete_Image.Drive_Status_Message[Axis_Index]:= 'Test Drive Status Message';
+			Discrete_Image.Drive_Diag_ErrorID[Axis_Index]:= ST_Ax5000_Diag[Axis_Index].iDiagNumber;
+			Discrete_Image.Drive_Diag_Message[Axis_Index]:= ST_Ax5000_Diag[Axis_Index].strDiagMessageFull;
+			Discrete_Image.Drive_C1D_ErrorID[Axis_Index]:= ST_Ax5000_Diag[Axis_Index].wClass1Diag;
+			Discrete_Image.Drive_C1D_ErrorStruct[Axis_Index]:= ST_Ax5000_Diag[Axis_Index].stClass1Diag;
+			Discrete_Image.Drive_C1D_Error_Message[Axis_Index]:= 'Test C1D Message';
+			Discrete_Image.Axis_In_Error[Axis_Index]:= In_Error[Axis_Index];
+			Discrete_Image.Axis_ErrorID[Axis_Index]:= Error_ID[Axis_Index];
+			Discrete_Image.Axis_ErrorMessage[Axis_Index]:= FUN_GTAC_NC_Error_Messages(Error_ID[Axis_Index]);
+
+		ELSIF FB_In.Option_Type = 10 (*EL7211 type selected*)
+			THEN
+			Discrete_Image.EL7xxx:=T03;
+			(*NOTE, more error messaging and ID passing will have to be added with further testing of terminal drive, b.lekx-toniolo*)
+		END_IF;
+		(*Type independant data*)
+		Discrete_Image.In_Play_ACK[Axis_Index]:= In_Play_ACK[Axis_Index];
+		Discrete_Image.In_Teach_ACK[Axis_Index]:= In_Teach_ACK[Axis_Index];
+		Discrete_Image.Current_Step_Pointer[Axis_Index]:= Current_Step_Pointer[Axis_Index];
+		Discrete_Image.At_Current_Step[Axis_Index]:= At_Current_Step[Axis_Index];
+		(*Tranfer Actual Step Data*)
+		IF Current_Step_Pointer[Axis_Index]>1
+			THEN
+			Discrete_Image.Prev_Step_Data[Axis_Index]:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]-1];
+		ELSE
+			Discrete_Image.Prev_Step_Data[Axis_Index]:= Program_Positions[Axis_Index][0];
+		END_IF;
+		Discrete_Image.Current_Step_Data[Axis_Index]:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]];
+		IF Current_Step_Pointer[Axis_Index]<15
+			THEN
+			Discrete_Image.Next_Step_Data[Axis_Index]:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]+1];
+		ELSE
+			Discrete_Image.Next_Step_Data[Axis_Index]:= Program_Positions[Axis_Index][0];
+		END_IF;
+
+		Discrete_Image.Axis_Common_Name[Axis_Index]:= FB_In.Axis_Common_Name[Axis_Index];
+		Discrete_Image.Corrected_Position[Axis_Index]:= Corrected_Position[Axis_Index];
+		Discrete_Image.Actual_Position[Axis_Index]:= Current_Position[Axis_Index];
+		Discrete_Image.In_Requested_Position[Axis_Index]:=In_Requested_Position[Axis_Index];
+		Discrete_Image.In_Motion:= In_Motion;
+		Discrete_Image.Is_Calibrated[Axis_Index]:= Homed[Axis_Index];
+		Discrete_Image.Homed[Axis_Index]:= Homed[Axis_Index];
+		Discrete_Image.Ready[Axis_Index]:=(In_Play_ACK[Axis_Index] AND ReadyFor_Motion[Axis_Index]) OR (In_Teach_ACK[Axis_Index] AND ReadyFor_TeachMotion[Axis_Index]) ;
+		Discrete_Image.Software_Limit_Exceeded[Axis_Index]:= fb_Read_Status[Axis_Index].Status.SoftLimitMaxExceeded OR fb_Read_Status[Axis_Index].Status.SoftLimitMinExceeded;
+		Discrete_Image.StateDWord[Axis_Index]:=Axis[Axis_Index].NcToPlc.StateDWord;
+		Discrete_Image.Teach_Enable[Axis_Index]:=FB_In.Teach_Enable[Axis_Index];
+
+
+END_FOR; (*End of Axis Index Loop*)]]></ST>
+    </Implementation>
+    <Action Name="AX5000_DiagReset" Id="{fc4fb488-34b2-4915-860b-4c37edfff9fe}">
+      <Implementation>
+        <ST><![CDATA[(* clear active flags for reset/diag *)
+ResetAct[Axis_Index]:= FALSE;
+DiagAct[Axis_Index]:= FALSE;
+
+(* Diag + Reset of AX5000 *)
+	(* call drive diag FBs *)
+	fb_Axis_Diag[Axis_Index](
+		IPCNetID	:= '',
+		Axis		:= Axis[Axis_Index],
+		stAX5000Diag:= ST_AX5000_Diag[Axis_Index],
+		Reset   	:= ResetReq[Axis_Index],
+		GetDiag 	:= DiagReq[Axis_Index]
+	);
+
+	(* update active flags for reset/diag *)
+	ResetAct[Axis_Index]	:= ResetAct[Axis_Index] OR FB_Axis_Diag[Axis_Index].ResetAct;
+	DiagAct[Axis_Index] := DiagAct[Axis_Index] OR FB_Axis_Diag[Axis_Index].DiagAct;
+
+(*Reset of AX5805 (if applicable) after all other errors are reset*)
+	IF FB_In.Option_Type<>10
+		THEN
+		CASE Axis_Index OF 
+		1:
+		Drive_Ax5805_Reset:= FB_In.Enable_Motion[1] AND NOT In_Error[1] AND Discrete_Image.AX5805.Axis1_Error_Ack;
+		2:
+		Drive_Ax5805_Reset:= FB_In.Enable_Motion[2] AND NOT In_Error[2] AND Discrete_Image.AX5805.Axis2_Error_Ack;
+
+		END_CASE;
+
+	END_IF;
+
+(* clear reset/diag request if not active *)
+ResetReq[Axis_Index]	:= ResetReq[Axis_Index] AND ResetAct[Axis_Index];
+DiagReq[Axis_Index]		:= DiagReq[Axis_Index] AND DiagAct[Axis_Index];]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Move_Absolute" Id="{225071b4-3bf4-4688-b2ef-4691e4ad8a81}">
+      <Implementation>
+        <ST><![CDATA[(*General Set-Up Parameters/Function calls for Servo Drive*)
+
+(*Call actual FBs*)
+fb_Move_ABS[Axis_Index](Axis:= Axis[Axis_Index]);
+IF ReadyFor_Motion[Axis_Index] AND In_Play_ACK[Axis_Index] AND NOT FB_In.Stop_PlayBack[Axis_Index] AND NOT Cycle_Complete[Axis_Index]
+	THEN
+			(*---------------Explicit Step Call-------------*)
+			IF (FB_In.Start_Explicit_StepCall[Axis_Index] OR Step_Running[Axis_Index])
+				AND (NOT FB_In.Start_PlayBack[Axis_Index] OR Step_Running[Axis_Index]) AND NOT Program_Running[Axis_Index]
+				AND NOT Step_Complete[Axis_Index]
+				AND (Current_Step_Pointer[Axis_Index]>=1) AND (Current_Step_Pointer[Axis_Index]<=15)
+					THEN
+					Step_Running[Axis_Index]:= TRUE;
+					Current_Step_Pointer[Axis_Index]:= FB_In.Explicit_Step_REQ[Axis_Index];
+					(*--- Absolute Type Move Requested ---*)
+					IF NOT fb_Move_ABS[Axis_Index].Active AND NOT fb_Move_Vel[Axis_Index].Active AND NOT fb_Move_MOD[Axis_Index].Active
+						AND NOT fb_Move_ABS[Axis_Index].Execute AND NOT fb_Move_Vel[Axis_Index].Execute AND NOT fb_Move_MOD[Axis_Index].Execute
+						AND (Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Move_Type=0)
+						THEN
+						(*Set Auto Playback Parameters Per Position*)
+						fb_Move_ABS[Axis_Index].Velocity:= (Program_Positions[Axis_Index] [Current_Step_Pointer[Axis_Index]].Velocity *(FB_In.PlayBack_Speed_Percentage[Axis_Index]/100));
+						fb_Move_ABS[Axis_Index].Acceleration:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Accel;
+						fb_Move_ABS[Axis_Index].Deceleration:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Decel;
+						fb_Move_ABS[Axis_Index].Position:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Position;
+						fb_Move_ABS[Axis_Index].Execute:= TRUE;
+					ELSIF fb_Move_ABS[Axis_Index].Execute AND fb_Move_ABS[Axis_Index].Done AND In_Requested_Position[Axis_Index] AND (At_Current_Step[Axis_Index] = Current_Step_Pointer[Axis_Index])
+						THEN
+							fb_Move_ABS[Axis_Index].Execute:= FALSE;			(*Position Reached, step execution request*)
+							Step_Complete[Axis_Index]:= TRUE;
+					END_IF;
+
+			END_IF;
+
+			(*--------------Cycle through Programmed Steps Continuous until End-----------*)
+			IF (FB_In.Start_PlayBack[Axis_Index])
+				AND fb_Power[Axis_Index].Status (*MC_Power -> Status:=Control Loop Closed (new ready bit (StateDWord.20) and not in error*)
+				AND NOT FB_In.Start_Explicit_StepCall[Axis_Index] AND NOT Step_Running[Axis_Index]
+				AND NOT Program_Complete[Axis_Index] AND FB_In.PlayBack_StepPermit[Axis_Index]
+				AND ((NOT Program_Running[Axis_Index] AND ((Current_Step_Pointer[Axis_Index]=1) AND In_Requested_Position[Axis_Index]))
+				OR (Program_Running[Axis_Index] AND (Current_Step_Pointer[Axis_Index]>=1) AND (Current_Step_Pointer[Axis_Index]<=15)))
+					THEN
+					Program_Running[Axis_Index]:= TRUE;
+					IF NOT fb_Move_ABS[Axis_Index].Active AND NOT fb_Move_ABS[Axis_Index].Execute
+						AND NOT fb_Move_MOD[Axis_Index].Active AND NOT fb_Move_MOD[Axis_Index].Execute
+						AND (Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Move_Type=0)
+						THEN
+						(*Set Auto Playback Parameters Per Position*)
+						fb_Move_ABS[Axis_Index].Velocity:= (Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Velocity *(FB_In.PlayBack_Speed_Percentage[Axis_Index]/100));
+						fb_Move_ABS[Axis_Index].Acceleration:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Accel;
+						fb_Move_ABS[Axis_Index].Deceleration:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Decel;
+						fb_Move_ABS[Axis_Index].Position:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Position;
+						fb_Move_ABS[Axis_Index].Execute:= TRUE;
+					ELSIF fb_Move_ABS[Axis_Index].Execute AND fb_Move_ABS[Axis_Index].Done AND In_Requested_Position[Axis_Index] AND (At_Current_Step[Axis_Index] = Current_Step_Pointer[Axis_Index])
+						THEN
+							fb_Move_ABS[Axis_Index].Execute:= FALSE; 				(*Position Reached, step execution request*)
+							(*Set Program Complete Flag to Only Allow One Cycle*)
+							IF Program_Running[Axis_Index] AND Current_Step_Pointer[Axis_Index]> 15 OR (Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].End_Flag=TRUE)
+								THEN
+									Program_Complete[Axis_Index]:= TRUE;
+							END_IF;
+							Current_Step_Pointer[Axis_Index]:= Current_Step_Pointer[Axis_Index]+1;	(*Once Position is reached, increment step pointer*)
+					END_IF;
+			END_IF;
+
+(*Call actual FBs*)
+fb_Move_ABS[Axis_Index](Axis:= Axis[Axis_Index]);
+
+				(*Reset Complete Flag and Step Pointer*)
+				IF (Program_Complete[Axis_Index] AND Program_Running[Axis_Index]) OR FB_In.Program_Reset[Axis_Index]
+					THEN
+						Current_Step_Pointer[Axis_Index]:= 1;
+						IF NOT fb_Move_ABS[Axis_Index].Busy AND NOT fb_Move_ABS[Axis_Index].Execute
+							AND NOT fb_Move_MOD[Axis_Index].Busy AND NOT fb_Move_MOD[Axis_Index].Execute
+							THEN
+							(*Set Auto Playback Parameters Per Position*)
+							fb_Move_ABS[Axis_Index].Velocity:= (Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Velocity *(FB_In.PlayBack_Speed_Percentage[Axis_Index]/100));
+							fb_Move_ABS[Axis_Index].Acceleration:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Accel;
+							fb_Move_ABS[Axis_Index].Deceleration:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Decel;
+							fb_Move_ABS[Axis_Index].Position:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Position;
+							fb_Move_ABS[Axis_Index].Execute:= TRUE;
+						ELSIF fb_Move_ABS[Axis_Index].Execute AND fb_Move_ABS[Axis_Index].Done AND In_Requested_Position[Axis_Index] AND (At_Current_Step[Axis_Index] = Current_Step_Pointer[Axis_Index])
+							THEN
+								fb_Move_ABS[Axis_Index].Execute:= FALSE; 				(*Position Reached, step execution request*)
+								Program_Complete[Axis_Index]:= FALSE;
+								Program_Running[Axis_Index]:= FALSE;
+								Cycle_Complete[Axis_Index]:= TRUE;
+						END_IF;
+				END_IF;
+
+
+
+ELSE
+	fb_Move_ABS[Axis_Index].Execute:= FALSE;
+	fb_Move_VEL[Axis_Index].Execute:= FALSE;
+	fb_Move_MOD[Axis_Index].Execute:= FALSE;
+	Step_Complete[Axis_Index]:= FALSE;
+	Step_Running[Axis_Index]:= FALSE;
+
+END_IF; (*End_If for Play Loop*)]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Move_Modulo" Id="{6bd00be4-6209-470b-aaae-ab7334f09320}">
+      <Implementation>
+        <ST><![CDATA[(*General Set-Up Parameters/Function calls for Servo Drive*)
+
+(*Call actual FBs*)
+fb_Move_MOD[Axis_Index](Axis:= Axis[Axis_Index]);
+IF ReadyFor_Motion[Axis_Index] AND In_Play_ACK[Axis_Index] AND NOT FB_In.Stop_PlayBack[Axis_Index] AND NOT Cycle_Complete[Axis_Index]
+	THEN
+			(*---------------Explicit Step Call-------------*)
+			IF (FB_In.Start_Explicit_StepCall[Axis_Index] OR Step_Running[Axis_Index])
+				AND (NOT FB_In.Start_PlayBack[Axis_Index] OR Step_Running[Axis_Index]) AND NOT Program_Running[Axis_Index]
+				AND NOT Step_Complete[Axis_Index]
+				AND (Current_Step_Pointer[Axis_Index]>=1) AND (Current_Step_Pointer[Axis_Index]<=15)
+					THEN
+					Step_Running[Axis_Index]:= TRUE;
+					Current_Step_Pointer[Axis_Index]:= FB_In.Explicit_Step_REQ[Axis_Index];
+					(*--- Modulo Type Move Requested ---*)
+					IF NOT fb_Move_ABS[Axis_Index].Active AND NOT fb_Move_Vel[Axis_Index].Active AND NOT fb_Move_MOD[Axis_Index].Active
+						AND NOT fb_Move_ABS[Axis_Index].Execute AND NOT fb_Move_Vel[Axis_Index].Execute AND NOT fb_Move_MOD[Axis_Index].Execute
+						AND (Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Move_Type=3)
+						THEN
+						(*Set Auto Playback Parameters Per Position*)
+						fb_Move_MOD[Axis_Index].Velocity:= (Program_Positions[Axis_Index] [Current_Step_Pointer[Axis_Index]].Velocity *(FB_In.PlayBack_Speed_Percentage[Axis_Index]/100));
+						fb_Move_MOD[Axis_Index].Acceleration:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Accel;
+						fb_Move_MOD[Axis_Index].Deceleration:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Decel;
+						fb_Move_MOD[Axis_Index].Position:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Position;
+						fb_Move_MOD[Axis_Index].Execute:= TRUE;
+					ELSIF fb_Move_MOD[Axis_Index].Execute AND fb_Move_MOD[Axis_Index].Done AND In_Requested_Position[Axis_Index] AND (At_Current_Step[Axis_Index] = Current_Step_Pointer[Axis_Index])
+						THEN
+							fb_Move_MOD[Axis_Index].Execute:= FALSE;			(*Position Reached, step execution request*)
+							Step_Complete[Axis_Index]:= TRUE;
+					END_IF;
+
+			END_IF;
+
+			(*--------------Cycle through Programmed Steps Continuous until End-----------*)
+			IF (FB_In.Start_PlayBack[Axis_Index])
+				AND fb_Power[Axis_Index].Status (*MC_Power -> Status:=Control Loop Closed (new ready bit (StateDWord.20) and not in error*)
+				AND NOT FB_In.Start_Explicit_StepCall[Axis_Index] AND NOT Step_Running[Axis_Index]
+				AND NOT Program_Complete[Axis_Index] AND FB_In.PlayBack_StepPermit[Axis_Index]
+				AND ((NOT Program_Running[Axis_Index] AND ((Current_Step_Pointer[Axis_Index]=1) AND In_Requested_Position[Axis_Index]))
+				OR (Program_Running[Axis_Index] AND (Current_Step_Pointer[Axis_Index]>=1) AND (Current_Step_Pointer[Axis_Index]<=15)))
+					THEN
+					Program_Running[Axis_Index]:= TRUE;
+					IF NOT fb_Move_ABS[Axis_Index].Active AND NOT fb_Move_ABS[Axis_Index].Execute
+						AND NOT fb_Move_MOD[Axis_Index].Active AND NOT fb_Move_MOD[Axis_Index].Execute
+						AND (Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Move_Type=0)
+						THEN
+						(*Set Auto Playback Parameters Per Position*)
+						fb_Move_MOD[Axis_Index].Velocity:= (Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Velocity *(FB_In.PlayBack_Speed_Percentage[Axis_Index]/100));
+						fb_Move_MOD[Axis_Index].Acceleration:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Accel;
+						fb_Move_MOD[Axis_Index].Deceleration:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Decel;
+						fb_Move_MOD[Axis_Index].Position:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Position;
+						fb_Move_MOD[Axis_Index].Execute:= TRUE;
+					ELSIF fb_Move_MOD[Axis_Index].Execute AND fb_Move_MOD[Axis_Index].Done AND In_Requested_Position[Axis_Index] AND (At_Current_Step[Axis_Index] = Current_Step_Pointer[Axis_Index])
+						THEN
+							fb_Move_MOD[Axis_Index].Execute:= FALSE; 				(*Position Reached, step execution request*)
+							(*Set Program Complete Flag to Only Allow One Cycle*)
+							IF Program_Running[Axis_Index] AND Current_Step_Pointer[Axis_Index]> 15 OR (Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].End_Flag=TRUE)
+								THEN
+									Program_Complete[Axis_Index]:= TRUE;
+							END_IF;
+							Current_Step_Pointer[Axis_Index]:= Current_Step_Pointer[Axis_Index]+1;	(*Once Position is reached, increment step pointer*)
+					END_IF;
+			END_IF;
+
+(*Call actual FBs*)
+fb_Move_MOD[Axis_Index](Axis:= Axis[Axis_Index]);
+
+				(*Reset Complete Flag and Step Pointer*)
+				IF (Program_Complete[Axis_Index] AND Program_Running[Axis_Index]) OR FB_In.Program_Reset[Axis_Index]
+					THEN
+						Current_Step_Pointer[Axis_Index]:= 1;
+						IF NOT fb_Move_ABS[Axis_Index].Busy AND NOT fb_Move_ABS[Axis_Index].Execute
+							AND NOT fb_Move_MOD[Axis_Index].Busy AND NOT fb_Move_MOD[Axis_Index].Execute
+							THEN
+							(*Set Auto Playback Parameters Per Position*)
+							fb_Move_MOD[Axis_Index].Velocity:= (Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Velocity *(FB_In.PlayBack_Speed_Percentage[Axis_Index]/100));
+							fb_Move_MOD[Axis_Index].Acceleration:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Accel;
+							fb_Move_MOD[Axis_Index].Deceleration:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Decel;
+							fb_Move_MOD[Axis_Index].Position:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Position;
+							fb_Move_MOD[Axis_Index].Execute:= TRUE;
+						ELSIF fb_Move_MOD[Axis_Index].Execute AND fb_Move_MOD[Axis_Index].Done AND In_Requested_Position[Axis_Index] AND (At_Current_Step[Axis_Index] = Current_Step_Pointer[Axis_Index])
+							THEN
+								fb_Move_MOD[Axis_Index].Execute:= FALSE; 				(*Position Reached, step execution request*)
+								Program_Complete[Axis_Index]:= FALSE;
+								Program_Running[Axis_Index]:= FALSE;
+								Cycle_Complete[Axis_Index]:= TRUE;
+						END_IF;
+				END_IF;
+
+
+
+ELSE
+	fb_Move_ABS[Axis_Index].Execute:= FALSE;
+	fb_Move_VEL[Axis_Index].Execute:= FALSE;
+	fb_Move_MOD[Axis_Index].Execute:= FALSE;
+	Step_Complete[Axis_Index]:= FALSE;
+	Step_Running[Axis_Index]:= FALSE;
+
+END_IF; (*End_If for Play Loop*)]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Move_Velocity" Id="{0ad3f46e-dc29-4cbc-b2ff-e529f684afd9}">
+      <Implementation>
+        <ST><![CDATA[(*General Set-Up Parameters/Function calls for Servo Drive*)
+
+(*Call actual FBs*)
+fb_Move_Vel[Axis_Index](Axis:= Axis[Axis_Index]);
+
+IF ReadyFor_Motion[Axis_Index] AND In_Play_ACK[Axis_Index] AND NOT FB_In.Stop_PlayBack[Axis_Index] AND NOT Cycle_Complete[Axis_Index]
+	THEN
+			(*---------------Explicit Step Call-------------*)
+			IF (FB_In.Start_Explicit_StepCall[Axis_Index] OR Step_Running[Axis_Index])
+				AND (NOT FB_In.Start_PlayBack[Axis_Index] OR Step_Running[Axis_Index]) AND NOT Program_Running[Axis_Index]
+				AND NOT Step_Complete[Axis_Index]
+				AND (Current_Step_Pointer[Axis_Index]>=1) AND (Current_Step_Pointer[Axis_Index]<=15)
+					THEN
+					Step_Running[Axis_Index]:= TRUE;
+					Current_Step_Pointer[Axis_Index]:= FB_In.Explicit_Step_REQ[Axis_Index];
+
+					(*--- Velocity only type move requested (+ or - direction) ---*)
+					IF NOT fb_Move_ABS[Axis_Index].Active AND NOT fb_Move_Vel[Axis_Index].Active AND NOT fb_Move_MOD[Axis_Index].Active
+						AND NOT fb_Move_ABS[Axis_Index].Execute AND NOT fb_Move_Vel[Axis_Index].Execute AND NOT fb_Move_MOD[Axis_Index].Execute
+						AND ((Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Move_Type=1) OR  (Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Move_Type=2))
+
+						THEN
+						(*Set Auto Playback Parameters Per Position*)
+						fb_Move_VEL[Axis_Index].Velocity:= (Program_Positions[Axis_Index] [Current_Step_Pointer[Axis_Index]].Velocity *(FB_In.PlayBack_Speed_Percentage[Axis_Index]/100));
+						fb_Move_VEL[Axis_Index].Acceleration:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Accel;
+						fb_Move_VEL[Axis_Index].Deceleration:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Decel;
+						(*Set Directionality*)
+						IF (Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Move_Type=1) (*+ direction requested*)
+							THEN
+							fb_Move_VEL[Axis_Index].Direction:= MC_Positive_Direction; (*Set Direction to Positive*)
+						ELSIF (Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Move_Type=2) (*- direction requested*)
+							THEN
+							fb_Move_VEL[Axis_Index].Direction:= MC_Negative_Direction; (*Set Direction to Positive*)
+						END_IF;
+						fb_Move_VEL[Axis_Index].Execute:= TRUE;
+					END_IF;
+			END_IF;
+
+ELSE
+	fb_Move_ABS[Axis_Index].Execute:= FALSE;
+	fb_Move_VEL[Axis_Index].Execute:= FALSE;
+	fb_Move_MOD[Axis_Index].Execute:= FALSE;
+	Step_Complete[Axis_Index]:= FALSE;
+	Step_Running[Axis_Index]:= FALSE;
+
+END_IF; (*End_If for Play Loop*)]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Teach_Mode" Id="{7eb18ce8-d71d-4c4b-925d-03dcba49ade0}">
+      <Implementation>
+        <ST><![CDATA[(*################################################# Manual Mode Code ###########################################*)
+(*General Set-Up Parameters/Function calls for Servo Drive*)
+			fb_Jog[Axis_Index](Axis:= Axis[Axis_Index]);
+			fb_Move_ABSTeach[Axis_Index](Axis:= Axis[Axis_Index]);
+			fb_Set_Home[Axis_Index](Axis:= Axis[Axis_Index]);
+			SET_HomeTMR[Axis_Index].PT:= T#5.0s;							(*Preset Time for Teach HomePos*)
+
+IF ReadyFor_TeachMotion[Axis_Index] AND In_Teach_ACK[Axis_Index] AND NOT fb_Stop[Axis_Index].Execute
+	THEN
+		Current_Step_Pointer[Axis_Index]:= FB_In.Explicit_Step_REQ[Axis_Index];
+		Step_Complete[Axis_Index]:= FALSE;
+		Step_Running[Axis_Index]:= FALSE;
+		Program_Complete[Axis_Index]:= FALSE;
+		Program_Running[Axis_Index]:= FALSE;
+
+			(*---------------Explicit Step Call in Teach-------------*)
+			IF FB_In.Start_Explicit_StepCall[Axis_Index] AND ReadyFor_Motion[Axis_Index]
+				AND (Current_Step_Pointer[Axis_Index]>=1) AND (Current_Step_Pointer[Axis_Index]<=15)
+					THEN
+					(*--- Absolute Type Move Requested ---*)
+					IF NOT fb_Move_ABS[Axis_Index].Active AND NOT fb_Move_Vel[Axis_Index].Active AND NOT fb_Move_MOD[Axis_Index].Active
+						AND NOT fb_Move_ABS[Axis_Index].Execute AND NOT fb_Move_Vel[Axis_Index].Execute AND NOT fb_Move_MOD[Axis_Index].Execute
+						AND (Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Move_Type=0)
+						THEN
+						(*Set Auto Playback Parameters Per Position*)
+						fb_Move_ABS[Axis_Index].Velocity:= 250; (*In Teach Mode, Lock down Velcoity*)
+						fb_Move_ABS[Axis_Index].Acceleration:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Accel;
+						fb_Move_ABS[Axis_Index].Deceleration:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Decel;
+						fb_Move_ABS[Axis_Index].Position:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Position;
+						fb_Move_ABS[Axis_Index].Execute:= TRUE;
+					ELSIF fb_Move_ABS[Axis_Index].Execute AND fb_Move_ABS[Axis_Index].Done AND In_Requested_Position[Axis_Index] AND (At_Current_Step[Axis_Index] = Current_Step_Pointer[Axis_Index])
+						THEN
+							fb_Move_ABS[Axis_Index].Execute:= FALSE;			(*Position Reached, step execution request*)
+					END_IF;
+					(*--- Modulo Type Move Requested ---*)
+					IF NOT fb_Move_ABS[Axis_Index].Active AND NOT fb_Move_Vel[Axis_Index].Active AND NOT fb_Move_MOD[Axis_Index].Active
+						AND NOT fb_Move_ABS[Axis_Index].Execute AND NOT fb_Move_Vel[Axis_Index].Execute AND NOT fb_Move_MOD[Axis_Index].Execute
+						AND (Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Move_Type=3)
+						THEN
+						(*Set Auto Playback Parameters Per Position*)
+						fb_Move_MOD[Axis_Index].Velocity:= 250; (*In Teach Mode, Lock down Velcoity*)
+						fb_Move_MOD[Axis_Index].Acceleration:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Accel;
+						fb_Move_MOD[Axis_Index].Deceleration:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Decel;
+						fb_Move_MOD[Axis_Index].Position:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Position;
+						fb_Move_MOD[Axis_Index].Execute:= TRUE;
+					ELSIF fb_Move_MOD[Axis_Index].Execute AND fb_Move_MOD[Axis_Index].Done AND In_Requested_Position[Axis_Index] AND (At_Current_Step[Axis_Index] = Current_Step_Pointer[Axis_Index])
+						THEN
+							fb_Move_MOD[Axis_Index].Execute:= FALSE;			(*Position Reached, step execution request*)
+					END_IF;
+					(*--- Velocity only type move requested (+ or - direction) ---*)
+					IF NOT fb_Move_ABS[Axis_Index].Active AND NOT fb_Move_Vel[Axis_Index].Active
+						AND NOT fb_Move_ABS[Axis_Index].Execute AND NOT fb_Move_Vel[Axis_Index].Execute
+						AND ((Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Move_Type=1) OR  (Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Move_Type=2))
+						THEN
+						(*Set Auto Playback Parameters Per Position*)
+						fb_Move_VEL[Axis_Index].Velocity:= 250; (*In Teach Mode, Lock down Velcoity*)
+						fb_Move_VEL[Axis_Index].Acceleration:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Accel;
+						fb_Move_VEL[Axis_Index].Deceleration:= Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Decel;
+						(*Set Directionality*)
+						IF (Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Move_Type=1) (*+ direction requested*)
+							THEN
+							fb_Move_VEL[Axis_Index].Direction:= MC_Positive_Direction; (*Set Direction to Positive*)
+						ELSIF (Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Move_Type=2) (*- direction requested*)
+							THEN
+							fb_Move_VEL[Axis_Index].Direction:= MC_Negative_Direction; (*Set Direction to Positive*)
+						END_IF;
+						fb_Move_VEL[Axis_Index].Execute:= TRUE;
+					END_IF;
+			ELSE
+				fb_Move_ABS[Axis_Index].Execute:= FALSE;
+				fb_Move_VEL[Axis_Index].Execute:= FALSE;
+				fb_Move_MOD[Axis_Index].Execute:= FALSE;
+			END_IF;
+(*Call actual FBs*)
+fb_Move_ABS[Axis_Index](Axis:= Axis[Axis_Index]);
+fb_Move_Vel[Axis_Index](Axis:= Axis[Axis_Index]);
+fb_Move_MOD[Axis_Index](Axis:= Axis[Axis_Index]);
+			(*Set Inching Value*)
+			IF FB_In.Teach_MicroInch_Enable[Axis_Index]
+				THEN
+				Inching_Value[Axis_Index]:= FB_In.MicroInch_Value[Axis_Index];
+			ELSE
+				Inching_Value[Axis_Index]:= 0.5;	(*Default Inching Value is 0.5mm OR degrees (depending on how Motion System is config'd*)
+			END_IF;
+			(*-------------Jog and Inching -----------------------*)
+			IF FB_In.Teach_JogFast_Plus[Axis_Index] OR FB_In.Teach_JogFast_Minus[Axis_Index]
+				THEN
+					(*Jog Drive Fast*)
+					fb_Jog[Axis_Index].Mode:= MC_JOGMODE_STANDARD_FAST;
+					fb_Jog[Axis_Index].Acceleration:= 0;
+					fb_Jog[Axis_Index].Velocity:= 0;
+					fb_Jog[Axis_Index].JogForward:= FB_In.Teach_JogFast_Plus[Axis_Index];
+					fb_Jog[Axis_Index].JogBackwards:= FB_In.Teach_JogFast_Minus[Axis_Index];
+			ELSIF FB_In.Teach_JogSlow_Plus[Axis_Index] OR FB_In.Teach_JogSlow_Minus[Axis_Index]
+				THEN
+					(*Jog Drive Slow*)
+					fb_Jog[Axis_Index].Mode:= MC_JOGMODE_STANDARD_SLOW;
+					fb_Jog[Axis_Index].Acceleration:= 0;
+					fb_Jog[Axis_Index].Velocity:= 0;
+					fb_Jog[Axis_Index].JogForward:= FB_In.Teach_JogSlow_Plus[Axis_Index];
+					fb_Jog[Axis_Index].JogBackwards:= FB_In.Teach_JogSlow_Minus[Axis_Index];
+			ELSIF FB_In.Teach_Inch_Plus[Axis_Index] OR FB_In.Teach_Inch_Minus[Axis_Index]
+				THEN
+					(*Jog Drive Inching*)
+					fb_Jog[Axis_Index].Mode:= MC_JOGMODE_INCHING;
+					fb_Jog[Axis_Index].Position:= Inching_Value[Axis_Index];
+					fb_Jog[Axis_Index].Acceleration:= 10;
+					fb_Jog[Axis_Index].Velocity:= 10;
+					fb_Jog[Axis_Index].JogForward:= FB_In.Teach_Inch_Plus[Axis_Index];
+					fb_Jog[Axis_Index].JogBackwards:= FB_In.Teach_Inch_Minus[Axis_Index];
+			ELSE
+					fb_Jog[Axis_Index].JogForward:= FALSE;
+					fb_Jog[Axis_Index].JogBackwards:= FALSE;
+			END_IF; (*End_If for Jog/Inch Requests*)
+
+			(*---------------- Record Current Position -----------------*)
+			IF ReadyFor_Motion[Axis_Index] AND FB_In.Teach_Record_CurrentPos[Axis_Index] AND FB_in.Teach_Enable[Axis_Index]
+				THEN
+				IF FB_In.Teach_Params[Axis_Index].Move_Type=0 (*Abs Move Type*)
+					THEN
+					IF (FB_In.Teach_Params[Axis_Index].Velocity=0) AND (FB_In.Teach_Params[Axis_Index].Accel=0)
+						AND (FB_In.Teach_Params[Axis_Index].Decel=0) AND (FB_In.Teach_Params[Axis_Index].Move_Type=0)
+						AND (FB_In.Teach_Params[Axis_Index].End_Flag=0) AND FB_In.Teach_ParamsOverwrite_Flag[Axis_Index]
+						THEN
+						Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Position:= 0; 									(*If All input paramters are set to zero and overwrite is selected then user is requesting to blank step*)
+					ELSIF  (FB_In.Teach_Params[Axis_Index].Velocity>0)
+						THEN
+						Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Position:= Current_Position[Axis_Index];				(*Store Current Positional Data to Program at Current Pointer Location*)
+					END_IF;
+				ELSIF FB_In.Teach_Params[Axis_Index].Move_Type=1 OR FB_In.Teach_Params[Axis_Index].Move_Type=2 (*Vel Move Type + or - *)
+					THEN
+					Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Position:= 0; 														(*If Move Type is Velocity only, then blank Positional data*)
+				END_IF;
+				(*Only overwrite all other parameters if Overwirte is selected*)
+				IF FB_In.Teach_ParamsOverwrite_Flag[Axis_Index]
+					THEN
+					Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Velocity:= (FB_In.System_Max_Velocity[Axis_Index] *(FB_In.Teach_Params[Axis_Index].Velocity/100)); 	(*Servo System Maximum Velocity x Desired PlayBack Speed*)
+					Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Accel:= FB_In.Teach_Params[Axis_Index].Accel;												(*Store Accel Param*)
+					Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Decel:= FB_In.Teach_Params[Axis_Index].Decel;												(*Store Decel Param*)
+					Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].Move_Type:= FB_In.Teach_Params[Axis_Index].Move_Type;									(*Store Decel Param*)
+					Program_Positions[Axis_Index][Current_Step_Pointer[Axis_Index]].End_Flag:= FB_In.Teach_Params[Axis_Index].End_Flag;										(*Store End Flag Param*)
+				END_IF;
+			END_IF;
+
+			(*--------------- Set Home Routine -----------------------*)
+			(*Simple Direct, Delayed Homing Routine*)
+			SET_HomeTMR[Axis_Index].IN:= FB_In.Enable_Motion[Axis_Index] AND
+											FB_In.Teach_Servo_HomePos[Axis_Index] AND
+											FB_In.Home_Position_Switch[Axis_Index] AND NOT
+											FB_In.Quick_Home_REQ[Axis_Index];
+			SET_HomeTMR[Axis_Index]();
+
+			(*User Specified, Non-Delayed Homing Routine*)
+			RPulse[0].CLK:= FB_In.Enable_Motion[Axis_Index] AND
+							FB_In.Quick_Home_REQ[Axis_Index] AND NOT
+							FB_In.Teach_Servo_HomePos[Axis_Index] AND NOT
+							SET_HomeTMR[Axis_Index].Q AND NOT
+							Homed[Axis_Index];
+			RPulse[0]();
+
+			IF SET_HomeTMR[Axis_Index].Q
+				THEN
+					fb_Set_Home[Axis_Index].HomingMode:= MC_Direct;
+					fb_Set_Home[Axis_Index].Position:=0.0;
+					fb_Set_Home[Axis_Index].Execute:= TRUE;
+			ELSIF RPulse[0].Q OR (fb_Set_Home[Axis_Index].Busy AND NOT FB_In.Teach_Servo_HomePos[Axis_Index] AND NOT fb_Set_Home[Axis_Index].Done)
+				THEN
+					fb_Set_Home[Axis_Index].HomingMode:= FB_In.Homing_Type[Axis_Index];
+					fb_Set_Home[Axis_Index].bCalibrationCam:= FB_In.Home_Position_Switch[Axis_Index];
+					fb_Set_Home[Axis_Index].Position:=FB_In.Homing_Offset[Axis_index];
+					fb_Set_Home[Axis_Index].Execute:= TRUE;
+			ELSE
+					fb_Set_Home[Axis_Index].Execute:= FALSE;
+			END_IF;
+
+
+
+
+			IF (NOT FB_In.Axis_Is_Absolute[Axis_Index] AND fb_Set_Home[Axis_Index].Done AND NOT fb_Set_Home[Axis_Index].Error)
+				THEN
+					Homed[Axis_Index]:= TRUE;
+			END_IF;
+
+END_IF; (*Manual Mode End_If*)]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_GTAC_ServoSystem_20211214">
+      <LineId Id="1413" Count="10" />
+      <LineId Id="1426" Count="512" />
+      <LineId Id="2054" Count="0" />
+      <LineId Id="2056" Count="0" />
+      <LineId Id="2055" Count="0" />
+      <LineId Id="1939" Count="110" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_GTAC_ServoSystem_20211214.AX5000_DiagReset">
+      <LineId Id="2" Count="20" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="24" Count="3" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_GTAC_ServoSystem_20211214.Move_Absolute">
+      <LineId Id="2" Count="97" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_GTAC_ServoSystem_20211214.Move_Modulo">
+      <LineId Id="2" Count="97" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_GTAC_ServoSystem_20211214.Move_Velocity">
+      <LineId Id="2" Count="44" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_GTAC_ServoSystem_20211214.Teach_Mode">
+      <LineId Id="2" Count="182" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

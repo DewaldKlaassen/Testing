@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FUN_GTAC_ReturnGrossShiftDuration" Id="{c0345fcf-5690-4c53-b489-b099daa45962}" SpecialFunc="None">
+    <Declaration><![CDATA[(*Uses Shift Configuration Structure and calculates total Gross duration of shift time (in hours)
+	original author: Brent Lekx-Toniolo of Fort Wisers / OoR Tech
+
+----------------------------------------------------------------------------------------------------------------------
+REVISION NOTES: 
+	Date: Jan 22, 2020:
+	- initial concept, blt
+	Date: October 25, 2022
+	- Added type conversaion to supress build warning, b.lekx-toniolo
+
+------------------------------------------------------------------------------------------------------------------------	
+
+*)
+
+FUNCTION FUN_GTAC_ReturnGrossShiftDuration: REAL
+VAR_INPUT
+	Shift_Config_TOD: udt_Generic_ShiftConfigTOD_20160527;
+END_VAR
+VAR
+
+	Gross_Duration_Milliseconds: REAL;
+	Gross_Duration_Hours: REAL;
+
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Calcuate Gross Shift Duration in milliseconds*)
+	IF Shift_Config_TOD.Shift_EndTime > Shift_Config_TOD.Shift_StartTime
+		THEN
+		Gross_Duration_Milliseconds:= UDINT_TO_REAL (TOD_TO_UDINT(Shift_Config_TOD.Shift_EndTime) - TOD_TO_UDINT(Shift_Config_TOD.Shift_StartTime));
+	ELSIF Shift_Config_TOD.Shift_EndTime < Shift_Config_TOD.Shift_StartTime
+		THEN
+		Gross_Duration_Milliseconds:= UDINT_TO_REAL(( 86400000 - TOD_TO_UDINT(Shift_Config_TOD.Shift_StartTime)) + TOD_TO_UDINT(Shift_Config_TOD.Shift_EndTime));
+	END_IF;
+
+(*Calcualte Milliseconds to Hours*)
+	Gross_Duration_Hours:= Gross_Duration_Milliseconds / UDINT_TO_REAL((60*60*1000));
+
+
+(*Finally, Return Value, in hours*)
+	FUN_GTAC_ReturnGrossShiftDuration:= Gross_Duration_Hours;
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FUN_GTAC_ReturnGrossShiftDuration">
+      <LineId Id="24" Count="17" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

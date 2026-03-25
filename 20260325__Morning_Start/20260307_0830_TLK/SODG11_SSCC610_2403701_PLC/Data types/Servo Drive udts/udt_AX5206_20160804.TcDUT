@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <DUT Name="udt_AX5206_20160804" Id="{dd014c1b-d5ce-43d7-815e-4b88bba256af}">
+    <Declaration><![CDATA[(*udt (user defined type) of Beckhoff AX5206 2 Axis Drive:
+	auth. R.Remillard; 
+	Oct 2014; version 1.0
+
+	Version 20160804
+		- Updated naming per convention, b.lekx-toniolo
+		- Re-arranged variables for more consitent order with HW spec, b.lekx-toniolo
+*)
+
+
+TYPE udt_AX5206_20160804 :
+STRUCT
+
+	WcState:	BOOL;
+	InfoData: udt_ECATSlave_StatusEXT;
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

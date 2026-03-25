@@ -1,0 +1,379 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_UIcommon_Output_20251008" Id="{4b53fd4c-3291-4bf3-b8b5-a6a8b201caf5}">
+    <Declaration><![CDATA[(*udt (user defined type) for interfacing to UI (User Interface)
+this udt represents data that is passed from PLC to ALL UIs
+
+	Author(S): Rob Remillard/Brent Lekx-Toniolo of Sodecia GTAC;
+	Version 1.0 (Named udt_HMI_Output): August 2010
+		- Initial Concept
+	Version 20141014
+		- Increase for 30 Robot framework + Fix Renaming, b.lekx-toniolo
+	Version 20141128
+		- Added ESW Count Option, b.lekx-toniolo
+		- Added More WSxxs, b.lekx-toniolo
+	Version 20141209
+		- Added TTxx Ints for location indexes of Turntables, b.lekx-toniolo
+	Version 20141211
+		- Added SMB Image, b.lekx-toniolo
+		- Updated Ecat Master Instance, b.lekx-toniolo
+	Version 20150226
+		- Added Target Cycle Time for display on UI screen(s), b.lekx-toniolo
+	Version 20150812
+		- Added PD Count for display on UI screen(s), b.lekx-toniolo
+	Version 20150827
+		- Renamed Option_HumanFix_Count to Option_HumanFix_Enables, b.lekx-toniolo
+	Version 20160113
+		- Increased fault area size and added area for water setpoint options, b.lekx-toniolo
+		- Added UI Prompt flags for controls faults prompting , b.lekx-toniolo
+	Version 20160418
+		- Added Area for Robot Water Flow Timeout feature configuration data, b.lekx-toniolo
+		- updated ECAT Master area to include new new image with HW config data, b.lekx-toniolo 
+	Version 20160519
+		-Added udts for Each Shift Structure Configuration, b.lekx-toniolo
+		- Removed Old Model Change Allow Bools, b.lekx-toniolo
+		- Added Report_Trigger_Acks, b.lekx-toniolo
+		- Added Rxx_ToolChange_Acks, b.lekx-toniolo
+	Version 20161129
+		-Custom setup for SIC marking, RRemillard	
+	Version 20161206
+		-added sealer bits, j.vandongen
+	Version 20170626
+		- added local dry cycle, b.lekx-toniolo / c.drees (edge automation)
+	Version 20170801
+		-added bit to control monitoring spaces from plc, RRemillard
+	Version 20170804
+		-added cycle hold ack, j.vandongen
+	Version 20180417	
+		-added Option_EOAT_Count, j.vandongen
+		-added Option_LaserController, j.vandongen
+		-changed var type Config_Fault, j.vandongen
+		-added EOAT discrete images, j.vandongen
+		-added SD option count, j.vandongen
+	Version 20191125
+		- Added ProdConfig_Common, b.lekx-toniolo 
+		- Update names for EOAT -> UI interface to correct naming mismatch in UI driver sheet, b.lekx-toniolo
+	Version 20191210
+		-Added Code to deal with TC3 Changes:
+			-Motherboard data is no longer a device in the I/O tree and MUST be read in from the MDP.  Not all data is available anymore, so UDT modified
+				to show data changes
+			-Application data is no longer stored in the same global system variable as before, new structure added for the App data
+			-Task Data is no longer stored in the same global system variable as before, new strucuture added for the task data.
+	Version 20220224
+		- Overhaul during TcUI migration project, b.lekx-toniolo / c.drees
+		- Added in In_Sim_Mode for integration into simulation, b.lekx-toniolo	
+	Version 20240909
+		- Increased Product Report Data Area to give EOATs a storage location, b.lekx-toniolo	
+	Version 20240926
+		- Added in data area for MDxx (Motorized Door) component, b.lekx-toniolo	
+	Version 20241121
+		- PD to IS rename, as per GH SSCC610 repo Issue#162, b.lekx-toniolo
+	Version 20250616
+		- Added in Nut Weld Based LVDT Output Image, b.lekx-toniolo	
+	Version 20250716
+		- Added in Exceed_Counter_Value, per SSCC610 GH Issue #235, b.lekx-toniolo
+	Version 20250723
+		- Added in config count and general discrete images for VFD additions, b.lekx-toniolo / r. jones
+	Version20251008
+		- MDxx instance update, b.lekx-toniolo	
+*)
+
+TYPE udt_UIcommon_Output_20251008 :
+	STRUCT
+(*Configuration Data to UI*)
+	Machine_Serial: STRING;
+	Machine_Common_Name: STRING;
+	Machine_Build_Used: STRING;
+	Machine_Appl_Dev: STRING;
+	
+	ProdConfig_Target_CycleTime: TIME;
+
+	ProdConfig_Common: udt_Generic_ShiftCommonConfig_20220420;
+	ProdConfig_Day: udt_Generic_ShiftConfigUDINT_20160531;
+	ProdConfig_Aft: udt_Generic_ShiftConfigUDINT_20160531;
+	ProdConfig_Mid: udt_Generic_ShiftConfigUDINT_20160531;
+
+	Option_Air1: BOOL;
+	Option_Air2: BOOL;
+	Option_Water1: BOOL;
+	Option_Water2: BOOL;
+
+	Option_WaterTimeOut_Enable: BOOL;
+	Option_WaterFlowTimeOut_SP: TIME;
+	Option_WaterTempHighLimit1: REAL;
+	Option_WaterFlowLowLimit1: REAL;
+	Option_WaterTempHighLimit2: REAL;
+	Option_WaterFlowLowLimit2: REAL;
+
+	Option_IS_Count: UINT;
+	Option_ESW_Count: UINT;
+	Option_MD_Count: UINT;
+	Option_IC_Count: UINT;
+	Option_HumanFix_Enables: UDINT;
+	Option_InternalFix_Count: UINT;
+	Option_Robot_Count: UINT;
+	Option_Ped_Count: UINT;
+	Option_StudController_Count: UINT;
+	Option_SealController_Count: UINT;
+	Option_NutWelder_Count: UINT;
+	Option_EOAT_Count: UINT;
+	Option_LaserController_Count: UINT;
+	Option_SD_Count: UINT;
+	Option_VFD_Count: UINT;
+	Config_Fault:UDINT;
+
+(*Standard Outputs to UI*)
+	(*Common to Cell*)
+	ControlPower1_OK: BOOL; (*Control Power is ON*)
+	ControlPower2_OK: BOOL;	(*spare*)
+	CycleHold_OK: BOOL;
+	Estops_OK: BOOL;		(*All Estops OK and Reset*)
+	Safety_Gates_OK: BOOL;	(*All Safety Gates OK and Reset*)
+	Faults_OK: BOOL;		(*No Major Faults*)
+	TipChangeReq_OK: BOOL;
+	TipChangeComp_OK: BOOL;
+	Change_Count: INT;
+	TipChange_Part_Count: INT;
+	InDryCycle:BOOL;
+	In_Local_DryCycle:UDINT;
+	Allow_Model_Change: BOOL;
+	QA_LH_Ready: BOOL;
+	QA_RH_Ready: BOOL;
+	QA_NOK_BinCounts: ARRAY [0..16] OF UINT;
+	Spare1: BOOL;
+	Spare2: BOOL;
+	SMB_Status_Image: udt_SMB_Status_20141211;
+	EtherCat_Master_Image: udt_ECATMaster_Image_20220224;
+	EL6900_FB_Errors1: DINT;
+	EL6900_Comm_Errors1: DINT;
+	EL6900_Out_Errors1: DINT;
+	EL6900_FB_Errors2: DINT;
+	EL6900_Comm_Errors2: DINT;
+	EL6900_Out_Errors2: DINT;
+	Overall_Controls_Fault: UINT;
+	In_Low_Speed: BOOL;
+	Under_Construction: BOOL;	(*System is Under Construction*)
+	In_Sim_Mode: BOOL; 			(*System in Simulation mode, added during project 90034*)
+	MasterTest_Req_OK: BOOL;
+	BrakeTest_Req_OK: BOOL;
+	Rxx_ReadyFor_TipChange: UDINT;
+	Bypass_ACKS: UDINT;
+	CustomApplication_ACKS: UDINT;
+	Rxx_ToolChange_ACKS: UDINT;
+	T1_Zone_Test_ACK: BOOL;
+	Production_Report_Trigger_REQS: UDINT;
+	Product_Report_Trigger_REQS: UDINT;
+
+	(* TC3 Specific data types for App data, Task data and Motherboard Diagnostics *)
+	Appdata 	:PlcAppSystemInfo;
+	TaskData	:PlcTaskSystemInfo;
+	MboardData	:udt_HardwareDiags;
+	Exceed_Counter_Value: UDINT;
+	
+	(*Sealer Bits*)
+	SL01_Dispense_Count: UINT;
+	SL02_Dispense_Count: UINT;
+	SL03_Dispense_Count: UINT;
+	SL04_Dispense_Count: UINT;
+	SL01_Bypass_ACK: UINT;
+	SL02_Bypass_ACK: UINT;
+	SL03_Bypass_ACK: UINT;
+	SL04_Bypass_ACK: UINT;
+
+
+(*Standard UI Visualization For Operator Stations*)
+	(*IC01*)
+	IC01OP1_LCHVR: BOOL;
+	IC01OP1_LCHHR: BOOL;
+	IC01OP1_LCRVR: BOOL;
+	IC01OP2_LCHVR: BOOL;
+	IC01OP2_LCHHR: BOOL;
+	IC01OP2_LCRVR: BOOL;
+	(*IC02*)
+	IC02OP1_LCHVR: BOOL;
+	IC02OP1_LCHHR: BOOL;
+	IC02OP1_LCRVR: BOOL;
+	IC02OP2_LCHVR: BOOL;
+	IC02OP2_LCHHR: BOOL;
+	IC02OP2_LCRVR: BOOL;
+	(*IC03*)
+	IC03OP1_LCHVR: BOOL;
+	IC03OP1_LCHHR: BOOL;
+	IC03OP1_LCRVR: BOOL;
+	IC03OP2_LCHVR: BOOL;
+	IC03OP2_LCHHR: BOOL;
+	IC03OP2_LCRVR: BOOL;
+	(*IC04*)
+	IC04OP1_LCHVR: BOOL;
+	IC04OP1_LCHHR: BOOL;
+	IC04OP1_LCRVR: BOOL;
+	IC04OP2_LCHVR: BOOL;
+	IC04OP2_LCHHR: BOOL;
+	IC04OP2_LCRVR: BOOL;
+	(*IC05*)
+	IC05OP1_LCHVR: BOOL;
+	IC05OP1_LCHHR: BOOL;
+	IC05OP1_LCRVR: BOOL;
+	IC05OP2_LCHVR: BOOL;
+	IC05OP2_LCHHR: BOOL;
+	IC05OP2_LCRVR: BOOL;
+	(*IC06*)
+	IC06OP1_LCHVR: BOOL;
+	IC06OP1_LCHHR: BOOL;
+	IC06OP1_LCRVR: BOOL;
+	IC06OP2_LCHVR: BOOL;
+	IC06OP2_LCHHR: BOOL;
+	IC06OP2_LCRVR: BOOL;
+	(*IC07*)
+	IC07OP1_LCHVR: BOOL;
+	IC07OP1_LCHHR: BOOL;
+	IC07OP1_LCRVR: BOOL;
+	IC07OP2_LCHVR: BOOL;
+	IC07OP2_LCHHR: BOOL;
+	IC07OP2_LCRVR: BOOL;
+	(*IC08*)
+	IC08OP1_LCHVR: BOOL;
+	IC08OP1_LCHHR: BOOL;
+	IC08OP1_LCRVR: BOOL;
+	IC08OP2_LCHVR: BOOL;
+	IC08OP2_LCHHR: BOOL;
+	IC08OP2_LCRVR: BOOL;
+
+
+	(*Location Index for Animation of Turntables*)
+	TT01_Location_Index: INT;
+	TT02_Location_Index: INT;
+	TT03_Location_Index: INT;
+	TT04_Location_Index: INT;
+	TT05_Location_Index: INT;
+	TT06_Location_Index: INT;
+	TT07_Location_Index: INT;
+	TT08_Location_Index: INT;
+	TT09_Location_Index: INT;
+
+	(*Fixture Visualization*)
+	Fix01_Discrete_Image: udt_FixXX_Output_Image_20250721_CUSTOM;
+	Fix02_Discrete_Image: udt_FixXX_Output_Image_20250721_CUSTOM;
+	Fix03_Discrete_Image: udt_FixXX_Output_Image_20220715;
+	Fix04_Discrete_Image: udt_FixXX_Output_Image_20220715;
+	Fix05_Discrete_Image: udt_FixXX_Output_Image_20220715;
+	Fix06_Discrete_Image: udt_FixXX_Output_Image_20220715;
+	Fix07_Discrete_Image: udt_FixXX_Output_Image_20220715;
+	Fix08_Discrete_Image: udt_FixXX_Output_Image_20220715;
+	Fix09_Discrete_Image: udt_FixXX_Output_Image_20220715;
+	Fix10_Discrete_Image: udt_FixXX_Output_Image_20220715;
+	Fix11_Discrete_Image: udt_FixXX_Output_Image_20220715;
+	Fix12_Discrete_Image: udt_FixXX_Output_Image_20220715;
+	Fix13_Discrete_Image: udt_FixXX_Output_Image_20220715;
+	Fix14_Discrete_Image: udt_FixXX_Output_Image_20220715;
+	Fix15_Discrete_Image: udt_FixXX_Output_Image_20220715;
+	Fix16_Discrete_Image: udt_FixXX_Output_Image_20220715;
+
+	Fix101_Discrete_Image: udt_FixXX_Output_Image_20220715;
+	Fix102_Discrete_Image: udt_FixXX_Output_Image_20220715;
+	Fix103_Discrete_Image: udt_FixXX_Output_Image_20220715;
+	Fix104_Discrete_Image: udt_FixXX_Output_Image_20220715;
+	Fix105_Discrete_Image: udt_FixXX_Output_Image_20220715;
+	Fix106_Discrete_Image: udt_FixXX_Output_Image_20220715;
+	Fix107_Discrete_Image: udt_FixXX_Output_Image_20220715;
+	Fix108_Discrete_Image: udt_FixXX_Output_Image_20220715;
+	Fix109_Discrete_Image: udt_FixXX_Output_Image_20220715;
+	Fix110_Discrete_Image: udt_FixXX_Output_Image_20220715;
+	Fix111_Discrete_Image: udt_FixXX_Output_Image_20220715;
+	Fix112_Discrete_Image: udt_FixXX_Output_Image_20220715;
+
+	(*End of Arm Tooling Visualization*)
+	EOAT01_Discrete_Image: udt_EOATxx_Image_20170607;
+	EOAT02_Discrete_Image: udt_EOATxx_Image_20170607;
+	EOAT03_Discrete_Image: udt_EOATxx_Image_20170607;
+	EOAT04_Discrete_Image: udt_EOATxx_Image_20170607;
+	EOAT05_Discrete_Image: udt_EOATxx_Image_20170607;
+	EOAT06_Discrete_Image: udt_EOATxx_Image_20170607;
+	EOAT07_Discrete_Image: udt_EOATxx_Image_20170607;
+	EOAT08_Discrete_Image: udt_EOATxx_Image_20170607;
+	EOAT09_Discrete_Image: udt_EOATxx_Image_20170607;
+	EOAT10_Discrete_Image: udt_EOATxx_Image_20170607;
+
+	(*Nut Weld based LVDTs*)
+	NutWeld_LVDT_Discrete_Image: ARRAY [0..5] OF udt_NutWeldLVDT_Output_Image_20250616;
+
+	(*Standard GTAC Component I/O Visualization*)
+	(*ISxx*)
+	IS: ARRAY [0..1] OF udt_ISxx_ToUI_20241121;
+	(*ICxx*)
+	IC: ARRAY [0..8] OF udt_ICxx_ToUI_20220224;
+	(*Rxx*)
+	Robot: ARRAY [0..30] OF udt_Rxx_ToUI_20220224;
+	(*SSxx*)
+	SS: ARRAY [0..2] OF udt_SSxx_ToUI_20250704;
+	(*STxx*)
+	Stud: ARRAY [0..10] OF udt_STxx_ToUI_20220224;
+	(*SLxx*)
+	SL: ARRAY [0..10] OF udt_SLxx_ToUI_20220224;
+	(*SDxx*)
+	SD: ARRAY [0..30] OF udt_SDxx_ToUI_20220224;
+	(*NWxx*)
+	NW: ARRAY [0..5] OF udt_NWxx_ToUI_20220224;
+	(*ESWxx*)
+	ESW: ARRAY [0..4] OF udt_ESWxx_ToUI_20220224;
+	(*LSRxx*)
+	LSR: ARRAY [0..9] OF udt_LSRxx_ToUI_20220224;
+	(*PEDxx*)
+	PED: ARRAY[0..30] OF udt_PEDxx_Image_20240808;
+	(*MDxx*)
+	MD: ARRAY[0..5] OF udt_MDxx_ToUI_20251008;
+	(*VFDxx*)
+	VFD: ARRAY[0..5] OF udt_VFDxx_ToUI_20250723;
+	(*IV2/3xx*)
+	IVx: ARRAY [0..5] OF udt_IVxx_ToUI_20250808;
+	(*Smart Ray*)
+	SRx: ARRAY [0..1] OF udt_SRxx_ToUI_20260122;	
+	
+	(*Production Report Fix XX*)
+	(*Elements 1 - 16 -> Fix01 - Fix16*)
+	ProdReport: ARRAY [0..16] OF udt_ProdReportxx_ToUI_20220224;
+	
+	(*Product Reports Fix XX*)
+	(*Element 0 -> Blank (intentionally)*)
+	(*Elements 1 - 16 -> Fix01 - Fix16*)
+	(*Elements 17 - 28 -> Fix101 - Fix112*)
+	(*Elements 31 - 40 -> EOAT01 - EOAT10*)
+	ProductReport: ARRAY [0..40] OF udt_Generic_ProductReportData_20240909;
+		
+	
+	(*System Faults*)
+	System_Faults: ARRAY[0..1639] OF BOOL:=[ FALSE]; (*General System Faults*)
+	(*Component Controls Fault Flag for Prompting on UI*)
+	ICxx_UI_FaultPrompts: UDINT;
+	Rxx_UI_FaultPrompts: UDINT;
+	Rxx_UI_FaultPrompts_2: UDINT;
+	ISxx_UI_FaultPrompts: UDINT;
+	SDxx_UI_FaultPrompts: UDINT;
+	STxx_UI_FaultPrompts: UDINT;
+	SLxx_UI_FaultPrompts: UDINT;
+	NWxx_UI_FaultPrompts: UDINT;
+	MDxx_UI_FaultPrompts: UDINT;
+	VFDxx_UI_FaultPrompts: UDINT;
+	MISCxx_UI_FaultPrompts: UDINT;
+
+	(*Custom Items for one time SIC Marker install*)
+	SIC01_DpState: INT;
+	SIC01_ProfinodeOK: BOOL;
+	SIC01_Running: BOOL;
+	SIC01_LastDot: BOOL;
+	SIC01_BackHome: BOOL;
+	SIC01_Complete: BOOL;
+	SIC01_Reply: STRING;
+
+	SIC02_DpState: INT;
+	SIC02_ProfinodeOK: BOOL;
+	SIC02_Running: BOOL;
+	SIC02_LastDot: BOOL;
+	SIC02_BackHome: BOOL;
+	SIC02_Complete: BOOL;
+	SIC02_Reply: STRING;
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

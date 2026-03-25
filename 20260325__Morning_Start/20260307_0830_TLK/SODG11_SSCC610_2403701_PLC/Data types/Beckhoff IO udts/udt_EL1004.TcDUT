@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_EL1004" Id="{85c584c8-866e-4427-9cde-1dd2539fa79f}">
+    <Declaration><![CDATA[(*udt (user defined type) of Beckhoff EL1004 - 4 Point NPN/PNP Type Input Terminal:
+	auth. Brent Lekx-Toniolo of Toniolo Research & Development Inc.; 
+	July 2010; version 1.0*)
+
+
+TYPE udt_EL1004 :
+STRUCT
+	I0: BOOL;				(*Input 0*)
+	I1: BOOL;				(*Input 1*)
+	I2: BOOL;				(*Input 2*)
+	I3: BOOL;				(*Input 3*)
+	InfoData: udt_ECATSlave_Status;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

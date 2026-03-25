@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_NutWeldLVDT_Input_Image_20250616" Id="{83b818c4-3299-4cd5-98c3-a9419b0b9ea6}">
+    <Declaration><![CDATA[(*udt (user defined type) for all Nut Weld based LVDT applications UI input interface (non presistant inputs)
+	auth. Brent Lekx-Toniolo of Sodecia GTAC
+
+------------------------------------------------------------------------
+REVISION NOTES:
+	Version 20250616:
+	- initial concept, b.lekx-toniolo
+------------------------------------------------------------------------
+
+*)
+
+
+TYPE udt_NutWeldLVDT_Input_Image_20250616 :
+STRUCT
+	Nut_Retry_REQ: BOOL;
+	Save_LVDT_REQ: BOOL;
+	Save_Nut_REQ: BOOL;
+	UpperElectrode_Reset: BOOL;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

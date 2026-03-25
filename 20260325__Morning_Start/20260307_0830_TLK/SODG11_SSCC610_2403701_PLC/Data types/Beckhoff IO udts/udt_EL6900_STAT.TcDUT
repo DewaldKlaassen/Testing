@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_EL6900_STAT" Id="{e949ac87-cae6-43f9-a5fd-b8892fb98085}">
+    <Declaration><![CDATA[(*udt (user defined type) of Beckhoff EL6900 - TwinSAFE Controller:
+	auth. Brent Lekx-Toniolo of Toniolo Research & Development Inc.; 
+	July 2010; version 1.0*)
+
+TYPE udt_EL6900_STAT :
+	STRUCT
+	SG: ARRAY[0..7] OF udt_EL6900_SafetyGroup_STAT;
+	InfoData: udt_ECATSlave_Status;
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <DUT Name="udt_Reamerxx_Image_20180405" Id="{9f478ac1-b66f-431a-b2c8-2abbf638b66f}">
+    <Declaration><![CDATA[(*udt (user defined type) for all generic Reamers (Mig Weld Tip Reamers)
+	auth. Brent Lekx-Toniolo of Sodecia GTAC
+
+------------------------------------------------------------------------
+REVISION NOTES:
+
+	Version 20160210:
+	- initial concept, b.lekx-toniolo	
+	Version 20180405
+	- changed N20 to N30 to follow standards, j.vandongen
+------------------------------------------------------------------------
+
+*)
+
+TYPE udt_Reamerxx_Image_20180405 :
+	STRUCT
+			(*Input nodes*)
+			N01: udt_EP1008_002_v2;
+
+			(*Output nodes*)
+			N30: udt_EP2028_002_v2;
+			N30_STAT: udt_EP2028_002_STAT;
+
+			(*Cable Break States*)
+			ECatSlave_Cable_Breaks: UDINT;
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,122 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FB_TripleCylinder_20150625" Id="{a8f39e51-3901-49a9-993a-789f3ee57d9c}" SpecialFunc="None">
+    <Declaration><![CDATA[(*FB for trpipel sensor, three position, 3 port cylinder":
+	Original Author(s): Brent Lekx-Toniolo
+------------------------------------------------------------------------------------------
+REVISION NOTES:
+	Version 20150625
+		- Initial Concept, blt
+------------------------------------------------------------------------------------------
+*)
+
+
+FUNCTION_BLOCK FB_TripleCylinder_20150625
+
+	VAR_INPUT
+		Enable_FB: BOOL;
+		Advanced_Sensor: BOOL;
+		Retracted_Sensor: BOOL;
+		Mid_Sensor: BOOL;
+		Advance_Solenoid: BOOL;
+		Retract_Solenoid: BOOL;
+		Mid_Solenoid: BOOL;
+		Adv_Delay: TIME;
+		Ret_Delay: TIME;
+		Mid_Delay: TIME;
+		Fault_Delay: TIME;
+		Disable_Fault: BOOL;
+	END_VAR
+
+	VAR
+		At_Advanced: BOOL;
+		At_Retracted: BOOL;
+		At_Mid: BOOL;
+		Adv_Delay_TMR: TON;
+		Ret_Delay_TMR: TON;
+		Mid_Delay_TMR: TON;
+		Sensor_FLT_TMR: TON;
+		Advancing_FLT_TMR: TON;
+		Retracting_FLT_TMR: TON;
+		Middling_FLT_TMR: TON;
+	END_VAR
+
+	VAR_OUTPUT
+		FB_OK: BOOL;
+		In_Advanced_Position: BOOL;
+		In_Retracted_Position: BOOL;
+		In_Mid_Position: BOOL;
+		Faulted: BOOL;
+		Sensor_Fault: BOOL;
+		Advancing_Fault: BOOL;
+		Retracting_Fault: BOOL;
+		Middling_Fault: BOOL;
+	END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[	(*Set FB_OK to True*)
+	FB_OK:= TRUE;
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Internal Code $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Develop Advanced Position*)
+	At_Advanced:= Advanced_Sensor AND NOT Mid_Sensor AND NOT Retracted_Sensor;
+
+	(*Develop Retracted Position*)
+	At_Retracted:= Retracted_Sensor AND NOT Mid_Sensor AND NOT Advanced_Sensor;
+
+	(*Develop Mid Position*)
+	At_Mid:= Mid_Sensor AND NOT Advanced_Sensor AND NOT Retracted_Sensor;
+
+	(*Delay Advanced Position Output*)
+	Adv_Delay_TMR.PT:= Adv_Delay;
+	Adv_Delay_TMR.IN:= At_Advanced;
+	Adv_Delay_TMR();
+	In_Advanced_Position:= Adv_Delay_TMR.Q;
+
+	(*Delay Retracted Position Output*)
+	Ret_Delay_TMR.PT:= Ret_Delay;
+	Ret_Delay_TMR.IN:= At_Retracted;
+	Ret_Delay_TMR();
+	In_Retracted_Position:= Ret_Delay_TMR.Q;
+
+	(*Delay Mid Position Output*)
+	Mid_Delay_TMR.PT:= Mid_Delay;
+	Mid_Delay_TMR.IN:= At_Mid;
+	Mid_Delay_TMR();
+	In_Mid_Position:= Mid_Delay_TMR.Q;
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Fault Code $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Sensor Fault*)
+	Sensor_FLT_TMR.PT:= Fault_Delay;
+	Sensor_FLT_TMR.IN:= (NOT At_Advanced AND NOT At_Mid AND NOT At_Retracted)
+						OR (At_Advanced AND At_Retracted)
+						OR (At_Advanced AND At_Mid)
+						OR (At_Mid AND At_Retracted);
+	Sensor_FLT_TMR();
+	Sensor_Fault:= Sensor_FLT_TMR.Q;
+
+	(*Advancing Fault*)
+	Advancing_FLT_TMR.PT:= Fault_Delay;
+	Advancing_FLT_TMR.IN:= Advance_Solenoid AND NOT At_Advanced AND NOT Sensor_Fault;
+	Advancing_FLT_TMR();
+	Advancing_Fault:= Advancing_FLT_TMR.Q;
+
+	(*Retracting Fault*)
+	Retracting_FLT_TMR.PT:= Fault_Delay;
+	Retracting_FLT_TMR.IN:= Retract_Solenoid AND NOT Mid_Solenoid AND NOT At_Retracted AND NOT Sensor_Fault;
+	Retracting_FLT_TMR();
+	Retracting_Fault:= Retracting_FLT_TMR.Q;
+
+	(*Middling Fault*)
+	Middling_FLT_TMR.PT:= Fault_Delay;
+	Middling_FLT_TMR.IN:= Mid_Solenoid AND NOT Advance_Solenoid AND NOT At_Mid AND NOT Sensor_Fault;
+	Middling_FLT_TMR();
+	Middling_Fault:= Middling_FLT_TMR.Q;
+
+	(*Develop Fault Output*)
+	Faulted:=NOT Disable_Fault AND  (Sensor_Fault OR Advancing_Fault OR Middling_Fault OR Retracting_Fault);]]></ST>
+    </Implementation>
+    <LineIds Name="FB_TripleCylinder_20150625">
+      <LineId Id="52" Count="59" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

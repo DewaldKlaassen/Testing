@@ -1,0 +1,68 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_ProfiMaster_Status" Id="{f2876c34-239f-4b16-b2a6-ad7eda61fe69}">
+    <Declaration><![CDATA[(*udt (user defined type) of Generic Profibus Master to Store Data for Status of any Profibus Master Modules:
+	auth. brent lekx-toniolo; April 2008*)
+
+TYPE udt_ProfiMaster_Status :
+	STRUCT
+		(*CdlInfo*)
+		cycleCounter: UINT;
+		error: USINT;
+		actualCycleTime: UINT;
+		actualModulo: USINT;
+		(*CycleCounter:
+  			FCxxxx increments this counter once after each cycle
+		Error:
+  			indicates the number of boxes with a BoxState unequal zero
+		ActualCycleTime:
+  			indicates the actual Cycle-Time (in 4/25 µs)
+		ActualModulo:
+  			indicates the actual Modulo in case of different poll cycles of the boxes*)
+
+		(*Counter*)
+		Counter0: UINT;
+		Counter1: UINT;
+		Counter2: UINT;
+		Counter3: UINT;
+		Counter4: UINT;
+		Counter5: UINT;
+		Counter6: UINT;
+		Counter7: UINT;
+		(*	Counter[0-1]: reserved for future
+			Counter[2]: ReceivedTelegram-Counter (in Redundancy Mode)
+  				FCxxxx increments this counter once every time when a correct
+  				PROFIBUS-telegram is received (only in Redundancy Mode)
+			Counter[3]: ReceivedTelegramFromPrimaryMaster-Counter (in Redundancy Mode)
+  				FCxxxx increments this counter once every time when a correct
+  				PROFIBUS-telegram from the Primary Master (which has the same
+  				station address as the Redundancy Master is received (only in Redundancy Mode)
+			Counter[4]: ClaimTokenTimeout-Counter (in Redundancy Mode)
+  				FCxxxx increments this counter once every time when a Timeout on the
+  				PROFIBUS occurs (only in Redundancy Mode)
+			Counter[5-7]: reserved for future*)
+
+		DiagFlag: BOOL;
+
+		(*GlobalState*)
+		GlobalState0: UINT;
+		GlobalState1: UINT;
+		GlobalState2: UINT;
+		GlobalState3: UINT;
+			(*GlobalState[0]:
+  				0: FC310x is in state RUN
+  				1: FC310x is in state RESET
+  				2: FC310x is in state OFFLINE
+  				3: FC310x is in state STOP
+			GlobalState[1]:
+  				number of bus errors detected
+			GlobalState[2]:
+  				reserved for future use*)
+
+		LastAdsError: UINT;
+		CycleFailedCounter: UINT;
+	END_STRUCT
+
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

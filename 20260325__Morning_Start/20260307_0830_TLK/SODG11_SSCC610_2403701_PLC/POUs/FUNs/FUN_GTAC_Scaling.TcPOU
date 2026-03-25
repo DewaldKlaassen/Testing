@@ -1,0 +1,73 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FUN_GTAC_Scaling" Id="{3422f138-e6d9-444d-ab7e-f4fb8b0811a8}" SpecialFunc="None">
+    <Declaration><![CDATA[(*General scaling function
+	author: Brent Lekx-Toniolo OF Sodecia GTAC
+	date: November 2016
+	version 1.0
+		- initial concept
+	Last Edit: 17-Nov-2016, b.lekx-toniolo
+
+*)
+
+
+FUNCTION FUN_GTAC_Scaling : REAL
+VAR_INPUT
+	Unscaled_Data: REAL;
+	Unscaled_LowerLimit: REAL;
+	Unscaled_UpperLimit: REAL;
+	Scaled_LowerLimit: REAL;
+	Scaled_UpperLimit: REAL;
+
+END_VAR
+VAR
+	Unscaled_Span: REAL;
+	Scaled_Span: REAL;
+	Scaling_Factor: REAL;
+	Offset: REAL;
+
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Calc Span of Scaled Input Values*)
+	IF Scaled_UpperLimit > Scaled_LowerLimit
+		THEN
+		Scaled_Span:= Scaled_UpperLimit - Scaled_LowerLimit;
+	END_IF;
+
+(*Calc Span of Unscaled Input Values*)
+	IF Unscaled_UpperLimit > Unscaled_LowerLimit
+		THEN
+		Unscaled_Span:= Unscaled_UpperLimit - Unscaled_LowerLimit;
+	END_IF;
+
+(*Calc Scaling Factor between two scales*)
+	IF Unscaled_Span>0
+		THEN
+		Scaling_Factor:= Scaled_Span / Unscaled_Span;
+	END_IF;
+
+(*Calc Offset using data above using  y = mx+b with b unknown for offset*)
+(*Scaled_LowerLimit = Scaling_Factor  * Unscaled_LowerLimit + b*)
+	Offset:= 0 - ((Scaling_Factor * Unscaled_LowerLimit) - Scaled_LowerLimit);
+
+(*Return Scaled Data Based on above spans and offset value*)
+	FUN_GTAC_Scaling:= ((Scaling_Factor * Unscaled_Data) + Offset);
+
+
+
+
+	(*Place limits on output to prevent over/underscaling*)
+	IF FUN_GTAC_Scaling > Scaled_UpperLimit
+		THEN
+			FUN_GTAC_Scaling:= Scaled_UpperLimit;
+	ELSIF FUN_GTAC_Scaling < Scaled_LowerLimit
+		THEN
+			FUN_GTAC_Scaling:= Scaled_LowerLimit;
+	END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="FUN_GTAC_Scaling">
+      <LineId Id="27" Count="35" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

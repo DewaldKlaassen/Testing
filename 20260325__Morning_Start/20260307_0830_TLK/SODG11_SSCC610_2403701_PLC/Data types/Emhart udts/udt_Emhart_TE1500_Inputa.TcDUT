@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <DUT Name="udt_Emhart_TE1500_Inputa" Id="{c680dabc-f50e-4269-839f-e133118c84d2}">
+    <Declaration><![CDATA[(*udt (user defined type) of Emhart TE 1500 Profibus Based Stud:
+	auth. Jessy Underhill; 
+	Jan 2020; version 1.0*)
+
+
+TYPE udt_Emhart_TE1500_Inputa :
+	STRUCT
+		(*Status Of Profibus Slave*)
+		Inputs:udt_ProfiNode_Status;
+		(*Input Bytes*)
+		Byte0: BYTE;
+		Byte1: BYTE;
+		Byte2: BYTE;
+		Byte3: BYTE;
+		Byte4: BYTE;
+		Byte5: BYTE;
+		Byte6: BYTE;
+		Byte7: BYTE;
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

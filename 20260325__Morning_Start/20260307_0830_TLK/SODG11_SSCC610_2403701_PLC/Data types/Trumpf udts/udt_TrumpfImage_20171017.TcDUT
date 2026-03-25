@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <DUT Name="udt_TrumpfImage_20171017" Id="{fd954d23-4792-4300-8c1a-32eeda0293b6}">
+    <Declaration><![CDATA[
+(*udt (user defined type) for all EtherCAT Based Trumpf Laser Discrete I/O Module
+	Author(S): Justin Vandongen of Sodecia GTAC;
+
+------------------------------------------------------------------------
+	REVISION NOTES:
+
+	Version 20171017
+		- Initial Concept, j.vandongen
+
+------------------------------------------------------------------------
+*)
+
+
+TYPE udt_TrumpfImage_20171017 :
+STRUCT
+
+		LSRT01: udt_EL6692_20121204;	(*EtherCAT bridge for Laser controller*)
+
+		Program_REQ: UDINT;
+		Program_ACK: UDINT;
+
+		Light_Path_REQ: UDINT;
+		Light_Path_ACK: UDINT;
+
+		Laser_No_REQ: UDINT;
+		Laser_No_ACK: UDINT;
+
+		Laser_Power: UDINT;
+		Laser_Power_Prev: UDINT;
+		Energy: UDINT;
+		Energy_Prev: UDINT;
+
+		Weld_Complete: BOOL;
+		Faulted: BOOL;
+
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_GenericRobot_AnyFieldbus_InputBytes_20220421" Id="{3233883b-9123-4b0b-9aa5-3d8d6bbee050}">
+    <Declaration><![CDATA[(*udt (user defined type) for all Fieldbus Based Robot Interfacing up to 64 Bytes
+	Author(S): Brent Lekx-Toniolo of Sodecia GTAC;
+	Version 1.0: November 2012
+		- Initial Concept
+	Version 20121204
+		Changes from v1
+			- Change to Naming Convention to include date as version
+	Version 20220421
+			- Changed starting point of Array fro 1 to 0 for TcHmi conventions, b.lekx-toniolo
+*)
+TYPE udt_GenericRobot_AnyFieldbus_InputBytes_20220421 :
+STRUCT
+	BYTE_: ARRAY [0..64] OF BYTE;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

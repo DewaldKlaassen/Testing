@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FUN_GTAC_KUKAKRC4_To_GenericRobotOutputImage" Id="{12f1b9f1-3306-436a-aa68-c9062de9e9da}" SpecialFunc="None">
+    <Declaration><![CDATA[(*Function used to map KUKA FB Bit Typed Data to HW Byte Array Typed Generic Output Image (to Robot Inputs)
+to more closly ressemble Robot Input structure in teach pendant
+	author: Brent Lekx-Toniolo of Sodecia GTAC
+	date: November 2012
+	version 1.0
+		- initial concept
+
+
+	Last Edit: December 4th, 2012, BLT
+*)
+
+FUNCTION FUN_GTAC_KUKAKRC4_To_GenericRobotOutputImage : udt_GenericRobot_AnyFieldbus_OutputBytes_20220421
+VAR_INPUT
+	BitBased_Data: udt_EtherCAT_Kuka_OutputBits_20121204;
+
+
+END_VAR
+VAR
+	Bit_Index: INT;
+	Byte_Index: INT;
+	BytesBit_Index: BYTE;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Ensure Index is reset*)
+Bit_Index:= 1;
+(*Gathering of Robot Specific Data Type Points to Map to Generic Byte Typed Array*)
+FOR Byte_Index:=1 TO 64 BY 1 DO
+			FUN_GTAC_KUKAKRC4_To_GenericRobotOutputImage.Byte_[Byte_Index].0:= BitBased_Data.Robot_IN[Bit_Index];
+			Bit_Index:=Bit_Index+1;
+			FUN_GTAC_KUKAKRC4_To_GenericRobotOutputImage.Byte_[Byte_Index].1:= BitBased_Data.Robot_IN[Bit_Index];
+			Bit_Index:=Bit_Index+1;
+			FUN_GTAC_KUKAKRC4_To_GenericRobotOutputImage.Byte_[Byte_Index].2:= BitBased_Data.Robot_IN[Bit_Index];
+			Bit_Index:=Bit_Index+1;
+			FUN_GTAC_KUKAKRC4_To_GenericRobotOutputImage.Byte_[Byte_Index].3:= BitBased_Data.Robot_IN[Bit_Index];
+			Bit_Index:=Bit_Index+1;
+			FUN_GTAC_KUKAKRC4_To_GenericRobotOutputImage.Byte_[Byte_Index].4:= BitBased_Data.Robot_IN[Bit_Index];
+			Bit_Index:=Bit_Index+1;
+			FUN_GTAC_KUKAKRC4_To_GenericRobotOutputImage.Byte_[Byte_Index].5:= BitBased_Data.Robot_IN[Bit_Index];
+			Bit_Index:=Bit_Index+1;
+			FUN_GTAC_KUKAKRC4_To_GenericRobotOutputImage.Byte_[Byte_Index].6:= BitBased_Data.Robot_IN[Bit_Index];
+			Bit_Index:=Bit_Index+1;
+			FUN_GTAC_KUKAKRC4_To_GenericRobotOutputImage.Byte_[Byte_Index].7:= BitBased_Data.Robot_IN[Bit_Index];
+			Bit_Index:=Bit_Index+1;
+	END_FOR;]]></ST>
+    </Implementation>
+    <LineIds Name="FUN_GTAC_KUKAKRC4_To_GenericRobotOutputImage">
+      <LineId Id="22" Count="20" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

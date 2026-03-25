@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FUN_GTAC_BYTEStoINT" Id="{4ccc75da-5e15-4ce8-b9e5-578c8eea2480}" SpecialFunc="None">
+    <Declaration><![CDATA[(*Copy Individual Bytes (input to the FUN) at bit level, into individual bits of the INT Return
+	author: Brent Lekx-Toniolo OF Sodecia GTAC
+	date: November 2012
+	version 1.0
+		- initial concept
+	Last Edit: December 4th, 2012, BLT
+*)
+
+FUNCTION FUN_GTAC_BYTEStoINT : INT
+VAR_INPUT
+	Byte0: BYTE;
+	Byte1: BYTE;
+END_VAR
+VAR
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Copy Individual Bytes (input to the FUN) at bit level, into individual bits of the INT Return*)
+
+(*Byte 0 to Lower 8 bits of Int*)
+FUN_GTAC_BYTEStoINT.0:= Byte0.0;
+FUN_GTAC_BYTEStoINT.1:= Byte0.1;
+FUN_GTAC_BYTEStoINT.2:= Byte0.2;
+FUN_GTAC_BYTEStoINT.3:= Byte0.3;
+FUN_GTAC_BYTEStoINT.4:= Byte0.4;
+FUN_GTAC_BYTEStoINT.5:= Byte0.5;
+FUN_GTAC_BYTEStoINT.6:= Byte0.6;
+FUN_GTAC_BYTEStoINT.7:= Byte0.7;
+
+(*Byte 1 to Upper 8 bits of Int*)
+FUN_GTAC_BYTEStoINT.8:= Byte1.0;
+FUN_GTAC_BYTEStoINT.9:= Byte1.1;
+FUN_GTAC_BYTEStoINT.10:= Byte1.2;
+FUN_GTAC_BYTEStoINT.11:= Byte1.3;
+FUN_GTAC_BYTEStoINT.12:= Byte1.4;
+FUN_GTAC_BYTEStoINT.13:= Byte1.5;
+FUN_GTAC_BYTEStoINT.14:= Byte1.6;
+FUN_GTAC_BYTEStoINT.15:= Byte1.7;]]></ST>
+    </Implementation>
+    <LineIds Name="FUN_GTAC_BYTEStoINT">
+      <LineId Id="15" Count="20" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

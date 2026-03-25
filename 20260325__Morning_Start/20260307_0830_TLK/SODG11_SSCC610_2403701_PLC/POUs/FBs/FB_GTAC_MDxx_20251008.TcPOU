@@ -1,0 +1,360 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_GTAC_MDxx_20251008" Id="{b52242a7-10a4-4383-973f-47d433412390}" SpecialFunc="None">
+    <Declaration><![CDATA[(*FB for use with Rite Hite Roll Up Doors
+	Original Author(s): Alan Lopez of Sodecia GTAC.; 
+------------------------------------------------------------------------------------------
+REVISION NOTES:
+	Version 20230718
+		- Intial concept, A.Lopez
+	Version 20250417
+		- Revamped, changed IO for EP rahter then the EL's, r.jones
+		- cable break added EP2624
+	Version 20251008
+		- Revamp per Hardware design requests, b.lekx-toniolo
+	Version 20260319
+		- Moved DoorClosed_Safety_Switches To Inputs Mapped from Safetys to Std for safety switches, TLK
+	
+
+------------------------------------------------------------------------------------------
+*)
+
+
+FUNCTION_BLOCK FB_GTAC_MDxx_20251008
+	VAR_INPUT
+
+			(*Internal Input Variables*)
+			Enable_Motion: BOOL;
+			Safety_RST: BOOL;
+			OPxx_RST: BOOL;
+			Ecat_Master_AmsNetID: STRING;
+			CoE_Read_Trigger: BOOL;
+			Enable_Latch: BOOL;
+			Prev_EcatNode_Present: BOOL;
+			DoorClose_REQ: BOOL;					(*Request to close the door*)
+			DoorOpen_REQ: BOOL;						(*Request to open the door*)
+			Fault_Time: TIME;
+			DoorStop_REQ: BOOL;
+			DoorStopped: BOOL;
+			DoorClosed_Safety_Switches: BOOL;		(*TLK MOVE TO INPUTS*)
+		
+	END_VAR
+
+	VAR
+		(*Hardware Data Types*)
+			(*Develop Discrete Nodes*)
+			N01_STAT AT %I*: udt_EP1918_STAT_20250213;		(*EP Based Twinsafe*)
+			N01_CMD AT %Q*: udt_EP1918_CMD_20250213;		(*EP Based Twinsafe*)
+			N02 AT %I*: udt_EP1008_002_v2;					(*EP Inputs*)
+			N03 AT %Q*: udt_EP2624;							(*EP 4ch Relay Output*)
+			N03_STAT AT %I*: udt_EP2624_STAT;				(*EP 4ch Relay Output Card Status*)
+			
+			(*Nodes States*)
+			DiscreteNode_OK: BOOL;
+			
+			(*Cable Break Warning Flags*)
+			ECatSlave_Cable_Breaks: UDINT;
+			EP1918_NotPresent :BOOL;				(*Coupler is Not Present on Bus when expected*)
+			EP1918_PortB_MissingLink: BOOL; 		
+			EP1008_PortB_MissingLink: BOOL;			
+			EP2624_PortB_MissingLink: BOOL;			
+		
+		(*CoE Read*)
+			CoE_ReadFB_1: FB_EcCoESdoReadEx; 		(*FB to retrieve Data from terminals via CoE*)
+			CoE_ReadBuffer_1: ARRAY [0..1] OF BYTE;	(*Variable, 2 bytes, for receiving data*)
+			CoE_ReadErr_1: BOOL;					(*CoE Read Error Flag*)
+			CoE_ReadErrID_1: UDINT;					(*CoE Read Error Identification*)
+			CoE_ReadFB_2: FB_EcCoESdoReadEx; 		(*FB to retrieve Data from terminals via CoE*)
+			CoE_ReadBuffer_2: ARRAY [0..1] OF BYTE;	(*Variable, 2 bytes, for receiving data*)
+			CoE_ReadErr_2: BOOL;					(*CoE Read Error Flag*)
+			CoE_ReadErrID_2: UDINT;					(*CoE Read Error Identification*)
+			EP1918_Overtemperature: BOOL;			(*Flag for result of CoE Read*)
+			
+			(*DoorClosed_Safety_Switches: BOOL;*)	(*TLK MOVE TO INPUTS*)
+			DoorClose_CMD: BOOL;
+			DoorOpen_CMD: BOOL;
+			DoorStop_CMD: BOOL;
+			Door_CloseSR: SR;						(*Latch to Close the door*)
+			Door_OpenSR: SR;						(*Latch to Open the door*)
+			DoorOpened_TMR: TON;					(*Timer to say door is open, no door open switches*)
+			DoorClosed_TMR: TON;					(*Timer to say door is closed*)
+			DoorStop_TMR: TON;
+
+	END_VAR
+
+	VAR_OUTPUT
+			
+			(*Internal Output Variables*)
+			FB_OK: BOOL;
+			Discrete_Image: udt_MDxx_Image_20251008;
+
+			Door_Closed: BOOL;						(*Door is closed*)
+			Door_Opened: BOOL;						(*Door is open*)
+			Door_Running: BOOL;						(*Door is Running Open/Close*)
+			Door_Faulted: BOOL;						(*Door is Faulted*)
+			Door_Stopped: BOOL;						(*Door is Faulted*)
+
+	END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*		
+	- DEBUG, this FB must be proven and debugged in field!!!! THEN remove THIS comment, b.lekx-toniolo
+*)
+
+
+	(*Set FB_OK to True*)
+	FB_OK:= TRUE;
+	
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$Gather Status Of Hardware $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Discrete I/O Node*)
+	IF N01_STAT.InfoData.State=8 AND N02.InfoData.State=8 AND N03_STAT.InfoData.State=8
+		THEN DiscreteNode_OK:=TRUE;
+	ELSE DiscreteNode_OK:=FALSE;
+	END_IF;
+
+	(*Develop Port Connection Warning Flags*)
+	IF N01_STAT.InfoData.State=257  (*State Machine for Slave Not Present*)
+		THEN EP1918_NotPresent:= TRUE;
+	ELSE EP1918_NotPresent := FALSE;
+	END_IF;
+
+	IF N01_STAT.InfoData.State=9224 (*State Machine for Link Missing at Port B*)
+		THEN EP1918_PortB_MissingLink:= TRUE; (*PortB is OUT Port*)
+	ELSE EP1918_PortB_MissingLink := FALSE;
+	END_IF;
+	
+	IF (N02.InfoData.State = 9224) (*State Machine for Link Missing at Port B*)
+		THEN EP1008_PortB_MissingLink:= TRUE; 
+	ELSE EP1008_PortB_MissingLink := FALSE;
+	END_IF;
+
+	IF (N03_STAT.InfoData.State = 9224) (*State Machine for Link Missing at Port B*)
+		THEN EP2624_PortB_MissingLink:= TRUE; 
+	ELSE EP2624_PortB_MissingLink := FALSE;
+	END_IF;
+	
+	(*Wrap up break Flags to Variable for shipment to UI*)
+	ECatSlave_Cable_Breaks.0:= EP1918_NotPresent AND Prev_EcatNode_Present;
+	ECatSlave_Cable_Breaks.1:= EP1918_PortB_MissingLink;
+	ECatSlave_Cable_Breaks.2:= EP1008_PortB_MissingLink;
+	ECatSlave_Cable_Breaks.3:= EP2624_PortB_MissingLink;
+
+(*------------ CoE Reads ------------*)
+
+	(*Read EP1918 Primaray Temperature Data*)
+
+	(*FB Inputs*)
+	CoE_ReadFB_1.bExecute:= CoE_Read_Trigger
+							AND (N01_Stat.InfoData.State=8);					(*Execute Upon Trigger*)
+	CoE_ReadFB_1.sNetId:= Ecat_Master_AmsNetID;
+	CoE_ReadFB_1.nSlaveAddr:= N01_STAT.InfoData.AdsAddr.port;					(*Address of Ecat Slave being Read*)
+	CoE_ReadFB_1.nIndex:= 16#F984;												(*CANopen SDO Index of Object (F984 = Device Info Data C1)*)
+	CoE_ReadFB_1.nSubIndex:= 16#02;												(*CANopen SDO SubIndex (Location from Index) of Object*)
+	CoE_ReadFB_1.cbBufLen:= 2;													(*Limit on Receive Length (bytes)*)
+	CoE_ReadFB_1.pDstBuf:= ADR(CoE_ReadBuffer_1);								(*Pointer to Receive Buffer*)
+	CoE_ReadFB_1.tTimeout:= T#2s;												(*TImeout for Read*)
+	CoE_ReadFB_1.bCompleteAccess:= TRUE;										(*Allow Complete Access to Full SDO Object*)
+
+	(*Execute FB*)
+	CoE_ReadFB_1();
+
+	(*FB Outputs*)
+	CoE_ReadErr_1:= CoE_ReadFB_1.bError;										(*Error Flag of Read*)
+	CoE_ReadErrID_1:= CoE_ReadFB_1.nErrId;										(*Error ID of Read (See ADS Return Codes)*)
+
+	(*Read EP1918 Secondary Temperature Data*)
+
+	(*FB Inputs*)
+	CoE_ReadFB_2.bExecute:= CoE_Read_Trigger
+							AND (N01_Stat.InfoData.State=8);					(*Execute Upon Trigger*)
+	CoE_ReadFB_2.sNetId:= Ecat_Master_AmsNetID;
+	CoE_ReadFB_2.nSlaveAddr:= N01_STAT.InfoData.AdsAddr.port;					(*Address of Ecat Slave being Read*)
+	CoE_ReadFB_2.nIndex:= 16#F985;												(*CANopen SDO Index of Object (F985 = Device Info Data C2)*)
+	CoE_ReadFB_2.nSubIndex:= 16#02;												(*CANopen SDO SubIndex (Location from Index) of Object*)
+	CoE_ReadFB_2.cbBufLen:= 2;													(*Limit on Receive Length (bytes)*)
+	CoE_ReadFB_2.pDstBuf:= ADR(CoE_ReadBuffer_2);								(*Pointer to Receive Buffer*)
+	CoE_ReadFB_2.tTimeout:= T#2S;												(*TImeout for Read*)
+	CoE_ReadFB_2.bCompleteAccess:= TRUE;										(*Allow Complete Access to Full SDO Object*)
+
+	(*Execute FB*)
+	CoE_ReadFB_2();
+
+	(*FB Outputs*)
+	CoE_ReadErr_2:= CoE_ReadFB_2.bError;										(*Error Flag of Read*)
+	CoE_ReadErrID_2:= CoE_ReadFB_2.nErrId;										(*Error ID of Read (See ADS Return Codes)*)
+	
+	
+	
+	
+	(*Tranfer Data to Image*)
+	IF (N01_Stat.InfoData.State=8) AND NOT CoE_ReadErr_1 AND NOT CoE_ReadErr_2
+		THEN
+		N01_STAT.CoE_Temperature_1:= FUN_GTAC_BYTEStoINT(CoE_ReadBuffer_1[0],CoE_ReadBuffer_1[1]);	(*Grab bytes 0 and 1 of read buffer, this is Primary Temperature*)
+		N01_STAT.CoE_Temperature_2:= FUN_GTAC_BYTEStoINT(CoE_ReadBuffer_1[0],CoE_ReadBuffer_1[1]);	(*Grab bytes 0 and 1 of read buffer, this is Secondary Temperature*)
+	ELSE
+		(*If Read Error, then blank data*)
+		N01_STAT.CoE_Temperature_1:=0;
+		N01_STAT.CoE_Temperature_2:=0;
+	END_IF;
+
+	(*Finally Evaluate Temperature Vs Upper Limit Restrictions*)
+	IF (N01_STAT.CoE_Temperature_1>=90) OR (N01_STAT.CoE_Temperature_2>=90)
+		THEN
+		EP1918_Overtemperature:= TRUE;
+	ELSE
+		EP1918_Overtemperature:= FALSE;
+	END_IF;
+	
+	
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Gather Safety Inputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Door Safety Switches*)
+	(*DoorClosed_Safety_Switches:= N01_STAT.I.0 AND N01_STAT.I.1 AND N01_STAT.I.2 AND N01_STAT.I.3;*)
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Gather Standard Inputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+	Door_Closed:= 	N02.I.0 AND DoorClosed_Safety_Switches;		(*YDC0*)
+	Door_Opened:= 	N02.I.1;									(*YDC1*)
+	Door_Stopped:= 	N02.I.2;									(*YDC2*)
+	Door_Faulted:= 	N02.I.3;									(*YDC3*)
+	
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Internal Code $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+	(*Set Door to Close*)
+	Door_CloseSR(
+			SET1:= Enable_Motion AND Enable_Latch AND DoorClose_REQ AND NOT DoorOpen_REQ,
+			RESET:= NOT Enable_Motion OR NOT Enable_Latch OR DoorOpen_REQ OR Door_Closed,
+			Q1=>
+			);
+
+	(*Set Door to Open*)
+	Door_OpenSR(
+			SET1:= Enable_Latch AND DoorOpen_REQ AND NOT DoorClose_REQ,
+			RESET:= NOT Enable_Latch OR DoorClose_REQ OR Door_Opened,
+			Q1=>
+			);
+
+	(*Output to Open or Close the Door*)
+	DoorClose_CMD:= Enable_Motion AND ((Enable_Latch AND Door_CloseSR.Q1) OR (NOT Enable_Latch AND DoorClose_REQ)) AND NOT Door_OpenSR.Q1;
+	DoorOpen_CMD:= ((Enable_Latch AND Door_OpenSR.Q1) OR (NOT Enable_Latch AND DoorOpen_REQ)) AND NOT Door_CloseSR.Q1;
+	DoorStop_CMD:= DoorStop_REQ AND (NOT Door_Closed OR NOT Door_Opened);
+
+	(*Door Opened Timer*)
+	DoorOpened_TMR(
+			IN:= NOT DoorClosed_Safety_Switches AND DoorOpen_CMD,
+			PT:= T#2.75s,
+			Q=> ,
+			ET=>
+			);
+
+	(*Door Closed Timer*)
+	DoorClosed_TMR(
+			IN:= DoorClosed_Safety_Switches,
+			PT:= T#500ms,
+			Q=> ,
+			ET=>
+			);
+			
+		(*Door Stop Timer*)
+	DoorStop_TMR(
+			IN:= DoorStop_REQ,
+			PT:= T#200MS,
+			Q=> ,
+			ET=>
+			);
+			
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Faults $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Transfer Standard Outputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Transfer I/O Images for Display On HMI*)
+	Discrete_Image.N01_STAT:= N01_STAT;
+	Discrete_Image.N02:= N02;
+	Discrete_Image.N03:= N03;
+	Discrete_Image.N03_STAT:= N03_STAT;
+
+(*Transfer Commands to Discrete Node Outputs*)
+	N03.Q.0:= DoorOpen_CMD;	     	(*X2*)
+	N03.Q.1:= DoorClose_CMD;		(*X5*)
+	N03.Q.2:= DoorStop_CMD;				(*X6*)
+	N03.Q.3:= FALSE;				(*X7*)
+	N03.Q.4:= (*DoorStop_CMD*) FALSE;			(*X8*)
+	N03.Q.5:= FALSE;				(*X9*)
+	N03.Q.6:= FALSE;				(*X10*)
+	N03.Q.7:= FALSE;				(*X11*)
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Transfer Safety Outputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+	(*Set All Safety Groups to Run*)
+		N01_CMD.SGs_RUNSTOP:= TRUE;
+	(*Reset Of Safety Group Errors*)
+		N01_CMD.SGs_ERRAck:= Safety_RST;
+	(*Reset Only Used FBs With In Safety Group*)
+		(*Reset of Estop, Safety Gate and Misc FBs*)
+		N01_CMD.FBs_ControlPowerPB:= Safety_RST;
+		(*Retrigger of evaluation of Switches*)
+		N01_CMD.FBs_Restart_Spare:= OPxx_RST;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_GTAC_MDxx_20251008">
+      <LineId Id="881" Count="1" />
+      <LineId Id="878" Count="2" />
+      <LineId Id="51" Count="1" />
+      <LineId Id="240" Count="0" />
+      <LineId Id="242" Count="1" />
+      <LineId Id="247" Count="0" />
+      <LineId Id="249" Count="2" />
+      <LineId Id="257" Count="10" />
+      <LineId Id="560" Count="0" />
+      <LineId Id="963" Count="4" />
+      <LineId Id="556" Count="0" />
+      <LineId Id="558" Count="1" />
+      <LineId Id="281" Count="0" />
+      <LineId Id="561" Count="0" />
+      <LineId Id="282" Count="2" />
+      <LineId Id="959" Count="0" />
+      <LineId Id="634" Count="0" />
+      <LineId Id="1045" Count="0" />
+      <LineId Id="1047" Count="21" />
+      <LineId Id="1112" Count="0" />
+      <LineId Id="1116" Count="19" />
+      <LineId Id="1069" Count="0" />
+      <LineId Id="1113" Count="2" />
+      <LineId Id="1070" Count="3" />
+      <LineId Id="1107" Count="0" />
+      <LineId Id="1075" Count="2" />
+      <LineId Id="1106" Count="0" />
+      <LineId Id="1079" Count="8" />
+      <LineId Id="295" Count="0" />
+      <LineId Id="1046" Count="0" />
+      <LineId Id="874" Count="0" />
+      <LineId Id="872" Count="1" />
+      <LineId Id="875" Count="0" />
+      <LineId Id="1094" Count="1" />
+      <LineId Id="1088" Count="5" />
+      <LineId Id="297" Count="1" />
+      <LineId Id="54" Count="17" />
+      <LineId Id="485" Count="0" />
+      <LineId Id="72" Count="15" />
+      <LineId Id="475" Count="0" />
+      <LineId Id="477" Count="5" />
+      <LineId Id="476" Count="0" />
+      <LineId Id="366" Count="0" />
+      <LineId Id="368" Count="0" />
+      <LineId Id="372" Count="1" />
+      <LineId Id="367" Count="0" />
+      <LineId Id="377" Count="1" />
+      <LineId Id="408" Count="0" />
+      <LineId Id="870" Count="0" />
+      <LineId Id="380" Count="0" />
+      <LineId Id="396" Count="9" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="853" Count="1" />
+      <LineId Id="862" Count="6" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="1228" Count="0" />
+      <LineId Id="1226" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

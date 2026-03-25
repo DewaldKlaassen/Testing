@@ -1,0 +1,122 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_Generic_Robot_FBIN_CUSTOM" Id="{854971c8-72c5-43f5-bd19-ff2d3c8e516b}">
+    <Declaration><![CDATA[(*udt (user defined type) for all generic Robot Data Required
+	Author(S): Brent Lekx-Toniolo of Sodecia GTAC;
+	Version 1.0: August 2012
+		- Initial Concept
+	 Version 2.0: November 2012,
+		Changes from v1 include:
+			- Expanded Equipment Interf Area
+			- Added EOAT Req Ack
+			-Added Water_OK Inputs (to be sent to WCUs)
+			- Added Water Output Command Bit (For Control of Slaves via Robot)
+			- Added EOAT Output Command Areas (For Control of Slaves via Robot)
+	Version: 20130625
+			- Added Speed Request Var
+	Version 20141016:
+			- Added WeldCont_Amount, to give ability to select amount of weld controllers robot will interface to, b.lekx-toniolo
+			- Added Under_Construction Input to remove external dependancy on variable, b.lekx-toniolo
+			- Added OK to enter Robot Infer Inputs to break away from equip interf area, b.lekx-toniolo
+			- Added Install_Zero_Orientation for use with new UI Robot Animation Symbol, b.lekx-toniolo
+	Version 20150103:
+			- Added SOS_Requested. RR/JVD
+	Version 20150120:
+			- Added "previous ecat node present" input, b.lekx-toniolo
+	Version 20150318:
+			- Added "Force Master and Brake Test Reqs", b.lekx-toniolo
+	Version 20150928:
+			- Added Ecat_Master_AmsNetID, CoE_Read_Trigger, b.lekx-toniolo
+	Version 20160127:
+			- Removed old Water Interface and Added config interface, part of internalizing water stand code, b.lekx-toniolo
+	Version 20160203:
+			- Added Option Enable Variables, b.lekx-toniolo
+	Version 20161202:
+			-added Aux Request ACK, j.vandongen
+	Version 20170531:
+			- Updated instance of Options, b.lekx-toniolo
+	Version 20170801:
+			- updated instance of options, j.vandongen
+	Version 20190923
+			- added EOAT_FLT variable, j.vandongen
+	Version 20240208
+			- added In_Sim_Mode and SIM_StartWorkAround during R&D project 90034, sim integration, b.lekx-toniolo
+			- Correct some minor typos etc to do with Disable water fault (FB Input), b.lekx-toniolo
+			
+
+*)
+TYPE udt_Generic_Robot_FBIN_CUSTOM :
+	STRUCT
+		Safety_RST: BOOL;
+		Enable_Motion: BOOL;
+		Alarm_RST: BOOL;
+		Robot_Type: UINT;
+		Install_Zero_Orientation: INT;
+		Under_Construction: BOOL;
+		In_SIM_Mode: BOOL;
+		SIM_StartWorkAround: BOOL;
+		
+		Ecat_Master_AmsNetID: STRING;
+		CoE_Read_Trigger: BOOL;
+		Prev_EcatNode_Present: BOOL;
+		Select_Play: BOOL;
+		Select_Teach: BOOL;
+		Select_Remote: BOOL;
+		Start_Scan: BOOL;
+		Stop_Scan: BOOL;
+		Stop_Scan2: BOOL;
+		In_DryCycle: BOOL;
+		Low_Speed: BOOL;
+		Major_Faults: BOOL;
+		Teach_Interlock: BOOL;
+		Weld_Inhibit: BOOL;
+		Power_Disable: BOOL;
+		Force_MasterTest_Req: BOOL;
+		Force_BrakeTest_Req: BOOL;
+		EOAT_FLT: BOOL;
+
+		Speed_Request: BYTE;
+		OK_ToEnter_EquipInterf1: BOOL;
+		OK_ToEnter_EquipInterf2: BOOL;
+		OK_ToEnter_EquipInterf3: BOOL;
+		OK_ToEnter_EquipInterf4: BOOL;
+		OK_ToEnter_EquipInterf5: BOOL;
+		OK_ToEnter_EquipInterf6: BOOL;
+		OK_ToEnter_EquipInterf7: BOOL;
+		OK_ToEnter_EquipInterf8: BOOL;
+		OK_ToEnter_EquipInterf9: BOOL;
+		OK_ToEnter_HumanInterf1: BOOL;
+		OK_ToEnter_HumanInterf2: BOOL;
+		OK_ToEnter_HumanInterf3: BOOL;
+		OK_ToEnter_HumanInterf4: BOOL;
+		OK_ToEnter_HumanInterf5: BOOL;
+		OK_ToEnter_HumanInterf6: BOOL;
+		OK_ToEnter_HumanInterf7: BOOL;
+		OK_ToEnter_HumanInterf8: BOOL;
+
+		OK_ToEnter_RobotInterfs: UINT;
+
+		User_Inputs: BYTE;
+
+		Fix_ID: UINT;
+		Task_ID: UINT;
+		Model_ID: UINT;
+		EOAT_ID: UDINT;
+		PeripheralReq_Ack: UINT;
+		AuxReq_Ack: UINT;
+		EOATReq_Ack: UINT;
+
+		Proceed_From_Pounce: BOOL;
+		Complete_Ack: BOOL;
+
+		Option_Disable_WaterFLT: BOOL;	
+
+		SOS_Requested: BOOL;
+
+		(*Option Configuration Inputs*)
+		Options: udt_Generic_Robot_Options_20170531;
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

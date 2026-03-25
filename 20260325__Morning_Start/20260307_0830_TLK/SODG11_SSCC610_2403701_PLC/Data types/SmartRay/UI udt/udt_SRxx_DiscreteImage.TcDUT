@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_SRxx_DiscreteImage" Id="{6f001830-db81-4dd9-a75c-57744c5f1ac9}">
+    <Declaration><![CDATA[TYPE udt_SRxx_DiscreteImage :
+STRUCT
+	(*Smart Ray*)
+	SR_Error : BOOL;
+	SR_Comm_Error : BOOL;
+	SR_PLC_FB_Error : BOOL;
+	SR_Smart_Ray_OK : BOOL;
+	SR_Smart_Ray_NOK : BOOL;
+	
+	Profinode_status : udt_ProfiNet_Status;
+
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

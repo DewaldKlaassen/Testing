@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <DUT Name="udt_GenericRobot_CycleTimes_20170304" Id="{6dfa1d08-1c60-4d73-9928-5c337e88adec}">
+    <Declaration><![CDATA[(*udt (user defined type) for generic framework of cycle time counters for any robot
+	Author(S): Brent Lekx-Toniolo of Sodecia GTAC;
+	Version 20150622
+		- Initila concept, BLT
+	Version 20170304
+		-added human, equip and total cycle time, JVD
+*)
+TYPE udt_GenericRobot_CycleTimes_20170304 :
+STRUCT
+	(*Cycle Times for Equipment Interf Zones*)
+		Cycle_Time_OutEquip1: TIME;
+		PrevCycle_Time_OutEquip1: TIME;
+		Cycle_Time_OutEquip2: TIME;
+		PrevCycle_Time_OutEquip2: TIME;
+		Cycle_Time_OutEquip3: TIME;
+		PrevCycle_Time_OutEquip3: TIME;
+		Cycle_Time_OutEquip4: TIME;
+		PrevCycle_Time_OutEquip4: TIME;
+		Cycle_Time_OutEquip5: TIME;
+		PrevCycle_Time_OutEquip5: TIME;
+		Cycle_Time_OutEquip6: TIME;
+		PrevCycle_Time_OutEquip6: TIME;
+		Cycle_Time_OutEquip7: TIME;
+		PrevCycle_Time_OutEquip7: TIME;
+		Cycle_Time_OutEquip8: TIME;
+		PrevCycle_Time_OutEquip8: TIME;
+
+	(*Cycle Times for Human Interf Zones*)
+		Cycle_Time_OutHuman1: TIME;
+		PrevCycle_Time_OutHuman1: TIME;
+		Cycle_Time_OutHuman2: TIME;
+		PrevCycle_Time_OutHuman2: TIME;
+		Cycle_Time_OutHuman3: TIME;
+		PrevCycle_Time_OutHuman3: TIME;
+		Cycle_Time_OutHuman4: TIME;
+		PrevCycle_Time_OutHuman4: TIME;
+		Cycle_Time_OutHuman5: TIME;
+		PrevCycle_Time_OutHuman5: TIME;
+		Cycle_Time_OutHuman6: TIME;
+		PrevCycle_Time_OutHuman6: TIME;
+		Cycle_Time_OutHuman7: TIME;
+		PrevCycle_Time_OutHuman7: TIME;
+		Cycle_Time_OutHuman8: TIME;
+		PrevCycle_Time_OutHuman8: TIME;
+
+		Cycle_Time_EquipTotal: TIME;
+		Cycle_Time_HumanTotal: TIME;
+		Cycle_Time_Total: TIME;
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

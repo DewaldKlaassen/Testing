@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_EL6900_STAT_20160426" Id="{58cbe09a-1bf8-4ff4-bd0e-90c393a92b6b}">
+    <Declaration><![CDATA[(*udt (user defined type) of Beckhoff EL6900 - TwinSAFE Controller Status Interface:
+	auth. Brent Lekx-Toniolo/Rob Remillard of Sodecia GTAC.; 
+------------------------------------------------------------------------
+REVISION NOTES:
+	Version 1.0: November 2012
+		- Initial Concept
+	Version 20121204
+		Changes from v1
+			- Change to Naming Convention to include date as version
+	Version 20150925
+			- Added variable for area to store terminal temperature data, b.lekx-toniolo
+			- Changed InfoData to EX type to allow linking area for AMS and Port, b.lekx-toniolo
+	Version 20160426
+			- Added Instance of udt_EL6900_DeviceInfoData_yyyymmdd, b.lekx-toniolo
+
+------------------------------------------------------------------------
+
+*)
+
+TYPE udt_EL6900_STAT_20160426 :
+	STRUCT
+	SGs_FB_ERR: BYTE;
+	(*
+	FB ERROR Status Summary of ALL FBs in Terminal, 1 bit per SG*)
+
+	SGs_COM_ERR: BYTE;
+	(*
+	COM Status of all Coms Linked to Terminal, 1 bit per SG*)
+
+	SGs_OUT_ERR: BYTE;
+	(*
+	OUTPUT ERROR Status of all Outputs Linked to Terminal, 1 bit per SG*)
+
+	FBs_FB_ERR: DINT;
+	(*
+	FB ERROR Status fof EACH FB within Terminal, 1 bit per FB*)
+
+	Device_Info_Data: udt_EL6900_DeviceInfoData_20160426;
+	InfoData: udt_ECATSlave_StatusEXT;
+
+	(*CoE Data Section*)
+	CoE_Project_State:	UDINT;	(*Retreived via CoE - For Storage of Safety Project State*)
+	CoE_Temperature_1: 	UINT; 	(*Retreived via CoE - For Storage of Primary Temperature MC1 Data*)
+	CoE_Temperature_2: 	UINT;  	(*Retreived via CoE - For Storage of Secondary Temperature MC1 Data*)
+
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

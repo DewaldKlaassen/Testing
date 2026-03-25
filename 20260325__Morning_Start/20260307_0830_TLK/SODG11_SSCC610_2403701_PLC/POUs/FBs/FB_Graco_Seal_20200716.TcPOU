@@ -1,0 +1,1505 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FB_Graco_Seal_20200716" Id="{54b63d05-da2e-4ad1-952f-59db9e1e9ddb}" SpecialFunc="None">
+    <Declaration><![CDATA[(*Function block created for Graco Sealer*)
+(*July 31 2014*)
+(*Rev1 - JVD initial creation*)
+(*
+------------------------------------------------------------------------------------------
+	REVISION NOTES:
+	Version 20141017:
+	- Added Error_Reset and Dry_Cycle FB Inputs to remove dependancies on external variable, b.lekx-toniolo
+	Version 20141127:
+	- Added ability to map Internal or External EL6731 Proibus Master, b.lekx-toniolo
+	Version 20141209
+	- General Structure Clean-up, b.lekx-toniolo
+	Version 20160302
+	- Added purge function, JVD
+	- Added Enable_Motion, JVD
+	-Added All_SafetiesOK, JVD
+	-Added Faulted to the reset bit, JVD
+	Version 20160405
+	- added Disp1_No_Error to Faulted, JVD
+	-added ProfiNode_OK to Fault, JVD
+	Version 20160412
+	- re-mapped purge to style select 15 at request of Graco for better table updates, blt
+	Version 20161202
+	-develop code for up to 4 dispense heads, j.vandongen
+	-added capture for sealant/volume Ok, j.vandongen
+	Version 20170227
+	-fixed copy/paste typos, jvandongen
+	Version 20171201
+	- fixed option gun count comparissons in the code, j.vandongen
+	Version 20200716
+	- changed from PCF to iQ controls (new GSD map), j.vandongen
+
+------------------------------------------------------------------------------------------
+*)
+FUNCTION_BLOCK FB_Graco_Seal_20200716
+
+	VAR_INPUT
+		External_Terminal_Enable: BOOL; (* Set Bit Low if you will be using the Internal Profibus Master Terminal Instance, set High to Pass Profibus Master Data from External*)
+		Txx_External_ProfiMaster: udt_EL6731;
+
+		Enable_Motion: BOOL;
+		All_SafetiesOK: BOOL;
+		Dry_Cycle: BOOL;
+
+		(*Inputs into FB for Option Selection*)
+		Option_Tandem: BOOL;
+		Option_Heat1: BOOL;
+		Option_Heat2: BOOL;
+
+
+		(*Inputs to FB to Control Sealer System*)
+		Error_Reset: BOOL;
+
+
+
+
+		(*Pump 1- Inputs from Graco*)
+		Pump1_HeartBeat: BOOL;
+		Pump1_Control_Ready: BOOL;
+		Pump1_System_Active: BOOL;
+		Pump1_Control_Active: BOOL;
+		Pump1_NoAlarms_Active: BOOL;
+		Pump1_NoDeviations_Active: BOOL;
+		Pump1_NoAdvisory_Active: BOOL;
+		Pump1_Ready_To_Dispense: BOOL;
+
+		Pump1_PreCharge_Active: BOOL;
+		Pump1_Dispense_In_Process: BOOL;
+		Pump1_Drum_Low: BOOL;
+		Pump1_Drum_Empty: BOOL;
+		Pump1_Not_Primed: BOOL;
+		Pump1_In_Job_Cycle: BOOL;
+		Pump1_Prime_Active: BOOL;
+		Pump1_Valve_Depressurization_Active: BOOL;
+
+		Pump1_Platen_Depressurization_Active: BOOL;
+		Pump1_Auto_Depressurization_Active: BOOL;
+		Pump1_Auto_Depressurization_Happened: BOOL;
+		Pump1_Trying_To_Move: BOOL;
+		Pump1_Moving: BOOL;
+		Pump1_DispenseValve_Opened: BOOL;
+		Pump1_PlatenValve_Opened: BOOL;
+		Pump1_Tandem_Active_Pump: BOOL; 			(*0 =Pump 1, 1 = Pump 2*)
+
+		Pump1_EFlo_iQ_Mode_Active: BOOL;
+		Pump1_ChangeOver_Occured: BOOL;
+		(*Reserved Bit 1*)
+		(*Reserved Bit 2*)
+		(*Reserved Bit 3*)
+		(*Reserved Bit 4*)
+		(*Reserved Bit 5*)
+		(*Reserved Bit 6*)
+
+		Pump1_ActualPump_Flowrate: UINT;				(*xxxx cc/min*)
+		Pump1_Outlet_Pressure: UINT; 					(*xxx.x bar*)
+		Pump1_Valve_Pressure: UINT; 					(*xxx.x bar*)
+		Pump1_Active_Style_Loaded: UINT;
+		Pump1_Active_Style_Precharge: UINT; 			(*xxx.x bar*)
+		Pump1_Active_Style_Flowrate: UINT; 			(*xxxx cc/min*)
+		Pump1_Active_Style_ShotSize: UINT; 			(*xxx.xx cc*)
+		Pump1_Actual_Amount_Dispense:UDINT; 		(*xxxx.xx cc*)
+		Pump1_Actual_Shot_Size: UDINT;				(*xx.xx cc*)
+		Pump1_Actual_Style_PreCharge_REQ: UINT;		(*xxx.x bar*)
+		Pump1_Actual_Style_Flowrate_REQ: UINT;		(*xxxx cc/min*)
+		Pump1_Actual_Style_Shot_Size_REQ: UINT;		(*xxx.xx cc*)
+		Pump1_PumpPosition: UINT;					(*x.xxxx inches*)
+		Pump1_Data_Exchange_Active_CMD: UINT;
+		Pump1_Data_Exchange_Active_CMD_Value: UDINT;
+
+
+		(*Pump 2 - Inputs Only used for Tandem systems*)
+		Pump2_HeartBeat: BOOL;
+		Pump2_Control_Ready: BOOL;
+		Pump2_System_Active: BOOL;
+		Pump2_Control_Active: BOOL;
+		Pump2_NoAlarms_Active: BOOL;
+		Pump2_NoDeviations_Active: BOOL;
+		Pump2_NoAdvisory_Active: BOOL;
+		Pump2_Ready_To_Dispense: BOOL;
+
+		Pump2_PreCharge_Active: BOOL;
+		Pump2_Dispense_In_Process: BOOL;
+		Pump2_Drum_Low: BOOL;
+		Pump2_Drum_Empty: BOOL;
+		Pump2_Not_Primed: BOOL;
+		Pump2_In_Job_Cycle: BOOL;
+		Pump2_Prime_Active: BOOL;
+		Pump2_Valve_Depressurization_Active: BOOL;
+
+		Pump2_Platen_Depressurization_Active: BOOL;
+		Pump2_Auto_Depressurization_Active: BOOL;
+		Pump2_Auto_Depressurization_Happened: BOOL;
+		Pump2_Trying_To_Move: BOOL;
+		Pump2_Moving: BOOL;
+		Pump2_DispenseValve_Opened: BOOL;
+		Pump2_PlatenValve_Opened: BOOL;
+		Pump2_Tandem_Active_Pump: BOOL; 			(*0 =Pump 1, 1 = Pump 2*)
+
+		Pump2_EFlo_iQ_Mode_Active: BOOL;
+		(*Reserved Bit 1*)
+		(*Reserved Bit 2*)
+		(*Reserved Bit 3*)
+		(*Reserved Bit 4*)
+		(*Reserved Bit 5*)
+		(*Reserved Bit 6*)
+		(*Reserved Bit 7*)
+
+		Pump2_ActualPump_Flowrate: UINT;				(*xxxx cc/min*)
+		Pump2_Outlet_Pressure: UINT; 					(*xxx.x bar*)
+		Pump2_Data_Exchange_Active_CMD: UINT;
+		Pump2_Data_Exchange_Active_CMD_Value: UDINT;
+
+
+		(*Heat 1 - Inputs from Graco*)
+		Heat1_Heartbeat: BOOL;
+		Heat1_Enabled: BOOL;
+		Heat1_Control_Active: BOOL;
+		Heat1_ON: BOOL;
+		Heat1_WarmingUp: BOOL;
+		Heat1_At_Temp: BOOL;
+		Heat1_Temp_Soak_Mode: BOOL;
+		Heat1_SetBack_Mode: BOOL;
+
+		Heat1_Off: BOOL;
+		Heat1_Module_NoAlarms_Active: BOOL;
+		Heat1_Module_NoDeviations_Active: BOOL;
+		Heat1_Module_NoAdvisory_Active: BOOL;
+		Heat1_Zone_NoAlarms_Active: BOOL;
+		Heat1_Zone_NoDeviations_Active: BOOL;
+		Heat1_Zone_NoAdvisory_Active: BOOL;
+		Heat1_Idle_Timeout_Happened: BOOL;
+
+		Heat1_Soak_Time_Remaining: UINT;	(*xx seconds*)
+		Heat1_Data_Exchange_Active_CMD: UINT;
+		Heat1_Data_Exchange_Active_CMD_Value: UDINT;
+
+
+		(*Heat 2 - Inputs from Graco. Only used if tandem pump is on*)
+		Heat2_Heartbeat: BOOL;
+		Heat2_Enabled: BOOL;
+		Heat2_Control_Active: BOOL;
+		Heat2_ON: BOOL;
+		Heat2_WarmingUp: BOOL;
+		Heat2_At_Temp: BOOL;
+		Heat2_Temp_Soak_Mode: BOOL;
+		Heat2_SetBack_Mode: BOOL;
+
+		Heat2_Off: BOOL;
+		Heat2_Module_NoAlarms_Active: BOOL;
+		Heat2_Module_NoDeviations_Active: BOOL;
+		Heat2_Module_NoAdvisory_Active: BOOL;
+		Heat2_Zone_NoAlarms_Active: BOOL;
+		Heat2_Zone_NoDeviations_Active: BOOL;
+		Heat2_Zone_NoAdvisory_Active: BOOL;
+		Heat2_Idle_Timeout_Happened: BOOL;
+
+		Heat2_Soak_Time_Remaining: UINT;	(*xx seconds*)
+		Heat2_Data_Exchange_Active_CMD: UINT;
+		Heat2_Data_Exchange_Active_CMD_Value: UDINT;
+
+
+
+	END_VAR
+
+
+	VAR
+		Txx_Internal_ProfiMaster AT %I*: udt_EL6731;
+
+		(*Develop Profibus Slave Node to map Profibus Slave I/O*)
+		GracoSealer_Inputs AT %I*: udt_Graco_Input;
+		GracoSealer_Outputs AT %Q*: udt_Graco_Outputs;
+
+		Purge_Trigger1: TON;
+		Purge_CompleteTrigger1: TON;
+
+		DiscreteNode_OK: BOOL;
+		Profinode_OK: BOOL;
+
+		Faulted: BOOL;
+
+		(*Status Information regarding Graco System*)
+
+
+
+
+	END_VAR
+
+	VAR_OUTPUT
+		(*Output Data to External*)
+		FB_OK: BOOL;
+
+		Dispense_Amount: UINT;
+		Disp1_Bypass: BOOL;
+		Disp1_Faulted: BOOL;
+		Disp1_Ready: BOOL;
+		Disp1_Volume_NotOK: BOOL;
+		Disp1_Bypass_Ack: BOOL;
+
+
+		(*Pump - Ouputs*)
+		Pump1_Sys_Data_Exchange_CMD: UINT;
+
+		Pump1_Sys_Enable: BOOL;
+		Pump1_Sys_Disable_REQ: BOOL;
+		Pump1_Lockout: BOOL;
+		Pump1_Style_Enable: BOOL;
+		Pump1_Go: BOOL;
+		Pump1_Disp_Complete: BOOL;
+		Pump1_Tandem_Cross_REQ: BOOL;
+		Pump2_Prime_Inactive_Pump_REQ: BOOL;
+
+		Pump1_Valve_Depressurization_REQ: BOOL;
+		Pump1_Platen_Depressurization_REQ: BOOL;
+		Pump1_Auto_Depressurization_Cancel_REQ: BOOL;
+		Pump_Acknowledge_Clear_Errors: BOOL; (*both pumps*)
+		(*Reserved Bit 1*)
+		(*Reserved Bit 2*)
+		(*Reserved Bit 3*)
+		(*Reserved Bit 4*)
+
+		Pump1_Desired_Style_Numb: UINT;
+		Pump1_Style_PreCharge_REQ: UINT;	(*xxx.x bars*)
+		Pump1_FlowRate_REQ: UINT;			(*xxxx cc/min*)
+		Pump1_ShotSize_REQ: UINT;			(*xxx.xx cc*)
+		Pump2_PrimePressure_Target: UINT;	(*xxx.x bars*)
+		Pump2_PrimeFlow_Target: UINT;			(*xxxx cc/min*)
+
+		Heat1_HeatEnabled_REQ: BOOL;
+		Heat1_HeatDissabled_REQ: BOOL;
+		Heat1_PLC_Lockout: BOOL;
+		Heat1_Heat_ON_REQ: BOOL;
+		Heat1_Heat_OFF_REQ: BOOL;
+		Heat1_Setback_REQ: BOOL;
+		Heat1_Acknowledge_Clear_Errors: BOOL;
+		(*Reserved Bit 1*)
+
+		(*Reserved Bit 2*)
+		(*Reserved Bit 3*)
+		(*Reserved Bit 4*)
+		(*Reserved Bit 5*)
+		(*Reserved Bit 6*)
+		(*Reserved Bit 7*)
+		(*Reserved Bit 8*)
+
+		Heat1_Data_Exchange_CMD: UINT;
+		Heat1_Data_Exchange_CMD_Value: UDINT;
+
+		Heat2_HeatEnabled_REQ: BOOL;
+		Heat2_HeatDissabled_REQ: BOOL;
+		Heat2_PLC_Lockout: BOOL;
+		Heat2_Heat_ON_REQ: BOOL;
+		Heat2_Heat_OFF_REQ: BOOL;
+		Heat2_Setback_REQ: BOOL;
+		Heat2_Acknowledge_Clear_Errors: BOOL;
+		(*Reserved Bit 1*)
+
+		(*Reserved Bit 2*)
+		(*Reserved Bit 3*)
+		(*Reserved Bit 4*)
+		(*Reserved Bit 5*)
+		(*Reserved Bit 6*)
+		(*Reserved Bit 7*)
+		(*Reserved Bit 8*)
+
+		Heat2_Data_Exchange_CMD: UINT;
+		Heat2_Data_Exchange_CMD_Value: UDINT;
+
+
+
+	END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+
+
+	(*Set FB_OK to True*)
+	FB_OK:= TRUE;
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$Gather Status Of Hardware $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	IF NOT External_Terminal_Enable
+		THEN (*Internally mapped Profimaster is selected*)
+			(*Discrete I/O Node (EL6731 Internal MASTER)*)
+			IF Txx_Internal_ProfiMaster.InfoData.State=8
+				THEN
+				DiscreteNode_OK:=TRUE;
+			ELSE
+				DiscreteNode_OK:=FALSE;
+			END_IF
+	END_IF
+
+	IF External_Terminal_Enable
+		THEN (*Externally mapped ProfiMaster is selected*)
+			(*Discrete I/O Node (EL6731 Internal MASTER)*)
+			IF Txx_External_ProfiMaster.InfoData.State=8
+				THEN
+					DiscreteNode_OK:=TRUE;
+			ELSE
+					DiscreteNode_OK:=FALSE;
+			END_IF
+	END_IF
+
+	(*Profibus Node*)
+	IF GracoSealer_Inputs.Inputs.DpState=0
+		THEN
+			ProfiNode_OK:=TRUE;
+	ELSE
+			ProfiNode_OK:=FALSE;
+	END_IF
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Gather Safety Inputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Gather Inputs  $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+(*Graco Sealer Input Bits*)
+	Inputs();
+
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Internal Code $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+
+
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Transfer Standard Outputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+	(*Output for Dispense Head Amount*)
+	Dispense_Amount:= 1;
+
+	(*Bypass Acks*)
+	Disp1_Bypass_Ack:= Disp1_Bypass;
+
+	Outputs();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(*end*)]]></ST>
+    </Implementation>
+    <Action Name="Inputs" Id="{6a17ee8e-f4c7-41b0-b369-6ce7e5cbc264}">
+      <Implementation>
+        <ST><![CDATA[
+
+
+	(*Pump 1- Inputs from Graco*)
+	Pump1_HeartBeat								:= GracoSealer_Inputs.Byte0.0;
+	Pump1_Control_Ready							:= GracoSealer_Inputs.Byte0.1;
+	Pump1_System_Active							:= GracoSealer_Inputs.Byte0.2;
+	Pump1_Control_Active							:= GracoSealer_Inputs.Byte0.3;
+	Pump1_NoAlarms_Active						:= GracoSealer_Inputs.Byte0.4;
+	Pump1_NoDeviations_Active					:= GracoSealer_Inputs.Byte0.5;
+	Pump1_NoAdvisory_Active						:= GracoSealer_Inputs.Byte0.6;
+	Pump1_Ready_To_Dispense					:= GracoSealer_Inputs.Byte0.7;
+
+
+	Pump1_PreCharge_Active						:= GracoSealer_Inputs.Byte1.0;
+	Pump1_Dispense_In_Process					:= GracoSealer_Inputs.Byte1.1;
+	Pump1_Drum_Low							:= GracoSealer_Inputs.Byte1.2;
+	Pump1_Drum_Empty							:= GracoSealer_Inputs.Byte1.3;
+	Pump1_Not_Primed							:= GracoSealer_Inputs.Byte1.4;
+	Pump1_In_Job_Cycle							:= GracoSealer_Inputs.Byte1.5;
+	Pump1_Prime_Active							:= GracoSealer_Inputs.Byte1.6;
+	Pump1_Valve_Depressurization_Active			:= GracoSealer_Inputs.Byte1.7;
+
+
+	Pump1_Platen_Depressurization_Active			:= GracoSealer_Inputs.Byte2.0;
+	Pump1_Auto_Depressurization_Active			:= GracoSealer_Inputs.Byte2.1;
+	Pump1_Auto_Depressurization_Happened		:= GracoSealer_Inputs.Byte2.2;
+	Pump1_Trying_To_Move						:= GracoSealer_Inputs.Byte2.3;
+	Pump1_Moving								:= GracoSealer_Inputs.Byte2.4;
+	Pump1_DispenseValve_Opened				:= GracoSealer_Inputs.Byte2.5;
+	Pump1_PlatenValve_Opened					:= GracoSealer_Inputs.Byte2.6;
+	Pump1_Tandem_Active_Pump					:= GracoSealer_Inputs.Byte2.7;			(*0 =Pump 1, 1 = Pump 2*)
+
+
+	Pump1_EFlo_iQ_Mode_Active					:= GracoSealer_Inputs.Byte3.0;
+	Pump1_ChangeOver_Occured					:= GracoSealer_Inputs.Byte3.1;
+	(*Reserved Bit 1*)
+	(*Reserved Bit 2*)
+	(*Reserved Bit 3*)
+	(*Reserved Bit 4*)
+	(*Reserved Bit 5*)
+	(*Reserved Bit 6*)
+
+
+	Pump1_ActualPump_Flowrate.0					:= GracoSealer_Inputs.Byte4.0;			(*xxxx cc/min*)
+	Pump1_ActualPump_Flowrate.1					:= GracoSealer_Inputs.Byte4.1;			(*xxxx cc/min*)
+	Pump1_ActualPump_Flowrate.2					:= GracoSealer_Inputs.Byte4.2;			(*xxxx cc/min*)
+	Pump1_ActualPump_Flowrate.3					:= GracoSealer_Inputs.Byte4.3;			(*xxxx cc/min*)
+	Pump1_ActualPump_Flowrate.4					:= GracoSealer_Inputs.Byte4.4;			(*xxxx cc/min*)
+	Pump1_ActualPump_Flowrate.5					:= GracoSealer_Inputs.Byte4.5;			(*xxxx cc/min*)
+	Pump1_ActualPump_Flowrate.6					:= GracoSealer_Inputs.Byte4.6;			(*xxxx cc/min*)
+	Pump1_ActualPump_Flowrate.7					:= GracoSealer_Inputs.Byte4.7;			(*xxxx cc/min*)
+
+	Pump1_ActualPump_Flowrate.8					:= GracoSealer_Inputs.Byte5.0;			(*xxxx cc/min*)
+	Pump1_ActualPump_Flowrate.9					:= GracoSealer_Inputs.Byte5.1;			(*xxxx cc/min*)
+	Pump1_ActualPump_Flowrate.10				:= GracoSealer_Inputs.Byte5.2;			(*xxxx cc/min*)
+	Pump1_ActualPump_Flowrate.11				:= GracoSealer_Inputs.Byte5.3;			(*xxxx cc/min*)
+	Pump1_ActualPump_Flowrate.12				:= GracoSealer_Inputs.Byte5.4;			(*xxxx cc/min*)
+	Pump1_ActualPump_Flowrate.13				:= GracoSealer_Inputs.Byte5.5;			(*xxxx cc/min*)
+	Pump1_ActualPump_Flowrate.14				:= GracoSealer_Inputs.Byte5.6;			(*xxxx cc/min*)
+	Pump1_ActualPump_Flowrate.15				:= GracoSealer_Inputs.Byte5.7;			(*xxxx cc/min*)
+
+
+	Pump1_Outlet_Pressure.0						:= GracoSealer_Inputs.Byte6.0;			(*xxx.x bar*)
+	Pump1_Outlet_Pressure.1						:= GracoSealer_Inputs.Byte6.1;			(*xxx.x bar*)
+	Pump1_Outlet_Pressure.2						:= GracoSealer_Inputs.Byte6.2;			(*xxx.x bar*)
+	Pump1_Outlet_Pressure.3						:= GracoSealer_Inputs.Byte6.3;			(*xxx.x bar*)
+	Pump1_Outlet_Pressure.4						:= GracoSealer_Inputs.Byte6.4;			(*xxx.x bar*)
+	Pump1_Outlet_Pressure.5						:= GracoSealer_Inputs.Byte6.5;			(*xxx.x bar*)
+	Pump1_Outlet_Pressure.6						:= GracoSealer_Inputs.Byte6.6;			(*xxx.x bar*)
+	Pump1_Outlet_Pressure.7						:= GracoSealer_Inputs.Byte6.7;			(*xxx.x bar*)
+
+	Pump1_Outlet_Pressure.8						:= GracoSealer_Inputs.Byte7.0;			(*xxx.x bar*)
+	Pump1_Outlet_Pressure.9						:= GracoSealer_Inputs.Byte7.1;			(*xxx.x bar*)
+	Pump1_Outlet_Pressure.10						:= GracoSealer_Inputs.Byte7.2;			(*xxx.x bar*)
+	Pump1_Outlet_Pressure.11						:= GracoSealer_Inputs.Byte7.3;			(*xxx.x bar*)
+	Pump1_Outlet_Pressure.12						:= GracoSealer_Inputs.Byte7.4;			(*xxx.x bar*)
+	Pump1_Outlet_Pressure.13						:= GracoSealer_Inputs.Byte7.5;			(*xxx.x bar*)
+	Pump1_Outlet_Pressure.14						:= GracoSealer_Inputs.Byte7.6;			(*xxx.x bar*)
+	Pump1_Outlet_Pressure.15						:= GracoSealer_Inputs.Byte7.7;			(*xxx.x bar*)
+
+
+	Pump1_Valve_Pressure.0						:= GracoSealer_Inputs.Byte8.0;			(*xxx.x bar*)
+	Pump1_Valve_Pressure.1						:= GracoSealer_Inputs.Byte8.1;			(*xxx.x bar*)
+	Pump1_Valve_Pressure.2						:= GracoSealer_Inputs.Byte8.2;			(*xxx.x bar*)
+	Pump1_Valve_Pressure.3						:= GracoSealer_Inputs.Byte8.3;			(*xxx.x bar*)
+	Pump1_Valve_Pressure.4						:= GracoSealer_Inputs.Byte8.4;			(*xxx.x bar*)
+	Pump1_Valve_Pressure.5						:= GracoSealer_Inputs.Byte8.5;			(*xxx.x bar*)
+	Pump1_Valve_Pressure.6						:= GracoSealer_Inputs.Byte8.6;			(*xxx.x bar*)
+	Pump1_Valve_Pressure.7						:= GracoSealer_Inputs.Byte8.7;			(*xxx.x bar*)
+
+	Pump1_Valve_Pressure.8						:= GracoSealer_Inputs.Byte9.0;			(*xxx.x bar*)
+	Pump1_Valve_Pressure.9						:= GracoSealer_Inputs.Byte9.1;			(*xxx.x bar*)
+	Pump1_Valve_Pressure.10						:= GracoSealer_Inputs.Byte9.2;			(*xxx.x bar*)
+	Pump1_Valve_Pressure.11						:= GracoSealer_Inputs.Byte9.3;			(*xxx.x bar*)
+	Pump1_Valve_Pressure.12						:= GracoSealer_Inputs.Byte9.4;			(*xxx.x bar*)
+	Pump1_Valve_Pressure.13						:= GracoSealer_Inputs.Byte9.5;			(*xxx.x bar*)
+	Pump1_Valve_Pressure.14						:= GracoSealer_Inputs.Byte9.6;			(*xxx.x bar*)
+	Pump1_Valve_Pressure.15						:= GracoSealer_Inputs.Byte9.7;			(*xxx.x bar*)
+
+
+	Pump1_Active_Style_Loaded.0					:= GracoSealer_Inputs.Byte10.0;
+	Pump1_Active_Style_Loaded.1					:= GracoSealer_Inputs.Byte10.1;
+	Pump1_Active_Style_Loaded.2					:= GracoSealer_Inputs.Byte10.2;
+	Pump1_Active_Style_Loaded.3					:= GracoSealer_Inputs.Byte10.3;
+	Pump1_Active_Style_Loaded.4					:= GracoSealer_Inputs.Byte10.4;
+	Pump1_Active_Style_Loaded.5					:= GracoSealer_Inputs.Byte10.5;
+	Pump1_Active_Style_Loaded.6					:= GracoSealer_Inputs.Byte10.6;
+	Pump1_Active_Style_Loaded.7					:= GracoSealer_Inputs.Byte10.7;
+
+	Pump1_Active_Style_Loaded.8					:= GracoSealer_Inputs.Byte11.0;
+	Pump1_Active_Style_Loaded.9					:= GracoSealer_Inputs.Byte11.1;
+	Pump1_Active_Style_Loaded.10					:= GracoSealer_Inputs.Byte11.2;
+	Pump1_Active_Style_Loaded.11					:= GracoSealer_Inputs.Byte11.3;
+	Pump1_Active_Style_Loaded.12					:= GracoSealer_Inputs.Byte11.4;
+	Pump1_Active_Style_Loaded.13					:= GracoSealer_Inputs.Byte11.5;
+	Pump1_Active_Style_Loaded.14					:= GracoSealer_Inputs.Byte11.6;
+	Pump1_Active_Style_Loaded.15					:= GracoSealer_Inputs.Byte11.7;
+
+
+	Pump1_Active_Style_Precharge.0				:= GracoSealer_Inputs.Byte12.0; 			(*xxx.x bar*)
+	Pump1_Active_Style_Precharge.1				:= GracoSealer_Inputs.Byte12.1; 			(*xxx.x bar*)
+	Pump1_Active_Style_Precharge.2				:= GracoSealer_Inputs.Byte12.2; 			(*xxx.x bar*)
+	Pump1_Active_Style_Precharge.3				:= GracoSealer_Inputs.Byte12.3; 			(*xxx.x bar*)
+	Pump1_Active_Style_Precharge.4				:= GracoSealer_Inputs.Byte12.4; 			(*xxx.x bar*)
+	Pump1_Active_Style_Precharge.5				:= GracoSealer_Inputs.Byte12.5; 			(*xxx.x bar*)
+	Pump1_Active_Style_Precharge.6				:= GracoSealer_Inputs.Byte12.6; 			(*xxx.x bar*)
+	Pump1_Active_Style_Precharge.7				:= GracoSealer_Inputs.Byte12.7; 			(*xxx.x bar*)
+
+	Pump1_Active_Style_Precharge.8				:= GracoSealer_Inputs.Byte13.0; 			(*xxx.x bar*)
+	Pump1_Active_Style_Precharge.9				:= GracoSealer_Inputs.Byte13.1; 			(*xxx.x bar*)
+	Pump1_Active_Style_Precharge.10				:= GracoSealer_Inputs.Byte13.2; 			(*xxx.x bar*)
+	Pump1_Active_Style_Precharge.11				:= GracoSealer_Inputs.Byte13.3; 			(*xxx.x bar*)
+	Pump1_Active_Style_Precharge.12				:= GracoSealer_Inputs.Byte13.4; 			(*xxx.x bar*)
+	Pump1_Active_Style_Precharge.13				:= GracoSealer_Inputs.Byte13.5; 			(*xxx.x bar*)
+	Pump1_Active_Style_Precharge.14				:= GracoSealer_Inputs.Byte13.6; 			(*xxx.x bar*)
+	Pump1_Active_Style_Precharge.15				:= GracoSealer_Inputs.Byte13.7; 			(*xxx.x bar*)
+
+
+	Pump1_Active_Style_Flowrate.0					:= GracoSealer_Inputs.Byte14.0; 	 		(*xxxx cc/min*)
+	Pump1_Active_Style_Flowrate.1					:= GracoSealer_Inputs.Byte14.1; 	 		(*xxxx cc/min*)
+	Pump1_Active_Style_Flowrate.2					:= GracoSealer_Inputs.Byte14.2; 	 		(*xxxx cc/min*)
+	Pump1_Active_Style_Flowrate.3					:= GracoSealer_Inputs.Byte14.3; 	 		(*xxxx cc/min*)
+	Pump1_Active_Style_Flowrate.4					:= GracoSealer_Inputs.Byte14.4; 	 		(*xxxx cc/min*)
+	Pump1_Active_Style_Flowrate.5					:= GracoSealer_Inputs.Byte14.5; 	 		(*xxxx cc/min*)
+	Pump1_Active_Style_Flowrate.6					:= GracoSealer_Inputs.Byte14.6; 	 		(*xxxx cc/min*)
+	Pump1_Active_Style_Flowrate.7					:= GracoSealer_Inputs.Byte14.7; 	 		(*xxxx cc/min*)
+
+	Pump1_Active_Style_Flowrate.8					:= GracoSealer_Inputs.Byte15.0; 	 		(*xxxx cc/min*)
+	Pump1_Active_Style_Flowrate.9					:= GracoSealer_Inputs.Byte15.1; 	 		(*xxxx cc/min*)
+	Pump1_Active_Style_Flowrate.10				:= GracoSealer_Inputs.Byte15.2; 	 		(*xxxx cc/min*)
+	Pump1_Active_Style_Flowrate.11				:= GracoSealer_Inputs.Byte15.3; 	 		(*xxxx cc/min*)
+	Pump1_Active_Style_Flowrate.12				:= GracoSealer_Inputs.Byte15.4; 	 		(*xxxx cc/min*)
+	Pump1_Active_Style_Flowrate.13				:= GracoSealer_Inputs.Byte15.5; 	 		(*xxxx cc/min*)
+	Pump1_Active_Style_Flowrate.14				:= GracoSealer_Inputs.Byte15.6; 	 		(*xxxx cc/min*)
+	Pump1_Active_Style_Flowrate.15				:= GracoSealer_Inputs.Byte15.7; 	 		(*xxxx cc/min*)
+
+
+	Pump1_Active_Style_ShotSize.0					:= GracoSealer_Inputs.Byte16.0;  			(*xxx.xx cc*)
+	Pump1_Active_Style_ShotSize.1					:= GracoSealer_Inputs.Byte16.1;  			(*xxx.xx cc*)
+	Pump1_Active_Style_ShotSize.2					:= GracoSealer_Inputs.Byte16.2;  			(*xxx.xx cc*)
+	Pump1_Active_Style_ShotSize.3					:= GracoSealer_Inputs.Byte16.3;  			(*xxx.xx cc*)
+	Pump1_Active_Style_ShotSize.4					:= GracoSealer_Inputs.Byte16.4;  			(*xxx.xx cc*)
+	Pump1_Active_Style_ShotSize.5					:= GracoSealer_Inputs.Byte16.5;  			(*xxx.xx cc*)
+	Pump1_Active_Style_ShotSize.6					:= GracoSealer_Inputs.Byte16.6;  			(*xxx.xx cc*)
+	Pump1_Active_Style_ShotSize.7					:= GracoSealer_Inputs.Byte16.7;  			(*xxx.xx cc*)
+
+	Pump1_Active_Style_ShotSize.8					:= GracoSealer_Inputs.Byte17.0;  			(*xxx.xx cc*)
+	Pump1_Active_Style_ShotSize.9					:= GracoSealer_Inputs.Byte17.1;  			(*xxx.xx cc*)
+	Pump1_Active_Style_ShotSize.10				:= GracoSealer_Inputs.Byte17.2;  			(*xxx.xx cc*)
+	Pump1_Active_Style_ShotSize.11				:= GracoSealer_Inputs.Byte17.3;  			(*xxx.xx cc*)
+	Pump1_Active_Style_ShotSize.12				:= GracoSealer_Inputs.Byte17.4;  			(*xxx.xx cc*)
+	Pump1_Active_Style_ShotSize.13				:= GracoSealer_Inputs.Byte17.5;  			(*xxx.xx cc*)
+	Pump1_Active_Style_ShotSize.14				:= GracoSealer_Inputs.Byte17.6;  			(*xxx.xx cc*)
+	Pump1_Active_Style_ShotSize.15				:= GracoSealer_Inputs.Byte17.7;  			(*xxx.xx cc*)
+
+
+	Pump1_Actual_Amount_Dispense.0				:= GracoSealer_Inputs.Byte18.0; 			(*xxxx.xx cc*)
+	Pump1_Actual_Amount_Dispense.1				:= GracoSealer_Inputs.Byte18.1; 			(*xxxx.xx cc*)
+	Pump1_Actual_Amount_Dispense.2				:= GracoSealer_Inputs.Byte18.2; 			(*xxxx.xx cc*)
+	Pump1_Actual_Amount_Dispense.3				:= GracoSealer_Inputs.Byte18.3; 			(*xxxx.xx cc*)
+	Pump1_Actual_Amount_Dispense.4				:= GracoSealer_Inputs.Byte18.4; 			(*xxxx.xx cc*)
+	Pump1_Actual_Amount_Dispense.5				:= GracoSealer_Inputs.Byte18.5; 			(*xxxx.xx cc*)
+	Pump1_Actual_Amount_Dispense.6				:= GracoSealer_Inputs.Byte18.6; 			(*xxxx.xx cc*)
+	Pump1_Actual_Amount_Dispense.7				:= GracoSealer_Inputs.Byte18.7; 			(*xxxx.xx cc*)
+
+	Pump1_Actual_Amount_Dispense.8				:= GracoSealer_Inputs.Byte19.0; 			(*xxxx.xx cc*)
+	Pump1_Actual_Amount_Dispense.9				:= GracoSealer_Inputs.Byte19.1; 			(*xxxx.xx cc*)
+	Pump1_Actual_Amount_Dispense.10				:= GracoSealer_Inputs.Byte19.2; 			(*xxxx.xx cc*)
+	Pump1_Actual_Amount_Dispense.11				:= GracoSealer_Inputs.Byte19.3; 			(*xxxx.xx cc*)
+	Pump1_Actual_Amount_Dispense.12				:= GracoSealer_Inputs.Byte19.4; 			(*xxxx.xx cc*)
+	Pump1_Actual_Amount_Dispense.13				:= GracoSealer_Inputs.Byte19.5; 			(*xxxx.xx cc*)
+	Pump1_Actual_Amount_Dispense.14				:= GracoSealer_Inputs.Byte19.6; 			(*xxxx.xx cc*)
+	Pump1_Actual_Amount_Dispense.15				:= GracoSealer_Inputs.Byte19.7; 			(*xxxx.xx cc*)
+
+	Pump1_Actual_Amount_Dispense.16				:= GracoSealer_Inputs.Byte20.0; 			(*xxxx.xx cc*)
+	Pump1_Actual_Amount_Dispense.17				:= GracoSealer_Inputs.Byte20.1; 			(*xxxx.xx cc*)
+	Pump1_Actual_Amount_Dispense.18				:= GracoSealer_Inputs.Byte20.2; 			(*xxxx.xx cc*)
+	Pump1_Actual_Amount_Dispense.19				:= GracoSealer_Inputs.Byte20.3; 			(*xxxx.xx cc*)
+	Pump1_Actual_Amount_Dispense.20				:= GracoSealer_Inputs.Byte20.4; 			(*xxxx.xx cc*)
+	Pump1_Actual_Amount_Dispense.21				:= GracoSealer_Inputs.Byte20.5; 			(*xxxx.xx cc*)
+	Pump1_Actual_Amount_Dispense.22				:= GracoSealer_Inputs.Byte20.6; 			(*xxxx.xx cc*)
+	Pump1_Actual_Amount_Dispense.23				:= GracoSealer_Inputs.Byte20.7; 			(*xxxx.xx cc*)
+
+	Pump1_Actual_Amount_Dispense.24				:= GracoSealer_Inputs.Byte21.0; 			(*xxxx.xx cc*)
+	Pump1_Actual_Amount_Dispense.25				:= GracoSealer_Inputs.Byte21.1; 			(*xxxx.xx cc*)
+	Pump1_Actual_Amount_Dispense.26				:= GracoSealer_Inputs.Byte21.2; 			(*xxxx.xx cc*)
+	Pump1_Actual_Amount_Dispense.27				:= GracoSealer_Inputs.Byte21.3; 			(*xxxx.xx cc*)
+	Pump1_Actual_Amount_Dispense.28				:= GracoSealer_Inputs.Byte21.4; 			(*xxxx.xx cc*)
+	Pump1_Actual_Amount_Dispense.29				:= GracoSealer_Inputs.Byte21.5; 			(*xxxx.xx cc*)
+	Pump1_Actual_Amount_Dispense.30				:= GracoSealer_Inputs.Byte21.6; 			(*xxxx.xx cc*)
+	Pump1_Actual_Amount_Dispense.31				:= GracoSealer_Inputs.Byte21.7; 			(*xxxx.xx cc*)
+
+
+	Pump1_Actual_Shot_Size.0						:= GracoSealer_Inputs.Byte22.0; 			(*xx.xx cc*)
+	Pump1_Actual_Shot_Size.1 						:= GracoSealer_Inputs.Byte22.1; 			(*xx.xx cc*)
+	Pump1_Actual_Shot_Size.2						:= GracoSealer_Inputs.Byte22.2; 			(*xx.xx cc*)
+	Pump1_Actual_Shot_Size.3						:= GracoSealer_Inputs.Byte22.3; 			(*xx.xx cc*)
+	Pump1_Actual_Shot_Size.4						:= GracoSealer_Inputs.Byte22.4; 			(*xx.xx cc*)
+	Pump1_Actual_Shot_Size.5						:= GracoSealer_Inputs.Byte22.5; 			(*xx.xx cc*)
+	Pump1_Actual_Shot_Size.6						:= GracoSealer_Inputs.Byte22.6; 			(*xx.xx cc*)
+	Pump1_Actual_Shot_Size.7						:= GracoSealer_Inputs.Byte22.7; 			(*xx.xx cc*)
+
+	Pump1_Actual_Shot_Size.8						:= GracoSealer_Inputs.Byte23.0; 			(*xx.xx cc*)
+	Pump1_Actual_Shot_Size.9						:= GracoSealer_Inputs.Byte23.1; 			(*xx.xx cc*)
+	Pump1_Actual_Shot_Size.10					:= GracoSealer_Inputs.Byte23.2; 			(*xx.xx cc*)
+	Pump1_Actual_Shot_Size.11					:= GracoSealer_Inputs.Byte23.3; 			(*xx.xx cc*)
+	Pump1_Actual_Shot_Size.12					:= GracoSealer_Inputs.Byte23.4; 			(*xx.xx cc*)
+	Pump1_Actual_Shot_Size.13					:= GracoSealer_Inputs.Byte23.5; 			(*xx.xx cc*)
+	Pump1_Actual_Shot_Size.14					:= GracoSealer_Inputs.Byte23.6; 			(*xx.xx cc*)
+	Pump1_Actual_Shot_Size.15					:= GracoSealer_Inputs.Byte23.7; 			(*xx.xx cc*)
+
+	Pump1_Actual_Shot_Size.16					:= GracoSealer_Inputs.Byte24.0; 			(*xx.xx cc*)
+	Pump1_Actual_Shot_Size.17					:= GracoSealer_Inputs.Byte24.1; 			(*xx.xx cc*)
+	Pump1_Actual_Shot_Size.18					:= GracoSealer_Inputs.Byte24.2; 			(*xx.xx cc*)
+	Pump1_Actual_Shot_Size.19					:= GracoSealer_Inputs.Byte24.3; 			(*xx.xx cc*)
+	Pump1_Actual_Shot_Size.20					:= GracoSealer_Inputs.Byte24.4; 			(*xx.xx cc*)
+	Pump1_Actual_Shot_Size.21					:= GracoSealer_Inputs.Byte24.5; 			(*xx.xx cc*)
+	Pump1_Actual_Shot_Size.22					:= GracoSealer_Inputs.Byte24.6; 			(*xx.xx cc*)
+	Pump1_Actual_Shot_Size.23					:= GracoSealer_Inputs.Byte24.7; 			(*xx.xx cc*)
+
+	Pump1_Actual_Shot_Size.24					:= GracoSealer_Inputs.Byte25.0; 			(*xx.xx cc*)
+	Pump1_Actual_Shot_Size.25					:= GracoSealer_Inputs.Byte25.1; 			(*xx.xx cc*)
+	Pump1_Actual_Shot_Size.26					:= GracoSealer_Inputs.Byte25.2; 			(*xx.xx cc*)
+	Pump1_Actual_Shot_Size.27					:= GracoSealer_Inputs.Byte25.3; 			(*xx.xx cc*)
+	Pump1_Actual_Shot_Size.28					:= GracoSealer_Inputs.Byte25.4; 			(*xx.xx cc*)
+	Pump1_Actual_Shot_Size.29					:= GracoSealer_Inputs.Byte25.5; 			(*xx.xx cc*)
+	Pump1_Actual_Shot_Size.30					:= GracoSealer_Inputs.Byte25.6; 			(*xx.xx cc*)
+	Pump1_Actual_Shot_Size.31					:= GracoSealer_Inputs.Byte25.7; 			(*xx.xx cc*)
+
+
+	Pump1_Actual_Style_PreCharge_REQ.0			:= GracoSealer_Inputs.Byte26.0;			(*xxx.x bar*)
+	Pump1_Actual_Style_PreCharge_REQ.1			:= GracoSealer_Inputs.Byte26.1;			(*xxx.x bar*)
+	Pump1_Actual_Style_PreCharge_REQ.2			:= GracoSealer_Inputs.Byte26.2;			(*xxx.x bar*)
+	Pump1_Actual_Style_PreCharge_REQ.3			:= GracoSealer_Inputs.Byte26.3;			(*xxx.x bar*)
+	Pump1_Actual_Style_PreCharge_REQ.4			:= GracoSealer_Inputs.Byte26.4;			(*xxx.x bar*)
+	Pump1_Actual_Style_PreCharge_REQ.5			:= GracoSealer_Inputs.Byte26.5;			(*xxx.x bar*)
+	Pump1_Actual_Style_PreCharge_REQ.6			:= GracoSealer_Inputs.Byte26.6;			(*xxx.x bar*)
+	Pump1_Actual_Style_PreCharge_REQ.7			:= GracoSealer_Inputs.Byte26.7;			(*xxx.x bar*)
+
+	Pump1_Actual_Style_PreCharge_REQ.8			:= GracoSealer_Inputs.Byte27.0;			(*xxx.x bar*)
+	Pump1_Actual_Style_PreCharge_REQ.9			:= GracoSealer_Inputs.Byte27.1;			(*xxx.x bar*)
+	Pump1_Actual_Style_PreCharge_REQ.10			:= GracoSealer_Inputs.Byte27.2;			(*xxx.x bar*)
+	Pump1_Actual_Style_PreCharge_REQ.11			:= GracoSealer_Inputs.Byte27.3;			(*xxx.x bar*)
+	Pump1_Actual_Style_PreCharge_REQ.12			:= GracoSealer_Inputs.Byte27.4;			(*xxx.x bar*)
+	Pump1_Actual_Style_PreCharge_REQ.13			:= GracoSealer_Inputs.Byte27.5;			(*xxx.x bar*)
+	Pump1_Actual_Style_PreCharge_REQ.14			:= GracoSealer_Inputs.Byte27.6;			(*xxx.x bar*)
+	Pump1_Actual_Style_PreCharge_REQ.15			:= GracoSealer_Inputs.Byte27.7;			(*xxx.x bar*)
+
+
+	Pump1_Actual_Style_Flowrate_REQ.0			:= GracoSealer_Inputs.Byte28.0;			(*xxxx cc/min*)
+	Pump1_Actual_Style_Flowrate_REQ.1			:= GracoSealer_Inputs.Byte28.1;			(*xxxx cc/min*)
+	Pump1_Actual_Style_Flowrate_REQ.2			:= GracoSealer_Inputs.Byte28.2;			(*xxxx cc/min*)
+	Pump1_Actual_Style_Flowrate_REQ.3			:= GracoSealer_Inputs.Byte28.3;			(*xxxx cc/min*)
+	Pump1_Actual_Style_Flowrate_REQ.4			:= GracoSealer_Inputs.Byte28.4;			(*xxxx cc/min*)
+	Pump1_Actual_Style_Flowrate_REQ.5			:= GracoSealer_Inputs.Byte28.5;			(*xxxx cc/min*)
+	Pump1_Actual_Style_Flowrate_REQ.6			:= GracoSealer_Inputs.Byte28.6;			(*xxxx cc/min*)
+	Pump1_Actual_Style_Flowrate_REQ.7			:= GracoSealer_Inputs.Byte28.7;			(*xxxx cc/min*)
+
+	Pump1_Actual_Style_Flowrate_REQ.8			:= GracoSealer_Inputs.Byte29.0;			(*xxxx cc/min*)
+	Pump1_Actual_Style_Flowrate_REQ.9			:= GracoSealer_Inputs.Byte29.1;			(*xxxx cc/min*)
+	Pump1_Actual_Style_Flowrate_REQ.10			:= GracoSealer_Inputs.Byte29.2;			(*xxxx cc/min*)
+	Pump1_Actual_Style_Flowrate_REQ.11			:= GracoSealer_Inputs.Byte29.3;			(*xxxx cc/min*)
+	Pump1_Actual_Style_Flowrate_REQ.12			:= GracoSealer_Inputs.Byte29.4;			(*xxxx cc/min*)
+	Pump1_Actual_Style_Flowrate_REQ.13			:= GracoSealer_Inputs.Byte29.5;			(*xxxx cc/min*)
+	Pump1_Actual_Style_Flowrate_REQ.14			:= GracoSealer_Inputs.Byte29.6;			(*xxxx cc/min*)
+	Pump1_Actual_Style_Flowrate_REQ.15			:= GracoSealer_Inputs.Byte29.7;			(*xxxx cc/min*)
+
+
+	Pump1_Actual_Style_Shot_Size_REQ.0			:= GracoSealer_Inputs.Byte30.0;			(*xxx.xx cc*)
+	Pump1_Actual_Style_Shot_Size_REQ.1			:= GracoSealer_Inputs.Byte30.1;			(*xxx.xx cc*)
+	Pump1_Actual_Style_Shot_Size_REQ.2			:= GracoSealer_Inputs.Byte30.2;			(*xxx.xx cc*)
+	Pump1_Actual_Style_Shot_Size_REQ.3			:= GracoSealer_Inputs.Byte30.3;			(*xxx.xx cc*)
+	Pump1_Actual_Style_Shot_Size_REQ.4			:= GracoSealer_Inputs.Byte30.4;			(*xxx.xx cc*)
+	Pump1_Actual_Style_Shot_Size_REQ.5			:= GracoSealer_Inputs.Byte30.5;			(*xxx.xx cc*)
+	Pump1_Actual_Style_Shot_Size_REQ.6			:= GracoSealer_Inputs.Byte30.6;			(*xxx.xx cc*)
+	Pump1_Actual_Style_Shot_Size_REQ.7			:= GracoSealer_Inputs.Byte30.7;			(*xxx.xx cc*)
+
+	Pump1_Actual_Style_Shot_Size_REQ.8			:= GracoSealer_Inputs.Byte31.0;			(*xxx.xx cc*)
+	Pump1_Actual_Style_Shot_Size_REQ.9			:= GracoSealer_Inputs.Byte31.1;			(*xxx.xx cc*)
+	Pump1_Actual_Style_Shot_Size_REQ.10			:= GracoSealer_Inputs.Byte31.2;			(*xxx.xx cc*)
+	Pump1_Actual_Style_Shot_Size_REQ.11			:= GracoSealer_Inputs.Byte31.3;			(*xxx.xx cc*)
+	Pump1_Actual_Style_Shot_Size_REQ.12			:= GracoSealer_Inputs.Byte31.4;			(*xxx.xx cc*)
+	Pump1_Actual_Style_Shot_Size_REQ.13			:= GracoSealer_Inputs.Byte31.5;			(*xxx.xx cc*)
+	Pump1_Actual_Style_Shot_Size_REQ.14			:= GracoSealer_Inputs.Byte31.6;			(*xxx.xx cc*)
+	Pump1_Actual_Style_Shot_Size_REQ.15			:= GracoSealer_Inputs.Byte31.7;			(*xxx.xx cc*)
+
+
+	Pump1_PumpPosition.0						:= GracoSealer_Inputs.Byte32.0;			(*x.xxxx inches*)
+	Pump1_PumpPosition.1						:= GracoSealer_Inputs.Byte32.1;			(*x.xxxx inches*)
+	Pump1_PumpPosition.2						:= GracoSealer_Inputs.Byte32.2;			(*x.xxxx inches*)
+	Pump1_PumpPosition.3						:= GracoSealer_Inputs.Byte32.3;			(*x.xxxx inches*)
+	Pump1_PumpPosition.4						:= GracoSealer_Inputs.Byte32.4;			(*x.xxxx inches*)
+	Pump1_PumpPosition.5						:= GracoSealer_Inputs.Byte32.5;			(*x.xxxx inches*)
+	Pump1_PumpPosition.6						:= GracoSealer_Inputs.Byte32.6;			(*x.xxxx inches*)
+	Pump1_PumpPosition.7						:= GracoSealer_Inputs.Byte32.7;			(*x.xxxx inches*)
+
+	Pump1_PumpPosition.8						:= GracoSealer_Inputs.Byte33.0;			(*x.xxxx inches*)
+	Pump1_PumpPosition.9						:= GracoSealer_Inputs.Byte33.1;			(*x.xxxx inches*)
+	Pump1_PumpPosition.10						:= GracoSealer_Inputs.Byte33.2;			(*x.xxxx inches*)
+	Pump1_PumpPosition.11						:= GracoSealer_Inputs.Byte33.3;			(*x.xxxx inches*)
+	Pump1_PumpPosition.12						:= GracoSealer_Inputs.Byte33.4;			(*x.xxxx inches*)
+	Pump1_PumpPosition.13						:= GracoSealer_Inputs.Byte33.5;			(*x.xxxx inches*)
+	Pump1_PumpPosition.14						:= GracoSealer_Inputs.Byte33.6;			(*x.xxxx inches*)
+	Pump1_PumpPosition.15						:= GracoSealer_Inputs.Byte33.7;			(*x.xxxx inches*)
+
+
+	Pump1_Data_Exchange_Active_CMD.0			:= GracoSealer_Inputs.Byte34.0;
+	Pump1_Data_Exchange_Active_CMD.1			:= GracoSealer_Inputs.Byte34.1;
+	Pump1_Data_Exchange_Active_CMD.2			:= GracoSealer_Inputs.Byte34.2;
+	Pump1_Data_Exchange_Active_CMD.3			:= GracoSealer_Inputs.Byte34.3;
+	Pump1_Data_Exchange_Active_CMD.4			:= GracoSealer_Inputs.Byte34.4;
+	Pump1_Data_Exchange_Active_CMD.5			:= GracoSealer_Inputs.Byte34.5;
+	Pump1_Data_Exchange_Active_CMD.6			:= GracoSealer_Inputs.Byte34.6;
+	Pump1_Data_Exchange_Active_CMD.7			:= GracoSealer_Inputs.Byte34.7;
+
+	Pump1_Data_Exchange_Active_CMD.8			:= GracoSealer_Inputs.Byte35.0;
+	Pump1_Data_Exchange_Active_CMD.9			:= GracoSealer_Inputs.Byte35.1;
+	Pump1_Data_Exchange_Active_CMD.10			:= GracoSealer_Inputs.Byte35.2;
+	Pump1_Data_Exchange_Active_CMD.11			:= GracoSealer_Inputs.Byte35.3;
+	Pump1_Data_Exchange_Active_CMD.12			:= GracoSealer_Inputs.Byte35.4;
+	Pump1_Data_Exchange_Active_CMD.13			:= GracoSealer_Inputs.Byte35.5;
+	Pump1_Data_Exchange_Active_CMD.14			:= GracoSealer_Inputs.Byte35.6;
+	Pump1_Data_Exchange_Active_CMD.15			:= GracoSealer_Inputs.Byte35.7;
+
+
+	Pump1_Data_Exchange_Active_CMD_Value.0		:= GracoSealer_Inputs.Byte36.0;
+	Pump1_Data_Exchange_Active_CMD_Value.1		:= GracoSealer_Inputs.Byte36.1;
+	Pump1_Data_Exchange_Active_CMD_Value.2		:= GracoSealer_Inputs.Byte36.2;
+	Pump1_Data_Exchange_Active_CMD_Value.3		:= GracoSealer_Inputs.Byte36.3;
+	Pump1_Data_Exchange_Active_CMD_Value.4		:= GracoSealer_Inputs.Byte36.4;
+	Pump1_Data_Exchange_Active_CMD_Value.5		:= GracoSealer_Inputs.Byte36.5;
+	Pump1_Data_Exchange_Active_CMD_Value.6		:= GracoSealer_Inputs.Byte36.6;
+	Pump1_Data_Exchange_Active_CMD_Value.7		:= GracoSealer_Inputs.Byte36.7;
+
+	Pump1_Data_Exchange_Active_CMD_Value.8		:= GracoSealer_Inputs.Byte37.0;
+	Pump1_Data_Exchange_Active_CMD_Value.9		:= GracoSealer_Inputs.Byte37.1;
+	Pump1_Data_Exchange_Active_CMD_Value.10	:= GracoSealer_Inputs.Byte37.2;
+	Pump1_Data_Exchange_Active_CMD_Value.11	:= GracoSealer_Inputs.Byte37.3;
+	Pump1_Data_Exchange_Active_CMD_Value.12	:= GracoSealer_Inputs.Byte37.4;
+	Pump1_Data_Exchange_Active_CMD_Value.13	:= GracoSealer_Inputs.Byte37.5;
+	Pump1_Data_Exchange_Active_CMD_Value.14	:= GracoSealer_Inputs.Byte37.6;
+	Pump1_Data_Exchange_Active_CMD_Value.15	:= GracoSealer_Inputs.Byte37.7;
+	Pump1_Data_Exchange_Active_CMD_Value.16	:= GracoSealer_Inputs.Byte38.0;
+	Pump1_Data_Exchange_Active_CMD_Value.17	:= GracoSealer_Inputs.Byte38.1;
+	Pump1_Data_Exchange_Active_CMD_Value.18	:= GracoSealer_Inputs.Byte38.2;
+	Pump1_Data_Exchange_Active_CMD_Value.19	:= GracoSealer_Inputs.Byte38.3;
+	Pump1_Data_Exchange_Active_CMD_Value.20	:= GracoSealer_Inputs.Byte38.4;
+	Pump1_Data_Exchange_Active_CMD_Value.21	:= GracoSealer_Inputs.Byte38.5;
+	Pump1_Data_Exchange_Active_CMD_Value.22	:= GracoSealer_Inputs.Byte38.6;
+	Pump1_Data_Exchange_Active_CMD_Value.23	:= GracoSealer_Inputs.Byte38.7;
+
+	Pump1_Data_Exchange_Active_CMD_Value.24	:= GracoSealer_Inputs.Byte39.0;
+	Pump1_Data_Exchange_Active_CMD_Value.25	:= GracoSealer_Inputs.Byte39.1;
+	Pump1_Data_Exchange_Active_CMD_Value.26	:= GracoSealer_Inputs.Byte39.2;
+	Pump1_Data_Exchange_Active_CMD_Value.27	:= GracoSealer_Inputs.Byte39.3;
+	Pump1_Data_Exchange_Active_CMD_Value.28	:= GracoSealer_Inputs.Byte39.4;
+	Pump1_Data_Exchange_Active_CMD_Value.29	:= GracoSealer_Inputs.Byte39.5;
+	Pump1_Data_Exchange_Active_CMD_Value.30	:= GracoSealer_Inputs.Byte39.6;
+	Pump1_Data_Exchange_Active_CMD_Value.31	:= GracoSealer_Inputs.Byte39.7;
+
+
+
+	(*Pump 2 - Inputs Only used for Tandem systems*)
+	Pump2_HeartBeat								:= GracoSealer_Inputs.Byte40.0;
+	Pump2_Control_Ready							:= GracoSealer_Inputs.Byte40.1;
+	Pump2_System_Active							:= GracoSealer_Inputs.Byte40.2;
+	Pump2_Control_Active							:= GracoSealer_Inputs.Byte40.3;
+	Pump2_NoAlarms_Active						:= GracoSealer_Inputs.Byte40.4;
+	Pump2_NoDeviations_Active					:= GracoSealer_Inputs.Byte40.5;
+	Pump2_NoAdvisory_Active						:= GracoSealer_Inputs.Byte40.6;
+	Pump2_Ready_To_Dispense					:= GracoSealer_Inputs.Byte40.7;
+
+
+	Pump2_PreCharge_Active						:= GracoSealer_Inputs.Byte41.0;
+	Pump2_Dispense_In_Process					:= GracoSealer_Inputs.Byte41.1;
+	Pump2_Drum_Low							:= GracoSealer_Inputs.Byte41.2;
+	Pump2_Drum_Empty							:= GracoSealer_Inputs.Byte41.3;
+	Pump2_Not_Primed							:= GracoSealer_Inputs.Byte41.4;
+	Pump2_In_Job_Cycle							:= GracoSealer_Inputs.Byte41.5;
+	Pump2_Prime_Active							:= GracoSealer_Inputs.Byte41.6;
+	Pump2_Valve_Depressurization_Active			:= GracoSealer_Inputs.Byte41.7;
+
+
+	Pump2_Platen_Depressurization_Active			:= GracoSealer_Inputs.Byte42.0;
+	Pump2_Auto_Depressurization_Active			:= GracoSealer_Inputs.Byte42.1;
+	Pump2_Auto_Depressurization_Happened		:= GracoSealer_Inputs.Byte42.2;
+	Pump2_Trying_To_Move						:= GracoSealer_Inputs.Byte42.3;
+	Pump2_Moving								:= GracoSealer_Inputs.Byte42.4;
+	Pump2_DispenseValve_Opened				:= GracoSealer_Inputs.Byte42.5;
+	Pump2_PlatenValve_Opened					:= GracoSealer_Inputs.Byte42.6;
+	Pump2_Tandem_Active_Pump					:= GracoSealer_Inputs.Byte42.7;			(*0 =Pump 1, 1 = Pump 2*)
+
+
+	Pump2_EFlo_iQ_Mode_Active					:= GracoSealer_Inputs.Byte43.0;
+	(*Reserved Bit 1*)
+	(*Reserved Bit 2*)
+	(*Reserved Bit 3*)
+	(*Reserved Bit 4*)
+	(*Reserved Bit 5*)
+	(*Reserved Bit 6*)
+	(*Reserved Bit 7*)
+	(*Reserved Bit 8*)
+	(*Reserved Bit 9*)
+
+
+	Pump2_ActualPump_Flowrate.0					:= GracoSealer_Inputs.Byte44.0;			(*xxxx cc/min*)
+	Pump2_ActualPump_Flowrate.1					:= GracoSealer_Inputs.Byte44.1;			(*xxxx cc/min*)
+	Pump2_ActualPump_Flowrate.2					:= GracoSealer_Inputs.Byte44.2;			(*xxxx cc/min*)
+	Pump2_ActualPump_Flowrate.3					:= GracoSealer_Inputs.Byte44.3;			(*xxxx cc/min*)
+	Pump2_ActualPump_Flowrate.4					:= GracoSealer_Inputs.Byte44.4;			(*xxxx cc/min*)
+	Pump2_ActualPump_Flowrate.5					:= GracoSealer_Inputs.Byte44.5;			(*xxxx cc/min*)
+	Pump2_ActualPump_Flowrate.6					:= GracoSealer_Inputs.Byte44.6;			(*xxxx cc/min*)
+	Pump2_ActualPump_Flowrate.7					:= GracoSealer_Inputs.Byte44.7;			(*xxxx cc/min*)
+
+	Pump2_ActualPump_Flowrate.8					:= GracoSealer_Inputs.Byte45.0;			(*xxxx cc/min*)
+	Pump2_ActualPump_Flowrate.9					:= GracoSealer_Inputs.Byte45.1;			(*xxxx cc/min*)
+	Pump2_ActualPump_Flowrate.10				:= GracoSealer_Inputs.Byte45.2;			(*xxxx cc/min*)
+	Pump2_ActualPump_Flowrate.11				:= GracoSealer_Inputs.Byte45.3;			(*xxxx cc/min*)
+	Pump2_ActualPump_Flowrate.12				:= GracoSealer_Inputs.Byte45.4;			(*xxxx cc/min*)
+	Pump2_ActualPump_Flowrate.13				:= GracoSealer_Inputs.Byte45.5;			(*xxxx cc/min*)
+	Pump2_ActualPump_Flowrate.14				:= GracoSealer_Inputs.Byte45.6;			(*xxxx cc/min*)
+	Pump2_ActualPump_Flowrate.15				:= GracoSealer_Inputs.Byte45.7;			(*xxxx cc/min*)
+
+
+	Pump2_Outlet_Pressure.0						:= GracoSealer_Inputs.Byte46.0;			(*xxx.x bar*)
+	Pump2_Outlet_Pressure.1						:= GracoSealer_Inputs.Byte46.1;			(*xxx.x bar*)
+	Pump2_Outlet_Pressure.2						:= GracoSealer_Inputs.Byte46.2;			(*xxx.x bar*)
+	Pump2_Outlet_Pressure.3						:= GracoSealer_Inputs.Byte46.3;			(*xxx.x bar*)
+	Pump2_Outlet_Pressure.4						:= GracoSealer_Inputs.Byte46.4;			(*xxx.x bar*)
+	Pump2_Outlet_Pressure.5						:= GracoSealer_Inputs.Byte46.5;			(*xxx.x bar*)
+	Pump2_Outlet_Pressure.6						:= GracoSealer_Inputs.Byte46.6;			(*xxx.x bar*)
+	Pump2_Outlet_Pressure.7						:= GracoSealer_Inputs.Byte46.7;			(*xxx.x bar*)
+
+	Pump2_Outlet_Pressure.8						:= GracoSealer_Inputs.Byte47.0;			(*xxx.x bar*)
+	Pump2_Outlet_Pressure.9						:= GracoSealer_Inputs.Byte47.1;			(*xxx.x bar*)
+	Pump2_Outlet_Pressure.10						:= GracoSealer_Inputs.Byte47.2;			(*xxx.x bar*)
+	Pump2_Outlet_Pressure.11						:= GracoSealer_Inputs.Byte47.3;			(*xxx.x bar*)
+	Pump2_Outlet_Pressure.12						:= GracoSealer_Inputs.Byte47.4;			(*xxx.x bar*)
+	Pump2_Outlet_Pressure.13						:= GracoSealer_Inputs.Byte47.5;			(*xxx.x bar*)
+	Pump2_Outlet_Pressure.14						:= GracoSealer_Inputs.Byte47.6;			(*xxx.x bar*)
+	Pump2_Outlet_Pressure.15						:= GracoSealer_Inputs.Byte47.7;			(*xxx.x bar*)
+
+
+	Pump2_Data_Exchange_Active_CMD.0			:= GracoSealer_Inputs.Byte48.0;
+	Pump2_Data_Exchange_Active_CMD.1			:= GracoSealer_Inputs.Byte48.1;
+	Pump2_Data_Exchange_Active_CMD.2			:= GracoSealer_Inputs.Byte48.2;
+	Pump2_Data_Exchange_Active_CMD.3			:= GracoSealer_Inputs.Byte48.3;
+	Pump2_Data_Exchange_Active_CMD.4			:= GracoSealer_Inputs.Byte48.4;
+	Pump2_Data_Exchange_Active_CMD.5			:= GracoSealer_Inputs.Byte48.5;
+	Pump2_Data_Exchange_Active_CMD.6			:= GracoSealer_Inputs.Byte48.6;
+	Pump2_Data_Exchange_Active_CMD.7			:= GracoSealer_Inputs.Byte48.7;
+
+	Pump2_Data_Exchange_Active_CMD.8			:= GracoSealer_Inputs.Byte49.0;
+	Pump2_Data_Exchange_Active_CMD.9			:= GracoSealer_Inputs.Byte49.1;
+	Pump2_Data_Exchange_Active_CMD.10			:= GracoSealer_Inputs.Byte49.2;
+	Pump2_Data_Exchange_Active_CMD.11			:= GracoSealer_Inputs.Byte49.3;
+	Pump2_Data_Exchange_Active_CMD.12			:= GracoSealer_Inputs.Byte49.4;
+	Pump2_Data_Exchange_Active_CMD.13			:= GracoSealer_Inputs.Byte49.5;
+	Pump2_Data_Exchange_Active_CMD.14			:= GracoSealer_Inputs.Byte49.6;
+	Pump2_Data_Exchange_Active_CMD.15			:= GracoSealer_Inputs.Byte49.7;
+
+
+	Pump2_Data_Exchange_Active_CMD_Value.0		:= GracoSealer_Inputs.Byte50.0;
+	Pump2_Data_Exchange_Active_CMD_Value.1		:= GracoSealer_Inputs.Byte50.1;
+	Pump2_Data_Exchange_Active_CMD_Value.2		:= GracoSealer_Inputs.Byte50.2;
+	Pump2_Data_Exchange_Active_CMD_Value.3		:= GracoSealer_Inputs.Byte50.3;
+	Pump2_Data_Exchange_Active_CMD_Value.4		:= GracoSealer_Inputs.Byte50.4;
+	Pump2_Data_Exchange_Active_CMD_Value.5		:= GracoSealer_Inputs.Byte50.5;
+	Pump2_Data_Exchange_Active_CMD_Value.6		:= GracoSealer_Inputs.Byte50.6;
+	Pump2_Data_Exchange_Active_CMD_Value.7		:= GracoSealer_Inputs.Byte50.7;
+
+	Pump2_Data_Exchange_Active_CMD_Value.8		:= GracoSealer_Inputs.Byte51.0;
+	Pump2_Data_Exchange_Active_CMD_Value.9		:= GracoSealer_Inputs.Byte51.1;
+	Pump2_Data_Exchange_Active_CMD_Value.10	:= GracoSealer_Inputs.Byte51.2;
+	Pump2_Data_Exchange_Active_CMD_Value.11	:= GracoSealer_Inputs.Byte51.3;
+	Pump2_Data_Exchange_Active_CMD_Value.12	:= GracoSealer_Inputs.Byte51.4;
+	Pump2_Data_Exchange_Active_CMD_Value.13	:= GracoSealer_Inputs.Byte51.5;
+	Pump2_Data_Exchange_Active_CMD_Value.14	:= GracoSealer_Inputs.Byte51.6;
+	Pump2_Data_Exchange_Active_CMD_Value.15	:= GracoSealer_Inputs.Byte51.7;
+
+	Pump2_Data_Exchange_Active_CMD_Value.16	:= GracoSealer_Inputs.Byte52.0;
+	Pump2_Data_Exchange_Active_CMD_Value.17	:= GracoSealer_Inputs.Byte52.1;
+	Pump2_Data_Exchange_Active_CMD_Value.18	:= GracoSealer_Inputs.Byte52.2;
+	Pump2_Data_Exchange_Active_CMD_Value.19	:= GracoSealer_Inputs.Byte52.3;
+	Pump2_Data_Exchange_Active_CMD_Value.20	:= GracoSealer_Inputs.Byte52.4;
+	Pump2_Data_Exchange_Active_CMD_Value.21	:= GracoSealer_Inputs.Byte52.5;
+	Pump2_Data_Exchange_Active_CMD_Value.22	:= GracoSealer_Inputs.Byte52.6;
+	Pump2_Data_Exchange_Active_CMD_Value.23	:= GracoSealer_Inputs.Byte52.7;
+
+	Pump2_Data_Exchange_Active_CMD_Value.24	:= GracoSealer_Inputs.Byte53.0;
+	Pump2_Data_Exchange_Active_CMD_Value.25	:= GracoSealer_Inputs.Byte53.1;
+	Pump2_Data_Exchange_Active_CMD_Value.26	:= GracoSealer_Inputs.Byte53.2;
+	Pump2_Data_Exchange_Active_CMD_Value.27	:= GracoSealer_Inputs.Byte53.3;
+	Pump2_Data_Exchange_Active_CMD_Value.28	:= GracoSealer_Inputs.Byte53.4;
+	Pump2_Data_Exchange_Active_CMD_Value.29	:= GracoSealer_Inputs.Byte53.5;
+	Pump2_Data_Exchange_Active_CMD_Value.30	:= GracoSealer_Inputs.Byte53.6;
+	Pump2_Data_Exchange_Active_CMD_Value.31	:= GracoSealer_Inputs.Byte53.7;
+
+
+
+	(*Heat 1 - Inputs from Graco*)
+	Heat1_Heartbeat								:= GracoSealer_Inputs.Byte54.0;
+	Heat1_Enabled								:= GracoSealer_Inputs.Byte54.1;
+	Heat1_Control_Active							:= GracoSealer_Inputs.Byte54.2;
+	Heat1_ON									:= GracoSealer_Inputs.Byte54.3;
+	Heat1_WarmingUp							:= GracoSealer_Inputs.Byte54.4;
+	Heat1_At_Temp								:= GracoSealer_Inputs.Byte54.5;
+	Heat1_Temp_Soak_Mode						:= GracoSealer_Inputs.Byte54.6;
+	Heat1_SetBack_Mode							:= GracoSealer_Inputs.Byte54.7;
+
+
+	Heat1_Off									:= GracoSealer_Inputs.Byte55.0;
+	Heat1_Module_NoAlarms_Active				:= GracoSealer_Inputs.Byte55.1;
+	Heat1_Module_NoDeviations_Active				:= GracoSealer_Inputs.Byte55.2;
+	Heat1_Module_NoAdvisory_Active				:= GracoSealer_Inputs.Byte55.3;
+	Heat1_Zone_NoAlarms_Active					:= GracoSealer_Inputs.Byte55.4;
+	Heat1_Zone_NoDeviations_Active				:= GracoSealer_Inputs.Byte55.5;
+	Heat1_Zone_NoAdvisory_Active				:= GracoSealer_Inputs.Byte55.6;
+	Heat1_Idle_Timeout_Happened					:= GracoSealer_Inputs.Byte55.7;
+
+
+	(*Byte 56 Reserved*)
+	(*Byte 57 Reserved*)
+
+
+	Heat1_Soak_Time_Remaining.0					:= GracoSealer_Inputs.Byte58.0;			(*xx seconds*)
+	Heat1_Soak_Time_Remaining.1					:= GracoSealer_Inputs.Byte58.1;			(*xx seconds*)
+	Heat1_Soak_Time_Remaining.2					:= GracoSealer_Inputs.Byte58.2;			(*xx seconds*)
+	Heat1_Soak_Time_Remaining.3					:= GracoSealer_Inputs.Byte58.3;			(*xx seconds*)
+	Heat1_Soak_Time_Remaining.4					:= GracoSealer_Inputs.Byte58.4;			(*xx seconds*)
+	Heat1_Soak_Time_Remaining.5					:= GracoSealer_Inputs.Byte58.5;			(*xx seconds*)
+	Heat1_Soak_Time_Remaining.6					:= GracoSealer_Inputs.Byte58.6;			(*xx seconds*)
+	Heat1_Soak_Time_Remaining.7					:= GracoSealer_Inputs.Byte58.7;			(*xx seconds*)
+
+	Heat1_Soak_Time_Remaining.8					:= GracoSealer_Inputs.Byte59.0;			(*xx seconds*)
+	Heat1_Soak_Time_Remaining.9					:= GracoSealer_Inputs.Byte59.1;			(*xx seconds*)
+	Heat1_Soak_Time_Remaining.10				:= GracoSealer_Inputs.Byte59.2;			(*xx seconds*)
+	Heat1_Soak_Time_Remaining.11				:= GracoSealer_Inputs.Byte59.3;			(*xx seconds*)
+	Heat1_Soak_Time_Remaining.12				:= GracoSealer_Inputs.Byte59.4;			(*xx seconds*)
+	Heat1_Soak_Time_Remaining.13				:= GracoSealer_Inputs.Byte59.5;			(*xx seconds*)
+	Heat1_Soak_Time_Remaining.14				:= GracoSealer_Inputs.Byte59.6;			(*xx seconds*)
+	Heat1_Soak_Time_Remaining.15				:= GracoSealer_Inputs.Byte59.7;			(*xx seconds*)
+
+
+	Heat1_Data_Exchange_Active_CMD.0			:= GracoSealer_Inputs.Byte60.0;
+	Heat1_Data_Exchange_Active_CMD.1			:= GracoSealer_Inputs.Byte60.1;
+	Heat1_Data_Exchange_Active_CMD.2			:= GracoSealer_Inputs.Byte60.2;
+	Heat1_Data_Exchange_Active_CMD.3			:= GracoSealer_Inputs.Byte60.3;
+	Heat1_Data_Exchange_Active_CMD.4			:= GracoSealer_Inputs.Byte60.4;
+	Heat1_Data_Exchange_Active_CMD.5			:= GracoSealer_Inputs.Byte60.5;
+	Heat1_Data_Exchange_Active_CMD.6			:= GracoSealer_Inputs.Byte60.6;
+	Heat1_Data_Exchange_Active_CMD.7			:= GracoSealer_Inputs.Byte60.7;
+
+	Heat1_Data_Exchange_Active_CMD.8			:= GracoSealer_Inputs.Byte61.0;
+	Heat1_Data_Exchange_Active_CMD.9			:= GracoSealer_Inputs.Byte61.1;
+	Heat1_Data_Exchange_Active_CMD.10			:= GracoSealer_Inputs.Byte61.2;
+	Heat1_Data_Exchange_Active_CMD.11			:= GracoSealer_Inputs.Byte61.3;
+	Heat1_Data_Exchange_Active_CMD.12			:= GracoSealer_Inputs.Byte61.4;
+	Heat1_Data_Exchange_Active_CMD.13			:= GracoSealer_Inputs.Byte61.5;
+	Heat1_Data_Exchange_Active_CMD.14			:= GracoSealer_Inputs.Byte61.6;
+	Heat1_Data_Exchange_Active_CMD.15			:= GracoSealer_Inputs.Byte61.7;
+
+
+	Heat1_Data_Exchange_Active_CMD_Value.0		:= GracoSealer_Inputs.Byte62.0;
+	Heat1_Data_Exchange_Active_CMD_Value.1		:= GracoSealer_Inputs.Byte62.1;
+	Heat1_Data_Exchange_Active_CMD_Value.2		:= GracoSealer_Inputs.Byte62.2;
+	Heat1_Data_Exchange_Active_CMD_Value.3		:= GracoSealer_Inputs.Byte62.3;
+	Heat1_Data_Exchange_Active_CMD_Value.4		:= GracoSealer_Inputs.Byte62.4;
+	Heat1_Data_Exchange_Active_CMD_Value.5		:= GracoSealer_Inputs.Byte62.5;
+	Heat1_Data_Exchange_Active_CMD_Value.6		:= GracoSealer_Inputs.Byte62.6;
+	Heat1_Data_Exchange_Active_CMD_Value.7		:= GracoSealer_Inputs.Byte62.7;
+
+	Heat1_Data_Exchange_Active_CMD_Value.8		:= GracoSealer_Inputs.Byte63.0;
+	Heat1_Data_Exchange_Active_CMD_Value.9		:= GracoSealer_Inputs.Byte63.1;
+	Heat1_Data_Exchange_Active_CMD_Value.10		:= GracoSealer_Inputs.Byte63.2;
+	Heat1_Data_Exchange_Active_CMD_Value.11		:= GracoSealer_Inputs.Byte63.3;
+	Heat1_Data_Exchange_Active_CMD_Value.12		:= GracoSealer_Inputs.Byte63.4;
+	Heat1_Data_Exchange_Active_CMD_Value.13		:= GracoSealer_Inputs.Byte63.5;
+	Heat1_Data_Exchange_Active_CMD_Value.14		:= GracoSealer_Inputs.Byte63.6;
+	Heat1_Data_Exchange_Active_CMD_Value.15		:= GracoSealer_Inputs.Byte63.7;
+
+	Heat1_Data_Exchange_Active_CMD_Value.16		:= GracoSealer_Inputs.Byte64.0;
+	Heat1_Data_Exchange_Active_CMD_Value.17		:= GracoSealer_Inputs.Byte64.1;
+	Heat1_Data_Exchange_Active_CMD_Value.18		:= GracoSealer_Inputs.Byte64.2;
+	Heat1_Data_Exchange_Active_CMD_Value.19		:= GracoSealer_Inputs.Byte64.3;
+	Heat1_Data_Exchange_Active_CMD_Value.20		:= GracoSealer_Inputs.Byte64.4;
+	Heat1_Data_Exchange_Active_CMD_Value.21		:= GracoSealer_Inputs.Byte64.5;
+	Heat1_Data_Exchange_Active_CMD_Value.22		:= GracoSealer_Inputs.Byte64.6;
+	Heat1_Data_Exchange_Active_CMD_Value.23		:= GracoSealer_Inputs.Byte64.7;
+
+	Heat1_Data_Exchange_Active_CMD_Value.24		:= GracoSealer_Inputs.Byte65.0;
+	Heat1_Data_Exchange_Active_CMD_Value.25		:= GracoSealer_Inputs.Byte65.1;
+	Heat1_Data_Exchange_Active_CMD_Value.26		:= GracoSealer_Inputs.Byte65.2;
+	Heat1_Data_Exchange_Active_CMD_Value.27		:= GracoSealer_Inputs.Byte65.3;
+	Heat1_Data_Exchange_Active_CMD_Value.28		:= GracoSealer_Inputs.Byte65.4;
+	Heat1_Data_Exchange_Active_CMD_Value.29		:= GracoSealer_Inputs.Byte65.5;
+	Heat1_Data_Exchange_Active_CMD_Value.30		:= GracoSealer_Inputs.Byte65.6;
+	Heat1_Data_Exchange_Active_CMD_Value.31		:= GracoSealer_Inputs.Byte65.7;
+
+
+
+	(*Heat 2 - Inputs from Graco. Only used if tandem pump is on*)
+	Heat1_Heartbeat								:= GracoSealer_Inputs.Byte66.0;
+	Heat2_Enabled								:= GracoSealer_Inputs.Byte66.1;
+	Heat2_Control_Active							:= GracoSealer_Inputs.Byte66.2;
+	Heat2_ON									:= GracoSealer_Inputs.Byte66.3;
+	Heat2_WarmingUp							:= GracoSealer_Inputs.Byte66.4;
+	Heat2_At_Temp								:= GracoSealer_Inputs.Byte66.5;
+	Heat2_Temp_Soak_Mode						:= GracoSealer_Inputs.Byte66.6;
+	Heat2_SetBack_Mode							:= GracoSealer_Inputs.Byte66.7;
+
+
+	Heat2_Off									:= GracoSealer_Inputs.Byte67.0;
+	Heat2_Module_NoAlarms_Active				:= GracoSealer_Inputs.Byte67.1;
+	Heat2_Module_NoDeviations_Active				:= GracoSealer_Inputs.Byte67.2;
+	Heat2_Module_NoAdvisory_Active				:= GracoSealer_Inputs.Byte67.3;
+	Heat2_Zone_NoAlarms_Active					:= GracoSealer_Inputs.Byte67.4;
+	Heat2_Zone_NoDeviations_Active				:= GracoSealer_Inputs.Byte67.5;
+	Heat2_Zone_NoAdvisory_Active				:= GracoSealer_Inputs.Byte67.6;
+	Heat2_Idle_Timeout_Happened					:= GracoSealer_Inputs.Byte67.7;
+
+
+	(*Byte 68 Reserved*)
+	(*Byte 69 Reserved*)
+
+
+	Heat2_Soak_Time_Remaining.0					:= GracoSealer_Inputs.Byte70.0;			(*xx seconds*)
+	Heat2_Soak_Time_Remaining.1					:= GracoSealer_Inputs.Byte70.1;			(*xx seconds*)
+	Heat2_Soak_Time_Remaining.2					:= GracoSealer_Inputs.Byte70.2;			(*xx seconds*)
+	Heat2_Soak_Time_Remaining.3					:= GracoSealer_Inputs.Byte70.3;			(*xx seconds*)
+	Heat2_Soak_Time_Remaining.4					:= GracoSealer_Inputs.Byte70.4;			(*xx seconds*)
+	Heat2_Soak_Time_Remaining.5					:= GracoSealer_Inputs.Byte70.5;			(*xx seconds*)
+	Heat2_Soak_Time_Remaining.6					:= GracoSealer_Inputs.Byte70.6;			(*xx seconds*)
+	Heat2_Soak_Time_Remaining.7					:= GracoSealer_Inputs.Byte70.7;			(*xx seconds*)
+
+	Heat2_Soak_Time_Remaining.8					:= GracoSealer_Inputs.Byte71.0;			(*xx seconds*)
+	Heat2_Soak_Time_Remaining.9					:= GracoSealer_Inputs.Byte71.1;			(*xx seconds*)
+	Heat2_Soak_Time_Remaining.10				:= GracoSealer_Inputs.Byte71.2;			(*xx seconds*)
+	Heat2_Soak_Time_Remaining.11				:= GracoSealer_Inputs.Byte71.3;			(*xx seconds*)
+	Heat2_Soak_Time_Remaining.12				:= GracoSealer_Inputs.Byte71.4;			(*xx seconds*)
+	Heat2_Soak_Time_Remaining.13				:= GracoSealer_Inputs.Byte71.5;			(*xx seconds*)
+	Heat2_Soak_Time_Remaining.14				:= GracoSealer_Inputs.Byte71.6;			(*xx seconds*)
+	Heat2_Soak_Time_Remaining.15				:= GracoSealer_Inputs.Byte71.7;			(*xx seconds*)
+
+
+	Heat2_Data_Exchange_Active_CMD.0			:= GracoSealer_Inputs.Byte72.0;
+	Heat2_Data_Exchange_Active_CMD.1			:= GracoSealer_Inputs.Byte72.1;
+	Heat2_Data_Exchange_Active_CMD.2			:= GracoSealer_Inputs.Byte72.2;
+	Heat2_Data_Exchange_Active_CMD.3			:= GracoSealer_Inputs.Byte72.3;
+	Heat2_Data_Exchange_Active_CMD.4			:= GracoSealer_Inputs.Byte72.4;
+	Heat2_Data_Exchange_Active_CMD.5			:= GracoSealer_Inputs.Byte72.5;
+	Heat2_Data_Exchange_Active_CMD.6			:= GracoSealer_Inputs.Byte72.6;
+	Heat2_Data_Exchange_Active_CMD.7			:= GracoSealer_Inputs.Byte72.7;
+
+	Heat2_Data_Exchange_Active_CMD.8			:= GracoSealer_Inputs.Byte73.0;
+	Heat2_Data_Exchange_Active_CMD.9			:= GracoSealer_Inputs.Byte73.1;
+	Heat2_Data_Exchange_Active_CMD.10			:= GracoSealer_Inputs.Byte73.2;
+	Heat2_Data_Exchange_Active_CMD.11			:= GracoSealer_Inputs.Byte73.3;
+	Heat2_Data_Exchange_Active_CMD.12			:= GracoSealer_Inputs.Byte73.4;
+	Heat2_Data_Exchange_Active_CMD.13			:= GracoSealer_Inputs.Byte73.5;
+	Heat2_Data_Exchange_Active_CMD.14			:= GracoSealer_Inputs.Byte73.6;
+	Heat2_Data_Exchange_Active_CMD.15			:= GracoSealer_Inputs.Byte73.7;
+
+
+	Heat2_Data_Exchange_Active_CMD_Value.0		:= GracoSealer_Inputs.Byte74.0;
+	Heat2_Data_Exchange_Active_CMD_Value.1		:= GracoSealer_Inputs.Byte74.1;
+	Heat2_Data_Exchange_Active_CMD_Value.2		:= GracoSealer_Inputs.Byte74.2;
+	Heat2_Data_Exchange_Active_CMD_Value.3		:= GracoSealer_Inputs.Byte74.3;
+	Heat2_Data_Exchange_Active_CMD_Value.4		:= GracoSealer_Inputs.Byte74.4;
+	Heat2_Data_Exchange_Active_CMD_Value.5		:= GracoSealer_Inputs.Byte74.5;
+	Heat2_Data_Exchange_Active_CMD_Value.6		:= GracoSealer_Inputs.Byte74.6;
+	Heat2_Data_Exchange_Active_CMD_Value.7		:= GracoSealer_Inputs.Byte74.7;
+
+	Heat2_Data_Exchange_Active_CMD_Value.8		:= GracoSealer_Inputs.Byte75.0;
+	Heat2_Data_Exchange_Active_CMD_Value.9		:= GracoSealer_Inputs.Byte75.1;
+	Heat2_Data_Exchange_Active_CMD_Value.10		:= GracoSealer_Inputs.Byte75.2;
+	Heat2_Data_Exchange_Active_CMD_Value.11		:= GracoSealer_Inputs.Byte75.3;
+	Heat2_Data_Exchange_Active_CMD_Value.12		:= GracoSealer_Inputs.Byte75.4;
+	Heat2_Data_Exchange_Active_CMD_Value.13		:= GracoSealer_Inputs.Byte75.5;
+	Heat2_Data_Exchange_Active_CMD_Value.14		:= GracoSealer_Inputs.Byte75.6;
+	Heat2_Data_Exchange_Active_CMD_Value.15		:= GracoSealer_Inputs.Byte75.7;
+
+	Heat2_Data_Exchange_Active_CMD_Value.16		:= GracoSealer_Inputs.Byte76.0;
+	Heat2_Data_Exchange_Active_CMD_Value.17		:= GracoSealer_Inputs.Byte76.1;
+	Heat2_Data_Exchange_Active_CMD_Value.18		:= GracoSealer_Inputs.Byte76.2;
+	Heat2_Data_Exchange_Active_CMD_Value.19		:= GracoSealer_Inputs.Byte76.3;
+	Heat2_Data_Exchange_Active_CMD_Value.20		:= GracoSealer_Inputs.Byte76.4;
+	Heat2_Data_Exchange_Active_CMD_Value.21		:= GracoSealer_Inputs.Byte76.5;
+	Heat2_Data_Exchange_Active_CMD_Value.22		:= GracoSealer_Inputs.Byte76.6;
+	Heat2_Data_Exchange_Active_CMD_Value.23		:= GracoSealer_Inputs.Byte76.7;
+
+	Heat2_Data_Exchange_Active_CMD_Value.24		:= GracoSealer_Inputs.Byte77.0;
+	Heat2_Data_Exchange_Active_CMD_Value.25		:= GracoSealer_Inputs.Byte77.1;
+	Heat2_Data_Exchange_Active_CMD_Value.26		:= GracoSealer_Inputs.Byte77.2;
+	Heat2_Data_Exchange_Active_CMD_Value.27		:= GracoSealer_Inputs.Byte77.3;
+	Heat2_Data_Exchange_Active_CMD_Value.28		:= GracoSealer_Inputs.Byte77.4;
+	Heat2_Data_Exchange_Active_CMD_Value.29		:= GracoSealer_Inputs.Byte77.5;
+	Heat2_Data_Exchange_Active_CMD_Value.30		:= GracoSealer_Inputs.Byte77.6;
+	Heat2_Data_Exchange_Active_CMD_Value.31		:= GracoSealer_Inputs.Byte77.7;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(*end*)]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Outputs" Id="{be8381fd-9aed-4eb9-8111-c33bc68e6e74}">
+      <Implementation>
+        <ST><![CDATA[
+
+
+	GracoSealer_Outputs.Byte0.0	:= Pump1_Sys_Data_Exchange_CMD.0;
+	GracoSealer_Outputs.Byte0.1	:= Pump1_Sys_Data_Exchange_CMD.1;
+	GracoSealer_Outputs.Byte0.2	:= Pump1_Sys_Data_Exchange_CMD.2;
+	GracoSealer_Outputs.Byte0.3	:= Pump1_Sys_Data_Exchange_CMD.3;
+	GracoSealer_Outputs.Byte0.4	:= Pump1_Sys_Data_Exchange_CMD.4;
+	GracoSealer_Outputs.Byte0.5	:= Pump1_Sys_Data_Exchange_CMD.5;
+	GracoSealer_Outputs.Byte0.6	:= Pump1_Sys_Data_Exchange_CMD.6;
+	GracoSealer_Outputs.Byte0.7	:= Pump1_Sys_Data_Exchange_CMD.7;
+
+	GracoSealer_Outputs.Byte1.0	:= Pump1_Sys_Data_Exchange_CMD.8;
+	GracoSealer_Outputs.Byte1.1	:= Pump1_Sys_Data_Exchange_CMD.9;
+	GracoSealer_Outputs.Byte1.2	:= Pump1_Sys_Data_Exchange_CMD.10;
+	GracoSealer_Outputs.Byte1.3	:= Pump1_Sys_Data_Exchange_CMD.11;
+	GracoSealer_Outputs.Byte1.4	:= Pump1_Sys_Data_Exchange_CMD.12;
+	GracoSealer_Outputs.Byte1.5	:= Pump1_Sys_Data_Exchange_CMD.13;
+	GracoSealer_Outputs.Byte1.6	:= Pump1_Sys_Data_Exchange_CMD.14;
+	GracoSealer_Outputs.Byte1.7	:= Pump1_Sys_Data_Exchange_CMD.15;
+
+
+	GracoSealer_Outputs.Byte2.0	:= Pump1_Sys_Enable;
+	GracoSealer_Outputs.Byte2.1	:= Pump1_Sys_Disable_REQ;
+	GracoSealer_Outputs.Byte2.2	:= Pump1_Lockout;
+	GracoSealer_Outputs.Byte2.3	:= Pump1_Style_Enable;
+	GracoSealer_Outputs.Byte2.4	:= Pump1_Go;
+	GracoSealer_Outputs.Byte2.5	:= Pump1_Disp_Complete;
+	GracoSealer_Outputs.Byte2.6	:= Pump1_Tandem_Cross_REQ;
+	GracoSealer_Outputs.Byte2.7	:= Pump2_Prime_Inactive_Pump_REQ;
+
+
+	GracoSealer_Outputs.Byte3.0	:= Pump1_Valve_Depressurization_REQ;
+	GracoSealer_Outputs.Byte3.1	:= Pump1_Platen_Depressurization_REQ;
+	GracoSealer_Outputs.Byte3.2	:= Pump1_Auto_Depressurization_Cancel_REQ;
+	GracoSealer_Outputs.Byte3.3	:= Pump_Acknowledge_Clear_Errors;
+	(*Byte3.4 Reserved Bit 1*)
+	(*Byte3.5 Reserved Bit 2*)
+	(*Byte 3.6 Reserved Bit 3*)
+	(*Byte 3.7 Reserved Bit 4*)
+
+
+	GracoSealer_Outputs.Byte4.0	:= Pump1_Desired_Style_Numb.0;
+	GracoSealer_Outputs.Byte4.1	:= Pump1_Desired_Style_Numb.1;
+	GracoSealer_Outputs.Byte4.2	:= Pump1_Desired_Style_Numb.2;
+	GracoSealer_Outputs.Byte4.3	:= Pump1_Desired_Style_Numb.3;
+	GracoSealer_Outputs.Byte4.4	:= Pump1_Desired_Style_Numb.4;
+	GracoSealer_Outputs.Byte4.5	:= Pump1_Desired_Style_Numb.5;
+	GracoSealer_Outputs.Byte4.6	:= Pump1_Desired_Style_Numb.6;
+	GracoSealer_Outputs.Byte4.7	:= Pump1_Desired_Style_Numb.7;
+
+	GracoSealer_Outputs.Byte5.0	:= Pump1_Desired_Style_Numb.8;
+	GracoSealer_Outputs.Byte5.1	:= Pump1_Desired_Style_Numb.9;
+	GracoSealer_Outputs.Byte5.2	:= Pump1_Desired_Style_Numb.10;
+	GracoSealer_Outputs.Byte5.3	:= Pump1_Desired_Style_Numb.11;
+	GracoSealer_Outputs.Byte5.4	:= Pump1_Desired_Style_Numb.12;
+	GracoSealer_Outputs.Byte5.5	:= Pump1_Desired_Style_Numb.13;
+	GracoSealer_Outputs.Byte5.6	:= Pump1_Desired_Style_Numb.14;
+	GracoSealer_Outputs.Byte5.7	:= Pump1_Desired_Style_Numb.15;
+
+
+	GracoSealer_Outputs.Byte6.0	:= Pump1_Style_PreCharge_REQ.0;		(*xxx.x bars*)
+	GracoSealer_Outputs.Byte6.1	:= Pump1_Style_PreCharge_REQ.1;		(*xxx.x bars*)
+	GracoSealer_Outputs.Byte6.2	:= Pump1_Style_PreCharge_REQ.2;		(*xxx.x bars*)
+	GracoSealer_Outputs.Byte6.3	:= Pump1_Style_PreCharge_REQ.3;		(*xxx.x bars*)
+	GracoSealer_Outputs.Byte6.4	:= Pump1_Style_PreCharge_REQ.4;		(*xxx.x bars*)
+	GracoSealer_Outputs.Byte6.5	:= Pump1_Style_PreCharge_REQ.5;		(*xxx.x bars*)
+	GracoSealer_Outputs.Byte6.6	:= Pump1_Style_PreCharge_REQ.6;		(*xxx.x bars*)
+	GracoSealer_Outputs.Byte6.7	:= Pump1_Style_PreCharge_REQ.7;		(*xxx.x bars*)
+
+	GracoSealer_Outputs.Byte7.0	:= Pump1_Style_PreCharge_REQ.8;		(*xxx.x bars*)
+	GracoSealer_Outputs.Byte7.1	:= Pump1_Style_PreCharge_REQ.9;		(*xxx.x bars*)
+	GracoSealer_Outputs.Byte7.2	:= Pump1_Style_PreCharge_REQ.10;		(*xxx.x bars*)
+	GracoSealer_Outputs.Byte7.3	:= Pump1_Style_PreCharge_REQ.11;		(*xxx.x bars*)
+	GracoSealer_Outputs.Byte7.4	:= Pump1_Style_PreCharge_REQ.12;		(*xxx.x bars*)
+	GracoSealer_Outputs.Byte7.5	:= Pump1_Style_PreCharge_REQ.13;		(*xxx.x bars*)
+	GracoSealer_Outputs.Byte7.6	:= Pump1_Style_PreCharge_REQ.14;		(*xxx.x bars*)
+	GracoSealer_Outputs.Byte7.7	:= Pump1_Style_PreCharge_REQ.15;		(*xxx.x bars*)
+
+
+	GracoSealer_Outputs.Byte8.0	:= Pump1_FlowRate_REQ.0;			(*xxxx cc/min*)
+	GracoSealer_Outputs.Byte8.1	:= Pump1_FlowRate_REQ.1;			(*xxxx cc/min*)
+	GracoSealer_Outputs.Byte8.2	:= Pump1_FlowRate_REQ.2;			(*xxxx cc/min*)
+	GracoSealer_Outputs.Byte8.3	:= Pump1_FlowRate_REQ.3;			(*xxxx cc/min*)
+	GracoSealer_Outputs.Byte8.4	:= Pump1_FlowRate_REQ.4;			(*xxxx cc/min*)
+	GracoSealer_Outputs.Byte8.5	:= Pump1_FlowRate_REQ.5;			(*xxxx cc/min*)
+	GracoSealer_Outputs.Byte8.6	:= Pump1_FlowRate_REQ.6;			(*xxxx cc/min*)
+	GracoSealer_Outputs.Byte8.7	:= Pump1_FlowRate_REQ.7;			(*xxxx cc/min*)
+
+	GracoSealer_Outputs.Byte9.0	:= Pump1_FlowRate_REQ.8;			(*xxxx cc/min*)
+	GracoSealer_Outputs.Byte9.1	:= Pump1_FlowRate_REQ.9;			(*xxxx cc/min*)
+	GracoSealer_Outputs.Byte9.2	:= Pump1_FlowRate_REQ.10;			(*xxxx cc/min*)
+	GracoSealer_Outputs.Byte9.3	:= Pump1_FlowRate_REQ.11;			(*xxxx cc/min*)
+	GracoSealer_Outputs.Byte9.4	:= Pump1_FlowRate_REQ.12;			(*xxxx cc/min*)
+	GracoSealer_Outputs.Byte9.5	:= Pump1_FlowRate_REQ.13;			(*xxxx cc/min*)
+	GracoSealer_Outputs.Byte9.6	:= Pump1_FlowRate_REQ.14;			(*xxxx cc/min*)
+	GracoSealer_Outputs.Byte9.7	:= Pump1_FlowRate_REQ.15;			(*xxxx cc/min*)
+
+
+	GracoSealer_Outputs.Byte10.0	:= Pump1_ShotSize_REQ.0;				(*xxx.xx cc*)
+	GracoSealer_Outputs.Byte10.1	:= Pump1_ShotSize_REQ.1;				(*xxx.xx cc*)
+	GracoSealer_Outputs.Byte10.2	:= Pump1_ShotSize_REQ.2;				(*xxx.xx cc*)
+	GracoSealer_Outputs.Byte10.3	:= Pump1_ShotSize_REQ.3;				(*xxx.xx cc*)
+	GracoSealer_Outputs.Byte10.4	:= Pump1_ShotSize_REQ.4;				(*xxx.xx cc*)
+	GracoSealer_Outputs.Byte10.5	:= Pump1_ShotSize_REQ.5;				(*xxx.xx cc*)
+	GracoSealer_Outputs.Byte10.6	:= Pump1_ShotSize_REQ.6;				(*xxx.xx cc*)
+	GracoSealer_Outputs.Byte10.7	:= Pump1_ShotSize_REQ.7;				(*xxx.xx cc*)
+
+	GracoSealer_Outputs.Byte11.0	:= Pump1_ShotSize_REQ.8;				(*xxx.xx cc*)
+	GracoSealer_Outputs.Byte11.1	:= Pump1_ShotSize_REQ.9;				(*xxx.xx cc*)
+	GracoSealer_Outputs.Byte11.2	:= Pump1_ShotSize_REQ.10;			(*xxx.xx cc*)
+	GracoSealer_Outputs.Byte11.3	:= Pump1_ShotSize_REQ.11;			(*xxx.xx cc*)
+	GracoSealer_Outputs.Byte11.4	:= Pump1_ShotSize_REQ.12;			(*xxx.xx cc*)
+	GracoSealer_Outputs.Byte11.5	:= Pump1_ShotSize_REQ.13;			(*xxx.xx cc*)
+	GracoSealer_Outputs.Byte11.6	:= Pump1_ShotSize_REQ.14;			(*xxx.xx cc*)
+	GracoSealer_Outputs.Byte11.7	:= Pump1_ShotSize_REQ.15;			(*xxx.xx cc*)
+
+
+	GracoSealer_Outputs.Byte12.0	:= Pump2_PrimePressure_Target.0;		(*xxx.x bars*)
+	GracoSealer_Outputs.Byte12.1	:= Pump2_PrimePressure_Target.1;		(*xxx.x bars*)
+	GracoSealer_Outputs.Byte12.2	:= Pump2_PrimePressure_Target.2;		(*xxx.x bars*)
+	GracoSealer_Outputs.Byte12.3	:= Pump2_PrimePressure_Target.3;		(*xxx.x bars*)
+	GracoSealer_Outputs.Byte12.4	:= Pump2_PrimePressure_Target.4;		(*xxx.x bars*)
+	GracoSealer_Outputs.Byte12.5	:= Pump2_PrimePressure_Target.5;		(*xxx.x bars*)
+	GracoSealer_Outputs.Byte12.6	:= Pump2_PrimePressure_Target.6;		(*xxx.x bars*)
+	GracoSealer_Outputs.Byte12.7	:= Pump2_PrimePressure_Target.7;		(*xxx.x bars*)
+
+	GracoSealer_Outputs.Byte13.0	:= Pump2_PrimePressure_Target.8;		(*xxx.x bars*)
+	GracoSealer_Outputs.Byte13.1	:= Pump2_PrimePressure_Target.9;		(*xxx.x bars*)
+	GracoSealer_Outputs.Byte13.2	:= Pump2_PrimePressure_Target.10;		(*xxx.x bars*)
+	GracoSealer_Outputs.Byte13.3	:= Pump2_PrimePressure_Target.11;		(*xxx.x bars*)
+	GracoSealer_Outputs.Byte13.4	:= Pump2_PrimePressure_Target.12;		(*xxx.x bars*)
+	GracoSealer_Outputs.Byte13.5	:= Pump2_PrimePressure_Target.13;		(*xxx.x bars*)
+	GracoSealer_Outputs.Byte13.6	:= Pump2_PrimePressure_Target.14;		(*xxx.x bars*)
+	GracoSealer_Outputs.Byte13.7	:= Pump2_PrimePressure_Target.15;		(*xxx.x bars*)
+
+
+	GracoSealer_Outputs.Byte14.0	:= Pump2_PrimeFlow_Target.0;			(*xxxx cc/min*)
+	GracoSealer_Outputs.Byte14.1	:= Pump2_PrimeFlow_Target.1;			(*xxxx cc/min*)
+	GracoSealer_Outputs.Byte14.2	:= Pump2_PrimeFlow_Target.2;			(*xxxx cc/min*)
+	GracoSealer_Outputs.Byte14.3	:= Pump2_PrimeFlow_Target.3;			(*xxxx cc/min*)
+	GracoSealer_Outputs.Byte14.4	:= Pump2_PrimeFlow_Target.4;			(*xxxx cc/min*)
+	GracoSealer_Outputs.Byte14.5	:= Pump2_PrimeFlow_Target.5;			(*xxxx cc/min*)
+	GracoSealer_Outputs.Byte14.6	:= Pump2_PrimeFlow_Target.6;			(*xxxx cc/min*)
+	GracoSealer_Outputs.Byte14.7	:= Pump2_PrimeFlow_Target.7;			(*xxxx cc/min*)
+
+	GracoSealer_Outputs.Byte15.0	:= Pump2_PrimeFlow_Target.8;			(*xxxx cc/min*)
+	GracoSealer_Outputs.Byte15.1	:= Pump2_PrimeFlow_Target.9;			(*xxxx cc/min*)
+	GracoSealer_Outputs.Byte15.2	:= Pump2_PrimeFlow_Target.10;			(*xxxx cc/min*)
+	GracoSealer_Outputs.Byte15.3	:= Pump2_PrimeFlow_Target.11;			(*xxxx cc/min*)
+	GracoSealer_Outputs.Byte15.4	:= Pump2_PrimeFlow_Target.12;			(*xxxx cc/min*)
+	GracoSealer_Outputs.Byte15.5	:= Pump2_PrimeFlow_Target.13;			(*xxxx cc/min*)
+	GracoSealer_Outputs.Byte15.6	:= Pump2_PrimeFlow_Target.14;			(*xxxx cc/min*)
+	GracoSealer_Outputs.Byte15.7	:= Pump2_PrimeFlow_Target.15;			(*xxxx cc/min*)
+
+
+	GracoSealer_Outputs.Byte16.0	:= Heat1_HeatEnabled_REQ;
+	GracoSealer_Outputs.Byte16.1	:= Heat1_HeatDissabled_REQ;
+	GracoSealer_Outputs.Byte16.2	:= Heat1_PLC_Lockout;
+	GracoSealer_Outputs.Byte16.3	:= Heat1_Heat_ON_REQ;
+	GracoSealer_Outputs.Byte16.4	:= Heat1_Heat_OFF_REQ;
+	GracoSealer_Outputs.Byte16.5	:= Heat1_Setback_REQ;
+	GracoSealer_Outputs.Byte16.6	:= Heat1_Acknowledge_Clear_Errors;
+	(*Byte 16.7 Reserved Bit 1*)
+
+
+	(*Byte 17 Reserved*)
+
+
+	GracoSealer_Outputs.Byte18.0	:= Heat1_Data_Exchange_CMD.0;
+	GracoSealer_Outputs.Byte18.1	:= Heat1_Data_Exchange_CMD.1;
+	GracoSealer_Outputs.Byte18.2	:= Heat1_Data_Exchange_CMD.2;
+	GracoSealer_Outputs.Byte18.3	:= Heat1_Data_Exchange_CMD.3;
+	GracoSealer_Outputs.Byte18.4	:= Heat1_Data_Exchange_CMD.4;
+	GracoSealer_Outputs.Byte18.5	:= Heat1_Data_Exchange_CMD.5;
+	GracoSealer_Outputs.Byte18.6	:= Heat1_Data_Exchange_CMD.6;
+	GracoSealer_Outputs.Byte18.7	:= Heat1_Data_Exchange_CMD.7;
+
+	GracoSealer_Outputs.Byte19.0	:= Heat1_Data_Exchange_CMD.8;
+	GracoSealer_Outputs.Byte19.1	:= Heat1_Data_Exchange_CMD.9;
+	GracoSealer_Outputs.Byte19.2	:= Heat1_Data_Exchange_CMD.10;
+	GracoSealer_Outputs.Byte19.3	:= Heat1_Data_Exchange_CMD.11;
+	GracoSealer_Outputs.Byte19.4	:= Heat1_Data_Exchange_CMD.12;
+	GracoSealer_Outputs.Byte19.5	:= Heat1_Data_Exchange_CMD.13;
+	GracoSealer_Outputs.Byte19.6	:= Heat1_Data_Exchange_CMD.14;
+	GracoSealer_Outputs.Byte19.7	:= Heat1_Data_Exchange_CMD.15;
+
+	GracoSealer_Outputs.Byte20.0	:= Heat1_Data_Exchange_CMD_Value.0;
+	GracoSealer_Outputs.Byte20.1	:= Heat1_Data_Exchange_CMD_Value.1;
+	GracoSealer_Outputs.Byte20.2	:= Heat1_Data_Exchange_CMD_Value.2;
+	GracoSealer_Outputs.Byte20.3	:= Heat1_Data_Exchange_CMD_Value.3;
+	GracoSealer_Outputs.Byte20.4	:= Heat1_Data_Exchange_CMD_Value.4;
+	GracoSealer_Outputs.Byte20.5	:= Heat1_Data_Exchange_CMD_Value.5;
+	GracoSealer_Outputs.Byte20.6	:= Heat1_Data_Exchange_CMD_Value.6;
+	GracoSealer_Outputs.Byte20.7	:= Heat1_Data_Exchange_CMD_Value.7;
+
+	GracoSealer_Outputs.Byte21.0	:= Heat1_Data_Exchange_CMD_Value.8;
+	GracoSealer_Outputs.Byte21.1	:= Heat1_Data_Exchange_CMD_Value.9;
+	GracoSealer_Outputs.Byte21.2	:= Heat1_Data_Exchange_CMD_Value.10;
+	GracoSealer_Outputs.Byte21.3	:= Heat1_Data_Exchange_CMD_Value.11;
+	GracoSealer_Outputs.Byte21.4	:= Heat1_Data_Exchange_CMD_Value.12;
+	GracoSealer_Outputs.Byte21.5	:= Heat1_Data_Exchange_CMD_Value.13;
+	GracoSealer_Outputs.Byte21.6	:= Heat1_Data_Exchange_CMD_Value.14;
+	GracoSealer_Outputs.Byte21.7	:= Heat1_Data_Exchange_CMD_Value.15;
+
+	GracoSealer_Outputs.Byte22.0	:= Heat1_Data_Exchange_CMD_Value.16;
+	GracoSealer_Outputs.Byte22.1	:= Heat1_Data_Exchange_CMD_Value.17;
+	GracoSealer_Outputs.Byte22.2	:= Heat1_Data_Exchange_CMD_Value.18;
+	GracoSealer_Outputs.Byte22.3	:= Heat1_Data_Exchange_CMD_Value.19;
+	GracoSealer_Outputs.Byte22.4	:= Heat1_Data_Exchange_CMD_Value.20;
+	GracoSealer_Outputs.Byte22.5	:= Heat1_Data_Exchange_CMD_Value.21;
+	GracoSealer_Outputs.Byte22.6	:= Heat1_Data_Exchange_CMD_Value.22;
+	GracoSealer_Outputs.Byte22.7	:= Heat1_Data_Exchange_CMD_Value.23;
+
+	GracoSealer_Outputs.Byte23.0	:= Heat1_Data_Exchange_CMD_Value.24;
+	GracoSealer_Outputs.Byte23.1	:= Heat1_Data_Exchange_CMD_Value.25;
+	GracoSealer_Outputs.Byte23.2	:= Heat1_Data_Exchange_CMD_Value.26;
+	GracoSealer_Outputs.Byte23.3	:= Heat1_Data_Exchange_CMD_Value.27;
+	GracoSealer_Outputs.Byte23.4	:= Heat1_Data_Exchange_CMD_Value.28;
+	GracoSealer_Outputs.Byte23.5	:= Heat1_Data_Exchange_CMD_Value.29;
+	GracoSealer_Outputs.Byte23.6	:= Heat1_Data_Exchange_CMD_Value.30;
+	GracoSealer_Outputs.Byte23.7	:= Heat1_Data_Exchange_CMD_Value.31;
+
+
+	GracoSealer_Outputs.Byte24.0	:= Heat2_HeatEnabled_REQ;
+	GracoSealer_Outputs.Byte24.1	:= Heat2_HeatDissabled_REQ;
+	GracoSealer_Outputs.Byte24.2	:= Heat2_PLC_Lockout;
+	GracoSealer_Outputs.Byte24.3	:= Heat2_Heat_ON_REQ;
+	GracoSealer_Outputs.Byte24.4	:= Heat2_Heat_OFF_REQ;
+	GracoSealer_Outputs.Byte24.5	:= Heat2_Setback_REQ;
+	GracoSealer_Outputs.Byte24.6	:= Heat2_Acknowledge_Clear_Errors;
+	(*Byte 24.7 Reserved Bit 1*)
+
+
+	(*Byte 25 Reserved*)
+
+
+	GracoSealer_Outputs.Byte26.0	:= Heat2_Data_Exchange_CMD.0;
+	GracoSealer_Outputs.Byte26.1	:= Heat2_Data_Exchange_CMD.1;
+	GracoSealer_Outputs.Byte26.2	:= Heat2_Data_Exchange_CMD.2;
+	GracoSealer_Outputs.Byte26.3	:= Heat2_Data_Exchange_CMD.3;
+	GracoSealer_Outputs.Byte26.4	:= Heat2_Data_Exchange_CMD.4;
+	GracoSealer_Outputs.Byte26.5	:= Heat2_Data_Exchange_CMD.5;
+	GracoSealer_Outputs.Byte26.6	:= Heat2_Data_Exchange_CMD.6;
+	GracoSealer_Outputs.Byte26.7	:= Heat2_Data_Exchange_CMD.7;
+
+	GracoSealer_Outputs.Byte27.0	:= Heat2_Data_Exchange_CMD.8;
+	GracoSealer_Outputs.Byte27.1	:= Heat2_Data_Exchange_CMD.9;
+	GracoSealer_Outputs.Byte27.2	:= Heat2_Data_Exchange_CMD.10;
+	GracoSealer_Outputs.Byte27.3	:= Heat2_Data_Exchange_CMD.11;
+	GracoSealer_Outputs.Byte27.4	:= Heat2_Data_Exchange_CMD.12;
+	GracoSealer_Outputs.Byte27.5	:= Heat2_Data_Exchange_CMD.13;
+	GracoSealer_Outputs.Byte27.6	:= Heat2_Data_Exchange_CMD.14;
+	GracoSealer_Outputs.Byte27.7	:= Heat2_Data_Exchange_CMD.15;
+
+
+	GracoSealer_Outputs.Byte28.0	:= Heat2_Data_Exchange_CMD_Value.0;
+	GracoSealer_Outputs.Byte28.1	:= Heat2_Data_Exchange_CMD_Value.1;
+	GracoSealer_Outputs.Byte28.2	:= Heat2_Data_Exchange_CMD_Value.2;
+	GracoSealer_Outputs.Byte28.3	:= Heat2_Data_Exchange_CMD_Value.3;
+	GracoSealer_Outputs.Byte28.4	:= Heat2_Data_Exchange_CMD_Value.4;
+	GracoSealer_Outputs.Byte28.5	:= Heat2_Data_Exchange_CMD_Value.5;
+	GracoSealer_Outputs.Byte28.6	:= Heat2_Data_Exchange_CMD_Value.6;
+	GracoSealer_Outputs.Byte28.7	:= Heat2_Data_Exchange_CMD_Value.7;
+
+	GracoSealer_Outputs.Byte29.0	:= Heat2_Data_Exchange_CMD_Value.8;
+	GracoSealer_Outputs.Byte29.1	:= Heat2_Data_Exchange_CMD_Value.9;
+	GracoSealer_Outputs.Byte29.2	:= Heat2_Data_Exchange_CMD_Value.10;
+	GracoSealer_Outputs.Byte29.3	:= Heat2_Data_Exchange_CMD_Value.11;
+	GracoSealer_Outputs.Byte29.4	:= Heat2_Data_Exchange_CMD_Value.12;
+	GracoSealer_Outputs.Byte29.5	:= Heat2_Data_Exchange_CMD_Value.13;
+	GracoSealer_Outputs.Byte29.6	:= Heat2_Data_Exchange_CMD_Value.14;
+	GracoSealer_Outputs.Byte29.7	:= Heat2_Data_Exchange_CMD_Value.15;
+
+	GracoSealer_Outputs.Byte30.0	:= Heat2_Data_Exchange_CMD_Value.16;
+	GracoSealer_Outputs.Byte30.1	:= Heat2_Data_Exchange_CMD_Value.17;
+	GracoSealer_Outputs.Byte30.2	:= Heat2_Data_Exchange_CMD_Value.18;
+	GracoSealer_Outputs.Byte30.3	:= Heat2_Data_Exchange_CMD_Value.19;
+	GracoSealer_Outputs.Byte30.4	:= Heat2_Data_Exchange_CMD_Value.20;
+	GracoSealer_Outputs.Byte30.5	:= Heat2_Data_Exchange_CMD_Value.21;
+	GracoSealer_Outputs.Byte30.6	:= Heat2_Data_Exchange_CMD_Value.22;
+	GracoSealer_Outputs.Byte30.7	:= Heat2_Data_Exchange_CMD_Value.23;
+
+	GracoSealer_Outputs.Byte31.0	:= Heat2_Data_Exchange_CMD_Value.24;
+	GracoSealer_Outputs.Byte31.1	:= Heat2_Data_Exchange_CMD_Value.25;
+	GracoSealer_Outputs.Byte31.2	:= Heat2_Data_Exchange_CMD_Value.26;
+	GracoSealer_Outputs.Byte31.3	:= Heat2_Data_Exchange_CMD_Value.27;
+	GracoSealer_Outputs.Byte31.4	:= Heat2_Data_Exchange_CMD_Value.28;
+	GracoSealer_Outputs.Byte31.5	:= Heat2_Data_Exchange_CMD_Value.29;
+	GracoSealer_Outputs.Byte31.6	:= Heat2_Data_Exchange_CMD_Value.30;
+	GracoSealer_Outputs.Byte31.7	:= Heat2_Data_Exchange_CMD_Value.31;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(*end*)]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_Graco_Seal_20200716">
+      <LineId Id="311" Count="85" />
+    </LineIds>
+    <LineIds Name="FB_Graco_Seal_20200716.Inputs">
+      <LineId Id="0" Count="759" />
+    </LineIds>
+    <LineIds Name="FB_Graco_Seal_20200716.Outputs">
+      <LineId Id="0" Count="323" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

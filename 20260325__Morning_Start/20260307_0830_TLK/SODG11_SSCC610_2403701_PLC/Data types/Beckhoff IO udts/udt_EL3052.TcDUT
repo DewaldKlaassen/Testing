@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_EL3052" Id="{651e5eaa-1de2-4349-89d7-d6eb849eabd0}">
+    <Declaration><![CDATA[(*udt (user defined type) of Beckhoff EL3052 - 2 channel, 4 TO 20ma, Analog Input Terminal:
+	auth. Brent Lekx-Toniolo of Toniolo Research & Development Inc.; 
+	October July; version 1.0*)
+
+
+TYPE udt_EL3052 :
+STRUCT
+	CH1: INT;
+	CH2: INT;
+	InfoData: udt_ECATSlave_Status;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_ECATNodeConfig_20200729" Id="{b17575ee-c692-4f4f-b968-d6a92f397857}">
+    <Declaration><![CDATA[TYPE udt_ECATNodeConfig_20200729 :
+STRUCT
+		FixtureConfig:ARRAY [0..120] OF udt_ECATNodeData_20221507;								(*Storage Area for Actual GTAC Fixture Device Based Config*)
+		EOATConfig:ARRAY[0..15] OF udt_ECATNodeData_20221507;
+		ATIConfig:ARRAY[0..5] OF udt_ECATNodeData_20221507;
+		WSConfig:ARRAY[0..5] OF  udt_ECATNodeData_20221507;
+		PedConfig:ARRAY[0..5] OF udt_ECATNodeData_20221507;
+		ReamConfig:ARRAY[0..5] OF udt_ECATNodeData_20221507;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

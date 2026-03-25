@@ -1,0 +1,231 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_SCHNEIDERVFD_20180808" Id="{48d9f3fb-d435-43f4-98dd-61b8665e205a}" SpecialFunc="None">
+    <Declaration><![CDATA[(*FB for use with Schenider Electric VFD:
+	Original Author(s): Justin Vandongen of Sodecia GTAC; 
+------------------------------------------------------------------------------------------
+REVISION NOTES:
+	Version 20180808
+		- Initial Concept, j.vandongen
+		- max output frequency is setup to 50hz. in future projects this could change and scalling will need to change. j.vandongen
+
+------------------------------------------------------------------------------------------
+*)
+
+
+
+
+FUNCTION_BLOCK FB_SchneiderVFD_20180808
+
+	VAR_INPUT
+		Enable_Motion: BOOL;
+		All_Safeties_OK: BOOL;
+		Prev_EcatNode_Present: BOOL;
+
+		(*Control Word*)
+		Operating_State_Switch_On: BOOL; 			(*Bit 0*)
+		Enable_Voltage: BOOL;					(*Bit 1*)
+		Operating_State_Quick_Stop_Req: BOOL; 	(*Bit 2*)
+		Enable_Operation: BOOL;					(*Bit 3*)
+		Operating_Mode_Bit4: BOOL;				(*Bit 4*)
+		Operating_Mode_Bit5: BOOL;				(*Bit 5*)
+		Operating_Mode_Bit6: BOOL;				(*Bit 6*)
+		Fault_Reset: BOOL;						(*Bit 7*)
+		Halt: BOOL;								(*Bit 8*)
+		Operating_Mode_Bit9: BOOL;				(*Bit 9*)
+
+		Requested_Freq: UINT;
+
+	END_VAR
+
+
+	VAR
+	(*Inputs from VFD*)
+		Status_Word AT %I*: UINT;
+
+	(*Outputs to VFD*)
+		Control_Word AT %Q*: UINT;
+		Target_Velocity AT %Q*: INT;
+
+	(*Hardware Data Types*)
+		VFD_State AT %I*: udt_Schneider_VFD_20180808;
+
+	(* Nodes/Interface States*)
+		DiscreteNode_OK: BOOL;
+
+	(*Cable Break Warning Flags*)
+		ECatSlave_Cable_Breaks: UDINT;
+		ATV320_NotPresent :BOOL;			(*Bridge Terminal is not on Bus when expected*)
+		ATV320_PortB_MissingLink: BOOL;
+
+		(*Move time*)
+		Move_TMR: TON;
+
+		Test: UINT;
+
+
+	END_VAR
+
+
+	VAR_OUTPUT
+		FB_OK: BOOL;
+
+	(*Status_Word*)
+		Operating_State_Ready: BOOL;					(*Bit 0*)
+		Operating_State_Switched_On: BOOL;			(*Bit 1*)
+		Operating_State_Operation_enabled: BOOL;		(*Bit 2*)
+		Operating_State_Fault: BOOL;					(*Bit 3*)
+		Voltage_Enabled: BOOL;						(*Bit 4*)
+		Operating_State_Quick_Stop: BOOL;				(*Bit 5*)
+		Operating_State_Switch_On_Dissabled: BOOL;	(*Bit 6*)
+		Error_Class0: BOOL;							(*Bit 7*)
+		Halt_Requested: BOOL;						(*Bit 8*)
+		Remote: BOOL;								(*Bit 9*)
+		Target_Reached: BOOL;						(*Bit 10*)
+		Internal_Limit: BOOL;							(*Bit 11*)
+		Operating_Mode_Specific: BOOL;				(*Bit 12*)
+		X_ERR: BOOL;								(*Bit 13*)
+		X_End: BOOL;								(*Bit 14*)
+		Ref_OK: BOOL;								(*Bit 15*)
+
+		Faulted: BOOL;
+		Move_TIME: TIME;
+
+		Discrete_Image: udt_Schneider_VFD_Image_20180808;
+
+	END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[	(*Set FB_OK to True*)
+		FB_OK:= TRUE;
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$Gather Status Of Hardware $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+		IF (VFD_State.InfoData.State=8)
+			THEN DiscreteNode_OK:= TRUE;
+		ELSE DiscreteNode_OK:= FALSE;
+		END_IF;
+
+		(*Develop Port Connection Warning Flags*)
+		IF (VFD_STATE.InfoData.State=257) (*State Machine for Slave Not Present*)
+			THEN ATV320_NotPresent:= TRUE;
+		ELSE ATV320_NotPresent := FALSE;
+		END_IF;
+
+		IF (VFD_STATE.InfoData.State= 9224) (*State Machine for Link Missing at Port B*)
+			THEN ATV320_PortB_MissingLink:= TRUE; (*PortB is OUT Port*)
+		ELSE ATV320_PortB_MissingLink := FALSE;
+		END_IF;
+
+		(*Wrap up break Flags to Variable for shipment to UI*)
+		ECatSlave_Cable_Breaks.0:= ATV320_NotPresent AND Prev_EcatNode_Present;
+		ECatSlave_Cable_Breaks.1:= ATV320_PortB_MissingLink;
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$Gather All Standard and System Inputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+	(*--------------- System Inputsfrom VFD System Outputs -------------------------*)
+
+	(*Status_Word*)
+		Operating_State_Ready:= NOT Status_Word.0;
+		Operating_State_Switched_On:=Status_Word.1;
+		Operating_State_Operation_enabled:=Status_Word.2;
+		Operating_State_Fault:=Status_Word.3;
+		Voltage_Enabled:=Status_Word.4;
+		Operating_State_Quick_Stop:=Status_Word.5;
+		Operating_State_Switch_On_Dissabled:=Status_Word.6;
+		Error_Class0:=Status_Word.7;
+		Halt_Requested:=Status_Word.8;
+		Remote:=Status_Word.9;
+		Target_Reached:=Status_Word.10;
+		Internal_Limit:=Status_Word.11;
+		Operating_Mode_Specific:=Status_Word.12;
+		X_ERR:=Status_Word.13;
+		X_End:=Status_Word.14;
+		Ref_OK:=Status_Word.15;
+
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Internal Code $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+
+	(*Capture time between part feeding*)
+	Move_TMR(
+			IN:= (Enable_Operation AND NOT Operating_State_Switch_On_Dissabled) AND Enable_Motion,
+			PT:= T#9999s,
+			Q=> ,
+			ET=>
+			);
+	IF Move_TMR.IN
+		THEN
+			Move_TIME:= Move_TMR.ET;
+	END_IF;
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Transfer Standard Outputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+	Discrete_Image.Status_Word:= Status_Word;
+	Discrete_Image.Control_Word:= Control_Word;
+	Discrete_Image.Target_Velocity:= Target_Velocity;
+	Discrete_Image.ECAT_Cable_Breaks:= ECatSlave_Cable_Breaks;
+
+	Discrete_Image.VFD_State:= VFD_State;
+	Discrete_Image.Move_TIME:= Move_TIME;
+
+
+
+	(*--------------- System Outputs to VFD System Inputs -------------------------*)
+
+	(*Control Word*)
+	Control_Word.0:= (Operating_State_Switch_On AND NOT Operating_State_Switch_On_Dissabled) AND Enable_Motion;
+	Control_Word.1:= Enable_Voltage AND Enable_Motion;
+	Control_Word.2:= Operating_State_Quick_Stop_Req;
+	Control_Word.3:= (Enable_Operation AND NOT Operating_State_Switch_On_Dissabled) AND Enable_Motion;
+	Control_Word.4:= Operating_Mode_Bit4;
+	Control_Word.5:= Operating_Mode_Bit5;
+	Control_Word.6:= Operating_Mode_Bit6;
+	Control_Word.7:= Fault_Reset;
+	Control_Word.8:= Halt;
+	Control_Word.9:= Operating_Mode_Bit9;
+	Control_Word.10:= FALSE; (*reserved - must be 0*)
+	Control_Word.11:= FALSE; (*reserved - must be 0*)
+	Control_Word.12:= FALSE; (*reserved - must be 0*)
+	Control_Word.13:= FALSE; (*reserved - must be 0*)
+	Control_Word.14:= FALSE; (*reserved - must be 0*)
+	Control_Word.15:= FALSE; (*reserved - must be 0*)
+
+
+	(*Output Frequency*)
+	IF (Requested_Freq>=0) AND (Requested_Freq<51)
+		THEN
+			Target_Velocity:= (Requested_Freq * 30);
+	ELSE
+			Target_Velocity:= 0;
+	END_IF;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(*end*)]]></ST>
+    </Implementation>
+    <LineIds Name="FB_SCHNEIDERVFD_20180808">
+      <LineId Id="103" Count="63" />
+      <LineId Id="170" Count="6" />
+      <LineId Id="320" Count="0" />
+      <LineId Id="177" Count="49" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

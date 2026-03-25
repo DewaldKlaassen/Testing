@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_EP9224_CMD_20161207" Id="{c7c7cc1b-3c7c-4b53-9035-e2c4c546c887}">
+    <Declaration><![CDATA[(*udt (user defined type) of Beckhoff EP9224 IP67 Block - Power Distribution Block:
+	To work in conjunction of udt_EP9224_STAT_yyyymmdd
+	auth. Brent Lekx-Toniolo of Sodecia GTAC; 
+
+
+------------------------------------------------------------------------
+REVISION NOTES:
+	Version 20161207
+		- Initial Concept
+------------------------------------------------------------------------
+*)
+TYPE udt_EP9224_CMD_20161207 :
+STRUCT
+
+	(*Channel Specific Commands*)
+	Channel1: udt_EP9224_CH_CMD_20161207;
+	Channel2: udt_EP9224_CH_CMD_20161207;
+	Channel3: udt_EP9224_CH_CMD_20161207;
+	Channel4: udt_EP9224_CH_CMD_20161207;
+
+	(*Overall Device Commands*)
+	Device: udt_EP9224_DEV_CMD_20161207;
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

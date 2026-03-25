@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <DUT Name="udt_SingleAxis_Position_20150119" Id="{85e71cdd-8a85-4d7d-868a-92cf014b120e}">
+    <Declaration><![CDATA[(*udt (user defined type) to create data type for storing single Axis Positional Data Parameters:
+	
+	Author(S): Brent Lekx-Toniolo of Sodecia GTAC;
+
+	Version 20150119
+		- Initial Concept
+
+*)
+
+
+
+TYPE udt_SingleAxis_Position_20150119 :
+STRUCT
+		Position: LREAL; 	(*Actual Stored Position Data*)
+		Velocity: REAL; 	(*Target Velocity*)
+		Accel: REAL; 		(*Target Acceleration Rate*)
+		Decel: REAL;		(*Target Decceleration Rate*)
+		End_Flag: BOOL;	(*Flag to Indicate Last Step In Program*)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_EL6900_CMD_20121204" Id="{24fd9323-2c58-44e0-b2b7-e6eada17f98d}">
+    <Declaration><![CDATA[(*udt (user defined type) of Beckhoff EL6900 - TwinSAFE Controller Command Interface:
+	auth: Brent Lekx-Toniolo/Rob Remillard of Sodecia GTAC
+	Version 1.0: November 2012
+		- Initial Concept
+	Version 20121204
+		Changes from v1
+			- Change to Naming Convention to include date as version
+
+	Last Edit: December 4th, 2012, blt
+*)
+
+
+TYPE udt_EL6900_CMD_20121204 :
+	STRUCT
+	SGs_RUNSTOP: BOOL;
+	(*
+	RUN/STOP for all Safety Groups in Terminal*)
+
+	SGs_ERRAck: BOOL;
+	(*
+	ERR Ack for all Safety Groups in Terminal*)
+
+	FBs_ControlPowerPB: BOOL;
+	(*
+	Reset from Control Power  for all FBs in Terminal*)
+
+	FBs_Restart_Spare: BOOL;
+	(*
+	Spare Reset for future use by FBs in Terminal*)
+
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

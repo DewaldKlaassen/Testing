@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_SLxx_ToUI_20220224" Id="{14c580a3-0a40-4fce-96b9-abab575b9cef}">
+    <Declaration><![CDATA[(*udt (user defined type) for interfacing to UI (User Interface)
+this udt represents data that is passed from PLC to EACH UI
+
+	Author(S): Brent Lekx-Toniolo of Sodecia GTAC;
+	Version 20141020
+		- Initial Concept
+	Version 20220224
+	- Overhaul during TcUI Migration project, b.lekx-toniolo / c.drees
+
+*)
+
+TYPE udt_SLxx_ToUI_20220224 :
+	STRUCT
+
+	(*Input and Output Data Images*)
+	In_Image: udt_Graco_Input;
+	Out_Image: udt_Graco_Outputs;
+	(*Image for Profibus Master (Internal or External to Dispensing unit)*)
+	Txx_ProfiMaster AT %I*: udt_EL6731;
+	(*EtherCAT Cable Break Flags*)
+	ECAT_Cable_Breaks: UDINT;
+
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

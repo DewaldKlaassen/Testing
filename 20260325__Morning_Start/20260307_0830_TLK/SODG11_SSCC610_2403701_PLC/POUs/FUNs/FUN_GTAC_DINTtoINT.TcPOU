@@ -1,0 +1,137 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FUN_GTAC_DINTtoINT" Id="{002e0919-d85a-4594-90fa-78c03fdab07a}" SpecialFunc="None">
+    <Declaration><![CDATA[(*Copies and truncates a DINT (input to the FUN) at bit level, into individual bits of the INT Return, based upon a byte shift index intput
+Valid Byte Shift Input values is 0-3
+
+	author: Brent Lekx-Toniolo OF Sodecia GTAC
+	date: Sept 2015
+	version 1.0
+		- initial concept
+	Last Edit: 29-Sept-2015, BLT
+*)
+
+FUNCTION FUN_GTAC_DINTtoINT : INT
+VAR_INPUT
+	Dint0: DINT;
+	Byte_Shift_Index: UINT;
+END_VAR
+VAR
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Copy Bytes from DINT to INT return, based upon Byte Shift Index*)
+
+IF Byte_Shift_Index=0
+	THEN
+	(*Byte Shift Index of 0, staright copy first two bytes of Dint to Return*)
+	FUN_GTAC_DINTtoINT.0:= Dint0.0;
+	FUN_GTAC_DINTtoINT.1:= Dint0.1;
+	FUN_GTAC_DINTtoINT.2:= Dint0.2;
+	FUN_GTAC_DINTtoINT.3:= Dint0.3;
+	FUN_GTAC_DINTtoINT.4:= Dint0.4;
+	FUN_GTAC_DINTtoINT.5:= Dint0.5;
+	FUN_GTAC_DINTtoINT.6:= Dint0.6;
+	FUN_GTAC_DINTtoINT.7:= Dint0.7;
+
+	FUN_GTAC_DINTtoINT.8:= Dint0.8;
+	FUN_GTAC_DINTtoINT.9:= Dint0.9;
+	FUN_GTAC_DINTtoINT.10:= Dint0.10;
+	FUN_GTAC_DINTtoINT.11:= Dint0.11;
+	FUN_GTAC_DINTtoINT.12:= Dint0.12;
+	FUN_GTAC_DINTtoINT.13:= Dint0.13;
+	FUN_GTAC_DINTtoINT.14:= Dint0.14;
+	FUN_GTAC_DINTtoINT.15:= Dint0.15;
+
+ELSIF Byte_Shift_Index=1
+	THEN
+	(*Byte Shift Index of 1, copy from Dint byte1 to Return*)
+	FUN_GTAC_DINTtoINT.0:= Dint0.8;
+	FUN_GTAC_DINTtoINT.1:= Dint0.9;
+	FUN_GTAC_DINTtoINT.2:= Dint0.10;
+	FUN_GTAC_DINTtoINT.3:= Dint0.11;
+	FUN_GTAC_DINTtoINT.4:= Dint0.12;
+	FUN_GTAC_DINTtoINT.5:= Dint0.13;
+	FUN_GTAC_DINTtoINT.6:= Dint0.14;
+	FUN_GTAC_DINTtoINT.7:= Dint0.15;
+
+	FUN_GTAC_DINTtoINT.8:= Dint0.16;
+	FUN_GTAC_DINTtoINT.9:= Dint0.17;
+	FUN_GTAC_DINTtoINT.10:= Dint0.18;
+	FUN_GTAC_DINTtoINT.11:= Dint0.19;
+	FUN_GTAC_DINTtoINT.12:= Dint0.20;
+	FUN_GTAC_DINTtoINT.13:= Dint0.21;
+	FUN_GTAC_DINTtoINT.14:= Dint0.22;
+	FUN_GTAC_DINTtoINT.15:= Dint0.23;
+
+ELSIF Byte_Shift_Index=2
+	THEN
+	(*Byte Shift Index of 2, copy from Dint byte2 to Return*)
+	FUN_GTAC_DINTtoINT.0:= Dint0.16;
+	FUN_GTAC_DINTtoINT.1:= Dint0.17;
+	FUN_GTAC_DINTtoINT.2:= Dint0.18;
+	FUN_GTAC_DINTtoINT.3:= Dint0.19;
+	FUN_GTAC_DINTtoINT.4:= Dint0.20;
+	FUN_GTAC_DINTtoINT.5:= Dint0.21;
+	FUN_GTAC_DINTtoINT.6:= Dint0.22;
+	FUN_GTAC_DINTtoINT.7:= Dint0.23;
+
+	FUN_GTAC_DINTtoINT.8:= Dint0.24;
+	FUN_GTAC_DINTtoINT.9:= Dint0.25;
+	FUN_GTAC_DINTtoINT.10:= Dint0.26;
+	FUN_GTAC_DINTtoINT.11:= Dint0.27;
+	FUN_GTAC_DINTtoINT.12:= Dint0.28;
+	FUN_GTAC_DINTtoINT.13:= Dint0.29;
+	FUN_GTAC_DINTtoINT.14:= Dint0.30;
+	FUN_GTAC_DINTtoINT.15:= Dint0.31;
+
+ELSIF Byte_Shift_Index=3
+	THEN
+	(*Byte Shift Index of 3, copy from Dint byte3 to Return and blank unused byte in return*)
+	FUN_GTAC_DINTtoINT.0:= Dint0.24;
+	FUN_GTAC_DINTtoINT.1:= Dint0.25;
+	FUN_GTAC_DINTtoINT.2:= Dint0.26;
+	FUN_GTAC_DINTtoINT.3:= Dint0.27;
+	FUN_GTAC_DINTtoINT.4:= Dint0.28;
+	FUN_GTAC_DINTtoINT.5:= Dint0.29;
+	FUN_GTAC_DINTtoINT.6:= Dint0.30;
+	FUN_GTAC_DINTtoINT.7:= Dint0.31;
+
+	FUN_GTAC_DINTtoINT.8:= FALSE;
+	FUN_GTAC_DINTtoINT.9:= FALSE;
+	FUN_GTAC_DINTtoINT.10:= FALSE;
+	FUN_GTAC_DINTtoINT.11:= FALSE;
+	FUN_GTAC_DINTtoINT.12:= FALSE;
+	FUN_GTAC_DINTtoINT.13:= FALSE;
+	FUN_GTAC_DINTtoINT.14:= FALSE;
+	FUN_GTAC_DINTtoINT.15:= FALSE;
+
+ELSE
+	(*default case, blank return*)
+	FUN_GTAC_DINTtoINT.0:= FALSE;
+	FUN_GTAC_DINTtoINT.1:= FALSE;
+	FUN_GTAC_DINTtoINT.2:= FALSE;
+	FUN_GTAC_DINTtoINT.3:= FALSE;
+	FUN_GTAC_DINTtoINT.4:= FALSE;
+	FUN_GTAC_DINTtoINT.5:= FALSE;
+	FUN_GTAC_DINTtoINT.6:= FALSE;
+	FUN_GTAC_DINTtoINT.7:= FALSE;
+
+	FUN_GTAC_DINTtoINT.8:= FALSE;
+	FUN_GTAC_DINTtoINT.9:= FALSE;
+	FUN_GTAC_DINTtoINT.10:= FALSE;
+	FUN_GTAC_DINTtoINT.11:= FALSE;
+	FUN_GTAC_DINTtoINT.12:= FALSE;
+	FUN_GTAC_DINTtoINT.13:= FALSE;
+	FUN_GTAC_DINTtoINT.14:= FALSE;
+	FUN_GTAC_DINTtoINT.15:= FALSE;
+
+END_IF;
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FUN_GTAC_DINTtoINT">
+      <LineId Id="17" Count="109" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

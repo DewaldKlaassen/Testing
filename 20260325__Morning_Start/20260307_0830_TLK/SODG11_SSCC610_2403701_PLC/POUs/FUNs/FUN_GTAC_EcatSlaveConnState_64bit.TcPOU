@@ -1,0 +1,421 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FUN_GTAC_EcatSlaveConnState_64bit" Id="{d6bc7bee-1fb5-4357-b3fa-0f18474152d1}" SpecialFunc="None">
+    <Declaration><![CDATA[(*Function used to check for cable breaks between ECAT slaves grouped as a fixture (or any large group of A+B port ECAT SLAVES)
+	author: Brent Lekx-Toniolo of Sodecia GTAC
+	date: April 2013
+	version 1.0
+		- initial concept
+	Late Edit: 06-May-2016
+		-update to handle 30 slaves, b.lekx-toniolo
+	64Bit Edit: 15-July-2022
+		-updated to handle 61 Slaves, c.Drees
+*)
+
+FUNCTION FUN_GTAC_EcatSlaveConnState_64bit : ARRAY [0..1] OF DINT;
+
+VAR_INPUT
+	Slave_State: ARRAY[0..63] OF UINT;
+
+
+END_VAR
+VAR
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Check State of Each Slave and look for "Port B Missling Link State, if exists cable break is likely
+If Cable Break is Likely, flag appropriate bit*)
+
+IF Slave_State[0]=257 (*Missing Slave, might be input cable*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].0:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].0:= FALSE;
+END_IF;
+
+IF Slave_State[0]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].1:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].1:= FALSE;
+END_IF;
+IF Slave_State[1]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].2:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].2:= FALSE;
+END_IF;
+IF Slave_State[2]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].3:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].3:= FALSE;
+END_IF;
+IF Slave_State[3]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].4:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].4:= FALSE;
+END_IF;
+IF Slave_State[4]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].5:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].5:= FALSE;
+END_IF;
+IF Slave_State[5]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].6:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].6:= FALSE;
+END_IF;
+IF Slave_State[6]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].7:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].7:= FALSE;
+END_IF;
+IF Slave_State[7]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].8:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].8:= FALSE;
+END_IF;
+IF Slave_State[8]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].9:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].9:= FALSE;
+END_IF;
+IF Slave_State[9]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].10:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].10:= FALSE;
+END_IF;
+IF Slave_State[10]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].11:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].11:= FALSE;
+END_IF;
+IF Slave_State[11]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].12:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].12:= FALSE;
+END_IF;
+IF Slave_State[12]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].13:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].13:= FALSE;
+END_IF;
+IF Slave_State[13]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].14:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].14:= FALSE;
+END_IF;
+IF Slave_State[14]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].15:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].15:= FALSE;
+END_IF;
+IF Slave_State[15]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].16:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].16:= FALSE;
+END_IF;
+IF Slave_State[16]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].17:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].17:= FALSE;
+END_IF;
+IF Slave_State[17]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].18:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].18:= FALSE;
+END_IF;
+IF Slave_State[18]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].19:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].19:= FALSE;
+END_IF;
+IF Slave_State[19]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].20:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].20:= FALSE;
+END_IF;
+IF Slave_State[20]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].21:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].21:= FALSE;
+END_IF;
+IF Slave_State[21]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].22:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].22:= FALSE;
+END_IF;
+IF Slave_State[22]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].23:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].23:= FALSE;
+END_IF;
+IF Slave_State[23]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].24:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].24:= FALSE;
+END_IF;
+IF Slave_State[24]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].25:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].25:= FALSE;
+END_IF;
+IF Slave_State[25]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].26:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].26:= FALSE;
+END_IF;
+IF Slave_State[26]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].27:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].27:= FALSE;
+END_IF;
+IF Slave_State[27]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].28:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].28:= FALSE;
+END_IF;
+IF Slave_State[28]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].29:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].29:= FALSE;
+END_IF;
+IF Slave_State[29]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].30:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].30:= FALSE;
+END_IF;
+IF Slave_State[30]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[0].31:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[0].31:= FALSE;
+END_IF;
+IF Slave_State[31]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[1].0:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[1].0:= FALSE;
+END_IF;
+IF Slave_State[32]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[1].1:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[1].1:= FALSE;
+END_IF;
+IF Slave_State[33]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[1].2:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[1].2:= FALSE;
+END_IF;
+IF Slave_State[34]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[1].3:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[1].3:= FALSE;
+END_IF;
+IF Slave_State[35]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[1].4:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[1].4:= FALSE;
+END_IF;
+IF Slave_State[36]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[1].5:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[1].5:= FALSE;
+END_IF;
+IF Slave_State[37]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[1].6:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[1].6:= FALSE;
+END_IF;
+IF Slave_State[38]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[1].7:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[1].7:= FALSE;
+END_IF;
+IF Slave_State[39]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[1].8:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[1].8:= FALSE;
+END_IF;
+IF Slave_State[40]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[1].9:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[1].9:= FALSE;
+END_IF;
+IF Slave_State[41]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[1].10:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[1].10:= FALSE;
+END_IF;
+IF Slave_State[42]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[1].11:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[1].11:= FALSE;
+END_IF;
+IF Slave_State[43]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[1].12:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[1].12:= FALSE;
+END_IF;
+IF Slave_State[44]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[1].13:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[1].13:= FALSE;
+END_IF;
+IF Slave_State[45]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[1].14:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[1].14:= FALSE;
+END_IF;
+IF Slave_State[46]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[1].15:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[1].15:= FALSE;
+END_IF;
+IF Slave_State[47]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[1].16:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[1].16:= FALSE;
+END_IF;
+IF Slave_State[48]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[1].17:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[1].17:= FALSE;
+END_IF;
+IF Slave_State[49]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[1].18:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[1].18:= FALSE;
+END_IF;
+IF Slave_State[50]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[1].19:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[1].19:= FALSE;
+END_IF;
+IF Slave_State[51]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[1].20:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[1].20:= FALSE;
+END_IF;
+IF Slave_State[52]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[1].21:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[1].21:= FALSE;
+END_IF;
+IF Slave_State[53]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[1].22:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[1].22:= FALSE;
+END_IF;
+IF Slave_State[54]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[1].23:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[1].23:= FALSE;
+END_IF;
+IF Slave_State[55]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[1].24:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[1].24:= FALSE;
+END_IF;
+IF Slave_State[56]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[1].25:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[1].25:= FALSE;
+END_IF;
+IF Slave_State[57]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[1].26:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[1].26:= FALSE;
+END_IF;
+IF Slave_State[58]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[1].27:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[1].27:= FALSE;
+END_IF;
+IF Slave_State[59]=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState_64bit[1].28:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState_64bit[1].28:= FALSE;
+END_IF;	
+
+
+
+
+
+
+
+
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FUN_GTAC_EcatSlaveConnState_64bit">
+      <LineId Id="47" Count="129" />
+      <LineId Id="408" Count="58" />
+      <LineId Id="236" Count="0" />
+      <LineId Id="468" Count="58" />
+      <LineId Id="467" Count="0" />
+      <LineId Id="527" Count="58" />
+      <LineId Id="297" Count="0" />
+      <LineId Id="586" Count="58" />
+      <LineId Id="298" Count="0" />
+      <LineId Id="296" Count="0" />
+      <LineId Id="237" Count="9" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

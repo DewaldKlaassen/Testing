@@ -1,0 +1,554 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="Robot_InterLock_Map" Id="{dec13b71-bd5f-418e-9597-e7b8a5157a64}" SpecialFunc="None">
+    <Declaration><![CDATA[(*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Robot Interlock Map:
+	Robot to Human Interference Mapping,
+	Robot to Equipment Interference Mapping,
+	Robot to Robot Interference Mapping,
+	Teach Interlock Mapping,
+	
+	auth. Brent Lekx-Toniolo of Toniolo Research & Development Inc.; 
+	August 2010
+----------------------------------------------------------------------------------------------------------------------
+REVISION NOTES: 
+	Date: October 2014
+	- Added capability of up to 30 robots, b.lekx-toniolo
+
+----------------------------------------------------------------------------------------------------------------------
+General Guidlines:
+ The following is just general generic concept, may not apply in each application
+
+	HumanInterf1 - Human Tool 1 (LH side from Human)
+	HumanInterf2 - Human Tool 2 (RH Side from Human)
+	HumanInterf3 - Human Tool 3
+	HumanInterf4 - Human Tool 4
+	HumanInterf5 - Human Tool 5
+	HumanInterf6 - Human Tool 6
+	HumanInterf7 - Human Tool 7
+	HumanInterf8 - Human Tool 8
+
+	EquipInterf1 - Internal Tool
+	EquipInterf2 - Internal Tool
+	EquipInterf3 - Internal Tool
+	EquipInterf4 - Internal Tool
+	EquipInterf5 - Internal Ped
+	EquipInterf6 - Internal Ped
+	EquipInterf7 - Internal Ped
+	EquipInterf8 - Reserved for: Cell Services (Master Test, Brake Test, Tip Change etc)
+
+	RobotInterf1-8 - Robot to Robot Interf Zones
+
+*)
+
+PROGRAM Robot_InterLock_Map
+	VAR_INPUT
+		Enable_Prog: BOOL;
+	END_VAR
+
+	VAR
+	(*add Internal Vars here*)
+END_VAR
+
+	VAR_OUTPUT
+		Prog_Ok: BOOL;
+	END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[	(*Set Prog_OK to True*)
+	Prog_OK:= TRUE;
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$Gather Status Of Hardware $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+
+
+(*Robot  Interference Zone Mapping, Add Robot to Robot Interference Mapping and Tool Interlocks Here*)
+(*R1-----------------------------------------------------------------*)
+	R1_Data.OK_ToEnter_HumanInterf1:= (Fix01.Tool_Call_ForSweepA AND Fix02.Tool_Call_ForSweepA)
+									AND MAIN.R2.At_Home AND MAIN.R3.At_Home;
+	R1_Data.OK_ToEnter_HumanInterf2:= (Fix01.Tool_Call_ForSweepB AND Fix02.Tool_Call_ForSweepB)
+									AND MAIN.R2.At_Home AND MAIN.R3.At_Home;
+	R1_Data.OK_ToEnter_HumanInterf3:= FALSE;
+	R1_Data.OK_ToEnter_HumanInterf4:= FALSE;
+	R1_Data.OK_ToEnter_HumanInterf5:= FALSE;
+	R1_Data.OK_ToEnter_HumanInterf6:= FALSE;
+	R1_Data.OK_ToEnter_HumanInterf7:= FALSE;
+	R1_Data.OK_ToEnter_HumanInterf8:= FALSE;
+	R1_Data.OK_ToEnter_EquipInterf1:= Fix01.Tool_Call_ForWeldRobots;
+	R1_Data.OK_ToEnter_EquipInterf2:= Fix02.Tool_Call_ForWeldRobots;
+	R1_Data.OK_ToEnter_EquipInterf3:= Fix01.Tool_Call_ForUnloadRobots1;
+	R1_Data.OK_ToEnter_EquipInterf4:= Fix02.Tool_Call_ForUnloadRobots1;
+	R1_Data.OK_ToEnter_EquipInterf5:= FALSE; 
+	R1_Data.OK_ToEnter_EquipInterf6:= FALSE; 
+	R1_Data.OK_ToEnter_EquipInterf7:= FALSE;
+	R1_Data.OK_ToEnter_EquipInterf8:= Cell_Services_Prog.Service_Call_ForAllRobots OR Cell_Services_Prog.Service_Call_ForRobot1
+							  AND NOT (Fix01.Start_TurntableA AND Fix02.Start_TurntableA)
+					          AND NOT (Fix01.Start_TurntableB AND Fix02.Start_TurntableB);
+	R1_Data.OK_ToEnter_EquipInterf9:= FALSE;
+	R1_Data.OK_ToEnter_RobotInterfs.0:= MAIN.R2.Clear_Of_RobotInterfs.0; //105
+	R1_Data.OK_ToEnter_RobotInterfs.1:= FALSE; //106
+	R1_Data.OK_ToEnter_RobotInterfs.2:= FALSE; //107
+	R1_Data.OK_ToEnter_RobotInterfs.3:= FALSE; //108
+	R1_Data.OK_ToEnter_RobotInterfs.4:= FALSE;//R1&R2-109
+	R1_Data.OK_ToEnter_RobotInterfs.5:= FALSE;//R1&R3-110
+	R1_Data.OK_ToEnter_RobotInterfs.6:= MAIN.R2.Clear_Of_RobotInterfs.6;//R1&R2-111
+	R1_Data.OK_ToEnter_RobotInterfs.7:= FALSE;//R1&R3-112
+
+	(*Teach Interlocks*)
+	IF GTAC_CONFIG.Under_Construction
+		THEN
+			R1_Data.Teach_Interlock:= TRUE;
+
+	ELSE
+			R1_Data.Teach_Interlock:= (NOT Main.R2.In_Teach AND NOT Main.R3.In_Teach) OR TRUE (*DEBUG*); (*DEBUG EXAMPLE ONLY - Add Other Robots In teach etc Interlocks here, must be held high to NOT hold this robot*)
+
+	END_IF;
+
+(*R2-----------------------------------------------------------------*)
+	R2_Data.OK_ToEnter_HumanInterf1:= FALSE;
+	R2_Data.OK_ToEnter_HumanInterf2:= FALSE;
+	R2_Data.OK_ToEnter_HumanInterf3:= FALSE;
+	R2_Data.OK_ToEnter_HumanInterf4:= FALSE;
+	R2_Data.OK_ToEnter_HumanInterf5:= FALSE;
+	R2_Data.OK_ToEnter_HumanInterf6:= FALSE;
+	R2_Data.OK_ToEnter_HumanInterf7:= FALSE;
+	R2_Data.OK_ToEnter_HumanInterf8:= FALSE;
+	R2_Data.OK_ToEnter_EquipInterf1:= Fix01.Tool_Call_ForWeldRobots;
+	R2_Data.OK_ToEnter_EquipInterf2:= Fix02.Tool_Call_ForWeldRobots;
+	R2_Data.OK_ToEnter_EquipInterf3:= Fix01.Tool_Call_ForUnloadRobots1;
+	R2_Data.OK_ToEnter_EquipInterf4:= Fix02.Tool_Call_ForUnloadRobots1;
+	R2_Data.OK_ToEnter_EquipInterf5:= FALSE;
+	R2_Data.OK_ToEnter_EquipInterf6:= FALSE;
+	R2_Data.OK_ToEnter_EquipInterf7:= FALSE;
+	R2_Data.OK_ToEnter_EquipInterf8:= (Cell_Services_Prog.Service_Call_ForAllRobots OR Cell_Services_Prog.Service_Call_ForRobot2)
+									AND ((Fix01.TurntableA_At_Robot OR Fix01.TurntableB_At_Robot) AND Fix01.Turntable_Clear AND Fix02.Turntable_Clear)
+							    AND NOT (Fix01.Start_TurntableA AND Fix02.Start_TurntableA)
+								AND NOT (Fix01.Start_TurntableB AND Fix02.Start_TurntableB);
+	R2_Data.OK_ToEnter_EquipInterf9:= FALSE;
+	R2_Data.OK_ToEnter_RobotInterfs.0:= MAIN.R1.Clear_Of_RobotInterfs.0;
+	R2_Data.OK_ToEnter_RobotInterfs.1:= MAIN.R3.Clear_Of_RobotInterfs.1;
+	R2_Data.OK_ToEnter_RobotInterfs.2:= FALSE;
+	R2_Data.OK_ToEnter_RobotInterfs.3:= FALSE;
+	R2_Data.OK_ToEnter_RobotInterfs.4:= FALSE;
+	R2_Data.OK_ToEnter_RobotInterfs.5:= FALSE;
+	R2_Data.OK_ToEnter_RobotInterfs.6:= MAIN.R1.Clear_Of_RobotInterfs.6 AND MAIN.R3.Clear_Of_RobotInterfs.6;
+	R2_Data.OK_ToEnter_RobotInterfs.7:= FALSE;
+	
+	(*Teach Interlocks*)
+	IF GTAC_CONFIG.Under_Construction
+		THEN
+			R2_Data.Teach_Interlock:= TRUE;
+
+	ELSE
+			R2_Data.Teach_Interlock:= (NOT Main.R1.In_Teach AND NOT Main.R3.In_Teach) OR TRUE (*DEBUG*); (*DEBUG EXAMPLE ONLY - Add Other Robots In teach etc Interlocks here, must be held high to NOT hold this robot*)
+
+	END_IF;
+
+
+(*R3-----------------------------------------------------------------*)
+	R3_Data.OK_ToEnter_HumanInterf1:= FALSE;
+	R3_Data.OK_ToEnter_HumanInterf2:= FALSE;
+	R3_Data.OK_ToEnter_HumanInterf3:= FALSE;
+	R3_Data.OK_ToEnter_HumanInterf4:= FALSE;
+	R3_Data.OK_ToEnter_HumanInterf5:= FALSE;
+	R3_Data.OK_ToEnter_HumanInterf6:= FALSE;
+	R3_Data.OK_ToEnter_HumanInterf7:= FALSE;
+	R3_Data.OK_ToEnter_HumanInterf8:= FALSE;
+	R3_Data.OK_ToEnter_EquipInterf1:= Fix01.Tool_Call_ForWeldRobots;
+	R3_Data.OK_ToEnter_EquipInterf2:= Fix02.Tool_Call_ForWeldRobots;
+	R3_Data.OK_ToEnter_EquipInterf3:= Fix01.Tool_Call_ForUnloadRobots1;
+	R3_Data.OK_ToEnter_EquipInterf4:= Fix02.Tool_Call_ForUnloadRobots1;
+	R3_Data.OK_ToEnter_EquipInterf5:= FALSE;
+	R3_Data.OK_ToEnter_EquipInterf6:= FALSE;
+	R3_Data.OK_ToEnter_EquipInterf7:= FALSE;
+	R2_Data.OK_ToEnter_EquipInterf8:= (Cell_Services_Prog.Service_Call_ForAllRobots OR Cell_Services_Prog.Service_Call_ForRobot2)
+									AND ((Fix01.TurntableA_At_Robot OR Fix01.TurntableB_At_Robot) AND Fix01.Turntable_Clear AND Fix02.Turntable_Clear)
+							    AND NOT (Fix01.Start_TurntableA AND Fix02.Start_TurntableA)
+								AND NOT (Fix01.Start_TurntableB AND Fix02.Start_TurntableB);
+	R3_Data.OK_ToEnter_EquipInterf9:= FALSE;
+	R3_Data.OK_ToEnter_RobotInterfs.0:= FALSE;
+	R3_Data.OK_ToEnter_RobotInterfs.1:= MAIN.R2.Clear_Of_RobotInterfs.1;
+	R3_Data.OK_ToEnter_RobotInterfs.2:= FALSE;
+	R3_Data.OK_ToEnter_RobotInterfs.3:= FALSE;
+	R3_Data.OK_ToEnter_RobotInterfs.4:= FALSE;
+	R3_Data.OK_ToEnter_RobotInterfs.5:= FALSE;
+	R3_Data.OK_ToEnter_RobotInterfs.6:= MAIN.R2.Clear_Of_RobotInterfs.6;
+	R3_Data.OK_ToEnter_RobotInterfs.7:= FALSE;
+
+	(*Teach Interlocks*)
+	IF GTAC_CONFIG.Under_Construction
+		THEN
+			R3_Data.Teach_Interlock:= TRUE;
+
+	ELSE
+			R3_Data.Teach_Interlock:= (NOT Main.R1.In_Teach AND NOT Main.R2.In_Teach) OR TRUE (*DEBUG*); (*DEBUG EXAMPLE ONLY - Add Other Robots In teach etc Interlocks here, must be held high to NOT hold this robot*)
+
+	END_IF;
+
+
+(*R4-----------------------------------------------------------------*)
+	R4_Data.OK_ToEnter_HumanInterf1:= Fix05.Tool_Call_ForLoadRobots1;
+	R4_Data.OK_ToEnter_HumanInterf2:= FALSE;
+	R4_Data.OK_ToEnter_HumanInterf3:= FALSE;
+	R4_Data.OK_ToEnter_HumanInterf4:= FALSE;
+	R4_Data.OK_ToEnter_HumanInterf5:= FALSE;
+	R4_Data.OK_ToEnter_HumanInterf6:= FALSE;
+	R4_Data.OK_ToEnter_HumanInterf7:= FALSE;
+	R4_Data.OK_ToEnter_HumanInterf8:= FALSE;
+	R4_Data.OK_ToEnter_EquipInterf1:= (Fix01.Tool_Call_ForUnloadRobots1 OR  Fix02.Tool_Call_ForUnloadRobots1) AND Fix101.All_Sensors_Off; //9 (*Dont pick up off Fix01 or 02 unless Fix101 is ready to receive*)
+	R4_Data.OK_ToEnter_EquipInterf2:= Fix101.Tool_Call_ForLoadRobots1 OR Fix101.Tool_Call_ForUnloadRobots1; //10
+	R4_Data.OK_ToEnter_EquipInterf3:= Fix03.Tool_Call_ForLoadRobots1 OR Fix04.Tool_Call_ForLoadRobots1 OR (Fix102.All_Sensors_Off AND (Fix03.Tool_Call_ForUnloadRobots1 OR Fix04.Tool_Call_ForUnloadRobots1)); //11 (*Dont pick up off Fix03 or 04 unless Fix102 is ready to receive*) //11 
+	R4_Data.OK_ToEnter_EquipInterf4:= Fix102.Tool_Call_ForLoadRobots1 OR Fix102.Tool_Call_ForUnloadRobots1;//12
+	R4_Data.OK_ToEnter_EquipInterf5:= Fix103.Tool_Call_ForLoadRobots1; //13
+	R4_Data.OK_ToEnter_EquipInterf6:= Fix104.Tool_Call_ForLoadRobots1; //14
+	R4_Data.OK_ToEnter_EquipInterf7:= Fix105.Tool_Call_ForLoadRobots1; //15
+	R4_Data.OK_ToEnter_EquipInterf8:= Cell_Services_Prog.Service_Call_ForAllRobots OR Cell_Services_Prog.Service_Call_ForRobot4; //16
+	R4_Data.OK_ToEnter_EquipInterf9:= MAIN.PED[1].Tool_Call_ForWorkRobots;//17
+	R4_Data.OK_ToEnter_RobotInterfs.0:= FALSE;
+	R4_Data.OK_ToEnter_RobotInterfs.1:= FALSE;
+	R4_Data.OK_ToEnter_RobotInterfs.2:= FALSE;
+	R4_Data.OK_ToEnter_RobotInterfs.3:= FALSE;
+	R4_Data.OK_ToEnter_RobotInterfs.4:= FALSE;
+	R4_Data.OK_ToEnter_RobotInterfs.5:= FALSE;
+	R4_Data.OK_ToEnter_RobotInterfs.6:= FALSE;
+	R4_Data.OK_ToEnter_RobotInterfs.7:= FALSE;
+
+	(*Teach Interlocks*)
+	IF GTAC_CONFIG.Under_Construction
+		THEN
+			R4_Data.Teach_Interlock:= TRUE;
+
+	ELSE
+			R4_Data.Teach_Interlock:= TRUE; (*DEBUG - Add Other Robots In teach etc Interlocks here, must be held high to NOT hold this robot*)
+
+	END_IF;
+
+
+(*R5-----------------------------------------------------------------*)
+	R5_Data.OK_ToEnter_HumanInterf1:= (Fix03.Tool_Call_ForSweepA AND Fix04.Tool_Call_ForSweepA)
+									AND MAIN.R6.At_Home;
+	R5_Data.OK_ToEnter_HumanInterf2:= (Fix03.Tool_Call_ForSweepB AND Fix04.Tool_Call_ForSweepB)
+									AND MAIN.R6.At_Home;
+	R5_Data.OK_ToEnter_HumanInterf3:= FALSE;
+	R5_Data.OK_ToEnter_HumanInterf4:= FALSE;
+	R5_Data.OK_ToEnter_HumanInterf5:= FALSE;
+	R5_Data.OK_ToEnter_HumanInterf6:= FALSE;
+	R5_Data.OK_ToEnter_HumanInterf7:= FALSE;
+	R5_Data.OK_ToEnter_HumanInterf8:= FALSE;
+	R5_Data.OK_ToEnter_EquipInterf1:= Fix03.Tool_Call_ForWeldRobots;
+	R5_Data.OK_ToEnter_EquipInterf2:= Fix04.Tool_Call_ForWeldRobots;
+	R5_Data.OK_ToEnter_EquipInterf3:= Fix03.Tool_Call_ForLoadRobots1;
+	R5_Data.OK_ToEnter_EquipInterf4:= Fix04.Tool_Call_ForLoadRobots1;
+	R5_Data.OK_ToEnter_EquipInterf5:= FALSE;
+	R5_Data.OK_ToEnter_EquipInterf6:= FALSE;
+	R5_Data.OK_ToEnter_EquipInterf7:= FALSE;
+	R5_Data.OK_ToEnter_EquipInterf8:= Cell_Services_Prog.Service_Call_ForAllRobots OR Cell_Services_Prog.Service_Call_ForRobot5;
+	R5_Data.OK_ToEnter_EquipInterf9:= FALSE;
+	R5_Data.OK_ToEnter_RobotInterfs.0:= MAIN.R6.Clear_Of_RobotInterfs.0; //105
+	R5_Data.OK_ToEnter_RobotInterfs.1:= MAIN.R6.Clear_Of_RobotInterfs.1; //106
+	R5_Data.OK_ToEnter_RobotInterfs.2:= MAIN.R6.Clear_Of_RobotInterfs.2; //107
+	R5_Data.OK_ToEnter_RobotInterfs.3:= MAIN.R6.Clear_Of_RobotInterfs.3; //108
+	R5_Data.OK_ToEnter_RobotInterfs.4:= MAIN.R6.Clear_Of_RobotInterfs.4; //109
+	R5_Data.OK_ToEnter_RobotInterfs.5:= MAIN.R6.Clear_Of_RobotInterfs.5; //110
+	R5_Data.OK_ToEnter_RobotInterfs.6:= MAIN.R6.Clear_Of_RobotInterfs.6; //111
+	R5_Data.OK_ToEnter_RobotInterfs.7:= MAIN.R6.Clear_Of_RobotInterfs.7; //112
+
+	(*Teach Interlocks*)
+	IF GTAC_CONFIG.Under_Construction
+		THEN
+			R5_Data.Teach_Interlock:= TRUE;
+
+	ELSE
+			R5_Data.Teach_Interlock:= TRUE; (*DEBUG - Add Other Robots In teach etc Interlocks here, must be held high to NOT hold this robot*)
+
+	END_IF;
+
+
+(*R6-----------------------------------------------------------------*)
+	R6_Data.OK_ToEnter_HumanInterf1:= FALSE;
+	R6_Data.OK_ToEnter_HumanInterf2:= FALSE;
+	R6_Data.OK_ToEnter_HumanInterf3:= FALSE;
+	R6_Data.OK_ToEnter_HumanInterf4:= FALSE;
+	R6_Data.OK_ToEnter_HumanInterf5:= FALSE;
+	R6_Data.OK_ToEnter_HumanInterf6:= FALSE;
+	R6_Data.OK_ToEnter_HumanInterf7:= FALSE;
+	R6_Data.OK_ToEnter_HumanInterf8:= FALSE;
+	R6_Data.OK_ToEnter_EquipInterf1:= Fix03.Tool_Call_ForWeldRobots;
+	R6_Data.OK_ToEnter_EquipInterf2:= Fix04.Tool_Call_ForWeldRobots;
+	R6_Data.OK_ToEnter_EquipInterf3:= Fix03.Tool_Call_ForLoadRobots1;
+	R6_Data.OK_ToEnter_EquipInterf4:= Fix04.Tool_Call_ForLoadRobots1;
+	R6_Data.OK_ToEnter_EquipInterf5:= FALSE;
+	R6_Data.OK_ToEnter_EquipInterf6:= FALSE;
+	R6_Data.OK_ToEnter_EquipInterf7:= FALSE;
+	R6_Data.OK_ToEnter_EquipInterf8:=  Cell_Services_Prog.Service_Call_ForAllRobots OR Cell_Services_Prog.Service_Call_ForRobot6;
+	R6_Data.OK_ToEnter_EquipInterf9:= FALSE;
+	R6_Data.OK_ToEnter_RobotInterfs.0:= MAIN.R5.Clear_Of_RobotInterfs.0; //105
+	R6_Data.OK_ToEnter_RobotInterfs.1:= MAIN.R5.Clear_Of_RobotInterfs.1; //106
+	R6_Data.OK_ToEnter_RobotInterfs.2:= MAIN.R5.Clear_Of_RobotInterfs.2; //107
+	R6_Data.OK_ToEnter_RobotInterfs.3:= MAIN.R5.Clear_Of_RobotInterfs.3; //108
+	R6_Data.OK_ToEnter_RobotInterfs.4:= MAIN.R5.Clear_Of_RobotInterfs.4; //109
+	R6_Data.OK_ToEnter_RobotInterfs.5:= MAIN.R5.Clear_Of_RobotInterfs.5; //110
+	R6_Data.OK_ToEnter_RobotInterfs.6:= MAIN.R5.Clear_Of_RobotInterfs.6; //111
+	R6_Data.OK_ToEnter_RobotInterfs.7:= MAIN.R5.Clear_Of_RobotInterfs.7; //112
+
+	(*Teach Interlocks*)
+	IF GTAC_CONFIG.Under_Construction
+		THEN
+			R6_Data.Teach_Interlock:= TRUE;
+
+	ELSE
+			R6_Data.Teach_Interlock:= TRUE; (*DEBUG - Add Other Robots In teach etc Interlocks here, must be held high to NOT hold this robot*)
+
+	END_IF;
+
+
+(*R7-----------------------------------------------------------------*)
+	R7_Data.OK_ToEnter_HumanInterf1:= FALSE;
+	R7_Data.OK_ToEnter_HumanInterf2:= FALSE;
+	R7_Data.OK_ToEnter_HumanInterf3:= FALSE;
+	R7_Data.OK_ToEnter_HumanInterf4:= FALSE;
+	R7_Data.OK_ToEnter_HumanInterf5:= FALSE;
+	R7_Data.OK_ToEnter_HumanInterf6:= FALSE;
+	R7_Data.OK_ToEnter_HumanInterf7:= FALSE;
+	R7_Data.OK_ToEnter_HumanInterf8:= FALSE;
+	R7_Data.OK_ToEnter_EquipInterf1:= Fix101.Tool_Call_ForWeldRobots;
+	R7_Data.OK_ToEnter_EquipInterf2:= Fix101.Tool_Call_ForSweepA;
+	R7_Data.OK_ToEnter_EquipInterf3:= FALSE;
+	R7_Data.OK_ToEnter_EquipInterf4:= FALSE;
+	R7_Data.OK_ToEnter_EquipInterf5:= FALSE;
+	R7_Data.OK_ToEnter_EquipInterf6:= FALSE;
+	R7_Data.OK_ToEnter_EquipInterf7:= FALSE;
+	R7_Data.OK_ToEnter_EquipInterf8:=  Cell_Services_Prog.Service_Call_ForAllRobots OR Cell_Services_Prog.Service_Call_ForRobot7;
+	R7_Data.OK_ToEnter_EquipInterf9:= FALSE;
+	R7_Data.OK_ToEnter_RobotInterfs.0:= MAIN.R8.Clear_Of_RobotInterfs.0 AND MAIN.R9.Clear_Of_RobotInterfs.0;//105
+	R7_Data.OK_ToEnter_RobotInterfs.1:= MAIN.R8.Clear_Of_RobotInterfs.1 AND MAIN.R9.Clear_Of_RobotInterfs.1;//106
+	R7_Data.OK_ToEnter_RobotInterfs.2:= MAIN.R8.Clear_Of_RobotInterfs.2 AND MAIN.R9.Clear_Of_RobotInterfs.2;//107
+	R7_Data.OK_ToEnter_RobotInterfs.3:= MAIN.R8.Clear_Of_RobotInterfs.3 AND MAIN.R9.Clear_Of_RobotInterfs.3;//108
+	R7_Data.OK_ToEnter_RobotInterfs.4:= MAIN.R8.Clear_Of_RobotInterfs.4;//109
+	R7_Data.OK_ToEnter_RobotInterfs.5:= MAIN.R8.Clear_Of_RobotInterfs.5;//110
+	R7_Data.OK_ToEnter_RobotInterfs.6:= MAIN.R8.Clear_Of_RobotInterfs.6;//111
+	R7_Data.OK_ToEnter_RobotInterfs.7:= MAIN.R9.Clear_Of_RobotInterfs.7;//112
+
+	(*Teach Interlocks*)
+	IF GTAC_CONFIG.Under_Construction
+		THEN
+			R7_Data.Teach_Interlock:= TRUE;
+
+	ELSE
+			R7_Data.Teach_Interlock:= TRUE; (*DEBUG - Add Other Robots In teach etc Interlocks here, must be held high to NOT hold this robot*)
+
+	END_IF;
+
+
+(*R8-----------------------------------------------------------------*)
+	R8_Data.OK_ToEnter_HumanInterf1:= FALSE;
+	R8_Data.OK_ToEnter_HumanInterf2:= FALSE;
+	R8_Data.OK_ToEnter_HumanInterf3:= FALSE;
+	R8_Data.OK_ToEnter_HumanInterf4:= FALSE;
+	R8_Data.OK_ToEnter_HumanInterf5:= FALSE;
+	R8_Data.OK_ToEnter_HumanInterf6:= FALSE;
+	R8_Data.OK_ToEnter_HumanInterf7:= FALSE;
+	R8_Data.OK_ToEnter_HumanInterf8:= FALSE;
+	R8_Data.OK_ToEnter_EquipInterf1:= Fix101.Tool_Call_ForWeldRobots;
+	R8_Data.OK_ToEnter_EquipInterf2:= FALSE;
+	R8_Data.OK_ToEnter_EquipInterf3:= FALSE;
+	R8_Data.OK_ToEnter_EquipInterf4:= FALSE;
+	R8_Data.OK_ToEnter_EquipInterf5:= FALSE;
+	R8_Data.OK_ToEnter_EquipInterf6:= FALSE;
+	R8_Data.OK_ToEnter_EquipInterf7:= FALSE;
+	R8_Data.OK_ToEnter_EquipInterf8:=  Cell_Services_Prog.Service_Call_ForAllRobots OR Cell_Services_Prog.Service_Call_ForRobot8;
+	R8_Data.OK_ToEnter_EquipInterf9:= FALSE;
+	R8_Data.OK_ToEnter_RobotInterfs.0:= MAIN.R7.Clear_Of_RobotInterfs.0;//105
+	R8_Data.OK_ToEnter_RobotInterfs.1:= MAIN.R7.Clear_Of_RobotInterfs.1;//106
+	R8_Data.OK_ToEnter_RobotInterfs.2:= MAIN.R7.Clear_Of_RobotInterfs.2;//107
+	R8_Data.OK_ToEnter_RobotInterfs.3:= MAIN.R7.Clear_Of_RobotInterfs.4;//R8-108 <-> R7 -109
+	R8_Data.OK_ToEnter_RobotInterfs.4:= MAIN.R7.Clear_Of_RobotInterfs.5;//R8-109 <-> R7 -110
+	R8_Data.OK_ToEnter_RobotInterfs.5:= MAIN.R7.Clear_Of_RobotInterfs.6;//R8-110 <-> R7 -111
+	R8_Data.OK_ToEnter_RobotInterfs.6:= MAIN.R9.Clear_Of_RobotInterfs.4;//R8-111 <-> R9 -109
+	R8_Data.OK_ToEnter_RobotInterfs.7:= MAIN.R9.Clear_Of_RobotInterfs.5;//R8-112 <-> R9 -110
+
+	(*Teach Interlocks*)
+	IF GTAC_CONFIG.Under_Construction
+		THEN
+			R8_Data.Teach_Interlock:= TRUE;
+
+	ELSE
+			R8_Data.Teach_Interlock:= TRUE; (*DEBUG - Add Other Robots In teach etc Interlocks here, must be held high to NOT hold this robot*)
+
+	END_IF;
+
+
+(*R9-----------------------------------------------------------------*)
+	R9_Data.OK_ToEnter_HumanInterf1:= FALSE;
+	R9_Data.OK_ToEnter_HumanInterf2:= FALSE;
+	R9_Data.OK_ToEnter_HumanInterf3:= FALSE;
+	R9_Data.OK_ToEnter_HumanInterf4:= FALSE;
+	R9_Data.OK_ToEnter_HumanInterf5:= FALSE;
+	R9_Data.OK_ToEnter_HumanInterf6:= FALSE;
+	R9_Data.OK_ToEnter_HumanInterf7:= FALSE;
+	R9_Data.OK_ToEnter_HumanInterf8:= FALSE;
+	R9_Data.OK_ToEnter_EquipInterf1:= Fix101.Tool_Call_ForWeldRobots;
+	R9_Data.OK_ToEnter_EquipInterf2:= FALSE;
+	R9_Data.OK_ToEnter_EquipInterf3:= FALSE;
+	R9_Data.OK_ToEnter_EquipInterf4:= FALSE;
+	R9_Data.OK_ToEnter_EquipInterf5:= FALSE;
+	R9_Data.OK_ToEnter_EquipInterf6:= FALSE;
+	R9_Data.OK_ToEnter_EquipInterf7:= FALSE;
+	R9_Data.OK_ToEnter_EquipInterf8:=  Cell_Services_Prog.Service_Call_ForAllRobots OR Cell_Services_Prog.Service_Call_ForRobot9;
+	R9_Data.OK_ToEnter_EquipInterf9:= FALSE;
+	R9_Data.OK_ToEnter_RobotInterfs.0:= MAIN.R7.Clear_Of_RobotInterfs.0;//105
+	R9_Data.OK_ToEnter_RobotInterfs.1:= MAIN.R7.Clear_Of_RobotInterfs.1;//106
+	R9_Data.OK_ToEnter_RobotInterfs.2:= MAIN.R7.Clear_Of_RobotInterfs.2;//107
+	R9_Data.OK_ToEnter_RobotInterfs.3:= MAIN.R8.Clear_Of_RobotInterfs.3;//108
+	R9_Data.OK_ToEnter_RobotInterfs.4:= MAIN.R8.Clear_Of_RobotInterfs.4;//109
+	R9_Data.OK_ToEnter_RobotInterfs.5:= MAIN.R8.Clear_Of_RobotInterfs.5;//110
+	R9_Data.OK_ToEnter_RobotInterfs.6:= FALSE;
+	R9_Data.OK_ToEnter_RobotInterfs.7:= MAIN.R7.Clear_Of_RobotInterfs.7;//112
+
+	(*Teach Interlocks*)
+	IF GTAC_CONFIG.Under_Construction
+		THEN
+			R9_Data.Teach_Interlock:= TRUE;
+
+	ELSE
+			R9_Data.Teach_Interlock:= TRUE; (*DEBUG - Add Other Robots In teach etc Interlocks here, must be held high to NOT hold this robot*)
+
+	END_IF;
+
+
+(*R10-----------------------------------------------------------------*)
+	R10_Data.OK_ToEnter_HumanInterf1:= FALSE;
+	R10_Data.OK_ToEnter_HumanInterf2:= FALSE;
+	R10_Data.OK_ToEnter_HumanInterf3:= FALSE;
+	R10_Data.OK_ToEnter_HumanInterf4:= FALSE;
+	R10_Data.OK_ToEnter_HumanInterf5:= FALSE;
+	R10_Data.OK_ToEnter_HumanInterf6:= FALSE;
+	R10_Data.OK_ToEnter_HumanInterf7:= FALSE;
+	R10_Data.OK_ToEnter_HumanInterf8:= FALSE;
+	R10_Data.OK_ToEnter_EquipInterf1:= Fix102.Tool_Call_ForWeldRobots;
+	R10_Data.OK_ToEnter_EquipInterf2:= Fix102.Tool_Call_ForSweepA;
+	R10_Data.OK_ToEnter_EquipInterf3:= FALSE;
+	R10_Data.OK_ToEnter_EquipInterf4:= FALSE;
+	R10_Data.OK_ToEnter_EquipInterf5:= FALSE;
+	R10_Data.OK_ToEnter_EquipInterf6:= FALSE;
+	R10_Data.OK_ToEnter_EquipInterf7:= FALSE;
+	R10_Data.OK_ToEnter_EquipInterf8:=  Cell_Services_Prog.Service_Call_ForAllRobots OR Cell_Services_Prog.Service_Call_ForRobot10;
+	R10_Data.OK_ToEnter_EquipInterf9:= FALSE;
+	R10_Data.OK_ToEnter_RobotInterfs.0:= MAIN.R11.Clear_Of_RobotInterfs.0; //105
+	R10_Data.OK_ToEnter_RobotInterfs.1:= MAIN.R11.Clear_Of_RobotInterfs.1; //106
+	R10_Data.OK_ToEnter_RobotInterfs.2:= MAIN.R11.Clear_Of_RobotInterfs.2; //107
+	R10_Data.OK_ToEnter_RobotInterfs.3:= FALSE;
+	R10_Data.OK_ToEnter_RobotInterfs.4:= FALSE;
+	R10_Data.OK_ToEnter_RobotInterfs.5:= FALSE;
+	R10_Data.OK_ToEnter_RobotInterfs.6:= FALSE;
+	R10_Data.OK_ToEnter_RobotInterfs.7:= FALSE;
+
+	(*Teach Interlocks*)
+	IF GTAC_CONFIG.Under_Construction
+		THEN
+			R10_Data.Teach_Interlock:= TRUE;
+
+	ELSE
+			R10_Data.Teach_Interlock:= TRUE; (*DEBUG - Add Other Robots In teach etc Interlocks here, must be held high to NOT hold this robot*)
+
+	END_IF;
+
+
+(*R11-----------------------------------------------------------------*)
+	R11_Data.OK_ToEnter_HumanInterf1:= FALSE;
+	R11_Data.OK_ToEnter_HumanInterf2:= FALSE;
+	R11_Data.OK_ToEnter_HumanInterf3:= FALSE;
+	R11_Data.OK_ToEnter_HumanInterf4:= FALSE;
+	R11_Data.OK_ToEnter_HumanInterf5:= FALSE;
+	R11_Data.OK_ToEnter_HumanInterf6:= FALSE;
+	R11_Data.OK_ToEnter_HumanInterf7:= FALSE;
+	R11_Data.OK_ToEnter_HumanInterf8:= FALSE;
+	R11_Data.OK_ToEnter_EquipInterf1:= Fix102.Tool_Call_ForWeldRobots;
+	R11_Data.OK_ToEnter_EquipInterf2:= FALSE;
+	R11_Data.OK_ToEnter_EquipInterf3:= FALSE;
+	R11_Data.OK_ToEnter_EquipInterf4:= FALSE;
+	R11_Data.OK_ToEnter_EquipInterf5:= FALSE;
+	R11_Data.OK_ToEnter_EquipInterf6:= FALSE;
+	R11_Data.OK_ToEnter_EquipInterf7:= FALSE;
+	R11_Data.OK_ToEnter_EquipInterf8:=  Cell_Services_Prog.Service_Call_ForAllRobots OR Cell_Services_Prog.Service_Call_ForRobot11;
+	R11_Data.OK_ToEnter_EquipInterf9:= FALSE;
+	R11_Data.OK_ToEnter_RobotInterfs.0:= MAIN.R10.Clear_Of_RobotInterfs.0; //105
+	R11_Data.OK_ToEnter_RobotInterfs.1:= MAIN.R10.Clear_Of_RobotInterfs.1; //106
+	R11_Data.OK_ToEnter_RobotInterfs.2:= MAIN.R10.Clear_Of_RobotInterfs.2; //107
+	R11_Data.OK_ToEnter_RobotInterfs.3:= FALSE;
+	R11_Data.OK_ToEnter_RobotInterfs.4:= FALSE;
+	R11_Data.OK_ToEnter_RobotInterfs.5:= FALSE;
+	R11_Data.OK_ToEnter_RobotInterfs.6:= FALSE;
+	R11_Data.OK_ToEnter_RobotInterfs.7:= FALSE;
+
+	(*Teach Interlocks*)
+	IF GTAC_CONFIG.Under_Construction
+		THEN
+			R11_Data.Teach_Interlock:= TRUE;
+
+	ELSE
+			R11_Data.Teach_Interlock:= TRUE; (*DEBUG - Add Other Robots In teach etc Interlocks here, must be held high to NOT hold this robot*)
+
+	END_IF;
+
+
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="Robot_InterLock_Map">
+      <LineId Id="51" Count="6" />
+      <LineId Id="1273" Count="1" />
+      <LineId Id="1278" Count="0" />
+      <LineId Id="60" Count="0" />
+      <LineId Id="1279" Count="0" />
+      <LineId Id="61" Count="4" />
+      <LineId Id="1275" Count="1" />
+      <LineId Id="68" Count="5" />
+      <LineId Id="1280" Count="1" />
+      <LineId Id="74" Count="0" />
+      <LineId Id="1495" Count="0" />
+      <LineId Id="1346" Count="6" />
+      <LineId Id="82" Count="19" />
+      <LineId Id="1290" Count="1" />
+      <LineId Id="104" Count="5" />
+      <LineId Id="1283" Count="2" />
+      <LineId Id="110" Count="0" />
+      <LineId Id="1496" Count="0" />
+      <LineId Id="1368" Count="6" />
+      <LineId Id="119" Count="0" />
+      <LineId Id="1375" Count="0" />
+      <LineId Id="120" Count="18" />
+      <LineId Id="1292" Count="1" />
+      <LineId Id="141" Count="4" />
+      <LineId Id="1286" Count="3" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="1497" Count="0" />
+      <LineId Id="1376" Count="6" />
+      <LineId Id="155" Count="20" />
+      <LineId Id="1556" Count="0" />
+      <LineId Id="177" Count="6" />
+      <LineId Id="1493" Count="1" />
+      <LineId Id="185" Count="20" />
+      <LineId Id="1435" Count="2" />
+      <LineId Id="206" Count="0" />
+      <LineId Id="208" Count="5" />
+      <LineId Id="1439" Count="0" />
+      <LineId Id="214" Count="0" />
+      <LineId Id="216" Count="5" />
+      <LineId Id="1498" Count="0" />
+      <LineId Id="222" Count="36" />
+      <LineId Id="1499" Count="0" />
+      <LineId Id="259" Count="36" />
+      <LineId Id="1500" Count="0" />
+      <LineId Id="296" Count="36" />
+      <LineId Id="1501" Count="0" />
+      <LineId Id="333" Count="36" />
+      <LineId Id="1502" Count="0" />
+      <LineId Id="370" Count="36" />
+      <LineId Id="1503" Count="0" />
+      <LineId Id="407" Count="36" />
+      <LineId Id="1504" Count="0" />
+      <LineId Id="444" Count="18" />
+      <LineId Id="1164" Count="3" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

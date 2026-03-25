@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FUN_GTAC_GetNodeFromName" Id="{f20c2dbe-2754-45ae-8e87-1c06add81fcb}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION FUN_GTAC_GetNodeFromName : String
+VAR_INPUT
+	InputString:STRING;
+	
+END_VAR
+VAR
+	SpaceLoc :INT;
+	PeriodLoc:INT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+(*Find the '.' location in the input string *)
+PeriodLoc := find(InputString,'.');
+SpaceLoc := find(InputString,' ');
+
+(*Using the above location, cut the name out of the input string, and return that as our string*)
+IF (SpaceLoc - PeriodLoc) = 5 THEN
+	FUN_GTAC_GetNodeFromName:= mid(InputString,4,PeriodLoc+1);
+ELSE
+	FUN_GTAC_GetNodeFromName:= mid(InputString,3,PeriodLoc+1);
+END_IF
+]]></ST>
+    </Implementation>
+    <LineIds Name="FUN_GTAC_GetNodeFromName">
+      <LineId Id="15" Count="0" />
+      <LineId Id="11" Count="0" />
+      <LineId Id="7" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="12" Count="0" />
+      <LineId Id="31" Count="2" />
+      <LineId Id="14" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

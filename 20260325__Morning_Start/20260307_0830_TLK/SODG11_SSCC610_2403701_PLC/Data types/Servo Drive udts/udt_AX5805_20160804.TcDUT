@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <DUT Name="udt_AX5805_20160804" Id="{8d25a7fc-ba1d-4682-8a7f-76482c5b2207}">
+    <Declaration><![CDATA[(*udt (user defined type) of Beckhoff Type AX5805 Drive Safety Module:
+	auth. R.Remillard; 
+	October 2014; version 1.0
+
+	Version 20160804
+		- Updated naming per convention, b.lekx-toniolo
+		- Re-arranged variables for more consitent order with HW spec, b.lekx-toniolo
+	*)
+
+TYPE udt_AX5805_20160804 :
+STRUCT
+
+	WcState:							BOOL;
+ 	InfoData: udt_ECATSlave_StatusEXT;
+
+	FSOE_Command: 					USINT;
+	Axis1_STO:						BOOL;
+	Axis1_SSM1:						BOOL;
+	Axis1_SSM2:						BOOL;
+	Axis1_SOS1:						BOOL;
+	Axis1_SSR1:						BOOL;
+	Axis1_SDIp:						BOOL;
+	Axis1_SDIn:						BOOL;
+	Axis1_Error_Ack:					BOOL;
+	FSOE_Slave_CRC_0:				UINT;
+	Axis2_STO:						BOOL;
+	Axis2_SSM1:						BOOL;
+	Axis2_SSM2:						BOOL;
+	Axis2_SOS1:						BOOL;
+	Axis2_SSR1:						BOOL;
+	Axis2_SDIp:						BOOL;
+	Axis2_SDIn:						BOOL;
+	Axis2_Error_Ack:					BOOL;
+	FSOE_Slave_CRC_1:				UINT;
+	FSOE_ConnID:					UINT;
+
+	AMSAddress:						udt_AdsAddr_AX5805;
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

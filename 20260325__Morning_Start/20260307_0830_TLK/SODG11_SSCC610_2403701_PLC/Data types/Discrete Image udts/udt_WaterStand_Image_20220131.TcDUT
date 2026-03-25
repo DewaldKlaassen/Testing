@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_WaterStand_Image_20220131" Id="{e1a8c414-7601-4918-ae9a-4276b46108e7}">
+    <Declaration><![CDATA[(*udt (user defined type) for Visualization of Water Stand Discrete I/O and Data for Visualization on UI(s)
+	Author(S): Brent Lekx-Toniolo;
+	Version 20151103
+		- Initial Concept,blt
+	Version 20200710
+		- changed from EP3174 to EP6224 on N01, j.vandongen
+		- removed N02 EP2028. changed to N01_CMD for EP6224, j.vandongen
+	Version 20220131
+		- added N01_I For UI Visualization, a.lopez
+
+
+*)
+TYPE udt_WaterStand_Image_20220131 :
+	STRUCT
+
+		N01: udt_EP6224;
+		N01_I: udt_EP6224_I;
+		N01_CMD: udt_EP6224_CMD;
+
+		(*Cable Break States*)
+		ECatSlave_Cable_Breaks: UDINT;
+
+		(*Data developed from discrete data*)
+		Water_Temp_Gun: REAL;
+		Water_Temp_Trans: REAL;
+		Water_Flow_Gun: REAL;
+		Water_Flow_Trans: REAL;
+
+	END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

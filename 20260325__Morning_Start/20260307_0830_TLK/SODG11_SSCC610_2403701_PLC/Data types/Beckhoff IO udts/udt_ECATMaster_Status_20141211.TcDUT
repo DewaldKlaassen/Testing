@@ -1,0 +1,127 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_ECATMaster_Status_20141211" Id="{c631d346-d311-45d1-a2c4-113955c1c25e}">
+    <Declaration><![CDATA[(*udt (user defined type) of Beckhoff Type EtherCAT Master:
+	auth. Brent Lekx-Toniolo of Toniolo Research & Development Inc.; 
+	Version 1.0, July 2010
+		- Initial Concept
+	Version 20121206
+		Changes from v1
+			- Changed Interface to include Infodata udt Instance
+			- Change to Naming Convention to include date as version
+*)
+
+
+
+TYPE udt_ECATMaster_Status_20141211 :
+STRUCT
+	Frm0State: UINT;
+	(*
+	0x0001 = 1. EtherCAT command NOT sent (NOP requested)
+	0x0002 = 2. EtherCAT command NOT sent (NOP requested)
+	0x0004 = 3. EtherCAT command NOT sent (NOP requested)
+	...
+	0x4000 = 15. EtherCAT command NOT sent (NOP requested)
+	0x8000 = complete frame NOT sent*)
+	Frm0WcState: UINT;
+	(*
+	0x0001 = wrong working counter of 1. EtherCAT command received
+	0x0002 = wrong working counter of 2. EtherCAT command received
+	0x0004 = wrong working counter of 3. EtherCAT command received
+	...
+	0x4000 = wrong working counter of 15. EtherCAT command received
+	0x8000 = complete frame missing*)
+	FR1State: UINT;
+	(*
+	0x0001 = 1. EtherCAT command NOT sent (NOP requested)
+	0x0002 = 2. EtherCAT command NOT sent (NOP requested)
+	0x0004 = 3. EtherCAT command NOT sent (NOP requested)
+	...
+	0x4000 = 15. EtherCAT command NOT sent (NOP requested)
+	0x8000 = complete frame NOT sent*)
+	FR1WcState: UINT;
+	(*
+	0x0001 = wrong working counter of 1. EtherCAT command received
+	0x0002 = wrong working counter of 2. EtherCAT command received
+	0x0004 = wrong working counter of 3. EtherCAT command received
+	...
+	0x4000 = wrong working counter of 15. EtherCAT command received
+	0x8000 = complete frame missing*)
+	FR2State: UINT;
+	(*
+	0x0001 = 1. EtherCAT command NOT sent (NOP requested)
+	0x0002 = 2. EtherCAT command NOT sent (NOP requested)
+	0x0004 = 3. EtherCAT command NOT sent (NOP requested)
+	...
+	0x4000 = 15. EtherCAT command NOT sent (NOP requested)
+	0x8000 = complete frame NOT sent*)
+	FR2WcState: UINT;
+	(*
+	0x0001 = wrong working counter of 1. EtherCAT command received
+	0x0002 = wrong working counter of 2. EtherCAT command received
+	0x0004 = wrong working counter of 3. EtherCAT command received
+	...
+	0x4000 = wrong working counter of 15. EtherCAT command received
+	0x8000 = complete frame missing*)
+	FR3State: UINT;
+	(*
+	0x0001 = 1. EtherCAT command NOT sent (NOP requested)
+	0x0002 = 2. EtherCAT command NOT sent (NOP requested)
+	0x0004 = 3. EtherCAT command NOT sent (NOP requested)
+	...
+	0x4000 = 15. EtherCAT command NOT sent (NOP requested)
+	0x8000 = complete frame NOT sent*)
+	FR3WcState: UINT;
+	(*
+	0x0001 = wrong working counter of 1. EtherCAT command received
+	0x0002 = wrong working counter of 2. EtherCAT command received
+	0x0004 = wrong working counter of 3. EtherCAT command received
+	...
+	0x4000 = wrong working counter of 15. EtherCAT command received
+	0x8000 = complete frame missing*)
+	FR4State: UINT;
+	(*
+	0x0001 = 1. EtherCAT command NOT sent (NOP requested)
+	0x0002 = 2. EtherCAT command NOT sent (NOP requested)
+	0x0004 = 3. EtherCAT command NOT sent (NOP requested)
+	...
+	0x4000 = 15. EtherCAT command NOT sent (NOP requested)
+	0x8000 = complete frame NOT sent*)
+	FR4WcState: UINT;
+	(*
+	0x0001 = wrong working counter of 1. EtherCAT command received
+	0x0002 = wrong working counter of 2. EtherCAT command received
+	0x0004 = wrong working counter of 3. EtherCAT command received
+	...
+	0x4000 = wrong working counter of 15. EtherCAT command received
+	0x8000 = complete frame missing*)
+
+
+
+	SlaveCount: UINT;
+	(*
+	Actual count of EtherCAT slaves received*)
+
+	DevState: UINT;
+	(*
+	0x0001 = Link error
+	0x0002 = I/O locked after link error (I/O reset required)
+	0x0004 = Link error (redundancy adapter)
+	0x0008 = Missing one frame (redundancy mode)
+	0x0010 = Out of send resources (I/O reset required)
+	0x0020 = Watchdog triggered
+	0x0040 = Ethernet driver (miniport) not found
+	0x0080 = I/O reset active
+	0x0100 = At least one device in 'INIT' state
+	0x0200 = At least one device in 'PRE-OP' state
+	0x0400 = At least one device in 'SAFE-OP' state
+	0x0800 = At least one device indicates an error state
+	0x1000 = DC not in sync*)
+
+
+	Infodata: udt_ECATMaster_InfoData_20121206;
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

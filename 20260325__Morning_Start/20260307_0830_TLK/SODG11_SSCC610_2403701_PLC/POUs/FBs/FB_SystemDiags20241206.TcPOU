@@ -1,0 +1,388 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_SystemDiags20241206" Id="{3ec4d150-ea20-4fe4-ac0e-d0f92834eeb1}" SpecialFunc="None">
+    <Declaration><![CDATA[(*FB for use gathering mother board data:
+	Original Author(s): Chris Drees of Sodecia GTAC; 
+------------------------------------------------------------------------------------------
+REVISION NOTES:
+	Version 20191210
+	- Original Concept, c.drees
+	Version 20241206
+	- Corrected missing module read error, added in new module read fb type and did some general cleanup, b.lekx-toniolo
+------------------------------------------------------------------------------------------
+*)
+
+
+FUNCTION_BLOCK FB_SystemDiags20241206
+VAR_INPUT
+    bRestart            :BOOL;               // flag to trigger restart of statemachine
+END_VAR
+VAR_OUTPUT
+	HardwareDiag		:udt_HardwareDiags;
+END_VAR
+VAR
+	sAmsNetId           :STRING := '';       //** ADS Net ID (local = '')    
+    eState              :E_State;            // Enum with index for state machine     
+    stMDP_Addr          : ST_MDP_Addr;        // structure will include all address parameters 
+	
+    uData               :UINT;               	// data storage for unsigned integer  
+	iData				:INT;					//data storage for signed integer
+	yData				:BYTE;					//Data Storage for Byte Data
+	dData				:DINT;					//data Storage for Double Integer
+	sData				:STRING;				//Data Storage for String Data   
+ 
+    
+    // FB instances
+    fbReadMDPElement    : FB_MDP_ReadElement; // instance of FB for reading MDP element  
+	fbIPCDiagReadParam	: FB_IPCDiag_ReadParameter;
+	fbRegister     : FB_IPCDiag_Register;
+	pBuffer			: DINT;
+
+    // results of execution
+    bError              : BOOL;               // error flag (indicator: error occured)
+    nErrID              : UDINT;              // last error ID
+	
+	
+	
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(* 	
+	The purpose of this function block is to replace the Motherboard Device that was present in TwinCAT2, due to changes between TC2 and TC3
+	the motherboard device no longer exists and all data to be pulled for diagnostics must now use the MDP element.
+	
+	This Function Block is a large sequence of 25 steps, every two steps is one piece of data pulled from the MDP information.
+*)
+
+
+CASE eState OF
+    0:               // initiate program parameters (if required)
+        fbReadMDPElement(bExecute := FALSE);   	// ensure parameter 'bExecute' has FALSE state at startup 
+		fbIPCDiagReadParam(bExecute := FALSE, fbRegister:= fbRegister);
+		fbRegister(bExecute:= TRUE);				//Must be pre-called before referenced by fb_IPCDiag_ReadParameter Instance
+        eState := 24;     							//Note, set this value to 26 for IPC that generate an error in steps 24 and 25 below
+
+	// Attempt to Read CPU Temperature (uses newer FB from TC3_IPCDiag library) ------------------------------
+	// Note, CPU Temp data is not be avail on all IPCs, if step 24 + 25 generates an error, set eState above to 26 to skip over and add "NA on this IPC" note to UI text field
+    24:    
+    	fbRegister(bExecute:= FALSE);								
+	    IF NOT fbRegister.bBusy THEN     			// FB executed?
+	        fbIPCDiagReadParam(
+	            bExecute:= TRUE,               		
+  	 			eParameterKey:= E_IPCDiag_ParameterKey.CPU_Temp,
+    			sNetId:= '',
+				fbRegister:= fbRegister
+ 				);                                
+		END_IF;	
+        eState := 25;  //** next state: process FB
+		
+	//Evaluate Response          
+    25:                
+        fbIPCDiagReadParam(bExecute := FALSE , fbRegister:= fbRegister);     
+        IF NOT fbIPCDiagReadParam.bBusy THEN     // FB executed?
+            IF fbIPCDiagReadparam.bError THEN    // Error?
+                bError    := TRUE;             // set error flag
+                nErrID    := fbIPCDiagReadParam.hrErrorCode; // store error id 
+                eState    := 100; // finish state machine
+            ELSE                               // set parameters for next steps
+                bError    := FALSE;            // turn off error flag
+				fbIPCDiagReadParam.GetParameter(ADR(pBuffer), SIZEOF(pBuffer)); //Call Method to retrieve data
+                HardwareDiag.CpuTemp := DINT_TO_INT(pBuffer);            		//Store data to dedicated variable
+                eState    := 26; //** next state 
+            END_IF
+        END_IF
+	//---------------------------------------------------------		
+	
+
+	// Attempt to Read Fan Speed ------------------------------
+    26:    
+        stMDP_Addr.nArea    := INT_TO_BYTE(eMDP_Area_ConfigArea); //** set area address to "Config Area"
+        stMDP_Addr.nTableId := 1;              //** table ID in module for "fan properties" table
+        stMDP_Addr.nSubIdx  := 1;              //** subindex in table ID for "Fan RPM"                     
+        
+        fbReadMDPElement(
+            bExecute    := TRUE,               // Flag: trigger execution of FB
+            eModuleType := eMDP_ModT_Fan,      //** desired module type = CPU         
+            stMDP_Addr  := stMDP_Addr,         // MDP address structure. Dynamic module ID added internally. 
+            iModIdx     := 0,                  //** instance of desired module type (0 = first instance) 
+            pDstBuf     := ADR(iData),         // buffer for storing data
+            cbDstBufLen := SIZEOF(iData),      // length of buffer
+            sAmsNetId   := sAmsNetId,          // AMS Net ID
+            );                                 //** Note: fbReadMDPElement.tTimeOut must be > cycle time!
+
+        eState := 27;  //** next state: process FB
+ 
+	//Evaluate Response           
+    27:                //** process FB: request CPU data
+        fbReadMDPElement(bExecute := FALSE);   
+        IF NOT fbReadMDPElement.bBusy THEN     // FB executed?
+            IF fbReadMDPElement.bError THEN    // Error?
+                bError    := TRUE;             // set error flag
+                nErrID    := fbReadMDPElement.nErrID; // store error id (16#ECA60105 = BIOS or HW does 
+                                               // not support this data (here: mainboard data))
+                eState    := 100; // finish state machine
+            ELSE                               // set parameters for next steps
+                bError    := FALSE;            // turn off error flag
+                HardwareDiag.FanSpeed := (iData);            //** store CPU usage in dedicated variable
+                eState    := 28; //** next state 
+            END_IF
+        END_IF
+	//-------------------------------------------------------------------	
+		
+	// Attempt to Mother Board Temperature ------------------------------
+    28:    
+        stMDP_Addr.nArea    := INT_TO_BYTE(eMDP_Area_ConfigArea); //** set area address to "Config Area"
+        stMDP_Addr.nTableId := 1;              //** table ID in module for "mainboard information" table
+        stMDP_Addr.nSubIdx  := 10;              //** subindex in table ID for "mainboard temperature (degC)"                     
+        
+        fbReadMDPElement(
+            bExecute    := TRUE,               // Flag: trigger execution of FB
+            eModuleType := eMDP_ModT_Mainboard,      //** desired module type = CPU         
+            stMDP_Addr  := stMDP_Addr,         // MDP address structure. Dynamic module ID added internally. 
+            iModIdx     := 0,                  //** instance of desired module type (0 = first instance) 
+            pDstBuf     := ADR(iData),         // buffer for storing data
+            cbDstBufLen := SIZEOF(iData),      // length of buffer
+            sAmsNetId   := sAmsNetId,          // AMS Net ID
+            );                                 //** Note: fbReadMDPElement.tTimeOut must be > cycle time!
+
+        eState := 29;  //** next state: process FB
+ 
+	//Evaluate Response           
+    29:                //** process FB: request CPU data
+        fbReadMDPElement(bExecute := FALSE);   
+        IF NOT fbReadMDPElement.bBusy THEN     // FB executed?
+            IF fbReadMDPElement.bError THEN    // Error?
+                bError    := TRUE;             // set error flag
+                nErrID    := fbReadMDPElement.nErrID; // store error id (16#ECA60105 = BIOS or HW does 
+                                               // not support this data (here: mainboard data))
+                eState    := 100; // finish state machine
+            ELSE                               // set parameters for next steps
+                bError    := FALSE;            // turn off error flag
+                HardwareDiag.MboardTemp := (iData);            //Store data to dedicated variable
+                eState    := 34; //** next state 
+            END_IF
+        END_IF
+	//---------------------------------------------------------		
+		
+	// Attempt to Read 5 Volt supply actual voltage (in mV) ----------------------
+    34:    
+        stMDP_Addr.nArea    := INT_TO_BYTE(eMDP_Area_ConfigArea); //** set area address to "Config Area"
+        stMDP_Addr.nTableId := 5;              //** table ID in module for "voltage information" table
+        stMDP_Addr.nSubIdx  := 3;              //** subindex in table ID for "5v supply"                     
+        
+        fbReadMDPElement(
+            bExecute    := TRUE,               // Flag: trigger execution of FB
+            eModuleType := eMDP_ModT_Mainboard,      //** desired module type = CPU         
+            stMDP_Addr  := stMDP_Addr,         // MDP address structure. Dynamic module ID added internally. 
+            iModIdx     := 0,                  //** instance of desired module type (0 = first instance) 
+            pDstBuf     := ADR(iData),         // buffer for storing data
+            cbDstBufLen := SIZEOF(iData),      // length of buffer
+            sAmsNetId   := sAmsNetId,          // AMS Net ID
+            );                                 //** Note: fbReadMDPElement.tTimeOut must be > cycle time!
+
+        eState := 35;  //** next state: process FB
+            
+	//Evaluate response
+    35:                //** process FB: request CPU data
+        fbReadMDPElement(bExecute := FALSE);    
+        IF NOT fbReadMDPElement.bBusy THEN     // FB executed?
+            IF fbReadMDPElement.bError THEN    // Error?
+                bError    := TRUE;             // set error flag
+                nErrID    := fbReadMDPElement.nErrID; // store error id (16#ECA60105 = BIOS or HW does 
+                                               // not support this data (here: mainboard data))
+                eState    := 100; // finish state machine
+            ELSE                               // set parameters for next steps
+                bError    := FALSE;            // turn off error flag
+                HardwareDiag.Supply5V := (iData);            //Store data to dedicated variable
+                eState    := 36; //** next state 
+            END_IF
+        END_IF
+	//---------------------------------------------------------		
+		
+	// Attempt to Read 12 Volt supply actual voltage (in mV) ----------------------
+    36:    
+        stMDP_Addr.nArea    := INT_TO_BYTE(eMDP_Area_ConfigArea); //** set area address to "Config Area"
+        stMDP_Addr.nTableId := 5;              //** table ID in module for "voltage information" table
+        stMDP_Addr.nSubIdx  := 4;              //** subindex in table ID for "12v supply"                     
+        
+        fbReadMDPElement(
+            bExecute    := TRUE,               // Flag: trigger execution of FB
+            eModuleType := eMDP_ModT_Mainboard,      //** desired module type = CPU         
+            stMDP_Addr  := stMDP_Addr,         // MDP address structure. Dynamic module ID added internally. 
+            iModIdx     := 0,                  //** instance of desired module type (0 = first instance) 
+            pDstBuf     := ADR(iData),         // buffer for storing data
+            cbDstBufLen := SIZEOF(iData),      // length of buffer
+            sAmsNetId   := sAmsNetId,          // AMS Net ID
+            );                                 //** Note: fbReadMDPElement.tTimeOut must be > cycle time!
+
+        eState := 37;  //** next state: process FB
+            
+	//Evaluate Response
+    37:                //** process FB: request CPU data
+        fbReadMDPElement(bExecute := FALSE);   
+        IF NOT fbReadMDPElement.bBusy THEN     // FB executed?
+            IF fbReadMDPElement.bError THEN    // Error?
+                bError    := TRUE;             // set error flag
+                nErrID    := fbReadMDPElement.nErrID; // store error id (16#ECA60105 = BIOS or HW does 
+                                               // not support this data (here: mainboard data))
+                eState    := 100; // finish state machine
+            ELSE                               // set parameters for next steps
+                bError    := FALSE;            // turn off error flag
+                HardwareDiag.Supply12V := (iData);           //Store data to dedicated variable
+                eState    := 40; //** next state 
+            END_IF
+        END_IF
+	//---------------------------------------------------------		
+		
+	// Attempt to Read Battery Last Replace Date ----------------------
+    40:    
+        stMDP_Addr.nArea    := INT_TO_BYTE(eMDP_Area_ConfigArea); //** set area address to "Config Area"
+        stMDP_Addr.nTableId := 1;              //** table ID in module for "UPS information" table
+        stMDP_Addr.nSubIdx  := 17;              //** subindex in table ID for "battery replace date"                     
+        
+        fbReadMDPElement(
+            bExecute    := TRUE,               // Flag: trigger execution of FB
+            eModuleType := eMDP_ModT_UPS,      //** desired module type = CPU         
+            stMDP_Addr  := stMDP_Addr,         // MDP address structure. Dynamic module ID added internally. 
+            iModIdx     := 0,                  //** instance of desired module type (0 = first instance) 
+            pDstBuf     := ADR(sData),         // buffer for storing data
+            cbDstBufLen := SIZEOF(sData),      // length of buffer
+            sAmsNetId   := sAmsNetId,          // AMS Net ID
+            );                                 //** Note: fbReadMDPElement.tTimeOut must be > cycle time!
+
+        eState := 41;  //** next state: process FB
+
+	//Evaluate Response            
+    41:                //** process FB: request CPU data
+        fbReadMDPElement(bExecute := FALSE);   
+        IF NOT fbReadMDPElement.bBusy THEN     // FB executed?
+            IF fbReadMDPElement.bError THEN    // Error?
+                bError    := TRUE;             // set error flag
+                nErrID    := fbReadMDPElement.nErrID; // store error id (16#ECA60105 = BIOS or HW does 
+                                               // not support this data (here: mainboard data))
+                eState    := 100; // finish state machine
+            ELSE                               // set parameters for next steps
+                bError    := FALSE;            // turn off error flag
+                HardwareDiag.BatteryReplaceDate := (sData);            //Store data to dedicated variable
+                eState    := 42; //** next state 
+            END_IF
+        END_IF
+	//---------------------------------------------------------		
+		
+	// Attempt to Read Battery Capacity ----------------------
+    42:    
+        stMDP_Addr.nArea    := INT_TO_BYTE(eMDP_Area_ConfigArea); //** set area address to "Config Area"
+        stMDP_Addr.nTableId := 1;              //** table ID in module for "UPS Information" table
+        stMDP_Addr.nSubIdx  := 10;              //** subindex in table ID for "battery capacity"                     
+        
+        fbReadMDPElement(
+            bExecute    := TRUE,               // Flag: trigger execution of FB
+            eModuleType := eMDP_ModT_UPS,      //** desired module type = CPU         
+            stMDP_Addr  := stMDP_Addr,         // MDP address structure. Dynamic module ID added internally. 
+            iModIdx     := 0,                  //** instance of desired module type (0 = first instance) 
+            pDstBuf     := ADR(yData),         // buffer for storing data
+            cbDstBufLen := SIZEOF(yData),      // length of buffer
+            sAmsNetId   := sAmsNetId,          // AMS Net ID
+            );                                 //** Note: fbReadMDPElement.tTimeOut must be > cycle time!
+
+        eState := 43;  //** next state: process FB
+		
+ 	//Evaluate Response           
+    43:                //** process FB: request CPU data
+        fbReadMDPElement(bExecute := FALSE);    
+        IF NOT fbReadMDPElement.bBusy THEN     // FB executed?
+            IF fbReadMDPElement.bError THEN    // Error?
+                bError    := TRUE;             // set error flag
+                nErrID    := fbReadMDPElement.nErrID; // store error id (16#ECA60105 = BIOS or HW does 
+                                               // not support this data (here: mainboard data))
+                eState    := 100; // finish state machine
+            ELSE                               // set parameters for next steps
+                bError    := FALSE;            // turn off error flag
+                HardwareDiag.BatteryCapacity := (yData);            //Store data to dedicated variable
+                eState    := 24; //** Done, restart 
+            END_IF
+        END_IF
+	//---------------------------------------------------------		
+		
+	// Idle State in event of error (halt on error for easier capture) ----------------------
+     100:                         // idle state 
+         IF bRestart THEN                      // flag = TRUE -> restart state machine
+            eState := 0;
+   		 END_IF    
+	//---------------------------------------------------------		
+		
+	// Default Case -----------------------------------------
+	ELSE
+    	eState := 100;                // capture undefined states 
+	END_CASE 
+	//--------------------------------------------------------
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_SystemDiags20241206">
+      <LineId Id="756" Count="10" />
+      <LineId Id="1310" Count="0" />
+      <LineId Id="1319" Count="0" />
+      <LineId Id="767" Count="1" />
+      <LineId Id="1223" Count="0" />
+      <LineId Id="1369" Count="0" />
+      <LineId Id="837" Count="0" />
+      <LineId Id="841" Count="0" />
+      <LineId Id="1323" Count="0" />
+      <LineId Id="1321" Count="0" />
+      <LineId Id="843" Count="0" />
+      <LineId Id="1311" Count="0" />
+      <LineId Id="1313" Count="0" />
+      <LineId Id="1316" Count="1" />
+      <LineId Id="1320" Count="0" />
+      <LineId Id="852" Count="0" />
+      <LineId Id="1225" Count="0" />
+      <LineId Id="1224" Count="0" />
+      <LineId Id="854" Count="2" />
+      <LineId Id="859" Count="2" />
+      <LineId Id="863" Count="2" />
+      <LineId Id="1324" Count="0" />
+      <LineId Id="866" Count="5" />
+      <LineId Id="1273" Count="0" />
+      <LineId Id="1307" Count="0" />
+      <LineId Id="1274" Count="16" />
+      <LineId Id="1308" Count="0" />
+      <LineId Id="1291" Count="1" />
+      <LineId Id="1295" Count="11" />
+      <LineId Id="1272" Count="0" />
+      <LineId Id="1230" Count="1" />
+      <LineId Id="906" Count="16" />
+      <LineId Id="1232" Count="0" />
+      <LineId Id="923" Count="1" />
+      <LineId Id="927" Count="11" />
+      <LineId Id="1233" Count="0" />
+      <LineId Id="1242" Count="1" />
+      <LineId Id="1008" Count="16" />
+      <LineId Id="1244" Count="0" />
+      <LineId Id="1025" Count="1" />
+      <LineId Id="1029" Count="11" />
+      <LineId Id="1245" Count="2" />
+      <LineId Id="1042" Count="16" />
+      <LineId Id="1248" Count="0" />
+      <LineId Id="1059" Count="1" />
+      <LineId Id="1063" Count="11" />
+      <LineId Id="1249" Count="0" />
+      <LineId Id="1254" Count="1" />
+      <LineId Id="1111" Count="15" />
+      <LineId Id="1256" Count="0" />
+      <LineId Id="1127" Count="2" />
+      <LineId Id="1132" Count="11" />
+      <LineId Id="1257" Count="2" />
+      <LineId Id="1145" Count="15" />
+      <LineId Id="1260" Count="0" />
+      <LineId Id="1161" Count="2" />
+      <LineId Id="1166" Count="11" />
+      <LineId Id="1261" Count="0" />
+      <LineId Id="1266" Count="1" />
+      <LineId Id="1214" Count="3" />
+      <LineId Id="1269" Count="2" />
+      <LineId Id="1218" Count="4" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

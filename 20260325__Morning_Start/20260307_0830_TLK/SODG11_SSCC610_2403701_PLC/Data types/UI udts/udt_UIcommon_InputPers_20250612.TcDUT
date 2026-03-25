@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_UIcommon_InputPers_20250612" Id="{fe42592b-b64b-4b7e-8aff-e60916034aac}">
+    <Declaration><![CDATA[(*udt (user defined type) for interfacing to UI (User Interface)
+this udt represents PERSISTENT data that is passed from ALL UIs to PLC
+
+	Version 20191127
+		- Cleaned up various, added structure and added production config variables, b.lekx-toniolo
+	Version 20250612
+		- Added in Nut Weld LVDT Config area to help reduce ground up work on nut weld applications, b.lekx-toniolo
+*)
+
+TYPE udt_UIcommon_InputPers_20250612 :
+	STRUCT
+(*Standard Persistent Inputs from UI*)
+	(*Production Configuration*)
+	ProdConfig_Common: udt_Generic_ShiftCommonConfig_20220420;
+	ProdConfig_Day: udt_Generic_ShiftConfigUDINT_20160531;
+	ProdConfig_Aft: udt_Generic_ShiftConfigUDINT_20160531;
+	ProdConfig_Mid: udt_Generic_ShiftConfigUDINT_20160531;
+
+(*Nut Weld based LVDT Configuration*)
+	Config_NutWeld_LVDT: ARRAY [0..5] OF udt_Generic_NutWeldLVDTConfig_20250612;
+	
+(*General QA Configuration Items*)
+	Config_Vision_Fail_Limits: ARRAY[0..16] OF  UINT;
+	Config_NOK_BinCount_Limits: ARRAY[0..16] OF UINT;
+	Config_NOK_Consecutive_Limits: ARRAY[0..16] OF UINT;
+	
+	
+(*Add Non- Standard Persistent Inputs from UI here*)
+
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

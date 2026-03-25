@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.4">
+  <DUT Name="udt_ICxx_Image_20201104" Id="{be1da289-76ad-42c1-8014-cb6b7777315a}">
+    <Declaration><![CDATA[(*udt (user defined type) for all generic IC (Industrial Controller) I/O Required
+	auth. Brent Lekx-Toniolo of Toniolo Research & Development Inc.
+
+------------------------------------------------------------------------
+REVISION NOTES:
+
+	Version??? (created before the begining of time):
+	- initial concept, b.lekx-toniolo	
+------------------------------------------------------------------------
+
+*)
+TYPE udt_ICxx_Image_20201104 :
+	STRUCT
+		T01: udt_EK1100;					(*Ecat Bus Coupler*)
+		T02_STAT: udt_EL6900_STAT_20160426;	(*EL Safety CPU*)
+		T02_CMD: udt_EL6900_CMD_20121204;
+		T03: udt_EL1904_v2;				(*EL Safety Inputs*)
+		T04: udt_EL1904_v2;				(*EL Safety Inputs*)
+		T05: udt_EL1904_v2;				(*EL Safety Inputs*)
+		T06: udt_EL1904_v2;				(*EL Safety Inputs*)
+		T07: udt_EL1904_v2;				(*EL Safety Inputs*)
+		T08: udt_EL1904_v2;				(*EL Safety Inputs*)
+		T09: udt_EL2904RO_v2;			(*EL Safety Outputs, Set to "I" as this terminal is safety rated, therefore read only!*)
+		T10: udt_EL2904RO_v2;			(*EL Safety Outputs, Set to "I" as this terminal is safety rated, therefore read only!*)
+		T11: udt_EL94xx;					(*EBUS Power Restoration*)
+		T12: udt_EL1004_v2;				(*EL Inputs*)
+		T13: udt_EL1004_v2;				(*EL Inputs*)
+		T14: udt_EL2008_v2;				(*EL Outputs, 8 Point*)
+		T14_STAT: udt_EL2008_STAT;		(*EL Output Card Status*)
+		T15: udt_EL2622;					(*EL Outputs, 4 Point*)
+		T15_STAT: udt_EL2622_STAT;		(*EL Output Card Status*)
+		T16: udt_EK1122; 					(*ECAT Junction*)
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

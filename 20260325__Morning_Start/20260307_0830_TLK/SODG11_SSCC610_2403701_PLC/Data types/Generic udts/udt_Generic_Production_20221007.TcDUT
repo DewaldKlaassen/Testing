@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <DUT Name="udt_Generic_Production_20221007" Id="{478dfe30-d243-4527-822c-b71af8632718}">
+    <Declaration><![CDATA[(*udt (user defined type) for production report data
+
+	Author(S): Rob Remillard and Brent Lekx-Toniolo ;
+	V1:
+		- Initial Concept
+	
+	Version 20160229:
+		- Increase Expected_Count Array size from 8 to 12, b.lekx-toniolo
+		- Enabled Start and End of Shift Time Structs, b.lekx-toniolo
+		- Added Report Status String, b.lekx-toniolo
+		- Changed PPH to REAL, b.lekx-toniolo
+	Version 20191125:
+		- Added fault count, running up time and net shift duration time, b.lekx-toniolo
+	Version 20221007:
+		- Added in Target CT to capture this value within the report itself, b.lekx-toniolo	
+*)
+
+
+TYPE udt_Generic_Production_20221007 :
+	STRUCT
+	(*----------- Data Area For Tagging Report with Machine Name, Date and Operator ID ----------*)
+	Machine_Serial: STRING;
+	Machine_Common_Name: STRING;
+	(*Logged in Operator ID*)
+	Operator_ID: UINT;
+	(*Data Area For Tagging Report with Shift Times and Date*)
+	Start_Shift_TimeDate: TIMEStruct;
+	End_Shift_TimeDate: TIMEStruct;
+	(*Target Cycle Time*)
+	Target_Cycle_Time: TIME;
+
+	(*------------ Shift Configuration --------------*)
+
+	ProdConfig_Common: udt_Generic_ShiftCommonConfig_20220420;
+	ProdConfig_Times: udt_Generic_ShiftConfigUDINT_20160531;
+
+	(*---------------- Hourly Report ---------------*)
+	(*Running Total Production Count After Each Hour*)
+	Total_Count: ARRAY[0..12] OF UINT;
+	(*Total Production Count OF Each Hour*)
+	Hour_Count: ARRAY[0..12] OF UINT;
+	(*Hourly Expected Count*)
+	Expected_Count: ARRAY[0..12] OF UINT;
+	(*Final Production Total Including Scrap, GROSS Production*)
+	Prod_Count_Total: UINT;
+	(*Total Scrap Made During Shift*)
+	Prod_Count_Scrap:UINT;
+
+	(*------------- OEE KPI Metrics ---------------*)
+
+	(*Availability*)
+	Prod_Availability: REAL;
+	(*Running Performance*)
+	Prod_Performance: REAL;
+	(*Running Quality*)
+	Prod_Quality: REAL;
+	(*Running OEE*)
+	Prod_Running_OEE: REAL;
+
+	(*----------- Misc Numbers -----------------*)
+	(*Static Production Target*)
+	Prod_Static_Target: UINT;
+	(*Incrementing Target (Tac Time)*)
+	Prod_Running_Target: UINT;
+	(*Calced Difference Of Above*)
+	Prod_Difference: DINT;
+	(*Final Average PPH*)
+	Prod_AvgFinal_PPH: REAL;
+	(*Total Machine Fault Time*)
+	Total_Fault_Time: TIME;
+	(*Fault Count During Shift*)
+	Total_Fault_Count: UDINT;
+	(*Running Up Time*)
+	Running_Up_Time: TIME;
+	(*Shift Durations, Gross = End time - Start Time, Net = Gross -  breaks and optional expected downtime*)
+	Gross_Shift_Duration: REAL;
+	Net_Shift_Duration: REAL;
+
+	(*--------------- Report Status --------------*)
+	Status: STRING;
+
+
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

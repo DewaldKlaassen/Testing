@@ -1,0 +1,1813 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FUN_GTAC_NC_Error_Messages" Id="{ac0cd9f7-01ce-46e4-88b2-0b66d235faa4}" SpecialFunc="None">
+    <Declaration><![CDATA[(*FUN for returning Error String Message based on NC error code
+
+	Original Concept (as FB): BCM of Beckhoff?
+	Original Author of this FUN: b.lekx-toniolo of Sodecia GTAC
+------------------------------------------------------------------------------------------
+REVISION NOTES:
+	Version 20160811
+		- original concept based on FB sent from Andy Burleigh of Beckhoff, b.lekx-toniolo
+	Version 20221025
+		- hard typed stGroupMessage and stErrorMessage to 255 to avoid build warning message, b.lekx-toniolo 
+------------------------------------------------------------------------------------------
+*)
+
+
+FUNCTION FUN_GTAC_NC_Error_Messages : STRING
+VAR_INPUT
+	NC_Error_Code: UDINT;
+END_VAR
+VAR
+	dwMask:	DWORD;
+	stGroupMessage: STRING(255);
+	stErrorMessage: STRING(255);
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Calculate Group Index from Raw Error Code*)
+
+dwMask := (NC_Error_Code/ 16#100);
+(*
+As of August 2016 from Beckhoff Infosys:
+
+0x40nn = General errors
+0x41nn = Channel Errors
+0x42nn = Group Errors
+0x43nn = Axis Errors
+0x44nn = Encoder Errors
+0x45nn = Controller Errors
+0x46nn = Drive Errors
+0x4Ann = Table Errors
+0x4Bnn = NC PLC errors
+0x4Cnn = Kinematic Transformation
+
+0x8000 -> 0x8FFF: New extended NC error code range
+
+0x81nn - 0x811F = Bode plot (diagnosis)
+0x8120 - 0x8FFF = further errors
+*)
+
+(*---------------------------- Based on Above, Generate Group Message and Actual Error Message ---------------------------*)
+(*General NC Errors*)
+IF dwMask = 16#40 THEN
+	stGroupMessage := 'General Error: ';
+	IF NC_Error_Code = 16#4000 THEN
+		stErrorMessage := 'Internal error';
+	END_IF
+	IF NC_Error_Code = 16#4001 THEN
+		stErrorMessage := 'Memory error';
+	END_IF
+	IF NC_Error_Code = 16#4010 THEN
+		stErrorMessage := 'Channel identifier not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4011 THEN
+		stErrorMessage := 'Group identifier not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4012 THEN
+		stErrorMessage := 'Axis identifier not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4013 THEN
+		stErrorMessage := 'Encoder identifier not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4014 THEN
+		stErrorMessage := 'Controller identifier not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4015 THEN
+		stErrorMessage := 'Drive identifier not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4016 THEN
+		stErrorMessage := 'Table identifier not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4020 THEN
+		stErrorMessage := 'No process image. No PLC-axis interface during creation of an axis. ';
+	END_IF
+	IF NC_Error_Code = 16#4021 THEN
+		stErrorMessage := 'No process image. No axis-PLC interface during creation of an axis. ';
+	END_IF
+	IF NC_Error_Code = 16#4022 THEN
+		stErrorMessage := 'No process image. No encoder-I/O interface during creation of an axis. ';
+	END_IF
+	IF NC_Error_Code = 16#4023 THEN
+		stErrorMessage := 'No process image. No I/O-encoder interface during creation of an axis. ';
+	END_IF
+	IF NC_Error_Code = 16#4024 THEN
+		stErrorMessage := 'No process image. No drive-I/O interface during creation of an axis. ';
+	END_IF
+	IF NC_Error_Code = 16#4025 THEN
+		stErrorMessage := 'No process image. No I/O-drive interface during creation of an axis. ';
+	END_IF
+	IF NC_Error_Code = 16#4030 THEN
+		stErrorMessage := 'Coupling type not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4031 THEN
+		stErrorMessage := 'Axis type not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4040 THEN
+		stErrorMessage := 'Axis is incompatible';
+	END_IF
+	IF NC_Error_Code = 16#4050 THEN
+		stErrorMessage := 'Channel not ready for operation';
+	END_IF
+	IF NC_Error_Code = 16#4051 THEN
+		stErrorMessage := 'Group not ready for operation';
+	END_IF
+	IF NC_Error_Code = 16#4052 THEN
+		stErrorMessage := 'Axis not ready for operation';
+	END_IF
+	IF NC_Error_Code = 16#4060 THEN
+		stErrorMessage := 'Channel exists';
+	END_IF
+	IF NC_Error_Code = 16#4061 THEN
+		stErrorMessage := 'Group exists';
+	END_IF
+	IF NC_Error_Code = 16#4062 THEN
+		stErrorMessage := 'Axis exists';
+	END_IF
+	IF NC_Error_Code = 16#4063 THEN
+		stErrorMessage := 'Table exists';
+	END_IF
+	IF NC_Error_Code = 16#4070 THEN
+		stErrorMessage := 'Axis index not allowed. The location within the channel specified for an axis is not allowed. ';
+	END_IF
+	IF NC_Error_Code = 16#4071 THEN
+		stErrorMessage := 'Axis index not allowed. The location within the group specified for an axis is not allowed. ';
+	END_IF
+END_IF
+
+(*Channel Errors*)
+IF dwMask = 16#41 THEN
+	stGroupMessage := 'Channel Error: ';
+	IF NC_Error_Code = 16#4101 THEN
+		stErrorMessage := 'Group index not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4102 THEN
+		stErrorMessage := 'Null pointer';
+	END_IF
+	IF NC_Error_Code = 16#4103 THEN
+		stErrorMessage := 'No process image';
+	END_IF
+	IF NC_Error_Code = 16#4104 THEN
+		stErrorMessage := 'M-function index not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4105 THEN
+		stErrorMessage := 'No memory';
+	END_IF
+	IF NC_Error_Code = 16#4106 THEN
+		stErrorMessage := 'Not ready';
+	END_IF
+	IF NC_Error_Code = 16#4107 THEN
+		stErrorMessage := 'Function/command not supported';
+	END_IF
+	IF NC_Error_Code = 16#4108 THEN
+		stErrorMessage := 'Invalid parameter while starting';
+	END_IF
+	IF NC_Error_Code = 16#4109 THEN
+		stErrorMessage := 'Channel function/command not executable';
+	END_IF
+	IF NC_Error_Code = 16#410A THEN
+		stErrorMessage := 'ItpGoAhead not executable';
+	END_IF
+	IF NC_Error_Code = 16#4110 THEN
+		stErrorMessage := 'Error opening a file';
+	END_IF
+	IF NC_Error_Code = 16#4111 THEN
+		stErrorMessage := 'Syntax error during loading';
+	END_IF
+	IF NC_Error_Code = 16#4112 THEN
+		stErrorMessage := 'Syntax error during interpretation';
+	END_IF
+	IF NC_Error_Code = 16#4113 THEN
+		stErrorMessage := 'Missing subroutine';
+	END_IF
+	IF NC_Error_Code = 16#4114 THEN
+		stErrorMessage := 'Loading buffer of interpreter is too small';
+	END_IF
+	IF NC_Error_Code = 16#4115 THEN
+		stErrorMessage := 'Symbolic“  - reserved';
+	END_IF
+	IF NC_Error_Code = 16#4116 THEN
+		stErrorMessage := 'Symbolic“  - reserved';
+	END_IF
+	IF NC_Error_Code = 16#4117 THEN
+		stErrorMessage := 'Subroutine incomplete';
+	END_IF
+	IF NC_Error_Code = 16#4120 THEN
+		stErrorMessage := 'Divide by zero';
+	END_IF
+	IF NC_Error_Code = 16#4121 THEN
+		stErrorMessage := 'Invalid circle parameterisation';
+	END_IF
+	IF NC_Error_Code = 16#4122 THEN
+		stErrorMessage := 'Invalid FPU-Operation';
+	END_IF
+	IF NC_Error_Code = 16#4130 THEN
+		stErrorMessage := 'Stack overflow: subroutines';
+	END_IF
+	IF NC_Error_Code = 16#4131 THEN
+		stErrorMessage := 'Stack underflow: subroutines';
+	END_IF
+	IF NC_Error_Code = 16#4132 THEN
+		stErrorMessage := 'Stack overflow: arithmetic unit';
+	END_IF
+	IF NC_Error_Code = 16#4133 THEN
+		stErrorMessage := 'Stack underflow: arithmetic unit';
+	END_IF
+	IF NC_Error_Code = 16#4140 THEN
+		stErrorMessage := 'Register index not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4141 THEN
+		stErrorMessage := 'Unacceptable G-function index';
+	END_IF
+	IF NC_Error_Code = 16#4142 THEN
+		stErrorMessage := 'Unacceptable M-function index';
+	END_IF
+	IF NC_Error_Code = 16#4143 THEN
+		stErrorMessage := 'Unacceptable extended address';
+	END_IF
+	IF NC_Error_Code = 16#4144 THEN
+		stErrorMessage := 'Unacceptable index to the internal H-function';
+	END_IF
+	IF NC_Error_Code = 16#4145 THEN
+		stErrorMessage := 'Machine data value unacceptable';
+	END_IF
+	IF NC_Error_Code = 16#4150 THEN
+		stErrorMessage := 'Cannot change tool params here';
+	END_IF
+	IF NC_Error_Code = 16#4151 THEN
+		stErrorMessage := 'Cannot calculate tool compensation';
+	END_IF
+	IF NC_Error_Code = 16#4152 THEN
+		stErrorMessage := 'Tool compensation: The plane for the tool compensation cannot be changed here.';
+	END_IF
+	IF NC_Error_Code = 16#4153 THEN
+		stErrorMessage := 'Tool compensation:  The D-Word is missing or invalid by turning on the tool compensation. ';
+	END_IF
+	IF NC_Error_Code = 16#4154 THEN
+		stErrorMessage := 'Tool compensation:  The spezified tool radius is invalid because the value is less or equal zero.';
+	END_IF
+	IF NC_Error_Code = 16#4155 THEN
+		stErrorMessage := 'Tool compensation: The tool radius cannot be changed here ';
+	END_IF
+	IF NC_Error_Code = 16#4156 THEN
+		stErrorMessage := 'Tool compensation:  Collision Detection Table is full.';
+	END_IF
+	IF NC_Error_Code = 16#4157 THEN
+		stErrorMessage := 'Tool compensation: Internal error while turning on the contour collision detection. ';
+	END_IF
+	IF NC_Error_Code = 16#4158 THEN
+		stErrorMessage := 'Tool compensation:  Internal error within the contour collision detection - update reversed geo failed.';
+	END_IF
+	IF NC_Error_Code = 16#4159 THEN
+		stErrorMessage := 'Tool compensation:  Unexpected combination of geometrie types by active contour collision detection.';
+	END_IF
+	IF NC_Error_Code = 16#415A THEN
+		stErrorMessage := 'Tool compensation: Programmed inner circle is smaller than the cutter radius';
+	END_IF
+	IF NC_Error_Code = 16#415B THEN
+		stErrorMessage := 'Tool compensation:  Bottle neck detection recognized contour violation';
+	END_IF
+	IF NC_Error_Code = 16#415C THEN
+		stErrorMessage := 'Table for corrected entries is full';
+	END_IF
+	IF NC_Error_Code = 16#415D THEN
+		stErrorMessage := 'Input table for tangential following is full';
+	END_IF
+	IF NC_Error_Code = 16#415E THEN
+		stErrorMessage := 'Executing table for tangential following is full';
+	END_IF
+	IF NC_Error_Code = 16#415F THEN
+		stErrorMessage := 'Geometric entry for tangential following can not be calculated';
+	END_IF
+	IF NC_Error_Code = 16#4160 THEN
+		stErrorMessage := 'reserved';
+	END_IF
+	IF NC_Error_Code = 16#4161 THEN
+		stErrorMessage := 'reserved';
+	END_IF
+	IF NC_Error_Code = 16#4162 THEN
+		stErrorMessage := 'The acutal active interpolation rules (g-code), zero-shifts, or rotation cannot be detected';
+	END_IF
+END_IF
+
+(*Group Errors*)
+IF dwMask = 16#42 THEN
+	stGroupMessage := 'Group Error: ';
+	IF NC_Error_Code = 16#4200 THEN
+		stErrorMessage := 'Group ID not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4201 THEN
+		stErrorMessage := 'Group type not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4202 THEN
+		stErrorMessage := 'Master axis index not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4203 THEN
+		stErrorMessage := 'Slave axis index not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4204 THEN
+		stErrorMessage := 'GROUPERR_INTERNAL ';
+	END_IF
+	IF NC_Error_Code = 16#4205 THEN
+		stErrorMessage := 'Invalid cycle time for statement execution task (SAF)';
+	END_IF
+	IF NC_Error_Code = 16#4206 THEN
+		stErrorMessage := 'GROUPERR_RANGE_MAXELEMENTSINAXIS ';
+	END_IF
+	IF NC_Error_Code = 16#4207 THEN
+		stErrorMessage := 'Invalid cycle time for the statement preparation task (SVB)';
+	END_IF
+	IF NC_Error_Code = 16#4208 THEN
+		stErrorMessage := 'Single step mode not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4209 THEN
+		stErrorMessage := 'Group deactivation not allowed';
+	END_IF
+	IF NC_Error_Code = 16#420A THEN
+		stErrorMessage := 'Statement execution state (SAF state) not allowed';
+	END_IF
+	IF NC_Error_Code = 16#420B THEN
+		stErrorMessage := 'Chanel address';
+	END_IF
+	IF NC_Error_Code = 16#420C THEN
+		stErrorMessage := 'Axis address (master axis)';
+	END_IF
+	IF NC_Error_Code = 16#420D THEN
+		stErrorMessage := 'Master axis address';
+	END_IF
+	IF NC_Error_Code = 16#420E THEN
+		stErrorMessage := 'Slave axis address';
+	END_IF
+	IF NC_Error_Code = 16#420F THEN
+		stErrorMessage := 'Slave set value generator address';
+	END_IF
+	IF NC_Error_Code = 16#4210 THEN
+		stErrorMessage := 'Encoder address';
+	END_IF
+	IF NC_Error_Code = 16#4211 THEN
+		stErrorMessage := 'Controller address';
+	END_IF
+	IF NC_Error_Code = 16#4212 THEN
+		stErrorMessage := 'Drive address';
+	END_IF
+	IF NC_Error_Code = 16#4213 THEN
+		stErrorMessage := 'GROUPERR_ADDR_MASTERGENERATOR';
+	END_IF
+	IF NC_Error_Code = 16#4214 THEN
+		stErrorMessage := 'Axis interface NC to PLC address';
+	END_IF
+	IF NC_Error_Code = 16#4215 THEN
+		stErrorMessage := 'Slave axis address';
+	END_IF
+	IF NC_Error_Code = 16#4216 THEN
+		stErrorMessage := 'Table adress unknown';
+	END_IF
+	IF NC_Error_Code = 16#4217 THEN
+		stErrorMessage := 'NcControl address';
+	END_IF
+	IF NC_Error_Code = 16#4218 THEN
+		stErrorMessage := 'Axis is blocked for commands while persistent NC data are queued';
+	END_IF
+	IF NC_Error_Code = 16#421A THEN
+		stErrorMessage := 'The master axis start position does not permit synchronisation';
+	END_IF
+	IF NC_Error_Code = 16#421B THEN
+		stErrorMessage := 'Slave coupling factor (gearing factor) of 0.0 is not allowed';
+	END_IF
+	IF NC_Error_Code = 16#421C THEN
+		stErrorMessage := 'Insertion of master axis into group not allowed';
+	END_IF
+	IF NC_Error_Code = 16#421D THEN
+		stErrorMessage := 'Deletion of master axis from group not allowed';
+	END_IF
+	IF NC_Error_Code = 16#421E THEN
+		stErrorMessage := 'Function/feature is not supported from the setpoint generator ';
+	END_IF
+	IF NC_Error_Code = 16#421F THEN
+		stErrorMessage := 'Group initialisation';
+	END_IF
+	IF NC_Error_Code = 16#4220 THEN
+		stErrorMessage := 'Group not ready / group not ready for new task';
+	END_IF
+	IF NC_Error_Code = 16#4221 THEN
+		stErrorMessage := 'Requested set velocity is not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4222 THEN
+		stErrorMessage := 'Requested target position is not allowed (master axis)';
+	END_IF
+	IF NC_Error_Code = 16#4223 THEN
+		stErrorMessage := 'No enable for controller and/or feed (Master axis)';
+	END_IF
+	IF NC_Error_Code = 16#4224 THEN
+		stErrorMessage := 'Movement smaller than one encoder increment';
+	END_IF
+	IF NC_Error_Code = 16#4225 THEN
+		stErrorMessage := 'Drive not ready during axis start';
+	END_IF
+	IF NC_Error_Code = 16#4226 THEN
+		stErrorMessage := 'Invalid parameters of the emergency stop.';
+	END_IF
+	IF NC_Error_Code = 16#4227 THEN
+		stErrorMessage := 'The setpoint generator is inactive such that no instructions are accepted';
+	END_IF
+	IF NC_Error_Code = 16#4228 THEN
+		stErrorMessage := 'Requested traverse distance is not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4229 THEN
+		stErrorMessage := 'Requested target position is not allowed (slave axis)';
+	END_IF
+	IF NC_Error_Code = 16#422A THEN
+		stErrorMessage := 'No enable for controller and/or feed (slave axis)';
+	END_IF
+	IF NC_Error_Code = 16#422B THEN
+		stErrorMessage := 'The activation position (position threshold) is out of range of the actual positioning';
+	END_IF
+	IF NC_Error_Code = 16#422C THEN
+		stErrorMessage := 'The start or activation data of the external setpoint generation are not valid';
+	END_IF
+	IF NC_Error_Code = 16#422D THEN
+		stErrorMessage := 'Velocity is not constant';
+	END_IF
+	IF NC_Error_Code = 16#422E THEN
+		stErrorMessage := 'Jerk less than or equal to 0.0 is not allowed';
+	END_IF
+	IF NC_Error_Code = 16#422F THEN
+		stErrorMessage := 'Acceleration less than or equal to 0.0 is not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4230 THEN
+		stErrorMessage := 'Absolute deceleration value less than or equal to 0.0 is not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4231 THEN
+		stErrorMessage := 'Set velocity less than or equal to 0.0 is not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4232 THEN
+		stErrorMessage := 'Loss of precision when trying a positioning';
+	END_IF
+	IF NC_Error_Code = 16#4233 THEN
+		stErrorMessage := 'Cycle time less than or equal to 0.0 is not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4234 THEN
+		stErrorMessage := 'PTP data type <intasdouble> range exceeded';
+	END_IF
+	IF NC_Error_Code = 16#4235 THEN
+		stErrorMessage := 'PTP LHL velocity profile cannot be generated';
+	END_IF
+	IF NC_Error_Code = 16#4236 THEN
+		stErrorMessage := 'PTP HML velocity profile cannot be generated';
+	END_IF
+	IF NC_Error_Code = 16#4237 THEN
+		stErrorMessage := 'Start data address is invalid';
+	END_IF
+	IF NC_Error_Code = 16#4238 THEN
+		stErrorMessage := 'Velocity override (start override) is not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4239 THEN
+		stErrorMessage := 'Start type not allowed';
+	END_IF
+	IF NC_Error_Code = 16#423A THEN
+		stErrorMessage := 'Velocity overflow (overshoot in the velocity)';
+	END_IF
+	IF NC_Error_Code = 16#423B THEN
+		stErrorMessage := 'Start parameter for the axis structure is invalid';
+	END_IF
+	IF NC_Error_Code = 16#423C THEN
+		stErrorMessage := 'Override generator initialisation parameter invalid';
+	END_IF
+	IF NC_Error_Code = 16#423D THEN
+		stErrorMessage := 'Slave axis has not set value generator';
+	END_IF
+	IF NC_Error_Code = 16#423E THEN
+		stErrorMessage := 'Table is empty';
+	END_IF
+	IF NC_Error_Code = 16#423F THEN
+		stErrorMessage := 'Table is full';
+	END_IF
+	IF NC_Error_Code = 16#4240 THEN
+		stErrorMessage := 'No memory available';
+	END_IF
+	IF NC_Error_Code = 16#4241 THEN
+		stErrorMessage := 'Table already contains an entry';
+	END_IF
+	IF NC_Error_Code = 16#4242 THEN
+		stErrorMessage := 'Stop is already active';
+	END_IF
+	IF NC_Error_Code = 16#4243 THEN
+		stErrorMessage := 'Compensation has not been carried out over the full compensation section';
+	END_IF
+	IF NC_Error_Code = 16#4244 THEN
+		stErrorMessage := 'Start parameter address for the compensation invalid';
+	END_IF
+	IF NC_Error_Code = 16#4245 THEN
+		stErrorMessage := 'Compensation active';
+	END_IF
+	IF NC_Error_Code = 16#4246 THEN
+		stErrorMessage := 'Compensation not active';
+	END_IF
+	IF NC_Error_Code = 16#4247 THEN
+		stErrorMessage := 'Compensation type invalid';
+	END_IF
+	IF NC_Error_Code = 16#4248 THEN
+		stErrorMessage := 'Axis address for compensation invalid';
+	END_IF
+	IF NC_Error_Code = 16#4249 THEN
+		stErrorMessage := 'Invalid slave address';
+	END_IF
+	IF NC_Error_Code = 16#424A THEN
+		stErrorMessage := 'Coupling velocity invalid';
+	END_IF
+	IF NC_Error_Code = 16#424B THEN
+		stErrorMessage := 'Coupling velocities not constant';
+	END_IF
+	IF NC_Error_Code = 16#424C THEN
+		stErrorMessage := 'Cycle time less than or equal to 0.0 is not allowed';
+	END_IF
+	IF NC_Error_Code = 16#424D THEN
+		stErrorMessage := 'Decoupling task not allowed';
+	END_IF
+	IF NC_Error_Code = 16#424E THEN
+		stErrorMessage := 'Function not allowed';
+	END_IF
+	IF NC_Error_Code = 16#424F THEN
+		stErrorMessage := 'No valid table weighting has been set';
+	END_IF
+	IF NC_Error_Code = 16#4250 THEN
+		stErrorMessage := 'Axis type, actual position type or end position type is not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4251 THEN
+		stErrorMessage := 'Function not presently supported';
+	END_IF
+	IF NC_Error_Code = 16#4252 THEN
+		stErrorMessage := 'State of state machine invalid';
+	END_IF
+	IF NC_Error_Code = 16#4253 THEN
+		stErrorMessage := 'Reference cam became free too soon';
+	END_IF
+	IF NC_Error_Code = 16#4254 THEN
+		stErrorMessage := 'Clearance monitoring between activation of the hardware latch and appearance of the sync pulse';
+	END_IF
+	IF NC_Error_Code = 16#4255 THEN
+		stErrorMessage := 'No memory available';
+	END_IF
+	IF NC_Error_Code = 16#4256 THEN
+		stErrorMessage := 'The table slave axis has no active table';
+	END_IF
+	IF NC_Error_Code = 16#4257 THEN
+		stErrorMessage := 'Function not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4258 THEN
+		stErrorMessage := 'Stopping compensation not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4259 THEN
+		stErrorMessage := 'Slave table is being used';
+	END_IF
+	IF NC_Error_Code = 16#425A THEN
+		stErrorMessage := 'Master or slave axis is processing a job (e.g. positioning command) while coupling is requested';
+	END_IF
+	IF NC_Error_Code = 16#425B THEN
+		stErrorMessage := 'Slave (start) parameter is incorrect';
+	END_IF
+	IF NC_Error_Code = 16#425C THEN
+		stErrorMessage := 'Slave type is incorrect';
+	END_IF
+	IF NC_Error_Code = 16#425D THEN
+		stErrorMessage := 'Axis stop is already active';
+	END_IF
+	IF NC_Error_Code = 16#425E THEN
+		stErrorMessage := 'Compensation refused';
+	END_IF
+	IF NC_Error_Code = 16#425F THEN
+		stErrorMessage := 'Compensation not started';
+	END_IF
+	IF NC_Error_Code = 16#4260 THEN
+		stErrorMessage := 'Controller enable';
+	END_IF
+	IF NC_Error_Code = 16#4261 THEN
+		stErrorMessage := 'Table not found';
+	END_IF
+	IF NC_Error_Code = 16#4262 THEN
+		stErrorMessage := 'Incorrect table type';
+	END_IF
+	IF NC_Error_Code = 16#4263 THEN
+		stErrorMessage := 'Single step mode';
+	END_IF
+	IF NC_Error_Code = 16#4264 THEN
+		stErrorMessage := 'Group task unknown (asynchronous table entry)';
+	END_IF
+	IF NC_Error_Code = 16#4265 THEN
+		stErrorMessage := 'Group function unknown (synchronous function)';
+	END_IF
+	IF NC_Error_Code = 16#4266 THEN
+		stErrorMessage := 'Group task for slave not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4267 THEN
+		stErrorMessage := 'Group function for slave not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4268 THEN
+		stErrorMessage := 'GROUPERR_GROUPFUNC_NOMOTION';
+	END_IF
+	IF NC_Error_Code = 16#4269 THEN
+		stErrorMessage := 'Startposition=Setpoint Position';
+	END_IF
+	IF NC_Error_Code = 16#426A THEN
+		stErrorMessage := 'Parameters of the delay-denerator are invalid';
+	END_IF
+	IF NC_Error_Code = 16#426B THEN
+		stErrorMessage := 'External parameters of the superimposed instruction are invalid';
+	END_IF
+	IF NC_Error_Code = 16#426C THEN
+		stErrorMessage := 'Invalid overridetype';
+	END_IF
+	IF NC_Error_Code = 16#426D THEN
+		stErrorMessage := 'Activation position under/overrun';
+	END_IF
+	IF NC_Error_Code = 16#426E THEN
+		stErrorMessage := 'Activation impossible: Master is standing';
+	END_IF
+	IF NC_Error_Code = 16#426F THEN
+		stErrorMessage := 'Activation mode not possible';
+	END_IF
+	IF NC_Error_Code = 16#4270 THEN
+		stErrorMessage := 'Start parameter for the compensation is invalid';
+	END_IF
+	IF NC_Error_Code = 16#4271 THEN
+		stErrorMessage := 'Start parameter for the compensation is invalid';
+	END_IF
+	IF NC_Error_Code = 16#4272 THEN
+		stErrorMessage := 'Start parameter for the compensation is invalid';
+	END_IF
+	IF NC_Error_Code = 16#4273 THEN
+		stErrorMessage := 'Target position under/overrun';
+	END_IF
+	IF NC_Error_Code = 16#4274 THEN
+		stErrorMessage := 'Target position will be under/overrun';
+	END_IF
+	IF NC_Error_Code = 16#4276 THEN
+		stErrorMessage := 'GROUPERR_GUIDERSTARTDATA';
+	END_IF
+	IF NC_Error_Code = 16#4279 THEN
+		stErrorMessage := 'GROUPERR_GUIDEROVERRUN';
+	END_IF
+	IF NC_Error_Code = 16#427A THEN
+		stErrorMessage := 'GROUPERR_GUIDERLOOKAHEAD';
+	END_IF
+	IF NC_Error_Code = 16#427B THEN
+		stErrorMessage := 'GROUPERR_GUIDERLOOKAHEADEND';
+	END_IF
+	IF NC_Error_Code = 16#427C THEN
+		stErrorMessage := 'GROUPERR_GUIDERLOOKAHEADREQU';
+	END_IF
+	IF NC_Error_Code = 16#427D THEN
+		stErrorMessage := 'GROUPERR_GUIDERMODE';
+	END_IF
+	IF NC_Error_Code = 16#427E THEN
+		stErrorMessage := 'A requested motion command could not be realized (BISECTION)';
+	END_IF
+	IF NC_Error_Code = 16#427F THEN
+		stErrorMessage := 'The new target position either has been overrun or will be overrun';
+	END_IF
+	IF NC_Error_Code = 16#4280 THEN
+		stErrorMessage := 'Group not ready / group not ready for new task';
+	END_IF
+	IF NC_Error_Code = 16#4281 THEN
+		stErrorMessage := 'The parameters of the oriented stop (O-Stop) are not admitted.';
+	END_IF
+	IF NC_Error_Code = 16#4282 THEN
+		stErrorMessage := 'The modulo target position of the modulo-start is invalid';
+	END_IF
+	IF NC_Error_Code = 16#4283 THEN
+		stErrorMessage := 'The online change activation mode is invalid';
+	END_IF
+	IF NC_Error_Code = 16#4284 THEN
+		stErrorMessage := 'The parameterized jerk rate is not permitted';
+	END_IF
+	IF NC_Error_Code = 16#4285 THEN
+		stErrorMessage := 'The parameterized acceleration or deceleration is not permitted';
+	END_IF
+	IF NC_Error_Code = 16#4286 THEN
+		stErrorMessage := 'The parameterized velocity is not permitted';
+	END_IF
+	IF NC_Error_Code = 16#4287 THEN
+		stErrorMessage := 'A activation cannot be executed due to a pending activation';
+	END_IF
+	IF NC_Error_Code = 16#4288 THEN
+		stErrorMessage := 'Illegal combination of different cycle times within an axis group';
+	END_IF
+	IF NC_Error_Code = 16#4289 THEN
+		stErrorMessage := 'Illegal motion reversal';
+	END_IF
+	IF NC_Error_Code = 16#428A THEN
+		stErrorMessage := 'Illegal moment for an axis command because there is an old axis command with activation position still active';
+	END_IF
+	IF NC_Error_Code = 16#428B THEN
+		stErrorMessage := 'Error in the stop-calculation routine';
+	END_IF
+	IF NC_Error_Code = 16#428C THEN
+		stErrorMessage := 'A command with activation position cannot fully be performed because the remaining path is too short';
+	END_IF
+	IF NC_Error_Code = 16#428D THEN
+		stErrorMessage := 'Illegal decoupletype when decoupling a slave axis';
+	END_IF
+	IF NC_Error_Code = 16#428E THEN
+		stErrorMessage := 'Illegal target velocity when decoupling a slave axis';
+	END_IF
+	IF NC_Error_Code = 16#428F THEN
+		stErrorMessage := 'The command new dynamic parameter cannot be performed since this would require a new target velocity';
+	END_IF
+	IF NC_Error_Code = 16#4290 THEN
+		stErrorMessage := 'A command with activation position cannot be performed becaus the axis is already in the brake phase';
+	END_IF
+	IF NC_Error_Code = 16#4291 THEN
+		stErrorMessage := 'Decouple routine of slave axis does not return a valid solution';
+	END_IF
+	IF NC_Error_Code = 16#4292 THEN
+		stErrorMessage := 'Command not be executed because the command buffer is full filled';
+	END_IF
+	IF NC_Error_Code = 16#4293 THEN
+		stErrorMessage := 'Command is rejected due to an internal error in the Look Ahead';
+	END_IF
+	IF NC_Error_Code = 16#4294 THEN
+		stErrorMessage := 'Command is rejected because the segment target velocity is not realized';
+	END_IF
+	IF NC_Error_Code = 16#4295 THEN
+		stErrorMessage := 'Command is rejected because the segment start velocity or the segment end velocity is not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4296 THEN
+		stErrorMessage := 'Logical positioning direction is inconsistent with the direction of the buffer command';
+	END_IF
+	IF NC_Error_Code = 16#4297 THEN
+		stErrorMessage := 'Command is rejected because the remaining positioning length is to small';
+	END_IF
+	IF NC_Error_Code = 16#42A0 THEN
+		stErrorMessage := 'Group/axis consequential error';
+	END_IF
+	IF NC_Error_Code = 16#42A1 THEN
+		stErrorMessage := 'Velocity reduction factor for C0/C1 transition is not allowed';
+	END_IF
+	IF NC_Error_Code = 16#42A2 THEN
+		stErrorMessage := 'Critical angle at segment transition not allowed';
+	END_IF
+	IF NC_Error_Code = 16#42A3 THEN
+		stErrorMessage := 'Radius of the tolerance sphere" (NOT IMPLEMENTED)   ';
+	END_IF
+	IF NC_Error_Code = 16#42A5 THEN
+		stErrorMessage := 'Start type';
+	END_IF
+	IF NC_Error_Code = 16#42A9 THEN
+		stErrorMessage := 'Curve velocity reduction method not allowed';
+	END_IF
+	IF NC_Error_Code = 16#42AA THEN
+		stErrorMessage := 'Minimum velocity not allowed';
+	END_IF
+	IF NC_Error_Code = 16#42AB THEN
+		stErrorMessage := 'Power function input not allowed';
+	END_IF
+	IF NC_Error_Code = 16#42AC THEN
+		stErrorMessage := 'Dynamic change parameter not allowed';
+	END_IF
+	IF NC_Error_Code = 16#42AD THEN
+		stErrorMessage := 'Memory allocation error';
+	END_IF
+	IF NC_Error_Code = 16#4AE THEN
+		stErrorMessage := 'The calculated end position differs from the end position in the nc instruction ';
+	END_IF
+	IF NC_Error_Code = 16#42AF THEN
+		stErrorMessage := 'Calculate remaining chord length';
+	END_IF
+	IF NC_Error_Code = 16#42B0 THEN
+		stErrorMessage := 'Set value generator SVB active';
+	END_IF
+	IF NC_Error_Code = 16#42B1 THEN
+		stErrorMessage := 'SVB parameter not allowed';
+	END_IF
+	IF NC_Error_Code = 16#42B2 THEN
+		stErrorMessage := 'Velocity reduction factor not allowed';
+	END_IF
+	IF NC_Error_Code = 16#42B3 THEN
+		stErrorMessage := 'Helix is a circle';
+	END_IF
+	IF NC_Error_Code = 16#42B4 THEN
+		stErrorMessage := 'Helix is a straight line';
+	END_IF
+	IF NC_Error_Code = 16#42B5 THEN
+		stErrorMessage := 'Guider parameter not allowed';
+	END_IF
+	IF NC_Error_Code = 16#42B6 THEN
+		stErrorMessage := 'Invalid segment address';
+	END_IF
+	IF NC_Error_Code = 16#42B7 THEN
+		stErrorMessage := 'Unparametrised generator';
+	END_IF
+	IF NC_Error_Code = 16#42B8 THEN
+		stErrorMessage := 'Unparametrised table';
+	END_IF
+	IF NC_Error_Code = 16#42BA THEN
+		stErrorMessage := 'The calculation of the arc length of the smoothed path failed ';
+	END_IF
+	IF NC_Error_Code = 16#42BB THEN
+		stErrorMessage := 'The radius of the tolerance ball is too small (smaller than 0.1 mm).';
+	END_IF
+	IF NC_Error_Code = 16#42BD THEN
+		stErrorMessage := 'NC-Block violates software limit switches of the group';
+	END_IF
+	IF NC_Error_Code = 16#42BE THEN
+		stErrorMessage := 'GROUPERR_DXD_SOFTENDCHECK';
+	END_IF
+	IF NC_Error_Code = 16#42BF THEN
+		stErrorMessage := 'GROUPERR_DXD_RTTG_VELOREFERENCE';
+	END_IF
+	IF NC_Error_Code = 16#42C0 THEN
+		stErrorMessage := 'Interpolating group contains axes of an incorrect axis type';
+	END_IF
+	IF NC_Error_Code = 16#42C1 THEN
+		stErrorMessage := 'Scalar product can not be calculated';
+	END_IF
+	IF NC_Error_Code = 16#42C2 THEN
+		stErrorMessage := 'Inverse cosine can not be calculated';
+	END_IF
+	IF NC_Error_Code = 16#42C3 THEN
+		stErrorMessage := 'Invalid table entry type';
+	END_IF
+	IF NC_Error_Code = 16#42C4 THEN
+		stErrorMessage := 'Invalid DIN66025 information type';
+	END_IF
+	IF NC_Error_Code = 16#42C5 THEN
+		stErrorMessage := 'Invalid dimension';
+	END_IF
+	IF NC_Error_Code = 16#42C6 THEN
+		stErrorMessage := 'Geometrical object is not a straight line';
+	END_IF
+	IF NC_Error_Code = 16#42C7 THEN
+		stErrorMessage := 'Geometrical object is not a circle';
+	END_IF
+	IF NC_Error_Code = 16#42C8 THEN
+		stErrorMessage := 'Geometrical object is not a helix';
+	END_IF
+	IF NC_Error_Code = 16#42C9 THEN
+		stErrorMessage := 'Set velocity less than or equal to 0.0 is invalid';
+	END_IF
+	IF NC_Error_Code = 16#42CA THEN
+		stErrorMessage := 'Address for look-ahead invalid';
+	END_IF
+	IF NC_Error_Code = 16#42CB THEN
+		stErrorMessage := 'Set value generator SAF active';
+	END_IF
+	IF NC_Error_Code = 16#42CC THEN
+		stErrorMessage := 'CNC set value generation not active';
+	END_IF
+	IF NC_Error_Code = 16#42CD THEN
+		stErrorMessage := 'CNC set value generation in the stop phase';
+	END_IF
+	IF NC_Error_Code = 16#42CE THEN
+		stErrorMessage := 'Override not allowed';
+	END_IF
+	IF NC_Error_Code = 16#42CF THEN
+		stErrorMessage := 'Invalid table address';
+	END_IF
+	IF NC_Error_Code = 16#42D0 THEN
+		stErrorMessage := 'Invalid table entry type';
+	END_IF
+	IF NC_Error_Code = 16#42D1 THEN
+		stErrorMessage := 'Memory allocation failed" Memory allocation for the table has failed. ';
+	END_IF
+	IF NC_Error_Code = 16#42D2 THEN
+		stErrorMessage := 'Memory allocation failed" Memory allocation for the filter has failed. ';
+	END_IF
+	IF NC_Error_Code = 16#42D3 THEN
+		stErrorMessage := 'Invalid parameter" Filter parameter is not allowed. ';
+	END_IF
+	IF NC_Error_Code = 16#42D4 THEN
+		stErrorMessage := 'Delete Distance To Go failed';
+	END_IF
+	IF NC_Error_Code = 16#42D5 THEN
+		stErrorMessage := 'The setpoint generator of the fying saw generates incompatible values';
+	END_IF
+	IF NC_Error_Code = 16#42D6 THEN
+		stErrorMessage := 'Axis will be stopped since otherwise it will overrun its target position (old PTP setpoint generator)';
+	END_IF
+	IF NC_Error_Code = 16#42D7 THEN
+		stErrorMessage := 'Internal error in the transformation from slave to master';
+	END_IF
+	IF NC_Error_Code = 16#42D8 THEN
+		stErrorMessage := 'Wrong direction in the transformation of slave to master';
+	END_IF
+	IF NC_Error_Code = 16#42DA THEN
+		stErrorMessage := 'Parameter of Motion Function (MF) table incorrect';
+	END_IF
+	IF NC_Error_Code = 16#42DB THEN
+		stErrorMessage := 'Parameter of Motion Function (MF) table invalid';
+	END_IF
+	IF NC_Error_Code = 16#42DC THEN
+		stErrorMessage := 'Internal error by using Motion Function (MF)';
+	END_IF
+	IF NC_Error_Code = 16#42DD THEN
+		stErrorMessage := 'Axis coupling with synchronization generator declined because of incorrect axis dynamic values';
+	END_IF
+	IF NC_Error_Code = 16#42DE THEN
+		stErrorMessage := 'Coupling conditions of synchronization generator incorrect';
+	END_IF
+	IF NC_Error_Code = 16#42DF THEN
+		stErrorMessage := 'Moving profile of synchronization generator declines dynamic limit of slave axis or required characterstic of profile';
+	END_IF
+	IF NC_Error_Code = 16#42E0 THEN
+		stErrorMessage := 'Invalid parameter" The encoder generator parameter is not allowed. ';
+	END_IF
+	IF NC_Error_Code = 16#42E1 THEN
+		stErrorMessage := 'Invalid parameter" The external (Fifo) generator parameter is not allowed. ';
+	END_IF
+	IF NC_Error_Code = 16#42E2 THEN
+		stErrorMessage := 'External generator is active';
+	END_IF
+	IF NC_Error_Code = 16#42E3 THEN
+		stErrorMessage := 'External generator is not active';
+	END_IF
+	IF NC_Error_Code = 16#42E4 THEN
+		stErrorMessage := 'NC-Block with auxiliary axis violates software limit switches of the group';
+	END_IF
+	IF NC_Error_Code = 16#42E5 THEN
+		stErrorMessage := 'NC-Block type Bezier spline curve contains a cusp (singularity)';
+	END_IF
+	IF NC_Error_Code = 16#42E7 THEN
+		stErrorMessage := 'Value for dead time compensation not allowed';
+	END_IF
+	IF NC_Error_Code = 16#42E8 THEN
+		stErrorMessage := 'GROUPERR_RANGE_NOMOTIONWINDOW';
+	END_IF
+	IF NC_Error_Code = 16#42E9 THEN
+		stErrorMessage := 'GROUPERR_RANGE_NOMOTIONFILTERTIME';
+	END_IF
+	IF NC_Error_Code = 16#42EA THEN
+		stErrorMessage := 'GROUPERR_RANGE_TIMEUNITFIFO';
+	END_IF
+	IF NC_Error_Code = 16#42EB THEN
+		stErrorMessage := 'GROUPERR_RANGE_OVERRIDETYPE';
+	END_IF
+	IF NC_Error_Code = 16#42EC THEN
+		stErrorMessage := 'GROUPERR_RANGE_OVERRIDECHANGETIME';
+	END_IF
+	IF NC_Error_Code = 16#42ED THEN
+		stErrorMessage := 'GROUPERR_FIFO_INVALIDDIMENSION';
+	END_IF
+	IF NC_Error_Code = 16#42EE THEN
+		stErrorMessage := 'GROUPERR_ADDR_FIFOTABLE';
+	END_IF
+	IF NC_Error_Code = 16#42EF THEN
+		stErrorMessage := 'Axis is locked for motion commands because a stop command is still active';
+	END_IF
+	IF NC_Error_Code = 16#42F0 THEN
+		stErrorMessage := 'Invalid number of auxiliary axes';
+	END_IF
+	IF NC_Error_Code = 16#42F1 THEN
+		stErrorMessage := 'Invalid reduction parameter for auxiliary axes';
+	END_IF
+	IF NC_Error_Code = 16#42F2 THEN
+		stErrorMessage := 'Invalid dynamic parameter for auxiliary axes';
+	END_IF
+	IF NC_Error_Code = 16#42F3 THEN
+		stErrorMessage := 'Invalid coupling parameter for auxiliary axes';
+	END_IF
+	IF NC_Error_Code = 16#42F4 THEN
+		stErrorMessage := 'Invalid auxiliary axis entry';
+	END_IF
+	IF NC_Error_Code = 16#42FF THEN
+		stErrorMessage := 'GROUPERR_HYMMEN_WATCHDOG';
+	END_IF
+END_IF
+
+(*Axis Errors*)
+IF dwMask = 16#43 THEN
+	stGroupMessage := 'Axis Error: ';
+	IF NC_Error_Code = 16#4300 THEN
+		stErrorMessage := 'Axis ID not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4301 THEN
+		stErrorMessage := 'Axis type not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4306 THEN
+		stErrorMessage := 'Slow manual velocity not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4307 THEN
+		stErrorMessage := 'Fast manual velocity NOT allowed';
+	END_IF
+	IF NC_Error_Code = 16#4308 THEN
+		stErrorMessage := 'High speed not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4309 THEN
+		stErrorMessage := 'Acceleration not allowed';
+	END_IF
+	IF NC_Error_Code = 16#430A THEN
+		stErrorMessage := 'Deceleration not allowed';
+	END_IF
+	IF NC_Error_Code = 16#430B THEN
+		stErrorMessage := 'Jerk not allowed';
+	END_IF
+	IF NC_Error_Code = 16#430C THEN
+		stErrorMessage := 'Delay time between position and velocity is not allowed';
+	END_IF
+	IF NC_Error_Code = 16#430D THEN
+		stErrorMessage := 'Override-Type not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4312 THEN
+		stErrorMessage := 'Referencing velocity in direction of cam not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4313 THEN
+		stErrorMessage := 'Referencing velocity in sync direction not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4314 THEN
+		stErrorMessage := 'Pulse width in positive direction not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4315 THEN
+		stErrorMessage := 'Pulse width in negative direction not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4316 THEN
+		stErrorMessage := 'Pulse time in positive direction not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4317 THEN
+		stErrorMessage := 'Pulse time in negative direction not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4318 THEN
+		stErrorMessage := 'Creep distance in positive direction not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4319 THEN
+		stErrorMessage := 'Creep distance in negative direction not allowed';
+	END_IF
+	IF NC_Error_Code = 16#431A THEN
+		stErrorMessage := 'Braking distance in positive direction not allowed';
+	END_IF
+	IF NC_Error_Code = 16#431B THEN
+		stErrorMessage := 'Braking distance in negative direction not allowed';
+	END_IF
+	IF NC_Error_Code = 16#431C THEN
+		stErrorMessage := 'Braking time in positive direction not allowed';
+	END_IF
+	IF NC_Error_Code = 16#431D THEN
+		stErrorMessage := 'Braking time in negative direction not allowed';
+	END_IF
+	IF NC_Error_Code = 16#431E THEN
+		stErrorMessage := 'Switching time from high to low speed not allowed';
+	END_IF
+	IF NC_Error_Code = 16#431F THEN
+		stErrorMessage := 'Creep distance for stop not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4320 THEN
+		stErrorMessage := 'Motion monitoring not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4321 THEN
+		stErrorMessage := 'Position window monitoring not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4322 THEN
+		stErrorMessage := 'Target window monitoring not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4323 THEN
+		stErrorMessage := 'Loop not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4324 THEN
+		stErrorMessage := 'Motion monitoring time not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4325 THEN
+		stErrorMessage := 'Target window range not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4326 THEN
+		stErrorMessage := 'Position window range not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4327 THEN
+		stErrorMessage := 'Position window monitoring time not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4328 THEN
+		stErrorMessage := 'Loop movement not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4329 THEN
+		stErrorMessage := 'Axis cycle time not allowed';
+	END_IF
+	IF NC_Error_Code = 16#432E THEN
+		stErrorMessage := 'DWORD for the interpretation of the axis units not allowed';
+	END_IF
+	IF NC_Error_Code = 16#432F THEN
+		stErrorMessage := 'Maximum velocity not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4330 THEN
+		stErrorMessage := 'Motion monitoring window not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4331 THEN
+		stErrorMessage := 'PEH time monitoring not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4332 THEN
+		stErrorMessage := 'PEH monitoring time not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4333 THEN
+		stErrorMessage := 'AXISERR_RANGE_DELAYBREAKRELEASE';
+	END_IF
+	IF NC_Error_Code = 16#4334 THEN
+		stErrorMessage := 'AXISERR_RANGE_DATAPERSISTENCE';
+	END_IF
+	IF NC_Error_Code = 16#4340 THEN
+		stErrorMessage := 'Axis initialisation';
+	END_IF
+	IF NC_Error_Code = 16#4342 THEN
+		stErrorMessage := 'Encoder address';
+	END_IF
+	IF NC_Error_Code = 16#4343 THEN
+		stErrorMessage := 'Controller address';
+	END_IF
+	IF NC_Error_Code = 16#4344 THEN
+		stErrorMessage := 'Drive address';
+	END_IF
+	IF NC_Error_Code = 16#4345 THEN
+		stErrorMessage := 'Axis interface PLC to NC address';
+	END_IF
+	IF NC_Error_Code = 16#4346 THEN
+		stErrorMessage := 'Axis interface NC to PLC address';
+	END_IF
+	IF NC_Error_Code = 16#4356 THEN
+		stErrorMessage := 'Controller enable';
+	END_IF
+	IF NC_Error_Code = 16#4357 THEN
+		stErrorMessage := 'Feed enable minus';
+	END_IF
+	IF NC_Error_Code = 16#4358 THEN
+		stErrorMessage := 'Feed enable plus';
+	END_IF
+	IF NC_Error_Code = 16#4359 THEN
+		stErrorMessage := 'Set velocity not allowed';
+	END_IF
+	IF NC_Error_Code = 16#435A THEN
+		stErrorMessage := 'Movement smaller than one encoder increment';
+	END_IF
+	IF NC_Error_Code = 16#435B THEN
+		stErrorMessage := 'Set acceleration monitoring';
+	END_IF
+	IF NC_Error_Code = 16#435C THEN
+		stErrorMessage := 'PEH time monitoring';
+	END_IF
+	IF NC_Error_Code = 16#435D THEN
+		stErrorMessage := 'Encoder existence monitoring / movement monitoring';
+	END_IF
+	IF NC_Error_Code = 16#435E THEN
+		stErrorMessage := 'Looping distance less than breaking distance';
+	END_IF
+	IF NC_Error_Code = 16#43A0 THEN
+		stErrorMessage := 'Axis consequential error';
+	END_IF
+END_IF
+
+
+(*Encoder Errors*)
+IF dwMask = 16#44 THEN
+	stGroupMessage := 'Encoder Error: ';
+	IF NC_Error_Code = 16#4402 THEN
+		stErrorMessage := 'Encoder mode';
+	END_IF
+	IF NC_Error_Code = 16#4403 THEN
+		stErrorMessage := 'Encoder counting direction inverted?';
+	END_IF
+	IF NC_Error_Code = 16#4404 THEN
+		stErrorMessage := 'Referencing status';
+	END_IF
+	IF NC_Error_Code = 16#4405 THEN
+		stErrorMessage := 'Encoder increments for each physical encoder rotation';
+	END_IF
+	IF NC_Error_Code = 16#4406 THEN
+		stErrorMessage := 'Scaling factor';
+	END_IF
+	IF NC_Error_Code = 16#4407 THEN
+		stErrorMessage := 'Position offset (zero point offset)';
+	END_IF
+	IF NC_Error_Code = 16#4408 THEN
+		stErrorMessage := 'Modulo factor';
+	END_IF
+	IF NC_Error_Code = 16#4409 THEN
+		stErrorMessage := 'Position filter time';
+	END_IF
+	IF NC_Error_Code = 16#440A THEN
+		stErrorMessage := 'Velocity filter time';
+	END_IF
+	IF NC_Error_Code = 16#440B THEN
+		stErrorMessage := 'Acceleration filter time';
+	END_IF
+	IF NC_Error_Code = 16#440C THEN
+		stErrorMessage := 'Cycle time not allowed';
+	END_IF
+	IF NC_Error_Code = 16#440E THEN
+		stErrorMessage := 'Actual position correction / measurement system error correction';
+	END_IF
+	IF NC_Error_Code = 16#440F THEN
+		stErrorMessage := 'Filter time actual position correction';
+	END_IF
+	IF NC_Error_Code = 16#4410 THEN
+		stErrorMessage := 'Search direction for referencing cam inverted';
+	END_IF
+	IF NC_Error_Code = 16#4411 THEN
+		stErrorMessage := 'Search direction for sync pulse (zero pulse) inverted';
+	END_IF
+	IF NC_Error_Code = 16#4412 THEN
+		stErrorMessage := 'Reference position';
+	END_IF
+	IF NC_Error_Code = 16#4413 THEN
+		stErrorMessage := 'Clearance monitoring between activation of the hardware latch and appearance of the sync pulse" (NOT IMPLEMENTED)';
+	END_IF
+	IF NC_Error_Code = 16#4414 THEN
+		stErrorMessage := 'Minimum clearance between activation of the hardware latch and appearance of the sync pulse" (NOT IMPLEMENTED)';
+	END_IF
+	IF NC_Error_Code = 16#4415 THEN
+		stErrorMessage := 'External sync pulse" (NOT IMPLEMENTED)';
+	END_IF
+	IF NC_Error_Code = 16#4416 THEN
+		stErrorMessage := 'Scaling of the noise rate is not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4417 THEN
+		stErrorMessage := 'Tolerance window for modulo-start';
+	END_IF
+	IF NC_Error_Code = 16#4418 THEN
+		stErrorMessage := 'Encoder reference mode';
+	END_IF
+	IF NC_Error_Code = 16#4419 THEN
+		stErrorMessage := 'Encoder evaluation direction';
+	END_IF
+	IF NC_Error_Code = 16#441A THEN
+		stErrorMessage := 'Encoder reference system';
+	END_IF
+	IF NC_Error_Code = 16#441B THEN
+		stErrorMessage := 'Encoder position initialization mode';
+	END_IF
+	IF NC_Error_Code = 16#441C THEN
+		stErrorMessage := 'Encoder sign interpretation (UNSIGNED- / SIGNED- data type)“';
+	END_IF
+	IF NC_Error_Code = 16#4420 THEN
+		stErrorMessage := 'Software end location monitoring minimum not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4421 THEN
+		stErrorMessage := 'Software end location monitoring maximum not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4422 THEN
+		stErrorMessage := 'Actual value setting is outside the value range';
+	END_IF
+	IF NC_Error_Code = 16#4423 THEN
+		stErrorMessage := 'Software end location minimum not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4424 THEN
+		stErrorMessage := 'Software end location maximum not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4425 THEN
+		stErrorMessage := 'Filter mask for the raw data of the encoder is invalid';
+	END_IF
+	IF NC_Error_Code = 16#4426 THEN
+		stErrorMessage := 'Reference mask for the raw data of the encoder is invalid';
+	END_IF
+	IF NC_Error_Code = 16#4430 THEN
+		stErrorMessage := 'Hardware latch activation (encoder)';
+	END_IF
+	IF NC_Error_Code = 16#4431 THEN
+		stErrorMessage := 'External hardware latch activation (encoder)';
+	END_IF
+	IF NC_Error_Code = 16#4432 THEN
+		stErrorMessage := 'External hardware latch activation (encoder)';
+	END_IF
+	IF NC_Error_Code = 16#4433 THEN
+		stErrorMessage := 'External hardware latch activation (encoder)';
+	END_IF
+	IF NC_Error_Code = 16#4434 THEN
+		stErrorMessage := 'Encoder function not supported';
+	END_IF
+	IF NC_Error_Code = 16#4435 THEN
+		stErrorMessage := 'Encoder function is already active';
+	END_IF
+	IF NC_Error_Code = 16#4440 THEN
+		stErrorMessage := 'Encoder initialization';
+	END_IF
+	IF NC_Error_Code = 16#4441 THEN
+		stErrorMessage := 'Axis address';
+	END_IF
+	IF NC_Error_Code = 16#4442 THEN
+		stErrorMessage := 'I/O input structure address';
+	END_IF
+	IF NC_Error_Code = 16#4443 THEN
+		stErrorMessage := 'I/O output structure address';
+	END_IF
+	IF NC_Error_Code = 16#4450 THEN
+		stErrorMessage := 'Encoder counter underflow monitoring';
+	END_IF
+	IF NC_Error_Code = 16#4451 THEN
+		stErrorMessage := 'Encoder counter overflow monitoring';
+	END_IF
+	IF NC_Error_Code = 16#4460 THEN
+		stErrorMessage := 'Software end location minimum (axis start)';
+	END_IF
+	IF NC_Error_Code = 16#4461 THEN
+		stErrorMessage := 'Software end location maximum (axis start)';
+	END_IF
+	IF NC_Error_Code = 16#4462 THEN
+		stErrorMessage := 'Software end location minimum (positioning process)" ';
+	END_IF
+	IF NC_Error_Code = 16#4463 THEN
+		stErrorMessage := 'Software end location maximum (positioning process)';
+	END_IF
+	IF NC_Error_Code = 16#4464 THEN
+		stErrorMessage := 'Encoder hardware error';
+	END_IF
+	IF NC_Error_Code = 16#4465 THEN
+		stErrorMessage := 'Position initialization error at system start';
+	END_IF
+	IF NC_Error_Code = 16#4470 THEN
+		stErrorMessage := 'SSI transformation fault or not finished';
+	END_IF
+	IF NC_Error_Code = 16#44A2 THEN
+		stErrorMessage := 'ENCERR_ADDR_CONTROLLER';
+	END_IF
+	IF NC_Error_Code = 16#44A3 THEN
+		stErrorMessage := 'ENCERR_INVALID_CONTROLLERTYPE';
+	END_IF
+END_IF
+
+(*Controller Errors*)
+IF dwMask = 16#45 THEN
+	stGroupMessage := 'Controller Error: ';
+	IF NC_Error_Code = 16#4500 THEN
+		stErrorMessage := 'Controller ID not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4501 THEN
+		stErrorMessage := 'Controller type not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4502 THEN
+		stErrorMessage := 'Controller operating mode not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4503 THEN
+		stErrorMessage := 'Weighting of the velocity pre-control not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4504 THEN
+		stErrorMessage := 'Following error monitoring (position) not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4505 THEN
+		stErrorMessage := 'Following error (velocity) not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4506 THEN
+		stErrorMessage := 'Following error window (position) not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4507 THEN
+		stErrorMessage := 'Following error filter time (position) not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4508 THEN
+		stErrorMessage := 'Following error window (velocity) not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4509 THEN
+		stErrorMessage := 'Following error filter time (velocity) not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4510 THEN
+		stErrorMessage := 'Proportional gain Kv or Kp (position controller) not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4511 THEN
+		stErrorMessage := 'Integral-action time Tn (position controller) not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4512 THEN
+		stErrorMessage := 'Derivative action time Tv (position controller) not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4513 THEN
+		stErrorMessage := 'Damping time Td (position controller) not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4514 THEN
+		stErrorMessage := 'Activation of the automatic offset compensation not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4515 THEN
+		stErrorMessage := 'Additional proportional gain Kv or Kp (position controller) not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4516 THEN
+		stErrorMessage := 'Reference velocity for additional proportional gain Kv or Kp (position controller) not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4517 THEN
+		stErrorMessage := 'Proportional gain Pa (acceleration proportion) not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4518 THEN
+		stErrorMessage := 'Proportional gain Kv (velocity controller) not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4519 THEN
+		stErrorMessage := 'Reset time Tn (velocity controller) not allowed';
+	END_IF
+	IF NC_Error_Code = 16#451A THEN
+		stErrorMessage := 'CONTROLERR_RANGE_ACCJUMPLIMITINGMODE';
+	END_IF
+	IF NC_Error_Code = 16#451B THEN
+		stErrorMessage := 'CONTROLERR_RANGE_ACCJUMPVALUE';
+	END_IF
+	IF NC_Error_Code = 16#451C THEN
+		stErrorMessage := 'CONTROLERR_RANGE_FILTERTIME';
+	END_IF
+	IF NC_Error_Code = 16#451D THEN
+		stErrorMessage := 'Dead zone not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4520 THEN
+		stErrorMessage := 'Rate time Tv (velocity controller) not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4521 THEN
+		stErrorMessage := 'Damping time Td (velocity controller) not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4522 THEN
+		stErrorMessage := 'CONTROLERR_RANGE_IOUTPUTLIMIT';
+	END_IF
+	IF NC_Error_Code = 16#4523 THEN
+		stErrorMessage := 'CONTROLERR_RANGE_DOUTPUTLIMIT';
+	END_IF
+	IF NC_Error_Code = 16#4524 THEN
+		stErrorMessage := 'CONTROLERR_RANGE_POSIDISABLEWHENMOVING';
+	END_IF
+	IF NC_Error_Code = 16#4540 THEN
+		stErrorMessage := 'Controller initialisation';
+	END_IF
+	IF NC_Error_Code = 16#4541 THEN
+		stErrorMessage := 'Axis address';
+	END_IF
+	IF NC_Error_Code = 16#4542 THEN
+		stErrorMessage := 'Drive address';
+	END_IF
+	IF NC_Error_Code = 16#4550 THEN
+		stErrorMessage := 'Following error monitoring (position)';
+	END_IF
+	IF NC_Error_Code = 16#4551 THEN
+		stErrorMessage := 'Following error monitoring (velocity)';
+	END_IF
+	IF NC_Error_Code = 16#45A0 THEN
+		stErrorMessage := 'CONTROLERR_RANGE_AREA_ASIDE';
+	END_IF
+	IF NC_Error_Code = 16#45A1 THEN
+		stErrorMessage := 'CONTROLERR_RANGE_AREA_BSIDE';
+	END_IF
+	IF NC_Error_Code = 16#45A2 THEN
+		stErrorMessage := 'CONTROLERR_RANGE_QNENN';
+	END_IF
+	IF NC_Error_Code = 16#45A3 THEN
+		stErrorMessage := 'CONTROLERR_RANGE_PNENN';
+	END_IF
+	IF NC_Error_Code = 16#45A4 THEN
+		stErrorMessage := 'CONTROLERR_RANGE_AXISIDPRESP0';
+	END_IF
+END_IF
+
+(*Drive Error*)
+IF dwMask = 16#46 THEN
+	stGroupMessage := 'Drive Error: ';
+	IF NC_Error_Code = 16#4600 THEN
+		stErrorMessage := 'Drive ID not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4601 THEN
+		stErrorMessage := 'Drive type not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4602 THEN
+		stErrorMessage := 'Drive operating mode not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4603 THEN
+		stErrorMessage := 'Motor polarity inverted?';
+	END_IF
+	IF NC_Error_Code = 16#4604 THEN
+		stErrorMessage := 'Drift compensation/velocity offset (DAC offset)';
+	END_IF
+	IF NC_Error_Code = 16#4605 THEN
+		stErrorMessage := 'Reference velocity (velocity pre-control)';
+	END_IF
+	IF NC_Error_Code = 16#4606 THEN
+		stErrorMessage := 'Reference output in percent';
+	END_IF
+	IF NC_Error_Code = 16#4607 THEN
+		stErrorMessage := 'Quadrant compensation factor';
+	END_IF
+	IF NC_Error_Code = 16#4608 THEN
+		stErrorMessage := 'Velocity reference point in percent';
+	END_IF
+	IF NC_Error_Code = 16#4609 THEN
+		stErrorMessage := 'Output reference point in percent';
+	END_IF
+	IF NC_Error_Code = 16#460A THEN
+		stErrorMessage := 'Minimum or maximum output limit';
+	END_IF
+	IF NC_Error_Code = 16#460B THEN
+		stErrorMessage := 'DRIVEERR_RANGE_MAXINCREMENT';
+	END_IF
+	IF NC_Error_Code = 16#460C THEN
+		stErrorMessage := 'DRIVEERR_RANGE_ DRIVECONTROLDWORD';
+	END_IF
+	IF NC_Error_Code = 16#460D THEN
+		stErrorMessage := 'DRIVEERR_RANGE_ RESETCYCLECOUNTER';
+	END_IF
+	IF NC_Error_Code = 16#460F THEN
+		stErrorMessage := 'Drive torque output scaling is not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4610 THEN
+		stErrorMessage := 'Drive velocity output scaling is not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4611 THEN
+		stErrorMessage := 'Profi Drive DSC Proportional gain  Kpc (position controller) not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4612 THEN
+		stErrorMessage := 'Table-ID is invalid';
+	END_IF
+	IF NC_Error_Code = 16#4613 THEN
+		stErrorMessage := 'Table interpolationtype is invalid';
+	END_IF
+	IF NC_Error_Code = 16#4614 THEN
+		stErrorMessage := 'Outputoffset in percent is invalid';
+	END_IF
+	IF NC_Error_Code = 16#4615 THEN
+		stErrorMessage := 'Profi Drive DSC scaling factor for calculating Xerr (position controller) is not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4616 THEN
+		stErrorMessage := 'Drive acceleration output scaling is not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4617 THEN
+		stErrorMessage := 'Drive position output scaling is not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4620 THEN
+		stErrorMessage := 'Bit mask for stepper motor cycle not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4621 THEN
+		stErrorMessage := 'Bit mask for stepper motor holding current not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4640 THEN
+		stErrorMessage := 'Drive initialisation';
+	END_IF
+	IF NC_Error_Code = 16#4641 THEN
+		stErrorMessage := 'Axis address';
+	END_IF
+	IF NC_Error_Code = 16#4642 THEN
+		stErrorMessage := 'I/O input structure address';
+	END_IF
+	IF NC_Error_Code = 16#4643 THEN
+		stErrorMessage := 'I/O output structure address';
+	END_IF
+	IF NC_Error_Code = 16#4650 THEN
+		stErrorMessage := 'Drive not ready for operation';
+	END_IF
+	IF NC_Error_Code = 16#4651 THEN
+		stErrorMessage := 'Error in cyclic communication with the drive (life counter)';
+	END_IF
+	IF NC_Error_Code = 16#4652 THEN
+		stErrorMessage := 'Not permitted to change the table ID while the axis is enabled';
+	END_IF
+	IF NC_Error_Code = 16#4655 THEN
+		stErrorMessage := 'Invalid IO data for more than (n) consecutive nc cycles';
+	END_IF
+END_IF
+
+(*Table Error*)
+IF dwMask = 16#4A THEN
+	stGroupMessage := 'Table Error: ';
+	IF NC_Error_Code = 16#4A00 THEN
+		stErrorMessage := 'Table ID not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4A01 THEN
+		stErrorMessage := 'Table type not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4A02 THEN
+		stErrorMessage := 'Number of lines in the table not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4A03 THEN
+		stErrorMessage := 'Number of columns in the table is not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4A04 THEN
+		stErrorMessage := 'Step size (position delta) not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4A05 THEN
+		stErrorMessage := 'Period not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4A06 THEN
+		stErrorMessage := 'Table is not monotonic';
+	END_IF
+	IF NC_Error_Code = 16#4A07 THEN
+		stErrorMessage := 'Table sub type is not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4A08 THEN
+		stErrorMessage := 'Table interpolation type is not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4A09 THEN
+		stErrorMessage := 'Incorrect table main type';
+	END_IF
+	IF NC_Error_Code = 16#4A10 THEN
+		stErrorMessage := 'Table initialisation';
+	END_IF
+	IF NC_Error_Code = 16#4A11 THEN
+		stErrorMessage := 'Not enough memory';
+	END_IF
+	IF NC_Error_Code = 16#4A12 THEN
+		stErrorMessage := 'Function not executed, function not available';
+	END_IF
+	IF NC_Error_Code = 16#4A13 THEN
+		stErrorMessage := 'Line index not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4A14 THEN
+		stErrorMessage := 'Column index not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4A15 THEN
+		stErrorMessage := 'Number of lines not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4A16 THEN
+		stErrorMessage := 'Number of columns not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4A17 THEN
+		stErrorMessage := 'Error in scaling or in range entry';
+	END_IF
+	IF NC_Error_Code = 16#4A18 THEN
+		stErrorMessage := 'Multi table slave out of range';
+	END_IF
+	IF NC_Error_Code = 16#4A19 THEN
+		stErrorMessage := 'Solo table underflow';
+	END_IF
+	IF NC_Error_Code = 16#4A1B THEN
+		stErrorMessage := 'Incorrect execution mode';
+	END_IF
+	IF NC_Error_Code = 16#4A1C THEN
+		stErrorMessage := 'Impermissible parameter';
+	END_IF
+	IF NC_Error_Code = 16#4A1D THEN
+		stErrorMessage := 'Fifo is empty';
+	END_IF
+	IF NC_Error_Code = 16#4A1E THEN
+		stErrorMessage := 'Fifo is full';
+	END_IF
+	IF NC_Error_Code = 16#4A1F THEN
+		stErrorMessage := 'Point-Index of Motion Function invalid';
+	END_IF
+	IF NC_Error_Code = 16#4A20 THEN
+		stErrorMessage := 'No diagonalisation of  matrix';
+	END_IF
+	IF NC_Error_Code = 16#4A21 THEN
+		stErrorMessage := 'Number of spline points to less';
+	END_IF
+	IF NC_Error_Code = 16#4A22 THEN
+		stErrorMessage := 'Fifo must not be overwritten';
+	END_IF
+END_IF
+
+(*NC-PLC Error*)
+IF dwMask = 16#4B THEN
+	stGroupMessage := 'NC-PLC Error: ';
+	IF NC_Error_Code = 16#4B00 THEN
+		stErrorMessage := 'Axis has been stopped';
+	END_IF
+	IF NC_Error_Code = 16#4B01 THEN
+		stErrorMessage := 'Axis cannot be started';
+	END_IF
+	IF NC_Error_Code = 16#4B02 THEN
+		stErrorMessage := 'Control mode not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4B03 THEN
+		stErrorMessage := 'Axis is not moving';
+	END_IF
+	IF NC_Error_Code = 16#4B04 THEN
+		stErrorMessage := 'Wrong mode for RestartPosAndVelo';
+	END_IF
+	IF NC_Error_Code = 16#4B05 THEN
+		stErrorMessage := 'Command not allowed';
+	END_IF
+	IF NC_Error_Code = 16#4B06 THEN
+		stErrorMessage := 'Parameter not correct';
+	END_IF
+	IF NC_Error_Code = 16#4B07 THEN
+		stErrorMessage := 'Timeout axis function block';
+	END_IF
+	IF NC_Error_Code = 16#4B08 THEN
+		stErrorMessage := 'Axis in protected mode';
+	END_IF
+	IF NC_Error_Code = 16#4B09 THEN
+		stErrorMessage := 'Axis is not ready';
+	END_IF
+	IF NC_Error_Code = 16#4B0A THEN
+		stErrorMessage := 'Homing error';
+	END_IF
+	IF NC_Error_Code = 16#4B0B THEN
+		stErrorMessage := 'Invalid definition trigger input definition';
+	END_IF
+	IF NC_Error_Code = 16#4B0C THEN
+		stErrorMessage := 'position latch has been deactivated';
+	END_IF
+	IF NC_Error_Code = 16#4B0E THEN
+		stErrorMessage := 'Supplement not installed';
+	END_IF
+	IF NC_Error_Code = 16#4B0F THEN
+		stErrorMessage := 'Timeout Register Access';
+	END_IF
+	IF NC_Error_Code = 16#4B10 THEN
+		stErrorMessage := 'M-Function request missing';
+	END_IF
+	IF NC_Error_Code = 16#4B11 THEN
+		stErrorMessage := 'Zero shift index is out of range';
+	END_IF
+	IF NC_Error_Code = 16#4B12 THEN
+		stErrorMessage := 'R parameter index or size is invalid';
+	END_IF
+	IF NC_Error_Code = 16#4B13 THEN
+		stErrorMessage := 'Index for tool description is invalid';
+	END_IF
+	IF NC_Error_Code = 16#4B14 THEN
+		stErrorMessage := 'Version of cyclic channel interface does not match to the requested function and function block, resp.';
+	END_IF
+	IF NC_Error_Code = 16#4B15 THEN
+		stErrorMessage := 'Channel is not ready for requested function';
+	END_IF
+	IF NC_Error_Code = 16#4B16 THEN
+		stErrorMessage := 'Requested function is not turned on';
+	END_IF
+	IF NC_Error_Code = 16#4B20 THEN
+		stErrorMessage := 'Cannot append all axes';
+	END_IF
+	IF NC_Error_Code = 16#4B30 THEN
+		stErrorMessage := 'Pointer invalid';
+	END_IF
+	IF NC_Error_Code = 16#4B31 THEN
+		stErrorMessage := 'Size of  memory invalid';
+	END_IF
+	IF NC_Error_Code = 16#4B32 THEN
+		stErrorMessage := 'Invalid cam table ID';
+	END_IF
+	IF NC_Error_Code = 16#4B33 THEN
+		stErrorMessage := 'Invalid point ID';
+	END_IF
+	IF NC_Error_Code = 16#4B34 THEN
+		stErrorMessage := 'Invalid number of points ';
+	END_IF
+	IF NC_Error_Code = 16#4B35 THEN
+		stErrorMessage := 'Invalid MC table type';
+	END_IF
+	IF NC_Error_Code = 16#4B36 THEN
+		stErrorMessage := 'Invalid number of rows';
+	END_IF
+	IF NC_Error_Code = 16#4B37 THEN
+		stErrorMessage := 'Invalid number of columns';
+	END_IF
+	IF NC_Error_Code = 16#4B38 THEN
+		stErrorMessage := 'Invalid Increment';
+	END_IF
+	IF NC_Error_Code = 16#4B40 THEN
+		stErrorMessage := 'Unsupported Terminal Type';
+	END_IF
+	IF NC_Error_Code = 16#4B41 THEN
+		stErrorMessage := 'Register Read/Write Error';
+	END_IF
+	IF NC_Error_Code = 16#4B42 THEN
+		stErrorMessage := 'Axis is Enabled';
+	END_IF
+	IF NC_Error_Code = 16#4B60 THEN
+		stErrorMessage := 'Motion command not be activated';
+	END_IF
+	IF NC_Error_Code = 16#4B61 THEN
+		stErrorMessage := 'Motion command could not be monitored by the PLC';
+	END_IF
+	IF NC_Error_Code = 16#4B62 THEN
+		stErrorMessage := 'Buffered command finished with error';
+	END_IF
+	IF NC_Error_Code = 16#4B63 THEN
+		stErrorMessage := 'Buffered command finished without state feedback';
+	END_IF
+	IF NC_Error_Code = 16#4B64 THEN
+		stErrorMessage := 'BufferMode not supported';
+	END_IF
+	IF NC_Error_Code = 16#4B71 THEN
+		stErrorMessage := 'Invalid NCI Entry Type';
+	END_IF
+	IF NC_Error_Code = 16#4B72 THEN
+		stErrorMessage := 'NciFeedTable full';
+	END_IF
+	IF NC_Error_Code = 16#4B74 THEN
+		stErrorMessage := 'ST_NciTangentialFollowingDesc: tangential axis is not an auxiliary axis';
+	END_IF
+	IF NC_Error_Code = 16#4B75 THEN
+		stErrorMessage := 'ST_NciTangentialFollowingDesc: nPathAxis1 and nPathAxis2, resp. are no path axes. ';
+	END_IF
+	IF NC_Error_Code = 16#4B76 THEN
+		stErrorMessage := 'ST_NciTangentialFollwoingDesc: nPathAxis1 and nPathAxis2 are equal.';
+	END_IF
+	IF NC_Error_Code = 16#4B77 THEN
+		stErrorMessage := 'ST_NciGeoCirclePlane';
+	END_IF
+	IF NC_Error_Code = 16#4B78 THEN
+		stErrorMessage := 'Internal error in calculation of the tangential following';
+	END_IF
+	IF NC_Error_Code = 16#4B79 THEN
+		stErrorMessage := 'Tangential following';
+	END_IF
+	IF NC_Error_Code = 16#4B7B THEN
+		stErrorMessage := 'Tangential Following';
+	END_IF
+	IF NC_Error_Code = 16#4B7C THEN
+		stErrorMessage := 'FB_NciFeedTablePreparation:  pEntry is NULL';
+	END_IF
+	IF NC_Error_Code = 16#4B7D THEN
+		stErrorMessage := 'FB_NciFeedTablePreparation: The specified nEntryType does not match the the structure type';
+	END_IF
+	IF NC_Error_Code = 16#4B7E THEN
+		stErrorMessage := 'ST_NciMFuncFast and ST_NciMFuncHsk';
+	END_IF
+	IF NC_Error_Code = 16#4B7F THEN
+		stErrorMessage := 'ST_NciDynOvr';
+	END_IF
+	IF NC_Error_Code = 16#4B80 THEN
+		stErrorMessage := 'ST_NciVertexSmoothing';
+	END_IF
+	IF NC_Error_Code = 16#4B81 THEN
+		stErrorMessage := 'FB_NciFeedTablePrepartion';
+	END_IF
+END_IF
+
+(*Finally, Concatenate Group Message and Error Message and Return*)
+
+FUN_GTAC_NC_Error_Messages:= CONCAT(stGroupMessage, stErrorMessage);]]></ST>
+    </Implementation>
+    <LineIds Name="FUN_GTAC_NC_Error_Messages">
+      <LineId Id="21" Count="1779" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

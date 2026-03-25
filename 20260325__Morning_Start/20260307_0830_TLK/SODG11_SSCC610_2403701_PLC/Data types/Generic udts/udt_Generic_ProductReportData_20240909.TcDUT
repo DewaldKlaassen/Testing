@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_Generic_ProductReportData_20240909" Id="{bdaa997f-1137-4a09-8137-bc2850cddbac}">
+    <Declaration><![CDATA[(*udt (user defined type) for product report data 
+Product report data can be populated with part / assembly / product measurements etc etc
+
+	Author(S): Version 20221007:
+		- Initial concept, b.lekx-toniolo and c.drees during tcui migration	
+	Version 20240909:
+		- Added in Model_Id and Spare Areas, b.lekx-toniolo
+*)
+
+
+
+TYPE udt_Generic_ProductReportData_20240909 :
+STRUCT
+	
+	(*Machine Indentifiers*)
+	Machine_Serial: STRING;
+	Machine_Common_Name: STRING;
+	(*Operator Identifier*)
+	Operator_ID: UINT;
+	(*Product Identifier*)
+	Product_Serial: STRING; 
+	Product_Number: STRING;
+	Product_Common_Name: STRING;
+	Product_Model_ID: UINT;
+	(*Spare Areas for general use*)
+	Spare1: STRING;
+	Spare2: STRING;
+	
+	(*Generic pass fail array*)
+	Generic_PassFail_Notes: ARRAY[0..31] OF STRING(4);
+	
+	(*Generic measurement array*)
+	Generic_Measurements: ARRAY [0..31] OF REAL;
+	
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

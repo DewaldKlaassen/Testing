@@ -1,0 +1,479 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FB_GTAC_ICxx_20181023" Id="{01c41499-3761-45ed-b729-b94835cf11fc}" SpecialFunc="None">
+    <Declaration><![CDATA[(*FB for use with Generic ICxx Panel conforming to SSCC V5.xx
+
+	Original Author(s): Brent Lekx-Toniolo/Rob Remillard of Sodecia GTAC.; 
+------------------------------------------------------------------------------------------
+REVISION NOTES:
+	Version 1.0: August 2010
+		- Initial Concept
+	Version 20120607
+		Changes from previous include:
+			- Un-commented T14 Stat
+	Version 20141202
+			- Corrected Port B Cable Break Detect Flag, b.lekx-toniolo
+	Version 20141205
+			- Added SafetyGate_Latch_OK Variable, b.lekx-toniolo
+	Version 20150120:
+			- Added "previous ecat node ok" input for more accurate display of cable breaks, b.lekx-toniolo
+	Version 20150326:
+			- Added State checks for both X1 and X2 ports dissconnected on EK1122, b.lekx-toniolo
+	Version 20150928:
+			- Added CoE reads to gather EL6900 temperatue data, b.lekx-toniolo
+			- Removed Main Relays as per new HW spec, b.lekx-toniolo
+	Version 20170713
+			- Added OP1_LC_Clear and OP2_LC_Clear bits for external control, j.vandongen
+	Version 20171130
+			- Added OP1_Yellow_Lamp_REQ and OP2_Yellow_Lamp_Req, j.vandongen
+	Version 20181023
+			- added provisions if a turntable is used, j.vandongen
+------------------------------------------------------------------------------------------
+*)
+
+FUNCTION_BLOCK FB_GTAC_ICxx_20181023
+	VAR_INPUT
+		Enable_FB: BOOL;
+		FB_In: udt_Generic_IC_20150928; (*Inputs to FB*)
+
+		OP1_LC_Clear: BOOL;
+		OP2_LC_Clear: BOOL;
+
+		Turntable_Type: BOOL;
+
+		Op1_At_Operator: BOOL;
+		Op2_At_Operator: BOOL;
+
+	END_VAR
+
+	VAR
+(*Hardware Data Types*)
+		(*Develop Discrete Nodes*)
+		T01 AT %I*: udt_EK1100;						(*Ecat Bus Coupler*)
+		T02_STAT AT %I*: udt_EL6900_STAT_20160426;	(*EL Safety CPU*)
+		T02_CMD AT %Q*: udt_EL6900_CMD_20121204;
+		T03 AT %I*: udt_EL1904_v2;						(*EL Safety Inputs*)
+		T04 AT %I*: udt_EL1904_v2;						(*EL Safety Inputs*)
+		T05 AT %I*: udt_EL1904_v2;						(*EL Safety Inputs*)
+		T06 AT %I*: udt_EL1904_v2;						(*EL Safety Inputs*)
+		T07 AT %I*: udt_EL1904_v2;						(*EL Safety Inputs*)
+		T08 AT %I*: udt_EL1904_v2;						(*EL Safety Inputs*)
+		T09 AT %I*: udt_EL2904RO_v2;					(*EL Safety Outputs, Set to "I" as this terminal is safety rated, therefore read only!*)
+		T10 AT %I*: udt_EL2904RO_v2;					(*EL Safety Outputs, Set to "I" as this terminal is safety rated, therefore read only!*)
+		T11 AT %I*: udt_EL94xx;						(*EBUS Power Restoration*)
+		T12 AT %I*: udt_EL1004_v2;						(*EL Inputs*)
+		T13 AT %I*: udt_EL1004_v2;						(*EL Inputs*)
+		T14 AT %Q*: udt_EL2008_v2;					(*EL Outputs, 8 Point*)
+		T14_STAT AT %I*: udt_EL2008_STAT;			(*EL Output Card Status*)
+		T15 AT %Q*: udt_EL2622;						(*EL Outputs, 2 Point*)
+		T15_STAT AT %I*: udt_EL2622_STAT;			(*EL Output Card Status*)
+		T16 AT%I*: udt_EK1122; 						(*ECAT Junction*)
+
+(* Nodes States*)
+		DiscreteNode_OK: BOOL;
+		Ecat_Junction_OK: BOOL;
+(*Cable Break Warning Flags*)
+		ECatSlave_Cable_Breaks: UDINT;
+		EK1100_NotPresent :BOOL;			(*Coupler is Not Present on Bus when expected*)
+		EK1100_PortC_MissingLink: BOOL; 	(*Port C of EK1100 is OUT*)
+		EK1122_PortD_MissingLink: BOOL; 	(*Port D of EK1122 is X1*)
+		EK1122_PortB_MissingLink: BOOL;	(*Port B of EK1122 is X2*)
+(*CoE Read*)
+		CoE_ReadFB_1: FB_EcCoESdoReadEx; 		(*FB to retrieve Data from terminals via CoE*)
+		CoE_ReadBuffer_1: ARRAY [0..7] OF BYTE;	(*Variable, 8 bytes, for receiving data*)
+		CoE_ReadErr_1: BOOL;					(*CoE Read Error Flag*)
+		CoE_ReadErrID_1: UDINT;					(*CoE Read Error Identification*)
+		EL6900_Overtemperature: BOOL;			(*Flag for result of CoE Read*)
+
+(*Safety Internals*)
+		OP1_Estop_OK: BOOL;
+		OP1_Cycle_Start: BOOL;
+		OP1_HumanVertLC_Clear: BOOL;
+		OP1_HumanHorizLC_Clear: BOOL;
+		OP1_RobotVertLC_Clear: BOOL;
+		OP1_Relays_On: BOOL;
+		OP1_Relays_Off: BOOL;
+
+		OP2_Estop_OK: BOOL;
+		OP2_Cycle_Start: BOOL;
+		OP2_HumanVertLC_Clear: BOOL;
+		OP2_HumanHorizLC_Clear: BOOL;
+		OP2_RobotVertLC_Clear: BOOL;
+		OP2_Relays_On: BOOL;
+		OP2_Relays_Off: BOOL;
+
+		Main_Relays_On: BOOL;
+		Main_Relays_Off: BOOL;
+
+		SafetyGate_Latch_OK: BOOL;
+(*Standard Internals*)
+		Estop_PBs_OK: BOOL;
+		OP1_AllHumanLCs_Clear: BOOL;
+		OP2_AllHumanLCs_Clear: BOOL;
+		Main_Air_Pressure_OK: BOOL;
+		Loop_Indicies: ARRAY[0..9] OF INT:=[0]; (*Counters for For Loops*)
+		OP1_Green_Lamp: BOOL;
+		OP1_Yellow_Lamp: BOOL;
+		OP1_Red_Lamp: BOOL;
+		OP1_Audible: BOOL;
+		OP2_Green_Lamp: BOOL;
+		OP2_Yellow_Lamp: BOOL;
+		OP2_Red_Lamp: BOOL;
+		OP2_Audible: BOOL;
+
+		Pulse_1S_FB: FB_Pulse_Generator;
+		Pulse_1S: BOOL;
+		Pulse_500ms_FB: FB_Pulse_Generator;
+		Pulse_500ms: BOOL;
+		Pulse_125ms_FB: FB_Pulse_Generator;
+		Pulse_125ms: BOOL;
+
+		KeyLOK_UnlockDelay_TMR: TON;
+
+		(*Fault Flags*)
+		OP1_RelayFLT: BOOL;
+		OP2_RelayFLT: BOOL;
+		Main_RelayFLT: BOOL;
+
+END_VAR
+
+	VAR_OUTPUT
+		FB_OK: BOOL;
+		Discrete_Image: udt_ICxx_Image;
+		OP1_Enable_Motion: BOOL;
+		OP2_Enable_Motion: BOOL;
+
+	END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[	(*Set FB_OK to True*)
+	FB_OK:= TRUE;
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$Gather Status Of Hardware $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Discrete I/O Node*)
+	IF T01.InfoData.State=8 AND T02_Stat.InfoData.State=8 AND T03.InfoData.State=8 AND T04.InfoData.State=8 AND T05.InfoData.State=8
+		AND T06.InfoData.State=8 AND T07.InfoData.State=8 AND T08.InfoData.State=8 AND T09.InfoData.State=8 AND T10.InfoData.State=8
+		AND T11.InfoData.State=8 AND T12.InfoData.State=8 AND T13.InfoData.State=8 AND T14_Stat.InfoData.State=8 AND T15_Stat.InfoData.State=8
+		AND T16.InfoData.State=8
+
+		THEN DiscreteNode_OK:=TRUE;
+	ELSE DiscreteNode_OK:=FALSE;
+	END_IF;
+	(*EtherCAT 2 Port Junction, For Interface to OP Fixtures*)
+	IF T16.InfoData.State=8
+		THEN Ecat_Junction_OK:=TRUE;
+	ELSE Ecat_Junction_OK:=FALSE;
+	END_IF;
+
+	(*Develop Port Connection Warning Flags*)
+	IF T01.InfoData.State=257  (*State Machine for Slave Not Present*)
+		THEN EK1100_NotPresent:= TRUE;
+	ELSE EK1100_NotPresent := FALSE;
+	END_IF;
+
+	IF T01.InfoData.State=17416 (*State Machine for Link Missing at Port C*)
+		THEN EK1100_PortC_MissingLink:= TRUE; (*PortC is OUT Port*)
+	ELSE EK1100_PortC_MissingLink := FALSE;
+	END_IF;
+
+
+	IF (T16.InfoData.State=-31736) (*State Machine for Link Missing at Port D (0xA8408)*)
+		OR (T16.InfoData.State=-23544) (*State Machine for Link Missing at Port D and Port B (0xA408)*)
+		THEN EK1122_PortD_MissingLink:= TRUE; (*Port D is X1 Port*)
+	ELSE EK1122_PortD_MissingLink := FALSE;
+	END_IF;
+
+	IF (T16.InfoData.State=9224) (*State Machine for Link Missing at Port B (0x2408)*)
+		OR (T16.InfoData.State=-23544) (*State Machine for Link Missing at Port D and Port B (0xA408)*)
+		THEN EK1122_PortB_MissingLink:= TRUE; (*Port B is X2 Port*)
+	ELSE EK1122_PortB_MissingLink := FALSE;
+	END_IF;
+
+	(*Wrap up break Flags to Variable for shipment to UI*)
+	ECatSlave_Cable_Breaks.0:= EK1100_NotPresent AND FB_In.Prev_EcatNode_Present;
+	ECatSlave_Cable_Breaks.1:= EK1100_PortC_MissingLink;
+	ECatSlave_Cable_Breaks.16:=EK1122_PortD_MissingLink;
+	ECatSlave_Cable_Breaks.17:=EK1122_PortB_MissingLink;
+
+	(*------------ CoE Reads ------------*)
+
+	(*Read EL6900 Primaray Temperature Data*)
+
+	(*FB Inputs*)
+	CoE_ReadFB_1.bExecute:= FB_In.CoE_Read_Trigger
+							AND (T02_Stat.InfoData.State=8);						(*Execute Upon Trigger*)
+	CoE_ReadFB_1.sNetId:= FB_In.Ecat_Master_AmsNetID;
+	CoE_ReadFB_1.nSlaveAddr:= T02_STAT.InfoData.AdsAddr.port;						(*Address of Ecat Slave being Read*)
+	CoE_ReadFB_1.nIndex:= 16#FA80;												(*CANopen SDO Index of Object (FA80 = Hardware Diag Object)*)
+	CoE_ReadFB_1.nSubIndex:= 16#01;												(*CANopen SDO SubIndex (Location from Index) of Object (1 = Primary Temperature)*)
+	CoE_ReadFB_1.cbBufLen:= 8;													(*Limit on Receive Length (bytes)*)
+	CoE_ReadFB_1.pDstBuf:= ADR(CoE_ReadBuffer_1);								(*Pointer to Receive Buffer*)
+	CoE_ReadFB_1.tTimeout:= T#2s;												(*TImeout for Read*)
+	CoE_ReadFB_1.bCompleteAccess:= TRUE;										(*Allow Complete Access to Full SDO Object*)
+
+	(*Execute FB*)
+	CoE_ReadFB_1();
+
+	(*FB Outputs*)
+	CoE_ReadErr_1:= CoE_ReadFB_1.bError;										(*Error Flag of Read*)
+	CoE_ReadErrID_1:= CoE_ReadFB_1.nErrId;										(*Error ID of Read (See ADS Return Codes)*)
+
+	(*Tranfer Data to Image*)
+	IF (T02_Stat.InfoData.State=8) AND NOT CoE_ReadErr_1
+		THEN
+		T02_STAT.CoE_Temperature_1:= FUN_GTAC_BYTEStoINT(CoE_ReadBuffer_1[0],CoE_ReadBuffer_1[1]);	(*Grab bytes 0 and 1 of read buffer, this is Primary Temperature*)
+		T02_STAT.CoE_Temperature_2:= FUN_GTAC_BYTEStoINT(CoE_ReadBuffer_1[2],CoE_ReadBuffer_1[3]);	(*Grab bytes 2 and 3 of read buffer, this is Secondary Temperature*)
+	ELSE
+		(*If Read Error, then blank data*)
+		T02_STAT.CoE_Temperature_1:=0;
+		T02_STAT.CoE_Temperature_2:=0;
+	END_IF;
+
+	(*Finally Evaluate Temperature Vs Upper Limit Restrictions*)
+	IF (T02_STAT.CoE_Temperature_1>=90) OR (T02_STAT.CoE_Temperature_2>=90)
+		THEN
+		EL6900_Overtemperature:= TRUE;
+	ELSE
+		EL6900_Overtemperature:= FALSE;
+	END_IF;
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Gather Standard Inputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+	(*Air Pressure Switch*)
+	Main_Air_Pressure_OK:= T12.I.0;
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Gather Safety Inputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*OP1 Safety Status*)
+	OP1_Estop_OK:= T03.I.0 AND T03.I.1;
+	OP1_Cycle_Start:= T03.I.3;
+	OP1_HumanVertLC_Clear:= T04.I.0 AND T04.I.1;
+	OP1_HumanHorizLC_Clear:= T04.I.2 AND T04.I.3;
+	OP1_RobotVertLC_Clear:= T05.I.0 AND T05.I.1;
+	OP1_Relays_On:= NOT T05.I.3 AND T09.Q.0 AND T09.Q.1;
+	OP1_Relays_Off:= T05.I.3;
+
+	(*OP2 Safety Status*)
+	OP2_Estop_OK:= T06.I.0 AND T06.I.1;
+	OP2_Cycle_Start:= T06.I.3;
+	OP2_HumanVertLC_Clear:= T07.I.0 AND T07.I.1;
+	OP2_HumanHorizLC_Clear:= T07.I.2 AND T07.I.3;
+	OP2_RobotVertLC_Clear:= T08.I.0 AND T08.I.1;
+	OP2_Relays_On:= NOT T08.I.3 AND T10.Q.0 AND T10.Q.1;
+	OP2_Relays_Off:= T08.I.3;
+
+	(*Main Relay Status*)
+	Main_Relays_On:= FALSE;
+	Main_Relays_Off:= FALSE;
+
+	(*Estop Status Of Area*)
+	Estop_PBs_Ok:= OP1_Estop_OK AND OP2_Estop_Ok;
+
+	(*SafetyGate Latch Status*)
+	SafetyGate_Latch_Ok:= T03.I.2 AND T08.I.2;
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Internal Code $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Pulse Generators*)
+		(*1 Second On and Off Time*)
+		Pulse_1S_FB.On_Time:=T#1.0S;
+		Pulse_1S_FB.Off_Time:=T#1.0S;
+		Pulse_1S_FB();
+		Pulse_1S:=Pulse_1S_FB.Wave;
+		(*0.5 Second On and Off Time*)
+		Pulse_500ms_FB.On_Time:=T#500ms;
+		Pulse_500ms_FB.Off_Time:=T#500ms;
+		Pulse_500ms_FB();
+		Pulse_500ms:=Pulse_500ms_FB.Wave;
+		(*0.25 Second On and Off Time*)
+		Pulse_125ms_FB.On_Time:=T#125ms;
+		Pulse_125ms_FB.Off_Time:=T#125ms;
+		Pulse_125ms_FB();
+		Pulse_125ms:=Pulse_125ms_FB.Wave;
+
+	(*Gather Light Curtain Status*)
+	OP1_AllHumanLCs_Clear:= OP1_LC_Clear;
+	OP2_AllHumanLCs_Clear:= OP2_LC_Clear;
+
+	(*Control Of Operator Station Lamps*)
+	(*OP1*)
+		(*Green Lamp*)
+		OP1_Green_Lamp:=  FB_In.Estops_OK AND FB_In.Safety_Gates_Ok
+					AND ((NOT Turntable_Type AND FB_In.OP1_Green_LampReq AND NOT FB_In.OP1_Red_LampReq)
+					OR (Turntable_Type  AND Op1_At_Operator AND FB_In.OP1_Green_LampReq AND NOT FB_In.OP1_Red_LampReq)
+					OR (Turntable_Type  AND Op2_At_Operator AND FB_In.OP2_Green_LampReq AND NOT FB_In.OP2_Red_LampReq));
+
+		(*Yellow Lamp*)
+		IF  FB_In.Estops_OK AND FB_in.Safety_Gates_Ok
+			AND (( NOT Turntable_Type AND OP1_AllHumanLCs_Clear AND NOT OP1_Relays_On AND FB_In.OP1_Yellow_LampReq)
+			OR (Turntable_Type AND Op1_At_Operator AND OP1_AllHumanLCs_Clear AND NOT OP1_Relays_On AND FB_In.OP1_Yellow_LampReq)
+			OR (Turntable_Type AND Op2_At_Operator AND OP2_AllHumanLCs_Clear AND NOT OP2_Relays_On AND FB_In.OP2_Yellow_LampReq))
+			THEN
+				OP1_Yellow_Lamp:= Pulse_500ms;
+		ELSIF NOT OP1_AllHumanLCs_Clear AND FB_In.Estops_OK
+			THEN
+				OP1_Yellow_Lamp:= TRUE;
+		ELSE
+				OP1_Yellow_Lamp:= FALSE;
+		END_IF;
+
+		(*Red Lamp*)
+		IF NOT FB_IN.Estops_OK
+			AND ((NOT Turntable_Type AND Op1_Estop_OK)
+			OR (Turntable_Type  AND Op1_At_Operator AND OP1_Estop_Ok)
+			OR (Turntable_Type  AND Op2_At_Operator AND OP2_Estop_Ok))
+			THEN
+				OP1_Red_Lamp:= TRUE;
+		ELSIF NOT FB_IN.Estops_OK
+			AND ((NOT Turntable_Type AND NOT Op1_Estop_OK)
+			OR (Turntable_Type  AND Op1_At_Operator AND NOT OP1_Estop_Ok)
+			OR (Turntable_Type  AND Op2_At_Operator AND NOT OP2_Estop_Ok))
+			THEN
+				OP1_Red_Lamp:= Pulse_500ms;
+		ELSIF NOT FB_In.Safety_Gates_Ok AND FB_In.Estops_OK
+			THEN
+				OP1_Red_Lamp:= Pulse_500ms;
+		ELSIF FB_In.Estops_OK
+			AND ((NOT Turntable_Type AND FB_In.OP1_Red_LampReq)
+			OR (Turntable_Type  AND Op1_At_Operator AND  FB_In.OP1_Red_LampReq)
+			OR (Turntable_Type  AND Op2_At_Operator AND  FB_In.OP2_Red_LampReq))
+			THEN
+				OP1_Red_Lamp:= Pulse_125ms;
+		ELSE
+				OP1_Red_Lamp:= FALSE;
+		END_IF;
+
+		(*Audible*)
+		OP1_Audible:= ((NOT Turntable_Type AND FB_In.OP1_Audible_Req)
+				OR (Turntable_Type  AND Op1_At_Operator AND FB_In.OP1_Audible_Req)
+				OR (Turntable_Type  AND Op2_At_Operator AND FB_In.OP2_Audible_Req));
+
+
+	(*OP2*)
+		(*Green Lamp*)
+		OP2_Green_Lamp:=  FB_In.Estops_OK AND FB_In.Safety_Gates_Ok
+					AND ((NOT Turntable_Type AND FB_In.OP2_Green_LampReq AND NOT FB_In.OP2_Red_LampReq)
+					OR (Turntable_Type  AND Op1_At_Operator AND FB_In.OP1_Green_LampReq AND NOT FB_In.OP1_Red_LampReq)
+					OR (Turntable_Type  AND Op2_At_Operator AND FB_In.OP2_Green_LampReq AND NOT FB_In.OP2_Red_LampReq));
+
+		(*Yellow Lamp*)
+		IF  FB_In.Estops_OK AND FB_in.Safety_Gates_Ok
+			AND (( NOT Turntable_Type AND OP2_AllHumanLCs_Clear AND NOT OP2_Relays_On AND FB_In.OP2_Yellow_LampReq)
+			OR (Turntable_Type AND Op1_At_Operator AND OP1_AllHumanLCs_Clear AND NOT OP1_Relays_On AND FB_In.OP1_Yellow_LampReq)
+			OR (Turntable_Type AND Op2_At_Operator AND OP2_AllHumanLCs_Clear AND NOT OP2_Relays_On AND FB_In.OP2_Yellow_LampReq))
+			THEN
+				OP2_Yellow_Lamp:= Pulse_500ms;
+		ELSIF NOT OP2_AllHumanLCs_Clear AND FB_In.Estops_OK
+			THEN
+				OP2_Yellow_Lamp:= TRUE;
+		ELSE
+				OP2_Yellow_Lamp:= FALSE;
+		END_IF;
+
+		(*Red Lamp*)
+		IF NOT FB_IN.Estops_OK
+			AND ((NOT Turntable_Type AND Op2_Estop_OK)
+			OR (Turntable_Type  AND Op1_At_Operator AND OP1_Estop_Ok)
+			OR (Turntable_Type  AND Op2_At_Operator AND OP2_Estop_Ok))
+			THEN
+				OP2_Red_Lamp:= TRUE;
+		ELSIF NOT FB_IN.Estops_OK
+			AND ((NOT Turntable_Type AND NOT Op2_Estop_OK)
+			OR (Turntable_Type  AND Op1_At_Operator AND NOT OP1_Estop_Ok)
+			OR (Turntable_Type  AND Op2_At_Operator AND NOT OP2_Estop_Ok))
+			THEN
+				OP2_Red_Lamp:= Pulse_500ms;
+		ELSIF NOT FB_In.Safety_Gates_Ok AND FB_In.Estops_OK
+			THEN
+				OP2_Red_Lamp:= Pulse_500ms;
+		ELSIF FB_In.Estops_OK
+			AND ((NOT Turntable_Type AND FB_In.OP2_Red_LampReq)
+			OR (Turntable_Type  AND Op1_At_Operator AND  FB_In.OP1_Red_LampReq)
+			OR (Turntable_Type  AND Op2_At_Operator AND  FB_In.OP2_Red_LampReq))
+			THEN
+				OP2_Red_Lamp:= Pulse_125ms;
+		ELSE
+				OP2_Red_Lamp:= FALSE;
+		END_IF;
+
+		(*Audible*)
+		OP2_Audible:= ((NOT Turntable_Type AND FB_In.OP2_Audible_Req)
+				OR (Turntable_Type  AND Op1_At_Operator AND FB_In.OP1_Audible_Req)
+				OR (Turntable_Type  AND Op2_At_Operator AND FB_In.OP2_Audible_Req));
+
+
+
+	(*Handle LOK Release Requests*)
+	KeyLOK_UnlockDelay_TMR.PT:= T#1.5s;
+	KeyLOK_UnlockDelay_TMR();
+	IF FB_In.Output_Req1
+		THEN
+		KeyLOK_UnlockDelay_TMR.IN:=TRUE;
+	ELSE
+		KeyLOK_UnlockDelay_TMR.IN:=FALSE;
+	END_IF;
+
+
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Faults $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+OP1_RelayFLT:= ((T09.Q.0 AND NOT OP1_Relays_On) OR (NOT T09.Q.0 AND NOT OP1_Relays_Off));
+OP2_RelayFLT:= ((T10.Q.0 AND NOT OP2_Relays_On) OR (NOT T10.Q.0 AND NOT OP2_Relays_Off));
+Main_RelayFLT:= FALSE;
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Transfer Standard Outputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Transfer I/O Images for Display On HMI*)
+	Discrete_Image.T01:=T01;
+	Discrete_Image.T02_STAT:=T02_STAT;
+	Discrete_Image.T03:=T03;
+	Discrete_Image.T04:=T04;
+	Discrete_Image.T05:=T05;
+	Discrete_Image.T06:=T06;
+	Discrete_Image.T07:=T07;
+	Discrete_Image.T08:=T08;
+	Discrete_Image.T09:=T09;
+	Discrete_Image.T10:=T10;
+	Discrete_Image.T11:=T11;
+	Discrete_Image.T12:=T12;
+	Discrete_Image.T13:=T13;
+	Discrete_Image.T14:=T14;
+	Discrete_Image.T14_STAT:= T14_STAT;
+	Discrete_Image.T15:=T15;
+	Discrete_Image.T15_STAT:= T15_STAT;
+	Discrete_Image.T16:=T16;
+
+(*Transfer Commands to Discrete Node Outputs*)
+	T14.Q.0:= OP1_Green_Lamp;			(*OP1 Green Lamp*)
+	T14.Q.1:= OP1_Yellow_Lamp;			(*OP1 Yellow Lamp*)
+	T14.Q.2:= OP1_Red_Lamp;				(*OP1 Red Lamp*)
+	T14.Q.3:= OP1_Audible;				(*OP1 Audible "Buzzer"*)
+	T14.Q.4:= OP2_Green_Lamp;			(*OP2 Green Lamp*)
+	T14.Q.5:= OP2_Yellow_Lamp;			(*OP2 Yellow Lamp*)
+	T14.Q.6:= OP2_Red_Lamp;				(*OP2 Red Lamp*)
+	T14.Q.7:= OP2_Audible;				(*OP2 Audible "Buzzer"*)
+
+	T15.Q0:= KeyLOK_UnlockDelay_TMR.Q;	(*EL2622 Output1*)
+	T15.Q1:= FB_In.Output_Req2;			(*EL2622 Output2*)
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Transfer Safety Outputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Transfer Enable_Motions for use by sub Components*)
+		OP1_Enable_Motion:= (NOT Turntable_Type AND OP1_Relays_On AND OP1_AllHumanLCs_Clear)
+				OR (Turntable_Type  AND Op1_At_Operator AND OP1_Relays_On AND OP1_AllHumanLCs_Clear)
+				OR (Turntable_Type  AND Op2_At_Operator AND OP1_Relays_On);
+		OP2_Enable_Motion:= (NOT Turntable_Type AND OP2_Relays_On AND OP2_AllHumanLCs_Clear)
+				OR (Turntable_Type  AND Op1_At_Operator AND OP2_Relays_On)
+				OR (Turntable_Type  AND Op2_At_Operator AND OP2_Relays_On AND OP2_AllHumanLCs_Clear);
+
+	(*Set All Safety Groups to Run*)
+		T02_CMD.SGs_RUNSTOP:= TRUE;
+	(*Reset Of Safety Group Errors*)
+		T02_CMD.SGs_ERRAck:= FB_In.Safety_RST;
+	(*Reset Only Used FBs With In Safety Group*)
+		(*Reset of Estop, Safety Gate and Misc FBs*)
+		T02_CMD.FBs_ControlPowerPB:= FB_In.Safety_RST;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_GTAC_ICxx_20181023">
+      <LineId Id="144" Count="324" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

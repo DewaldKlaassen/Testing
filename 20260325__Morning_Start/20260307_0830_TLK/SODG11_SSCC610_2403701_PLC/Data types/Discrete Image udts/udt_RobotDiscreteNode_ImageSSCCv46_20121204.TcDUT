@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <DUT Name="udt_RobotDiscreteNode_ImageSSCCv46_20121204" Id="{eeedb8b8-9608-4beb-af35-b64ce8549f8d}">
+    <Declaration><![CDATA[
+(*udt (user defined type) for Visualization of Robot Discrete Image Conforming to SSCCv4.6
+	Author(S): Brent Lekx-Toniolo/Rob Remillard of Sodecia GTAC;
+	Version 20121204
+		- Intiial Concept
+
+	Last Edit: December 5th, 2012, blt
+		- Added Slave State Message Variables
+
+*)
+
+TYPE udt_RobotDiscreteNode_ImageSSCCv46_20121204 :
+	STRUCT
+		T01: udt_EK1100;				(*Ecat Bus Coupler*)
+		T02_STAT: udt_EL6900_STAT_20160426;	(*EL Safety CPU*)
+		T02_CMD: udt_EL6900_CMD_20121204;
+		T03: udt_EL1904_v2;				(*EL Safety Inputs*)
+		T04: udt_EL1904_v2;				(*EL Safety Inputs*)
+		T05: udt_EL1904_v2;				(*EL Safety Inputs*)
+		T06: udt_EL1904_v2;				(*EL Safety Inputs*)
+		T07: udt_EL1904_v2;				(*EL Safety Inputs*)
+		T08: udt_EL2904RO_v2;			(*EL Safety Outputs, Set to "I" as this terminal is safety rated, therefore read only!*)
+		T09: udt_EL2904RO_v2; 			(*EL Safety Outputs, Set to "I" as this terminal is safety rated, therefore read only!*)
+		T10: udt_EL6731;				(*EL Profibus Mater Terminal*)
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

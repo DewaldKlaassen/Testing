@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_SmartRay_Out_To_Robot_IN_20260119" Id="{f41e1e0e-daec-4240-b010-ef45a9ec2f03}">
+    <Declaration><![CDATA[(*udt of SmartRay profinet based
+   Smart Ray > Robot 
+  auth . Sodecia GTAC;
+  Jan 2026: Version 1.0*)
+TYPE udt_SmartRay_Out_To_Robot_IN_20260119 :	
+STRUCT
+	(*Status*)
+	(*Byte 0*)
+	SystemReady_Out : BOOL; (*Bit 0*)
+	Alive_Out : BOOL; (*Bit 1*)
+    FailureSystem_Out : BOOL; (*Bit 4*)
+	FailureGlobal_Out : BOOL; (*Bit 5*)
+	
+	(*Byte 1*)
+	SensorReady_Out : BOOL; (*Bit 0*)
+	LaserOn_Out : BOOL; (*Bit 1*)
+	LaserOn2_Out : BOOL; (*Bit 2*)
+	SensortestOK_Out : BOOL; (*Bit 4*)
+	SensortestNOK_Out : BOOL; (*Bit 5*)
+	
+	(*Byte 2*)
+	QualityOK_Out : BOOL; (*Bit 0*)
+	QualityNOK_Out : BOOL; (*Bit 1*)
+	InspectionCompleted_Out : BOOL;(*Bit 2*)
+	ResultValid_Out : BOOL; (*Bit 3*)
+	ToolfinderValid_Out : BOOL; (*Bit 4*)
+	ReferenceTrackSpeedActive_Out : BOOL; (*Bit 5*)
+	
+	(*Byte 3*)
+	RobotSelection_Out : BYTE;
+	
+	(*Byte 4-5*)
+	JobID_Out : UINT;
+	
+	(*Byte 6*)
+	ErrorCode_Out : BYTE;
+	
+	(*Byte 7*)
+	ToolfinderErrorCode_Out : BYTE;
+	
+	(*Byte 8-9*)
+	Toolfinder_X : INT ;
+	
+	(*Byte 10-11*)
+	Toolfinder_Y : INT;
+	
+	(*Byte 12-13*)
+	Toolfinder_Z : INT;
+	
+	(*Byte 14-15*)
+	Toolfinder_Q1_A_W :INT;
+	
+	(*Byte 16-17*)
+	Toolfinder_Q2_B_P : INT;
+	
+	(*Byte 18-19*)
+	Toolfinder_Q3_C_R : INT;
+	
+	(*Byte 20-21*)
+	Toolfinder_Q4 : INT;
+	
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

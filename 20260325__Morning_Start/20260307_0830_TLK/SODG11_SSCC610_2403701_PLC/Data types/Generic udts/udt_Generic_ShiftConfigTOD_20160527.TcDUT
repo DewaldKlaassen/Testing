@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <DUT Name="udt_Generic_ShiftConfigTOD_20160527" Id="{0a21cca2-0cc3-4c95-92a0-895f49996d91}">
+    <Declaration><![CDATA[(*udt (user defined type) for production shift config data In TOD (Time Of Day) Format
+
+	Author(S): Brent Lekx-Toniolo ;
+	20160527:
+		- Initial Concept
+	
+
+
+*)
+
+
+TYPE udt_Generic_ShiftConfigTOD_20160527 :
+	STRUCT
+		Shift_StartTime: TOD;
+		Break1_StartTime: TOD;
+		Break1_EndTime: TOD;
+		Break2_StartTime: TOD;
+		Break2_EndTime: TOD;
+		Break3_StartTime: TOD;
+		Break3_EndTime: TOD;
+		Shift_EndTime: TOD;
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

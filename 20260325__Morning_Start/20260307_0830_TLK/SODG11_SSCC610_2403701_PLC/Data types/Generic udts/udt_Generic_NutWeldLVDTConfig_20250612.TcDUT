@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_Generic_NutWeldLVDTConfig_20250612" Id="{d4a7192e-52f1-4373-bb58-b3f25ed356fc}">
+    <Declaration><![CDATA[(*udt (user defined type) for nut weld LVDT config data (developed from some code in project 21013_1
+
+	Author(S): Brent Lekx-Toniolo ;
+	Version 20250612:
+		- Initial Concept
+
+*)
+
+
+
+TYPE udt_Generic_NutWeldLVDTConfig_20250612 :
+STRUCT
+	
+	Pin_ADVD_UpperLimit: REAL;		(*Upper limit for the Pin ADVD Range*)
+	Pin_ADVD_LowerLimit: REAL;		(*Lower limit for the Pin ADVD Range*)
+	Pin_RETD_UpperLimit: REAL;		(*Upper limit for the Pin RETD Range*)
+	Pin_RETD_LowerLimit: REAL;		(*Lower limit for the Pin RETD Range*)
+	Nut_UpperLimit: REAL;			(*Upper limit for the Nut present range on Pin*)
+	Nut_LowerLimit: REAL;			(*Lower limit for the Nut present range on Pin*)
+	UpperElectrode_WeldCountLimit: UINT;	(*Weld Count limit for System Upper Electrode (for wear)*)
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

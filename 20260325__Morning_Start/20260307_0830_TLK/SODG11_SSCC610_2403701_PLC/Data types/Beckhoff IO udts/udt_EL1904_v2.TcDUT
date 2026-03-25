@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_EL1904_v2" Id="{f96b4848-3688-4787-8bb7-d3541ae627d6}">
+    <Declaration><![CDATA[(*udt (user defined type) of Beckhoff EL1904 - 4 Point PNP Safety Type Input Terminal:
+	auth. Brent Lekx-Toniolo of Toniolo Research & Development Inc.; 
+	July 2010;
+	Modified for tag reduction by R.Remillard
+	November 2012; version 2.0*)
+
+
+TYPE udt_EL1904_v2 :
+STRUCT
+	I: BYTE;
+
+	InfoData: udt_ECATSlave_Status;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <DUT Name="udt_SDx_Image" Id="{c7880f3f-2fcf-40bb-817d-e90b64f5fea3}">
+    <Declaration><![CDATA[TYPE udt_SDx_Image :
+	STRUCT
+		T01: udt_EK1100;
+		T02: udt_EL1904;
+		T03: udt_EL2904RO;		(*Set to "I" as this terminal is safety rated, therefore read only!*)
+		(*Develop Drive Nodes*)
+		(*D10_STAT: udt_AX51xx_STAT;	(*Status Data Area for Drive10 (LH)*)
+		D10_CMD: udt_AX51xx_CMD;		(*Command Data Area for Drive20 (RH)*)
+		D20_STAT: udt_AX51xx_STAT;	(*Status Data Area for Drive10 (LH)*)
+		D20_CMD: udt_AX51xx_CMD;*)		(*Command Data Area for Drive20 (RH)*)
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

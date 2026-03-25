@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <DUT Name="udt_ATIxx_Image_20151104" Id="{6549cec9-7b84-4405-b9a7-9fe55360f3d7}">
+    <Declaration><![CDATA[(*udt (user defined type) for all generic ATI Tool changers
+	auth. Brent Lekx-Toniolo of Sodecia GTAC
+
+------------------------------------------------------------------------
+REVISION NOTES:
+
+	Version 20151104:
+	- initial concept, b.lekx-toniolo	
+------------------------------------------------------------------------
+
+*)
+
+TYPE udt_ATIxx_Image_20151104 :
+	STRUCT
+			(*Input Data Image*)
+			In_From_Hardware: udt_ATI_Input_20150203;
+			(*Output Data Image*)
+			Out_To_Hardware: udt_ATI_Output_20150203;
+
+			(*Cable Break States*)
+			ECatSlave_Cable_Breaks: UDINT;
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

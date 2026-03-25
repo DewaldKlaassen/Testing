@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <DUT Name="udt_NWx_Image" Id="{40913904-c176-4f2a-b058-f09642d411f7}">
+    <Declaration><![CDATA[TYPE udt_NWx_Image :
+STRUCT
+			InAuto: BOOL;
+			InManual: BOOL;
+			ManInds: DINT;
+			At_Home: BOOL;
+			All_Sensors_Off: BOOL;
+			ReadyTo_Load: BOOL;
+			Status: INT;
+			ProdCount: INT;
+			CycleTime: TIME;
+			LoadTime: TIME;
+			WeldTime: TIME;
+			UnloadTime: TIME;
+			PrevCycleTime: TIME;
+			ToolID: INT;
+			Model_Data: INT;
+			CLFaults: UDINT;
+			CLFaults2: UDINT;
+			CLFaults3: UDINT;
+			CLFaults4: UDINT;
+			CLFaulted: UDINT;
+			PPFaults: UDINT;
+			PPFaulted: UDINT;
+			Enable_Motion: BOOL;
+			Weld_Curtain_Is_Bypassed: BOOL;
+			Vacuum_Is_Bypassed: BOOL;
+			Marker_Running: BOOL;
+			Marker_Com_OK: BOOL;
+			Marker_Is_Bypassed: BOOL;
+			Marker_Start_Signal_Monitor: BOOL;
+			Marker_Complete: BOOL;
+
+
+			T01: 				udt_EK1100;
+			T02_STAT: 			udt_EL6900_STAT_20160426;		(*EL Safety CPU*)
+			T02_CMD: 			udt_EL6900_CMD_20121204;
+			T03: 				udt_EL1904_v2;
+			T04: 				udt_EL2904RO_v2;				(*Set to "I" as this terminal is safety rated, therefore read only!*)
+			T05: 				udt_EL1004_v2;
+			T15: 				udt_EL2622;						(*EL Outputs, 4 Point*)
+			T15_STAT: 			udt_EL2622_STAT;				(*EL Output Card Status*)
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

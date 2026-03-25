@@ -1,0 +1,5082 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="Fix105" Id="{59254387-87ac-4711-8bfd-37b2ddb4b051}" SpecialFunc="None">
+    <Declaration><![CDATA[(*Fixture*)
+
+PROGRAM Fix105
+	VAR_INPUT
+		Enable_Prog: BOOL;
+		Enable_Motion: BOOL;
+		Discrete_In: udt_FixXX_Input_Image_20180202;
+		Dry_Cycle: BOOL;
+		Cell_In_Services: BOOL;
+		Flash_Rate: BOOL;
+		NodeLayout:udt_ECATNodeData_20221507;
+
+	END_VAR
+
+	VAR
+(*Hardware Related Data Types*)
+			(*Develop "Beckhoff Nodes"*)
+			{attribute 'OPC.UA.DA':='1'}
+			N00 AT %I*: udt_EP1111;
+			{attribute 'OPC.UA.DA':='1'}
+			N01 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N02 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N03 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N04 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N05 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N06 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N07 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N08 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N09 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N10 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N11 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N12 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N13 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N14 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N15 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N16 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N17 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N18 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N19 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N20 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N21 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N22 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N100 AT %Q*: udt_SMC_EX260_ValveBank;
+			{attribute 'OPC.UA.DA':='1'}
+			N100_STAT AT %I*:udt_SMC_EX260_Stat;
+			{attribute 'OPC.UA.DA':='1'}
+			N101 AT %Q*: udt_SMC_EX260_ValveBank;
+			{attribute 'OPC.UA.DA':='1'}
+			N101_STAT AT %I*:udt_SMC_EX260_Stat;
+			{attribute 'OPC.UA.DA':='1'}
+			N102 AT %Q*: udt_SMC_EX260_ValveBank;
+			{attribute 'OPC.UA.DA':='1'}
+			N102_STAT AT %I*:udt_SMC_EX260_Stat;
+
+(* Nodes States*)
+		NodeState: ARRAY[0..63] OF UINT;
+		DiscreteNode_OK: BOOL;
+(*Cable Break States*)
+		ECatSlave_Cable_Breaks: ARRAY[0..1] OF DINT;
+(*Standard Internal Variables*)
+		(*Generic Sensor Variables*)
+		All_Sensors_On: UINT;
+		All_Sensors_Off: BOOL;
+		All_Sensors_Off1: BOOL;
+		All_Sensors_Off2: BOOL;
+		(*Generic Position Variables*)
+		Tool_At_Home: BOOL;
+		Tool_At_Load: UINT;
+		Tool_At_Weld: UINT;
+		Tool_At_Rotate: UINT;
+		Tool_At_Seal: UINT;
+		Tool_At_Stud: UINT;
+		Tool_At_Unload: UINT ;
+		(*Grouping Of Items*)
+		All_QAChecks_OK: BOOL;
+		QAChecks_Failed: BOOL;
+		(*General Internals*)
+		In_Auto: BOOL;
+		In_Manual: BOOL;
+
+		Auto_Run: BOOL;
+		Reset_All_Completes:BOOL;
+		Load_Robots_Clear1: BOOL;
+		Load_Robots_Clear2: BOOL;
+		Load_Robots_Clear: BOOL;
+		Load_Robots_WorkingOK1: BOOL;
+		Load_Robots_WorkingOK2: BOOL;
+		Load_Robots_Complete1: BOOL;
+		Load_Robots_Complete2: BOOL;
+		Load_Robots_PartInEOAT1: BOOL;
+		Load_Robots_PartInEOAT2: BOOL;
+		Load_Robots_UnclampEarly1: BOOL;
+		Load_Robots_UnclampEarly2: BOOL;
+		Seal_Robots_Clear: BOOL;
+		Seal_Robots_WorkingOK: BOOL;
+		Seal_Robots_UnclampEarly: BOOL;
+		Seal_Robots_Complete: BOOL;
+		Stud_Robots_Clear: BOOL;
+		Stud_Robots_WorkingOK: BOOL;
+		Stud_Robots_UnclampEarly: BOOL;
+		Stud_Robots_Complete: BOOL;
+		Weld_Robots_Clear: BOOL;
+		Weld_Robots_WorkingOK: BOOL;
+		Weld_Robots_UnclampEarly: BOOL;
+		Weld_Robots_Complete: BOOL;
+		Mig_Robots_Ready :BOOL;
+		TurntableA_Clear: BOOL;
+		TurntableB_Clear: BOOL;
+		Turntable_Clear:BOOL;
+		Turntable_WorkingOK: BOOL;
+		TurntableA_Complete: BOOL;
+		TurntableB_Complete: BOOL;
+		Unload_Robots_Clear1: BOOL;
+		Unload_Robots_WorkingOK1: BOOL;
+		Unload_Robots_Complete1: BOOL;
+		Unload_Robots_EOATEmpty1: BOOL;
+		Unload_Robots_Clear2: BOOL;
+		Unload_Robots_WorkingOK2: BOOL;
+		Unload_Robots_Complete2: BOOL;
+		Unload_Robots_EOATEmpty2: BOOL;
+		Unload_Robots_Clear: BOOL;
+		All_Robots_Clear: BOOL;
+
+		Unload_Robot_Complete: BOOL;
+
+		Start_Load_Robots1: BOOL;
+		Start_Load_Robots2: BOOL;
+		Start_Weld_Robots: BOOL;
+		Start_Unload_Robots1: BOOL;
+		Start_Unload_Robots2: BOOL;
+		Start_Seal_Robots: BOOL;
+		Start_Stud_Robots: BOOL;
+		Start_TurntableA: BOOL;
+		Start_TurntableB: BOOL;
+		Load_Robots_Proceed1: BOOL;
+		Load_Robots_Proceed2: BOOL;
+		Weld_Robots_Proceed: BOOL;
+		Seal_Robots_Proceed: BOOL;
+		Stud_Robots_Proceed: BOOL;
+		Unload_Robots_Proceed1: BOOL;
+		Unload_Robots_Proceed2: BOOL;
+
+		Prod_Inc: R_TRIG;
+		Cycle_Time: TON;
+		Cycle_Time_Pulse: R_TRIG;
+		Load_Time: TON;
+		Weld_Time: TON;
+		Seal_Time: TON;
+		Stud_Time: TON;
+		Turn_Time: TON;
+		Unload_Time: TON;
+		Date_Stamp_TMR: TON;
+		Date_StampHome_TMR: TON;
+		CLFaulted: UDINT;
+		PPFaulted: UDINT;
+		Manual_Ind_HomePrompt: BOOL;
+		Fixture_Allow_Model_Change: BOOL;
+
+(*Non-Standard Variables*)
+
+		(*FB Instances*)
+		Clamp1FB: FB_Cylinder_Status;
+		Clamp2FB: FB_Cylinder_Status;
+		Clamp3FB: FB_Cylinder_Status;
+		Clamp4FB: FB_Cylinder_Status;
+		Clamp5FB: FB_Cylinder_Status;
+		Clamp6FB: FB_Cylinder_Status;
+		Clamp7FB: FB_Cylinder_Status;
+		Clamp8FB: FB_Cylinder_Status;
+		Clamp9FB: FB_Cylinder_Status;
+		Clamp10FB: FB_Cylinder_Status;
+		Clamp11FB: FB_Cylinder_Status;
+		Clamp12FB: FB_Cylinder_Status;
+		Clamp13FB: FB_Cylinder_Status;
+		Clamp14FB: FB_Cylinder_Status;
+		Clamp15FB: FB_Cylinder_Status;
+		Clamp16FB: FB_Cylinder_Status;
+		Clamp17FB: FB_Cylinder_Status;
+		Clamp18FB: FB_Cylinder_Status;
+		Clamp19FB: FB_Cylinder_Status;
+		Clamp20FB: FB_Cylinder_Status;
+		Clamp21FB: FB_Cylinder_Status;
+		Clamp22FB: FB_Cylinder_Status;
+		Clamp23FB: FB_Cylinder_Status;
+		Clamp24FB: FB_Cylinder_Status;
+		Cyl1FB: FB_TripleCylinder_20150625;
+		Pin1FB: FB_Cylinder_Status;
+		Pin2FB: FB_Cylinder_Status;
+		Pin3FB: FB_Cylinder_Status;
+		Pin4FB: FB_Cylinder_Status;
+		Pin5FB: FB_Cylinder_Status;
+		Pin6FB: FB_Cylinder_Status;
+		Pin7FB: FB_Cylinder_Status;
+		Pin8FB: FB_Cylinder_Status;
+		Pin9FB: FB_Cylinder_Status;
+		Pin10FB: FB_Cylinder_Status;
+		Pin11FB: FB_Cylinder_Status;
+		Pin12FB: FB_Cylinder_Status;
+		Pin13FB: FB_Cylinder_Status;
+		Pin14FB: FB_Cylinder_Status;
+		Slide1FB: FB_Cylinder_Status;
+		Slide2FB: FB_Cylinder_Status;
+		Slide3FB: FB_Cylinder_Status;
+		Slide4FB: FB_Cylinder_Status;
+		Slide5FB: FB_Cylinder_Status;
+		Slide6FB: FB_Cylinder_Status;
+		Swing1FB: FB_Cylinder_Status;
+		Swing2FB: FB_Cylinder_Status;
+		Swing3FB: FB_Cylinder_Status;
+		Swing4FB: FB_Cylinder_Status;
+		Swing5FB: FB_Cylinder_Status;
+		Swing6FB: FB_Cylinder_Status;
+		QACheck1FB: FB_Cylinder_Status;
+		QACheck2FB: FB_Cylinder_Status;
+		CheckQA1FB: FB_GTAC_QAcheck_20150529;
+		Part_Present1FB: FB_PP_Sensor;
+		Part_Present2FB: FB_PP_Sensor;
+		Part_Present3FB: FB_PP_Sensor;
+		Part_Present4FB: FB_PP_Sensor;
+		Part_Present5FB: FB_PP_Sensor;
+		Part_Present6FB: FB_PP_Sensor;
+		Part_Present7FB: FB_PP_Sensor;
+		Part_Present8FB: FB_PP_Sensor;
+		Part_Present9FB: FB_PP_Sensor;
+		Part_Present10FB: FB_PP_Sensor;
+		Part_Present11FB: FB_PP_Sensor;
+		Part_Present12FB: FB_PP_Sensor;
+		Part_Present13FB: FB_PP_Sensor;
+		Part_Present14FB: FB_PP_Sensor;
+		Part_Present15FB: FB_PP_Sensor;
+		Part_Present16FB: FB_PP_Sensor;
+		Part_Present17FB: FB_PP_Sensor;
+		Part_Present18FB: FB_PP_Sensor;
+		Part_Present19FB: FB_PP_Sensor;
+		Part_Present20FB: FB_PP_Sensor;
+		Part_Present21FB: FB_PP_Sensor;
+		Part_Present22FB: FB_PP_Sensor;
+		Part_Present23FB: FB_PP_Sensor;
+		Part_Present24FB: FB_PP_Sensor;
+		Part_Present25FB: FB_PP_Sensor;
+		Part_Present26FB: FB_PP_Sensor;
+		Part_Present27FB: FB_PP_Sensor;
+		Part_Present28FB: FB_PP_Sensor;
+		Part_Present29FB: FB_PP_Sensor;
+		Part_Present30FB: FB_PP_Sensor;
+		Part_Present31FB: FB_PP_Sensor;
+		Part_Present32FB: FB_PP_Sensor;
+		Part_Present33FB: FB_PP_Sensor;
+		Part_Present34FB: FB_PP_Sensor;
+		Part_Present35FB: FB_PP_Sensor;
+		Part_Present36FB: FB_PP_Sensor;
+		Part_Present37FB: FB_PP_Sensor;
+		Part_Present38FB: FB_PP_Sensor;
+		Part_Present39FB: FB_PP_Sensor;
+		Part_Present40FB: FB_PP_Sensor;
+		Tape_Present1FB: FB_PP_Sensor;
+
+		(*Valve FBs*)
+		Valve1FB: FB_GTAC_Valve_20170704;
+		Valve2FB: FB_GTAC_Valve_20170704;
+		Valve3FB: FB_GTAC_Valve_20170704;
+		Valve4FB: FB_GTAC_Valve_20170704;
+		Valve5FB: FB_GTAC_Valve_20170704;
+		Valve6FB: FB_GTAC_Valve_20170704;
+		Valve7FB: FB_GTAC_Valve_20170704;
+		Valve8FB: FB_GTAC_Valve_20170704;
+		Valve9FB: FB_GTAC_Valve_20170704;
+		Valve10FB: FB_GTAC_Valve_20170704;
+		Valve11FB: FB_GTAC_Valve_20170704;
+		Valve12FB: FB_GTAC_Valve_20170704;
+		Valve13FB: FB_GTAC_Valve_20170704;
+		Valve14FB: FB_GTAC_Valve_20170704;
+		Valve15FB: FB_GTAC_Valve_20170704;
+		Valve16FB: FB_GTAC_Valve_20170704;
+		Valve17FB: FB_GTAC_Valve_20170704;
+		Valve18FB: FB_GTAC_Valve_20170704;
+		Valve19FB: FB_GTAC_Valve_20170704;
+		Valve20FB: FB_GTAC_Valve_20170704;
+		Valve21FB: FB_GTAC_Valve_20170704;
+		Valve22FB: FB_GTAC_Valve_20170704;
+		Valve23FB: FB_GTAC_Valve_20170704;
+		Valve24FB: FB_GTAC_Valve_20170704;
+		Valve25FB: FB_GTAC_Valve_20170704;
+		Valve26FB: FB_GTAC_Valve_20170704;
+		Valve27FB: FB_GTAC_Valve_20170704;
+		Valve28FB: FB_GTAC_Valve_20170704;
+		Valve29FB: FB_GTAC_Valve_20170704;
+		Valve30FB: FB_GTAC_Valve_20170704;
+		Valve31FB: FB_GTAC_Valve_20170704;
+		Valve32FB: FB_GTAC_Valve_20170704;
+		Valve33FB: FB_GTAC_Valve_20170704;
+		Valve34FB: FB_GTAC_Valve_20170704;
+		Valve35FB: FB_GTAC_Valve_20170704;
+		Valve36FB: FB_GTAC_Valve_20170704;
+		Valve37FB: FB_GTAC_Valve_20170704;
+		Valve38FB: FB_GTAC_Valve_20170704;
+		Valve39FB: FB_GTAC_Valve_20170704;
+		Valve40FB: FB_GTAC_Valve_20170704;
+		Valve41FB: FB_GTAC_Valve_20170704;
+		Valve42FB: FB_GTAC_Valve_20170704;
+		Valve43FB: FB_GTAC_Valve_20170704;
+		Valve44FB: FB_GTAC_Valve_20170704;
+		Valve45FB: FB_GTAC_Valve_20170704;
+		Valve46FB: FB_GTAC_Valve_20170704;
+		Valve47FB: FB_GTAC_Valve_20170704;
+		Valve48FB: FB_GTAC_Valve_20170704;
+
+		(*Tool Positions*)
+			(*Add User Indivdual Position Variables Here*)
+			Clamp1ADVD: BOOL;
+			Clamp1RETD: BOOL;
+			Clamp2ADVD: BOOL;
+			Clamp2RETD: BOOL;
+			Clamp3ADVD: BOOL;
+			Clamp3RETD: BOOL;
+			Clamp4ADVD: BOOL;
+			Clamp4RETD: BOOL;
+			Clamp5ADVD: BOOL;
+			Clamp5RETD: BOOL;
+			Clamp6ADVD: BOOL;
+			Clamp6RETD: BOOL;
+			Clamp7ADVD: BOOL;
+			Clamp7RETD: BOOL;
+			Clamp8ADVD: BOOL;
+			Clamp8RETD: BOOL;
+			Clamp9ADVD: BOOL;
+			Clamp9RETD: BOOL;
+			Clamp10ADVD: BOOL;
+			Clamp10RETD: BOOL;
+			Clamp11ADVD: BOOL;
+			Clamp11RETD: BOOL;
+			Clamp12ADVD: BOOL;
+			Clamp12RETD: BOOL;
+			Clamp13ADVD: BOOL;
+			Clamp13RETD: BOOL;
+			Clamp14ADVD: BOOL;
+			Clamp14RETD: BOOL;
+			Clamp15ADVD: BOOL;
+			Clamp15RETD: BOOL;
+			Clamp16ADVD: BOOL;
+			Clamp16RETD: BOOL;
+			Clamp17ADVD: BOOL;
+			Clamp17RETD: BOOL;
+			Clamp18ADVD: BOOL;
+			Clamp18RETD: BOOL;
+			Clamp19ADVD: BOOL;
+			Clamp19RETD: BOOL;
+			Clamp20ADVD: BOOL;
+			Clamp20RETD: BOOL;
+			Clamp21ADVD: BOOL;
+			Clamp21RETD: BOOL;
+			Clamp22ADVD: BOOL;
+			Clamp22RETD: BOOL;
+			Clamp23ADVD: BOOL;
+			Clamp23RETD: BOOL;
+			Clamp24ADVD: BOOL;
+			Clamp24RETD: BOOL;
+			Cyl1ADVD: BOOL;
+			Cyl1MID: BOOL;
+			Cyl1RETD: BOOL;
+			Pin1ADVD: BOOL;
+			Pin1RETD: BOOL;
+			Pin2ADVD: BOOL;
+			Pin2RETD: BOOL;
+			Pin3ADVD: BOOL;
+			Pin3RETD: BOOL;
+			Pin4ADVD: BOOL;
+			Pin4RETD: BOOL;
+			Pin5ADVD: BOOL;
+			Pin5RETD: BOOL;
+			Pin6ADVD: BOOL;
+			Pin6RETD: BOOL;
+			Pin7ADVD: BOOL;
+			Pin7RETD: BOOL;
+			Pin8ADVD: BOOL;
+			Pin8RETD: BOOL;
+			Pin9ADVD: BOOL;
+			Pin9RETD: BOOL;
+			Pin10ADVD: BOOL;
+			Pin10RETD: BOOL;
+			Pin11ADVD: BOOL;
+			Pin11RETD: BOOL;
+			Pin12ADVD: BOOL;
+			Pin12RETD: BOOL;
+			Pin13ADVD: BOOL;
+			Pin13RETD: BOOL;
+			Pin14ADVD: BOOL;
+			Pin14RETD: BOOL;
+			Slide1ADVD: BOOL;
+			Slide1RETD: BOOL;
+			Slide2ADVD: BOOL;
+			Slide2RETD: BOOL;
+			Slide3ADVD: BOOL;
+			Slide3RETD: BOOL;
+			Slide4ADVD: BOOL;
+			Slide4RETD: BOOL;
+			Slide5ADVD: BOOL;
+			Slide5RETD: BOOL;
+			Slide6ADVD: BOOL;
+			Slide6RETD: BOOL;
+			Swing1ADVD: BOOL;
+			Swing1RETD: BOOL;
+			Swing2ADVD: BOOL;
+			Swing2RETD: BOOL;
+			Swing3ADVD: BOOL;
+			Swing3RETD: BOOL;
+			Swing4ADVD: BOOL;
+			Swing4RETD: BOOL;
+			Swing5ADVD: BOOL;
+			Swing5RETD: BOOL;
+			Swing6ADVD: BOOL;
+			Swing6RETD: BOOL;
+			QACheck1ADVD: BOOL;
+			QACheck1RETD: BOOL;
+			QACheck2ADVD: BOOL;
+			QACheck2RETD: BOOL;
+
+		(*Part Present Sensors*)
+			(*Main Body Present*)
+			Part_Present1: BOOL;
+			Part_Present2: BOOL;
+			Part_Present3: BOOL;
+			Part_Present4: BOOL;
+			Part_Present5: BOOL;
+			Part_Present6: BOOL;
+			Part_Present7: BOOL;
+			Part_Present8: BOOL;
+			Part_Present9: BOOL;
+			Part_Present10: BOOL;
+			Part_Present11: BOOL;
+			Part_Present12: BOOL;
+			Part_Present13: BOOL;
+			Part_Present14: BOOL;
+			Part_Present15: BOOL;
+			Part_Present16: BOOL;
+			Part_Present17: BOOL;
+			Part_Present18: BOOL;
+			Part_Present19: BOOL;
+			Part_Present20: BOOL;
+			Part_Present21: BOOL;
+			Part_Present22: BOOL;
+			Part_Present23: BOOL;
+			Part_Present24: BOOL;
+			Part_Present25: BOOL;
+			Part_Present26: BOOL;
+			Part_Present27: BOOL;
+			Part_Present28: BOOL;
+			Part_Present29: BOOL;
+			Part_Present30: BOOL;
+			Part_Present31: BOOL;
+			Part_Present32: BOOL;
+			Part_Present33: BOOL;
+			Part_Present34: BOOL;
+			Part_Present35: BOOL;
+			Part_Present36: BOOL;
+			Part_Present37: BOOL;
+			Part_Present38: BOOL;
+			Part_Present39: BOOL;
+			Part_Present40: BOOL;
+			Tape_Present1: BOOL;
+			Part_InEOAT04_1_ReadyforThisFix: BOOL; 
+			Part_InEOAT04_2_ReadyforThisFix: BOOL; 
+
+		(*Motion Sequence Variables*)
+			Clamp_Step: UINT;
+			Repo1_Step: UINT;
+			Repo2_Step: UINT;
+			Repo3_Step: UINT;
+			Repo4_Step: UINT;
+			Unclamp_Step: UINT;
+
+		(*Custom Application Variables*)
+			Weld_Curtain_Bypass: BOOL;
+			Vacuum_Bypass: BOOL;
+			Sealer_Bypass: BOOL;
+			Stud_Bypass: BOOL;
+
+END_VAR
+
+	(*data that needs to be retained in the event of a power cycle*)
+	VAR PERSISTENT
+
+		Load_Complete1: BOOL;
+		Load_Complete2: BOOL;
+		Load_Complete: BOOL;
+		Stud_Complete: BOOL;
+		Welding_Complete: BOOL;
+		Sealing_Complete: BOOL;
+		Unload_Complete: BOOL;
+		TurnA_Complete: BOOL;
+		TurnB_Complete: BOOL;
+		Cycle_Complete: BOOL;
+		Eject_Complete: BOOL;
+		VacCheck_Complete: BOOL;
+		Date_Stamp_Complete: BOOL;
+		Load_Seq01: FB_GTAC_Load_Seq_20230302;
+		Production_Count:INT;
+		Repo_REQS: UINT;
+		(*Allow_Load_PreCall: BOOL;
+		Allow_Weld_PreCall: BOOL;
+		Allow_Unload_PreCall: BOOL;*)
+		(*All_SubPP_Off: BOOL;*)
+		Production_Report: FB_Production_Report_20221007;
+
+	END_VAR
+
+	VAR_OUTPUT
+
+		Prog_Ok: BOOL;
+		Discrete_Image: udt_FixXX_Output_Image_20220715;
+		In_Auto_Mode: BOOL;
+		In_Manual_Mode: BOOL;
+		Manual_Indicators1: DINT;
+		Manual_Indicators2: DINT;
+		Manual_Indicators3: DINT;
+		At_Home: BOOL;
+		Ready_To_Load: BOOL;
+		Red_Lamp_Req: BOOL;
+		Status: UINT;
+		CLFaults1:UDINT;
+		CLFaults2:UDINT;
+		CLFaults3:UDINT;
+		CLFaults4:UDINT;
+		PPFaults: UDINT;
+		PPFaults1: UDINT;
+		PPFaults2: UDINT;
+		Prod_Count_Out: INT;
+		Cycle_Time_Out: TIME;
+		PrevCycle_Time_Out: TIME;
+		Load_Time_Out: TIME;
+		Weld_Time_Out: TIME;
+		Seal_Time_Out: TIME;
+		Stud_Time_Out: TIME;
+		Turn_Time_Out: TIME;
+		Unload_Time_Out: TIME;
+		Model_ID: UINT;
+		TurntableA_At_Robot: BOOL;
+		TurntableB_At_Robot: BOOL;
+		Tool_Call_ForLoadRobots1: BOOL;
+		Tool_Call_ForLoadRobots2: BOOL;
+		Tool_Call_ForSealRobots: BOOL;
+		Tool_Call_ForStudRobots: BOOL;
+		Tool_Call_ForWeldRobots: BOOL;
+		Tool_Call_ForSweepA: BOOL;
+		Tool_Call_ForSweepB: BOOL;
+		Tool_Call_ForUnloadRobots1: BOOL;
+		Tool_Call_ForUnloadRobots2: BOOL;
+		Robots_Clear_ToProceed: BOOL;
+		Task_ID: UINT;
+		Fix_ID: UINT;
+		Load_Complete1_Ack: BOOL;
+		Load_Complete2_Ack: BOOL;
+		Seal_Complete_Ack: BOOL;
+		Stud_Complete_Ack: BOOL;
+		Weld_Complete_Ack: BOOL;
+		TurnA_Complete_Ack: BOOL;
+		TurnB_Complete_Ack: BOOL;
+		Unload_Complete1_Ack: BOOL;
+		Unload_Complete2_Ack: BOOL;
+		Repo_Ack: UINT;
+	END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[	(*Set FB_OK to True*)
+	Prog_OK:= TRUE;
+
+	(*Conveyor 3*)
+	
+	
+	
+	(*Set conditions to allow model change*)
+	Fixture_Allow_Model_Change:= (In_Manual AND Tool_At_Home AND All_Sensors_Off AND All_Robots_Clear)
+							OR (Model_ID=0);
+
+							
+	(*Set conditions for interlock Part direction once in EOAT04*)
+	(*Welded by all Upstream and Passed by Fix102 OR any part coming in from Fix05*)
+	(*Side 1 of EOAT*)
+	Part_InEOAT04_1_ReadyForThisFix:= ((EOAT04_1_ProductData_Pers.Generic_PassFail_Notes[1] = 'Comp' 		//Fix01 Weld Comp
+									OR EOAT04_1_ProductData_Pers.Generic_PassFail_Notes[2] = 'Comp')		//Fix02 Weld Comp
+									AND EOAT04_1_ProductData_Pers.Generic_PassFail_Notes[11] = 'Comp'		//Fix101 Weld Comp
+									AND (EOAT04_1_ProductData_Pers.Generic_PassFail_Notes[3] = 'Comp'		//Fix03 Weld Comp
+									OR EOAT04_1_ProductData_Pers.Generic_PassFail_Notes[4] = 'Comp')		//Fix04 Weld Comp
+									AND EOAT04_1_ProductData_Pers.Generic_PassFail_Notes[12] = 'Pass')		//Fix102 Passed
+									OR EOAT04_1_ProductData_Pers.Generic_PassFail_Notes[5] = 'Comp';		//Or Part came from Fix05
+	(*Side 2 of EOAT*)
+	Part_InEOAT04_2_ReadyForThisFix:= ((EOAT04_2_ProductData_Pers.Generic_PassFail_Notes[1] = 'Comp' 		//Fix01 Weld Comp
+									OR EOAT04_2_ProductData_Pers.Generic_PassFail_Notes[2] = 'Comp')		//Fix02 Weld Comp
+									AND EOAT04_2_ProductData_Pers.Generic_PassFail_Notes[11] = 'Comp'		//Fix101 Weld Comp
+									AND (EOAT04_2_ProductData_Pers.Generic_PassFail_Notes[3] = 'Comp'		//Fix03 Weld Comp
+									OR EOAT04_2_ProductData_Pers.Generic_PassFail_Notes[4] = 'Comp')		//Fix04 Weld Comp
+									AND EOAT04_2_ProductData_Pers.Generic_PassFail_Notes[12] = 'Pass')		//Fix102 Passed
+									OR EOAT04_2_ProductData_Pers.Generic_PassFail_Notes[5] = 'Comp';		//Or Part came from Fix05
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Fixture Bypasses $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	Weld_Curtain_Bypass:= Discrete_In.Bypass_REQS.0;
+	Vacuum_Bypass:= Discrete_In.Bypass_REQS.1;
+	Stud_Bypass:= Discrete_In.Bypass_REQS.2;
+	Sealer_Bypass:= MAIN.SL01.Disp1_Bypass;
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Gather Status Of Hardware $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Check on Status of Hardware*)
+	Hardware();
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Gather Standard Inputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+(*Clamp/Cylinder Inputs*)
+	Cylinders();
+
+(*Part Present Inputs*)
+	Proxies();
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Qaulity Checking Routines $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+	(*QA Checks*)
+		CheckQA1FB(
+			Start_QAcheck:= Auto_Run AND Enable_Motion AND Tool_At_Load.3,
+			QAcheck_Reset:= Cycle_Complete OR (In_Manual AND Discrete_In.Go_Home AND All_Sensors_Off),
+			QAcheck_Retry:= In_From_ICxx.QA_Reset.0,
+			QAcheck_Release:= In_From_ICxx.QA_Reset.1,
+			QAcheck_Adv_In:= QACheck1ADVD AND QACheck2ADVD,
+			QAcheck_Ret_In:= QACheck1RETD AND QACheck2RETD,
+			User_Dry_Cycle:= Dry_Cycle,
+			QAcheck_OK_Delay:= T#0.75s,
+			QAcheck_Fault_Delay:= T#3.0s,
+			QAcheck_OK=> All_QAChecks_OK,
+			QAcheck_Failed=> QAChecks_Failed);
+
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Internal Code $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+(*Auto / Manual Mode Code*)
+	IF Discrete_In.Mode_Select.0 AND NOT Discrete_In.Mode_Select.1
+		THEN
+			In_Auto:= TRUE;
+			In_Auto_Mode:= TRUE;
+	END_IF;
+	IF NOT Discrete_In.Mode_Select.0 AND Discrete_In.Mode_Select.1
+		THEN
+			In_Auto:= FALSE;
+			In_Auto_Mode:= FALSE;
+	END_IF;
+	In_Manual:= NOT In_Auto;
+	In_Manual_Mode:= In_Manual;
+
+(*--------------------------------------------------------------------------------Tool Positions---------------------------------------------------------------*)
+	Tool_States();
+
+(*----------------------------------------------------Part Present Sensor Input Patterns----------------------------------------------------------------*)
+	All_Sensors();
+
+
+(*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Auto Run Cycle >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+	(*Control of Auto_Run*)
+	Auto_Run:= Enable_Motion AND In_Auto AND Model_ID<>0 AND NOT Cycle_Complete;
+
+	(*Auto Run Enables All Other Auto Cycle Code*)
+	IF Auto_Run
+		THEN
+
+			IF (NOT Load_Complete1 OR (Load_Robots_UnclampEarly1 AND All_Sensors_On.1))
+				AND Load_Robots_Clear2 AND Stud_Robots_Clear AND Seal_Robots_Clear
+				AND Weld_Robots_Clear AND TurnTable_Clear AND Unload_Robots_Clear
+				AND TurnTableA_At_Robot
+				THEN
+					(*Start 1st Load Robots*)
+					Start_Load_Robots1:= ((Tool_At_Load.0 AND All_Sensors_Off AND NOT Repo_Reqs.0 AND Load_Robots_PartInEOAT1 AND Part_InEOAT04_1_ReadyForThisFix)
+									OR (Tool_At_Load.1 AND All_Sensors_On.4 AND Repo_Reqs.0))
+									OR Load_Robots_WorkingOK1;
+					(*Allow 1st Load Robots To Proceed*)
+					Load_Robots_Proceed1:= Tool_At_Load.0 AND All_Sensors_Off AND Load_Robots_PartInEOAT1 AND Part_InEOAT04_1_ReadyForThisFix;
+			ELSE
+					Start_Load_Robots1:= FALSE;
+					Load_Robots_Proceed1:= FALSE;
+			END_IF;
+
+
+			IF (NOT Load_Complete2 OR (Load_Robots_UnclampEarly2 AND All_Sensors_On.2))
+				AND Load_Robots_Clear1 AND Stud_Robots_Clear AND Seal_Robots_Clear
+				AND Weld_Robots_Clear AND TurnTable_Clear AND Unload_Robots_Clear
+				AND TurnTableA_At_Robot
+				THEN
+					(*Start 2nd Load Robots*)
+					Start_Load_Robots2:= ((Tool_At_Load.1 AND All_Sensors_Off AND NOT Repo_Reqs.0 AND Load_Robots_PartInEOAT2 AND Part_InEOAT04_2_ReadyForThisFix)
+									OR (Tool_At_Load.1 AND All_Sensors_On.4 AND Repo_Reqs.0))
+									OR Load_Robots_WorkingOK2;
+					(*Allow 2nd Load Robots To Proceed*)
+					Load_Robots_Proceed2:= Tool_At_Load.1 AND All_Sensors_Off AND Load_Robots_PartInEOAT2 AND Part_InEOAT04_1_ReadyForThisFix;
+			ELSE
+					Start_Load_Robots2:= FALSE;
+					Load_Robots_Proceed2:= FALSE;
+			END_IF;
+
+
+			IF NOT Sealer_Bypass AND Load_Complete AND NOT Sealing_Complete
+				AND Load_Robots_Clear AND Stud_Robots_Clear AND  Weld_Robots_Clear AND TurnTable_Clear AND Unload_Robots_Clear
+				AND TurnTableA_At_Robot
+				THEN
+					(*Start Seal Robots*)
+					Start_Seal_Robots:= ((Tool_At_Seal.0 AND All_Sensors_On.3 AND NOT Repo_Reqs.1 AND NOT MAIN.SL01.Disp1_Faulted AND MAIN.SL01.Disp1_Ready)
+									OR (Tool_At_Seal.1 AND All_Sensors_On.4 AND Repo_Reqs.1))
+									OR Seal_Robots_WorkingOK;
+					(*Allow Seal Robots To Proceed*)
+					Seal_Robots_Proceed:= Tool_At_Seal.0 AND All_Sensors_On.3;
+			ELSE
+					Start_Seal_Robots:= FALSE;
+					Seal_Robots_Proceed:= FALSE;
+			END_IF;
+
+
+			IF NOT Stud_Bypass AND Load_Complete AND NOT Stud_Complete AND NOT Welding_Complete
+				AND Load_Robots_Clear AND Seal_Robots_Clear AND  Weld_Robots_Clear AND TurnTable_Clear AND Unload_Robots_Clear
+				AND TurnTableA_At_Robot
+				THEN
+					(*Start Stud Robots*)
+					Start_Stud_Robots:= ((Tool_At_Stud.0 AND All_Sensors_On.3 AND NOT Repo_Reqs.2)
+									OR (Tool_At_Stud.1 AND All_Sensors_On.4 AND Repo_Reqs.2))
+									OR Stud_Robots_WorkingOK;
+					(*Allow Stud Robots To Proceed*)
+					Stud_Robots_Proceed:= Tool_At_Stud.0 AND All_Sensors_On.3;
+			ELSE
+					Start_Stud_Robots:= FALSE;
+					Stud_Robots_Proceed:= FALSE;
+			END_IF;
+
+
+                             IF  NOT TurnA_Complete AND Load_Complete AND NOT Welding_Complete AND NOT Unload_Complete
+				 AND Load_Robots_Clear AND Seal_Robots_Clear AND Stud_Robots_Clear AND  Weld_Robots_Clear AND Unload_Robots_Clear
+				AND (NOT TurntableA_At_Robot OR TurnTable_WorkingOK)
+				THEN
+					(*Start Turntable SweepA (Fix01 to the Robot)*)
+					Start_TurntableA:= ((Tool_At_Rotate.0 AND All_Sensors_On.3)
+									OR (All_Sensors_Off AND Tool_At_Home))
+									OR TurnTable_WorkingOK;
+			ELSE
+					Start_TurntableA:= FALSE;
+			END_IF;
+
+
+			IF NOT TurnB_Complete AND Welding_Complete AND NOT Unload_Complete AND (Sealing_Complete OR Sealer_Bypass) AND (Stud_Complete OR Stud_Bypass)
+				AND Load_Robots_Clear AND Seal_Robots_Clear AND Stud_Robots_Clear AND Weld_Robots_Clear  AND Unload_Robots_Clear
+				AND (NOT TurntableB_At_Robot OR TurnTable_WorkingOK)
+				THEN
+					(*Start Turntable SweepB (Fix01 to the Operator)*)
+					Start_TurntableB:= TRUE;
+                             ELSIF All_Sensors_Off AND NOT TurnB_Complete AND Weld_Robots_Clear AND Load_Robots_Clear AND Unload_Robots_Clear
+				AND (NOT TurntableB_At_Robot OR TurnTable_WorkingOK)
+			THEN
+					Start_TurntableB:= All_Sensors_Off;
+                             ELSE
+					Start_TurntableB:= FALSE;
+                             END_IF;
+
+
+			IF Load_Complete AND NOT Welding_Complete AND (Sealing_Complete OR Sealer_Bypass) AND (Stud_Complete OR Stud_Bypass) AND NOT Unload_Complete
+				AND Load_Robots_Clear AND Seal_Robots_Clear AND Stud_Robots_Clear AND TurnTable_Clear AND Unload_Robots_Clear
+				AND TurnTableA_At_Robot AND Mig_Robots_Ready 
+				THEN
+					(*Start Weld Robots*)
+					Start_Weld_Robots:=((Tool_At_Weld.0 AND NOT Repo_Reqs.3 AND NOT Repo_Reqs.4 AND NOT Repo_Reqs.5 AND All_Sensors_On.3)
+										OR (Tool_At_Weld.1 AND Repo_Reqs.3 AND All_Sensors_On.3)
+										OR (Tool_At_Weld.2 AND Repo_Reqs.4 AND All_Sensors_On.4)
+										OR (Tool_At_Weld.3 AND Repo_Reqs.5 AND All_Sensors_On.5)
+										OR (Tool_At_Unload.0 AND Weld_Robots_UnclampEarly))
+										OR Weld_Robots_WorkingOK;
+					(*Allow Weld Robots To Proceed*)
+					Weld_Robots_Proceed:= Load_Complete AND Tool_At_Weld.0 AND All_Sensors_On.3;
+			ELSE
+					Start_Weld_Robots:= FALSE;
+					Weld_Robots_Proceed:= FALSE;
+			END_IF;
+
+
+			IF Welding_Complete  AND (Sealing_Complete OR Sealer_Bypass) AND (Stud_Complete OR Stud_Bypass) AND NOT Unload_Complete
+				AND Load_Robots_Clear AND Seal_Robots_Clear AND Stud_Robots_Clear AND TurnTable_Clear AND Unload_Robots_Clear2
+				AND TurnTableA_At_Robot
+				THEN
+					(*Start Unload Robots*)
+					Start_Unload_Robots1:=((((Tool_At_Unload.0 AND NOT Repo_Reqs.6 AND NOT Repo_Reqs.7 AND All_Sensors_On.8)
+										OR (Tool_At_Unload.1 AND Repo_Reqs.6)
+										OR (Tool_At_Unload.2 AND Repo_Reqs.7))
+										AND (All_Sensors_On.8 AND Unload_Robots_EOATEmpty1))
+										OR (NOT Unload_Robots_Clear1 AND NOT Unload_Robots_EOATEmpty1))
+										OR Unload_Robots_WorkingOK1;
+					(*Allow Unload Robots To Proceed*)
+					Unload_Robots_Proceed1:= Welding_Complete AND Tool_At_Unload.0 AND All_Sensors_On.8 AND Unload_Robots_EOATEmpty1;
+			ELSE
+					Start_Unload_Robots1:= FALSE;
+					Unload_Robots_Proceed1:= FALSE;
+			END_IF;
+
+
+			IF Welding_Complete  AND (Sealing_Complete OR Sealer_Bypass) AND (Stud_Complete OR Stud_Bypass) AND NOT Unload_Complete
+				AND Load_Robots_Clear AND Seal_Robots_Clear AND Stud_Robots_Clear AND TurnTable_Clear AND Unload_Robots_Clear1
+				AND TurnTableA_At_Robot
+				THEN
+					(*Start Unload Robots*)
+					Start_Unload_Robots2:=((((Tool_At_Unload.0 AND NOT Repo_Reqs.6 AND NOT Repo_Reqs.7 AND All_Sensors_On.8)
+										OR (Tool_At_Unload.1 AND Repo_Reqs.6)
+										OR (Tool_At_Unload.2 AND Repo_Reqs.7))
+										AND (All_Sensors_On.8 AND Unload_Robots_EOATEmpty2))
+										OR (NOT Unload_Robots_Clear2 AND NOT Unload_Robots_EOATEmpty2))
+										OR Unload_Robots_WorkingOK2;
+					(*Allow Unload Robots To Proceed*)
+					Unload_Robots_Proceed2:= Welding_Complete AND Tool_At_Unload.0 AND All_Sensors_On.8 AND Unload_Robots_EOATEmpty2;
+			ELSE
+					Start_Unload_Robots2:= FALSE;
+					Unload_Robots_Proceed2:= FALSE;
+			END_IF;
+
+
+	ELSE
+		Start_Load_Robots1:= FALSE;
+		Start_Load_Robots2:= FALSE;
+		Start_Seal_Robots:= FALSE;
+		Start_Stud_Robots:= FALSE;
+		Start_TurntableA:= FALSE;
+		Start_TurntableB:= FALSE;
+		Start_Weld_Robots:= FALSE;
+		Start_Unload_Robots1:= FALSE;
+		Start_Unload_Robots2:= FALSE;
+		Load_Robots_Proceed1:=FALSE;
+		Load_Robots_Proceed2:=FALSE;
+		Seal_Robots_Proceed:=FALSE;
+		Weld_Robots_Proceed:=FALSE;
+		Unload_Robots_Proceed1:=FALSE;
+		Unload_Robots_Proceed2:=FALSE;
+	END_IF;
+
+
+
+
+(*---------------------------------------------------------------Completes----------------------------------------------------*)
+	(*1st Load Complete*)
+	IF NOT Dry_Cycle
+		THEN
+		Load_Complete1:=  All_Sensors_On.1;
+	ELSIF Dry_Cycle
+		THEN
+		IF Tool_At_Home AND Enable_Motion AND All_Sensors_Off
+			THEN
+			Load_Complete1:= TRUE;
+		END_IF;
+	END_IF;
+	(*2nd Load Complete*)
+	IF NOT Dry_Cycle
+		THEN
+		Load_Complete2:=  All_Sensors_On.2;
+	ELSIF Dry_Cycle
+		THEN
+		IF Tool_At_Home AND Enable_Motion AND All_Sensors_Off
+			THEN
+			Load_Complete2:= TRUE;
+		END_IF;
+	END_IF;
+	(*All Load Complete*)
+	IF NOT Dry_Cycle
+		THEN
+		Load_Complete:= (All_Sensors_On.2
+					OR (All_Sensors_On.3 AND Tool_At_Weld.0)
+					OR (Repo_Reqs.0 AND All_Sensors_On.4)
+					OR (Repo_Reqs.1 AND All_Sensors_On.5)
+					OR (Repo_Reqs.2 AND All_Sensors_On.6))
+					OR Weld_Robots_WorkingOK OR Welding_Complete;
+	ELSIF Dry_Cycle
+		THEN
+		IF Load_Complete1 AND Load_Complete2 AND All_Sensors_Off
+			THEN
+			Load_Complete:= TRUE;
+		END_IF;
+	END_IF;
+
+	(*Welding Complete*)
+	IF Weld_Robots_Complete
+		THEN
+		Welding_Complete:= TRUE;
+	END_IF;
+
+	(*Unload Complete*)
+	IF NOT Dry_Cycle
+		THEN
+			IF (Unload_Robots_Complete1 OR Unload_Robots_Complete2 OR (All_Sensors_Off AND Unload_Robots_Clear)) AND Welding_Complete
+				THEN
+				Unload_Complete:= TRUE;
+			END_IF;
+	ELSIF Dry_Cycle
+		THEN
+			IF (Unload_Robots_Complete1 OR Unload_Robots_Complete2 OR (All_Sensors_Off AND Unload_Robots_Clear)) AND Welding_Complete
+				THEN
+				Unload_Complete:= TRUE;
+			END_IF;
+	END_IF;
+(*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Cycle Complete !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*)
+	(*Set Cycle Complete*)
+	IF Auto_Run AND Load_Complete AND Welding_Complete AND Unload_Complete AND All_Robots_Clear
+		THEN Cycle_Complete:= TRUE;
+	END_IF;
+	(*Reset All Completes*)
+	IF Load_Robots_Clear AND Weld_Robots_Clear AND Unload_Robots_Clear AND NOT Unload_Robots_Complete1 AND NOT Unload_Robots_Complete2
+		THEN
+			IF In_Manual AND Discrete_In.Go_Home AND All_Sensors_Off
+				THEN
+					Reset_All_Completes:= TRUE;
+			ELSIF NOT Dry_Cycle AND Cycle_Complete AND NOT Enable_Motion AND Tool_At_Home AND All_Sensors_Off
+				THEN
+					Reset_All_Completes:= TRUE;
+			ELSIF Dry_Cycle AND Cycle_Complete AND Tool_At_Home AND All_Sensors_Off
+				THEN
+					Reset_All_Completes:=TRUE;
+			ELSE
+					Reset_All_Completes:= FALSE;
+			END_IF;
+	END_IF;
+	(*Perform Actual Reset*)
+		IF Reset_All_Completes
+			THEN
+				Cycle_Complete:= FALSE;
+				Load_Complete1:= FALSE;
+				Load_Complete2:= FALSE;
+				Load_Complete:= FALSE;
+				Sealing_Complete:= FALSE;
+				Stud_Complete:= FALSE;
+				Welding_Complete:= FALSE;
+				Date_Stamp_Complete:= FALSE;
+				VacCheck_Complete:= FALSE;
+				Unload_Complete:=FALSE;
+				Eject_Complete:= FALSE;
+				Load_Robots_UnclampEarly1:= FALSE;
+				Load_Robots_UnclampEarly2:= FALSE;
+				Seal_Robots_UnclampEarly:= FALSE;
+				Stud_Robots_UnclampEarly:= FALSE;
+				Weld_Robots_UnclampEarly:= FALSE;
+				Repo_Reqs:= 0;
+				Reset_All_Completes:= FALSE;
+
+		END_IF;
+
+(*---------------------------------------------------------------------------- Call Various Actions ----------------------------------------------------------------------------------------------------*)
+	(*Poduction Counters and Report*)
+	Production();
+
+	(*Register Robot(s) to Fixture*)
+	Robot_Registration();
+
+	(*Setup Fix ID and Model Data*)
+	Task_Fix_Model_IDs();
+
+	(*Generate Status Banner and Fault Flags*)
+	Status_and_Faults();
+
+	(*Tool Clamp / Unclamp Sequencing and Reposition Handling*)
+	Tool_VBSeq_Repos();
+
+	(*Transfer Object Image Data to UI Section*)
+	Xfer_To_UI();
+
+
+(*-----------------------------------------------------------------------------------------Transfer Valve Outputs --------------------------------------------------------------------------------*)
+	(*Move "Manual_Home_Prompt" as required for home prompting*)
+		Manual_Ind_HomePrompt:= Flash_Rate AND In_Manual AND Discrete_In.Go_Home AND NOT Tool_At_Home;
+
+	(*Call each valve bank*)
+	ValveBank1();
+	(*ValveBank2();
+	ValveBank3(); *)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+]]></ST>
+    </Implementation>
+    <Action Name="All_Sensors" Id="{52975292-c13d-431f-97e2-c5d24d5ea202}">
+      <Implementation>
+        <ST><![CDATA[
+
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+
+
+
+(**************************************************************************All Sensors Off******************************************************************************)
+(**************************************************************************All Sensors Off******************************************************************************)
+(**************************************************************************All Sensors Off******************************************************************************)
+
+	(*All Sensors Required Off*)
+	All_Sensors_Off:= NOT Part_Present1 AND NOT Part_Present2 AND NOT  Part_Present3
+			AND NOT Part_Present4 AND NOT Part_Present5 AND NOT Part_Present6
+			AND NOT Part_Present7 AND NOT Part_Present8 AND NOT Part_Present9
+			AND NOT Part_Present10 AND NOT Part_Present11 AND NOT Part_Present12
+			AND NOT Part_Present13 AND NOT Part_Present14 AND NOT Part_Present15
+			AND NOT Part_Present16 AND NOT Part_Present17 AND NOT Part_Present18
+			AND NOT Part_Present19 AND NOT Part_Present20 AND NOT Part_Present21
+			AND NOT Part_Present22 AND NOT Part_Present23 AND NOT Part_Present24
+			AND NOT Part_Present25 AND NOT Part_Present26 AND NOT Part_Present27
+			AND NOT Part_Present28 AND NOT Part_Present29 AND NOT Part_Present30
+			AND NOT Part_Present31 AND NOT Part_Present32 AND NOT Part_Present33
+			AND NOT Part_Present34 AND NOT Part_Present35 AND NOT Part_Present36
+			AND NOT Part_Present37 AND NOT Part_Present38 AND NOT Part_Present39
+			AND NOT Part_Present40;
+
+	(*All Sensors Required Off - Used for sub fixtures where the part has to move from one stage to the next*)
+	All_Sensors_Off1:= NOT Part_Present1 AND NOT Part_Present2 AND NOT  Part_Present3
+			AND NOT Part_Present4 AND NOT Part_Present5 AND NOT Part_Present6
+			AND NOT Part_Present7 AND NOT Part_Present8 AND NOT Part_Present9
+			AND NOT Part_Present10 AND NOT Part_Present11 AND NOT Part_Present12
+			AND NOT Part_Present13 AND NOT Part_Present14 AND NOT Part_Present15
+			AND NOT Part_Present16 AND NOT Part_Present17 AND NOT Part_Present18
+			AND NOT Part_Present19 AND NOT Part_Present20 AND NOT Part_Present21
+			AND NOT Part_Present22 AND NOT Part_Present23 AND NOT Part_Present24
+			AND NOT Part_Present25 AND NOT Part_Present26 AND NOT Part_Present27
+			AND NOT Part_Present28 AND NOT Part_Present29 AND NOT Part_Present30
+			AND NOT Part_Present31 AND NOT Part_Present32 AND NOT Part_Present33
+			AND NOT Part_Present34 AND NOT Part_Present35 AND NOT Part_Present36
+			AND NOT Part_Present37 AND NOT Part_Present38 AND NOT Part_Present39
+			AND NOT Part_Present40;
+
+	(*All Sensors Required Off - Used for sub fixtures where the part has to move from one stage to the next*)
+	All_Sensors_Off2:= NOT Part_Present1 AND NOT Part_Present2 AND NOT  Part_Present3
+			AND NOT Part_Present4 AND NOT Part_Present5 AND NOT Part_Present6
+			AND NOT Part_Present7 AND NOT Part_Present8 AND NOT Part_Present9
+			AND NOT Part_Present10 AND NOT Part_Present11 AND NOT Part_Present12
+			AND NOT Part_Present13 AND NOT Part_Present14 AND NOT Part_Present15
+			AND NOT Part_Present16 AND NOT Part_Present17 AND NOT Part_Present18
+			AND NOT Part_Present19 AND NOT Part_Present20 AND NOT Part_Present21
+			AND NOT Part_Present22 AND NOT Part_Present23 AND NOT Part_Present24
+			AND NOT Part_Present25 AND NOT Part_Present26 AND NOT Part_Present27
+			AND NOT Part_Present28 AND NOT Part_Present29 AND NOT Part_Present30
+			AND NOT Part_Present31 AND NOT Part_Present32 AND NOT Part_Present33
+			AND NOT Part_Present34 AND NOT Part_Present35 AND NOT Part_Present36
+			AND NOT Part_Present37 AND NOT Part_Present38 AND NOT Part_Present39
+			AND NOT Part_Present40;
+
+
+
+(**************************************************************************All Sensors On******************************************************************************)
+(**************************************************************************All Sensors On******************************************************************************)
+(**************************************************************************All Sensors On******************************************************************************)
+
+
+	(*Sensors Required for Start Of 1st Robot Load*)
+	All_Sensors_On.0:= FALSE OR (Dry_Cycle AND All_Sensors_Off);
+	(*Sensors Required for Start of 2nd Robot Load*)
+	All_Sensors_On.1:= FALSE OR  (Dry_Cycle AND All_Sensors_Off);
+
+	(*Sensors After Load Complete*)
+	All_Sensors_On.2:=(
+					((Model_ID=1)
+						AND Part_Present1 AND Part_Present2 AND Part_Present3
+						AND Part_Present4 AND Part_Present5 AND Part_Present6
+						AND Part_Present7 AND Part_Present8 AND Part_Present9
+						AND Part_Present10 AND Part_Present11 AND Part_Present12
+						AND Part_Present13 AND Part_Present14 AND Part_Present15
+						AND Part_Present16 AND Part_Present17 AND Part_Present18
+						AND Part_Present19 AND Part_Present20 AND Part_Present21
+						AND Part_Present22 AND Part_Present23 AND Part_Present24
+						AND Part_Present25 AND Part_Present26 AND Part_Present27
+						AND Part_Present28 AND Part_Present29 AND Part_Present30
+						AND Part_Present31 AND Part_Present32 AND Part_Present33
+						AND Part_Present34 AND Part_Present35 AND Part_Present36
+						AND Part_Present37 AND Part_Present38 AND Part_Present39
+						AND Part_Present40)
+
+					OR ((Model_ID=2)
+						AND Part_Present1 AND Part_Present2 AND Part_Present3
+						AND Part_Present4 AND Part_Present5 AND Part_Present6
+						AND Part_Present7 AND Part_Present8 AND Part_Present9
+						AND Part_Present10 AND Part_Present11 AND Part_Present12
+						AND Part_Present13 AND Part_Present14 AND Part_Present15
+						AND Part_Present16 AND Part_Present17 AND Part_Present18
+						AND Part_Present19 AND Part_Present20 AND Part_Present21
+						AND Part_Present22 AND Part_Present23 AND Part_Present24
+						AND Part_Present25 AND Part_Present26 AND Part_Present27
+						AND Part_Present28 AND Part_Present29 AND Part_Present30
+						AND Part_Present31 AND Part_Present32 AND Part_Present33
+						AND Part_Present34 AND Part_Present35 AND Part_Present36
+						AND Part_Present37 AND Part_Present38 AND Part_Present39
+						AND Part_Present40)
+
+					OR ((Model_ID=3)
+						AND Part_Present1 AND Part_Present2 AND Part_Present3
+						AND Part_Present4 AND Part_Present5 AND Part_Present6
+						AND Part_Present7 AND Part_Present8 AND Part_Present9
+						AND Part_Present10 AND Part_Present11 AND Part_Present12
+						AND Part_Present13 AND Part_Present14 AND Part_Present15
+						AND Part_Present16 AND Part_Present17 AND Part_Present18
+						AND Part_Present19 AND Part_Present20 AND Part_Present21
+						AND Part_Present22 AND Part_Present23 AND Part_Present24
+						AND Part_Present25 AND Part_Present26 AND Part_Present27
+						AND Part_Present28 AND Part_Present29 AND Part_Present30
+						AND Part_Present31 AND Part_Present32 AND Part_Present33
+						AND Part_Present34 AND Part_Present35 AND Part_Present36
+						AND Part_Present37 AND Part_Present38 AND Part_Present39
+						AND Part_Present40)
+
+					OR ((Model_ID=4)
+						AND Part_Present1 AND Part_Present2 AND Part_Present3
+						AND Part_Present4 AND Part_Present5 AND Part_Present6
+						AND Part_Present7 AND Part_Present8 AND Part_Present9
+						AND Part_Present10 AND Part_Present11 AND Part_Present12
+						AND Part_Present13 AND Part_Present14 AND Part_Present15
+						AND Part_Present16 AND Part_Present17 AND Part_Present18
+						AND Part_Present19 AND Part_Present20 AND Part_Present21
+						AND Part_Present22 AND Part_Present23 AND Part_Present24
+						AND Part_Present25 AND Part_Present26 AND Part_Present27
+						AND Part_Present28 AND Part_Present29 AND Part_Present30
+						AND Part_Present31 AND Part_Present32 AND Part_Present33
+						AND Part_Present34 AND Part_Present35 AND Part_Present36
+						AND Part_Present37 AND Part_Present38 AND Part_Present39
+						AND Part_Present40)
+					) OR (All_Sensors_Off AND Dry_Cycle);
+
+
+	(*Sensors Require for Start Of Welding*)
+	All_Sensors_On.3:=(
+					((Model_ID=1)
+						AND Part_Present1 AND Part_Present2 AND Part_Present3
+						AND Part_Present4 AND Part_Present5 AND Part_Present6
+						AND Part_Present7 AND Part_Present8 AND Part_Present9
+						AND Part_Present10 AND Part_Present11 AND Part_Present12
+						AND Part_Present13 AND Part_Present14 AND Part_Present15
+						AND Part_Present16 AND Part_Present17 AND Part_Present18
+						AND Part_Present19 AND Part_Present20 AND Part_Present21
+						AND Part_Present22 AND Part_Present23 AND Part_Present24
+						AND Part_Present25 AND Part_Present26 AND Part_Present27
+						AND Part_Present28 AND Part_Present29 AND Part_Present30
+						AND Part_Present31 AND Part_Present32 AND Part_Present33
+						AND Part_Present34 AND Part_Present35 AND Part_Present36
+						AND Part_Present37 AND Part_Present38 AND Part_Present39
+						AND Part_Present40)
+
+					OR ((Model_ID=2)
+						AND Part_Present1 AND Part_Present2 AND Part_Present3
+						AND Part_Present4 AND Part_Present5 AND Part_Present6
+						AND Part_Present7 AND Part_Present8 AND Part_Present9
+						AND Part_Present10 AND Part_Present11 AND Part_Present12
+						AND Part_Present13 AND Part_Present14 AND Part_Present15
+						AND Part_Present16 AND Part_Present17 AND Part_Present18
+						AND Part_Present19 AND Part_Present20 AND Part_Present21
+						AND Part_Present22 AND Part_Present23 AND Part_Present24
+						AND Part_Present25 AND Part_Present26 AND Part_Present27
+						AND Part_Present28 AND Part_Present29 AND Part_Present30
+						AND Part_Present31 AND Part_Present32 AND Part_Present33
+						AND Part_Present34 AND Part_Present35 AND Part_Present36
+						AND Part_Present37 AND Part_Present38 AND Part_Present39
+						AND Part_Present40)
+
+					OR ((Model_ID=3)
+						AND Part_Present1 AND Part_Present2 AND Part_Present3
+						AND Part_Present4 AND Part_Present5 AND Part_Present6
+						AND Part_Present7 AND Part_Present8 AND Part_Present9
+						AND Part_Present10 AND Part_Present11 AND Part_Present12
+						AND Part_Present13 AND Part_Present14 AND Part_Present15
+						AND Part_Present16 AND Part_Present17 AND Part_Present18
+						AND Part_Present19 AND Part_Present20 AND Part_Present21
+						AND Part_Present22 AND Part_Present23 AND Part_Present24
+						AND Part_Present25 AND Part_Present26 AND Part_Present27
+						AND Part_Present28 AND Part_Present29 AND Part_Present30
+						AND Part_Present31 AND Part_Present32 AND Part_Present33
+						AND Part_Present34 AND Part_Present35 AND Part_Present36
+						AND Part_Present37 AND Part_Present38 AND Part_Present39
+						AND Part_Present40)
+
+					OR ((Model_ID=4)
+						AND Part_Present1 AND Part_Present2 AND Part_Present3
+						AND Part_Present4 AND Part_Present5 AND Part_Present6
+						AND Part_Present7 AND Part_Present8 AND Part_Present9
+						AND Part_Present10 AND Part_Present11 AND Part_Present12
+						AND Part_Present13 AND Part_Present14 AND Part_Present15
+						AND Part_Present16 AND Part_Present17 AND Part_Present18
+						AND Part_Present19 AND Part_Present20 AND Part_Present21
+						AND Part_Present22 AND Part_Present23 AND Part_Present24
+						AND Part_Present25 AND Part_Present26 AND Part_Present27
+						AND Part_Present28 AND Part_Present29 AND Part_Present30
+						AND Part_Present31 AND Part_Present32 AND Part_Present33
+						AND Part_Present34 AND Part_Present35 AND Part_Present36
+						AND Part_Present37 AND Part_Present38 AND Part_Present39
+						AND Part_Present40)
+					) OR (All_Sensors_Off AND Dry_Cycle);
+
+
+	(*Sensors Required After Repo_Reqs.0*)
+	All_Sensors_On.4:= (FALSE) OR (Dry_Cycle AND All_Sensors_Off);
+	(*Sensors Required After Repo_Reqs.1*)
+	All_Sensors_On.5:= (FALSE) OR (Dry_Cycle AND All_Sensors_Off);
+	(*Sensors Required After Repo_Reqs.2*)
+	All_Sensors_On.6:= (FALSE) OR (Dry_Cycle AND All_Sensors_Off);
+	(*Sensors Required After Repo_Reqs.3*)
+	All_Sensors_On.7:= (FALSE) OR (Dry_Cycle AND All_Sensors_Off);
+
+
+	(*Sensors Required for Start Of Unload1*)
+	All_Sensors_On.8:=(
+					((Model_ID=1)
+						AND Part_Present1 AND Part_Present2 AND Part_Present3
+						AND Part_Present4 AND Part_Present5 AND Part_Present6
+						AND Part_Present7 AND Part_Present8 AND Part_Present9
+						AND Part_Present10 AND Part_Present11 AND Part_Present12
+						AND Part_Present13 AND Part_Present14 AND Part_Present15
+						AND Part_Present16 AND Part_Present17 AND Part_Present18
+						AND Part_Present19 AND Part_Present20 AND Part_Present21
+						AND Part_Present22 AND Part_Present23 AND Part_Present24
+						AND Part_Present25 AND Part_Present26 AND Part_Present27
+						AND Part_Present28 AND Part_Present29 AND Part_Present30
+						AND Part_Present31 AND Part_Present32 AND Part_Present33
+						AND Part_Present34 AND Part_Present35 AND Part_Present36
+						AND Part_Present37 AND Part_Present38 AND Part_Present39
+						AND Part_Present40)
+
+					OR ((Model_ID=2)
+						AND Part_Present1 AND Part_Present2 AND Part_Present3
+						AND Part_Present4 AND Part_Present5 AND Part_Present6
+						AND Part_Present7 AND Part_Present8 AND Part_Present9
+						AND Part_Present10 AND Part_Present11 AND Part_Present12
+						AND Part_Present13 AND Part_Present14 AND Part_Present15
+						AND Part_Present16 AND Part_Present17 AND Part_Present18
+						AND Part_Present19 AND Part_Present20 AND Part_Present21
+						AND Part_Present22 AND Part_Present23 AND Part_Present24
+						AND Part_Present25 AND Part_Present26 AND Part_Present27
+						AND Part_Present28 AND Part_Present29 AND Part_Present30
+						AND Part_Present31 AND Part_Present32 AND Part_Present33
+						AND Part_Present34 AND Part_Present35 AND Part_Present36
+						AND Part_Present37 AND Part_Present38 AND Part_Present39
+						AND Part_Present40)
+
+					OR ((Model_ID=3)
+						AND Part_Present1 AND Part_Present2 AND Part_Present3
+						AND Part_Present4 AND Part_Present5 AND Part_Present6
+						AND Part_Present7 AND Part_Present8 AND Part_Present9
+						AND Part_Present10 AND Part_Present11 AND Part_Present12
+						AND Part_Present13 AND Part_Present14 AND Part_Present15
+						AND Part_Present16 AND Part_Present17 AND Part_Present18
+						AND Part_Present19 AND Part_Present20 AND Part_Present21
+						AND Part_Present22 AND Part_Present23 AND Part_Present24
+						AND Part_Present25 AND Part_Present26 AND Part_Present27
+						AND Part_Present28 AND Part_Present29 AND Part_Present30
+						AND Part_Present31 AND Part_Present32 AND Part_Present33
+						AND Part_Present34 AND Part_Present35 AND Part_Present36
+						AND Part_Present37 AND Part_Present38 AND Part_Present39
+						AND Part_Present40)
+
+					OR ((Model_ID=4)
+						AND Part_Present1 AND Part_Present2 AND Part_Present3
+						AND Part_Present4 AND Part_Present5 AND Part_Present6
+						AND Part_Present7 AND Part_Present8 AND Part_Present9
+						AND Part_Present10 AND Part_Present11 AND Part_Present12
+						AND Part_Present13 AND Part_Present14 AND Part_Present15
+						AND Part_Present16 AND Part_Present17 AND Part_Present18
+						AND Part_Present19 AND Part_Present20 AND Part_Present21
+						AND Part_Present22 AND Part_Present23 AND Part_Present24
+						AND Part_Present25 AND Part_Present26 AND Part_Present27
+						AND Part_Present28 AND Part_Present29 AND Part_Present30
+						AND Part_Present31 AND Part_Present32 AND Part_Present33
+						AND Part_Present34 AND Part_Present35 AND Part_Present36
+						AND Part_Present37 AND Part_Present38 AND Part_Present39
+						AND Part_Present40)
+					) OR (All_Sensors_Off AND Dry_Cycle);
+
+	(*Sensors Required for Start Of Unload2*)
+	All_Sensors_On.9:=(
+					((Model_ID=1)
+						AND Part_Present1 AND Part_Present2 AND Part_Present3
+						AND Part_Present4 AND Part_Present5 AND Part_Present6
+						AND Part_Present7 AND Part_Present8 AND Part_Present9
+						AND Part_Present10 AND Part_Present11 AND Part_Present12
+						AND Part_Present13 AND Part_Present14 AND Part_Present15
+						AND Part_Present16 AND Part_Present17 AND Part_Present18
+						AND Part_Present19 AND Part_Present20 AND Part_Present21
+						AND Part_Present22 AND Part_Present23 AND Part_Present24
+						AND Part_Present25 AND Part_Present26 AND Part_Present27
+						AND Part_Present28 AND Part_Present29 AND Part_Present30
+						AND Part_Present31 AND Part_Present32 AND Part_Present33
+						AND Part_Present34 AND Part_Present35 AND Part_Present36
+						AND Part_Present37 AND Part_Present38 AND Part_Present39
+						AND Part_Present40)
+
+					OR ((Model_ID=2)
+						AND Part_Present1 AND Part_Present2 AND Part_Present3
+						AND Part_Present4 AND Part_Present5 AND Part_Present6
+						AND Part_Present7 AND Part_Present8 AND Part_Present9
+						AND Part_Present10 AND Part_Present11 AND Part_Present12
+						AND Part_Present13 AND Part_Present14 AND Part_Present15
+						AND Part_Present16 AND Part_Present17 AND Part_Present18
+						AND Part_Present19 AND Part_Present20 AND Part_Present21
+						AND Part_Present22 AND Part_Present23 AND Part_Present24
+						AND Part_Present25 AND Part_Present26 AND Part_Present27
+						AND Part_Present28 AND Part_Present29 AND Part_Present30
+						AND Part_Present31 AND Part_Present32 AND Part_Present33
+						AND Part_Present34 AND Part_Present35 AND Part_Present36
+						AND Part_Present37 AND Part_Present38 AND Part_Present39
+						AND Part_Present40)
+
+					OR ((Model_ID=3)
+						AND Part_Present1 AND Part_Present2 AND Part_Present3
+						AND Part_Present4 AND Part_Present5 AND Part_Present6
+						AND Part_Present7 AND Part_Present8 AND Part_Present9
+						AND Part_Present10 AND Part_Present11 AND Part_Present12
+						AND Part_Present13 AND Part_Present14 AND Part_Present15
+						AND Part_Present16 AND Part_Present17 AND Part_Present18
+						AND Part_Present19 AND Part_Present20 AND Part_Present21
+						AND Part_Present22 AND Part_Present23 AND Part_Present24
+						AND Part_Present25 AND Part_Present26 AND Part_Present27
+						AND Part_Present28 AND Part_Present29 AND Part_Present30
+						AND Part_Present31 AND Part_Present32 AND Part_Present33
+						AND Part_Present34 AND Part_Present35 AND Part_Present36
+						AND Part_Present37 AND Part_Present38 AND Part_Present39
+						AND Part_Present40)
+
+					OR ((Model_ID=4)
+						AND Part_Present1 AND Part_Present2 AND Part_Present3
+						AND Part_Present4 AND Part_Present5 AND Part_Present6
+						AND Part_Present7 AND Part_Present8 AND Part_Present9
+						AND Part_Present10 AND Part_Present11 AND Part_Present12
+						AND Part_Present13 AND Part_Present14 AND Part_Present15
+						AND Part_Present16 AND Part_Present17 AND Part_Present18
+						AND Part_Present19 AND Part_Present20 AND Part_Present21
+						AND Part_Present22 AND Part_Present23 AND Part_Present24
+						AND Part_Present25 AND Part_Present26 AND Part_Present27
+						AND Part_Present28 AND Part_Present29 AND Part_Present30
+						AND Part_Present31 AND Part_Present32 AND Part_Present33
+						AND Part_Present34 AND Part_Present35 AND Part_Present36
+						AND Part_Present37 AND Part_Present38 AND Part_Present39
+						AND Part_Present40)
+					) OR (All_Sensors_Off AND Dry_Cycle);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(*end*)]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Cylinders" Id="{f74ed5ad-b694-48d3-878c-e1b782133d88}">
+      <Implementation>
+        <ST><![CDATA[
+(* -----------------------------------------------------------------------------------*)
+(*Below are Examples only, each will have to be customized for your application
+	Notes:
+	- Use SODGxx-SSCC61x-xxxxxxx_Fix IO and Seq.xlsx document to capture Clamp / Cylinder I/O Layout
+	- CLFaults1 thru 4 can be used to group cylinder type faults (All Clamps on CLFaults1, all Pins on CLFaults2)
+		OR
+	- CLFaults 1 thru 4 can be used to group cylinder UI screens 
+		(All items on Cylinder_1.content screen are on CLFaults1, all items on Cylinder_2.content screen are on CLFaults2 as example)
+*)
+(* -----------------------------------------------------------------------------------*)
+
+
+
+(*Clamps*)(*Clamps*)(*Clamps*)
+(*Clamps*)(*Clamps*)(*Clamps*)
+(*Clamps*)(*Clamps*)(*Clamps*)
+
+		(*Clamp1*)
+		Clamp1FB(
+			Retracted_Sensor:= N02.I.0 ,
+			Advanced_Sensor:= N02.I.1 ,
+			Retract_Solenoid:= N100.Q.1,
+			Advance_Solenoid:= N100.Q.0 ,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp1RETD,
+			In_Advanced_Position=> Clamp1ADVD,
+			Faulted=> CLFaults1.1 );
+
+		(*Clamp2*)
+		Clamp2FB(
+			Retracted_Sensor:= N02.I.2 ,
+			Advanced_Sensor:= N02.I.3 ,
+			Retract_Solenoid:= N100.Q.1 ,
+			Advance_Solenoid:= N100.Q.0 ,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp2RETD,
+			In_Advanced_Position=> Clamp2ADVD,
+			Faulted=> CLFaults1.2 );
+
+		(*Clamp3*)
+		Clamp3FB(
+			Retracted_Sensor:= N02.I.4,
+			Advanced_Sensor:= N02.I.5,
+			Retract_Solenoid:= N100.Q.1,
+			Advance_Solenoid:= N100.Q.0,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp3RETD,
+			In_Advanced_Position=> Clamp3ADVD,
+			Faulted=> CLFaults1.3 );
+
+		(*Clamp4*)
+		Clamp4FB(
+			Retracted_Sensor:= N02.I.6,
+			Advanced_Sensor:= N02.I.7,
+			Retract_Solenoid:= N100.Q.1,
+			Advance_Solenoid:= N100.Q.0,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp4RETD,
+			In_Advanced_Position=> Clamp4ADVD,
+			Faulted=> CLFaults1.4 );
+
+		(*Clamp5*)
+		Clamp5FB(
+			Retracted_Sensor:= N03.I.0,
+			Advanced_Sensor:= N03.I.1,
+			Retract_Solenoid:= N100.Q.1,
+			Advance_Solenoid:= N100.Q.0,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp5RETD,
+			In_Advanced_Position=> Clamp5ADVD,
+			Faulted=> CLFaults1.5 );
+
+		(*Clamp6*)
+		Clamp6FB(
+			Retracted_Sensor:= N03.I.2,
+			Advanced_Sensor:= N03.I.3,
+			Retract_Solenoid:= N100.Q.1,
+			Advance_Solenoid:= N100.Q.0,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp6RETD,
+			In_Advanced_Position=> Clamp6ADVD,
+			Faulted=> CLFaults1.6 );
+
+		(*Clamp7*)
+		Clamp7FB(
+			Retracted_Sensor:= N03.I.4,
+			Advanced_Sensor:= N03.I.5,
+			Retract_Solenoid:= N100.Q.1,
+			Advance_Solenoid:= N100.Q.0,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp7RETD,
+			In_Advanced_Position=> Clamp7ADVD,
+			Faulted=> CLFaults1.7 );
+
+		(*Clamp8*)
+		Clamp8FB(
+			Retracted_Sensor:= N03.I.6,
+			Advanced_Sensor:= N03.I.7,
+			Retract_Solenoid:= N100.Q.1,
+			Advance_Solenoid:= N100.Q.0,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp8RETD,
+			In_Advanced_Position=> Clamp8ADVD,
+			Faulted=> CLFaults1.8 );
+
+		(*Clamp9*)
+		Clamp9FB(
+			Retracted_Sensor:= N04.I.0,
+			Advanced_Sensor:= N04.I.1,
+			Retract_Solenoid:= N100.Q.3,
+			Advance_Solenoid:= N100.Q.2,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp9RETD,
+			In_Advanced_Position=> Clamp9ADVD,
+			Faulted=> CLFaults1.9 );
+
+		(*Clamp10*)
+		Clamp10FB(
+			Retracted_Sensor:= N04.I.2,
+			Advanced_Sensor:= N04.I.3,
+			Retract_Solenoid:= N100.Q.3,
+			Advance_Solenoid:= N100.Q.2,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp10RETD,
+			In_Advanced_Position=> Clamp10ADVD,
+			Faulted=> CLFaults1.10 );
+
+		(*Clamp11*)
+		Clamp11FB(
+			Retracted_Sensor:= N04.I.4,
+			Advanced_Sensor:= N04.I.5,
+			Retract_Solenoid:= N100.Q.3,
+			Advance_Solenoid:= N100.Q.2,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp11RETD,
+			In_Advanced_Position=> Clamp11ADVD,
+			Faulted=> CLFaults1.11 );
+
+		(*Clamp12*)
+		Clamp12FB(
+			Retracted_Sensor:= N04.I.6,
+			Advanced_Sensor:= N04.I.7,
+			Retract_Solenoid:= N100.Q.3,
+			Advance_Solenoid:= N100.Q.2,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp12RETD,
+			In_Advanced_Position=> Clamp12ADVD,
+			Faulted=> CLFaults1.12 );
+
+		(*Clamp13*)
+		Clamp13FB(
+			Retracted_Sensor:= N05.I.0,
+			Advanced_Sensor:= N05.I.1,
+			Retract_Solenoid:= N100.Q.5,
+			Advance_Solenoid:= N100.Q.4,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp13RETD,
+			In_Advanced_Position=> Clamp13ADVD,
+			Faulted=> CLFaults1.13 );
+
+		(*Clamp14*)
+		Clamp14FB(
+			Retracted_Sensor:= N05.I.2,
+			Advanced_Sensor:= N05.I.3,
+			Retract_Solenoid:= N100.Q.5,
+			Advance_Solenoid:= N100.Q.4,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp14RETD,
+			In_Advanced_Position=> Clamp14ADVD,
+			Faulted=> CLFaults1.14 );
+
+		(*Clamp15*)
+		Clamp15FB(
+			Retracted_Sensor:= N05.I.4,
+			Advanced_Sensor:= N05.I.5,
+			Retract_Solenoid:= N100.Q.5,
+			Advance_Solenoid:= N100.Q.4,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp15RETD,
+			In_Advanced_Position=> Clamp15ADVD,
+			Faulted=> CLFaults1.15 );
+
+		(*Clamp16*)
+		Clamp16FB(
+			Retracted_Sensor:= N05.I.6,
+			Advanced_Sensor:= N05.I.7,
+			Retract_Solenoid:= N100.Q.5,
+			Advance_Solenoid:= N100.Q.4,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp16RETD,
+			In_Advanced_Position=> Clamp16ADVD,
+			Faulted=> CLFaults1.16 );
+
+		(*Clamp17*)
+		Clamp17FB(
+			Retracted_Sensor:= N06.I.0,
+			Advanced_Sensor:= N06.I.1,
+			Retract_Solenoid:= N100.Q.7,
+			Advance_Solenoid:= N100.Q.6,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp17RETD,
+			In_Advanced_Position=> Clamp17ADVD,
+			Faulted=> CLFaults1.17 );
+
+		(*Clamp18*)
+		Clamp18FB(
+			Retracted_Sensor:= N06.I.2,
+			Advanced_Sensor:= N06.I.3,
+			Retract_Solenoid:= N100.Q.7,
+			Advance_Solenoid:= N100.Q.6,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp18RETD,
+			In_Advanced_Position=> Clamp18ADVD,
+			Faulted=> CLFaults1.18 );
+
+		(*Clamp19*)
+		Clamp19FB(
+			Retracted_Sensor:= N06.I.4,
+			Advanced_Sensor:= N06.I.5,
+			Retract_Solenoid:= N100.Q.7,
+			Advance_Solenoid:= N100.Q.6,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp19RETD,
+			In_Advanced_Position=> Clamp19ADVD,
+			Faulted=> CLFaults1.19 );
+
+		(*Clamp20*)
+		Clamp20FB(
+			Retracted_Sensor:= N06.I.6,
+			Advanced_Sensor:= N06.I.7,
+			Retract_Solenoid:= N100.Q.7,
+			Advance_Solenoid:= N100.Q.6,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp20RETD,
+			In_Advanced_Position=> Clamp20ADVD,
+			Faulted=> CLFaults1.20 );
+
+		(*Clamp21*)
+		Clamp21FB(
+			Retracted_Sensor:= N07.I.0,
+			Advanced_Sensor:= N07.I.1,
+			Retract_Solenoid:= N100.Q.9,
+			Advance_Solenoid:= N100.Q.8,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp21RETD,
+			In_Advanced_Position=> Clamp21ADVD,
+			Faulted=> CLFaults1.21 );
+
+		(*Clamp22*)
+		Clamp22FB(
+			Retracted_Sensor:= N07.I.2,
+			Advanced_Sensor:= N07.I.3,
+			Retract_Solenoid:= N100.Q.9,
+			Advance_Solenoid:= N100.Q.8,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp22RETD,
+			In_Advanced_Position=> Clamp22ADVD,
+			Faulted=> CLFaults1.22 );
+
+		(*Clamp23*)
+		Clamp23FB(
+			Retracted_Sensor:= N07.I.4,
+			Advanced_Sensor:= N07.I.5,
+			Retract_Solenoid:= N100.Q.9,
+			Advance_Solenoid:= N100.Q.8,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp23RETD,
+			In_Advanced_Position=> Clamp23ADVD,
+			Faulted=> CLFaults1.23 );
+
+		(*Clamp24*)
+		Clamp24FB(
+			Retracted_Sensor:= N07.I.6,
+			Advanced_Sensor:= N07.I.7,
+			Retract_Solenoid:= N100.Q.9,
+			Advance_Solenoid:= N100.Q.8,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp24RETD,
+			In_Advanced_Position=> Clamp24ADVD,
+			Faulted=> CLFaults1.24 );
+
+
+(*Pins*)(*Pins*)(*Pins*)
+(*Pins*)(*Pins*)(*Pins*)
+(*Pins*)(*Pins*)(*Pins*)
+
+		(*Pin1*)
+		Pin1FB(
+			Retracted_Sensor:= N03.I.0,
+			Advanced_Sensor:= N03.I.1,
+			Retract_Solenoid:= N101.Q.1,
+			Advance_Solenoid:= N101.Q.0,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Pin1RETD,
+			In_Advanced_Position=> Pin1ADVD,
+			Faulted=> CLFaults2.1 );
+
+		(*Pin2*)
+		Pin2FB(
+			Retracted_Sensor:= N03.I.2,
+			Advanced_Sensor:= N03.I.3,
+			Retract_Solenoid:= N101.Q.1,
+			Advance_Solenoid:= N101.Q.0,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Pin2RETD,
+			In_Advanced_Position=> Pin2ADVD,
+			Faulted=> CLFaults2.2 );
+
+		(*Pin3*)
+		Pin3FB(
+			Retracted_Sensor:= N03.I.4,
+			Advanced_Sensor:= N03.I.5,
+			Retract_Solenoid:= N101.Q.1,
+			Advance_Solenoid:= N101.Q.0,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Pin3RETD,
+			In_Advanced_Position=> Pin3ADVD,
+			Faulted=> CLFaults2.3 );
+
+		(*Pin4*)
+		Pin4FB(
+			Retracted_Sensor:= N03.I.6,
+			Advanced_Sensor:= N10.I.7,
+			Retract_Solenoid:= N101.Q.1,
+			Advance_Solenoid:= N101.Q.0,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Pin4RETD,
+			In_Advanced_Position=> Pin4ADVD,
+			Faulted=> CLFaults2.4 );
+
+		(*Pin5*)
+		Pin5FB(
+			Retracted_Sensor:= N04.I.0,
+			Advanced_Sensor:= N04.I.1,
+			Retract_Solenoid:= N101.Q.1,
+			Advance_Solenoid:= N101.Q.0,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Pin5RETD,
+			In_Advanced_Position=> Pin5ADVD,
+			Faulted=> CLFaults2.5 );
+
+		(*Pin6*)
+		Pin6FB(
+			Retracted_Sensor:= N04.I.2,
+			Advanced_Sensor:= N04.I.3,
+			Retract_Solenoid:= N101.Q.1,
+			Advance_Solenoid:= N101.Q.0,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Pin6RETD,
+			In_Advanced_Position=> Pin6ADVD,
+			Faulted=> CLFaults2.6 );
+
+		(*Pin7*)
+		Pin7FB(
+			Retracted_Sensor:= N04.I.4,
+			Advanced_Sensor:= N04.I.5,
+			Retract_Solenoid:= N101.Q.1,
+			Advance_Solenoid:= N101.Q.0,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Pin7RETD,
+			In_Advanced_Position=> Pin7ADVD,
+			Faulted=> CLFaults2.7 );
+
+		(*Pin8*)
+		Pin8FB(
+			Retracted_Sensor:= N04.I.6,
+			Advanced_Sensor:= N04.I.7,
+			Retract_Solenoid:= N101.Q.1,
+			Advance_Solenoid:= N101.Q.0,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Pin8RETD,
+			In_Advanced_Position=> Pin8ADVD,
+			Faulted=> CLFaults2.8 );
+
+		(*Pin9*)
+		Pin9FB(
+			Retracted_Sensor:= N05.I.0,
+			Advanced_Sensor:= N05.I.1,
+			Retract_Solenoid:= N101.Q.3,
+			Advance_Solenoid:= N101.Q.2,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Pin9RETD,
+			In_Advanced_Position=> Pin9ADVD,
+			Faulted=> CLFaults2.9 );
+
+		(*Pin10*)
+		Pin10FB(
+			Retracted_Sensor:= N05.I.2,
+			Advanced_Sensor:= N05.I.3,
+			Retract_Solenoid:= N101.Q.3,
+			Advance_Solenoid:= N101.Q.2,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Pin10RETD,
+			In_Advanced_Position=> Pin10ADVD,
+			Faulted=> CLFaults2.10 );
+
+		(*Pin11*)
+		Pin11FB(
+			Retracted_Sensor:= N05.I.4,
+			Advanced_Sensor:= N05.I.5,
+			Retract_Solenoid:= N101.Q.3,
+			Advance_Solenoid:= N101.Q.2,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Pin11RETD,
+			In_Advanced_Position=> Pin11ADVD,
+			Faulted=> CLFaults2.11 );
+
+		(*Pin12*)
+		Pin12FB(
+			Retracted_Sensor:= N05.I.6,
+			Advanced_Sensor:= N05.I.7,
+			Retract_Solenoid:= N101.Q.3,
+			Advance_Solenoid:= N101.Q.2,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Pin12RETD,
+			In_Advanced_Position=> Pin12ADVD,
+			Faulted=> CLFaults2.12 );
+
+
+(*Slides*)(*Slides*)(*Slides*)
+(*Slides*)(*Slides*)(*Slides*)
+(*Slides*)(*Slides*)(*Slides*)
+
+		(*Slide1*)
+		Slide1FB(
+			Retracted_Sensor:= N07.I.0,
+			Advanced_Sensor:= N07.I.1,
+			Retract_Solenoid:= N100.Q.11,
+			Advance_Solenoid:= N100.Q.10,
+			Adv_Delay:= T#0.2S,
+			Ret_Delay:= T#0.2S,
+			Fault_Delay:= T#4.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Slide1RETD,
+			In_Advanced_Position=> Slide1ADVD,
+			Faulted=> CLFaults3.1 );
+
+		(*Slide2*)
+		Slide2FB(
+			Retracted_Sensor:= N07.I.2,
+			Advanced_Sensor:= N07.I.3,
+			Retract_Solenoid:= N100.Q.11,
+			Advance_Solenoid:= N100.Q.10,
+			Adv_Delay:= T#0.2S,
+			Ret_Delay:= T#0.2S,
+			Fault_Delay:= T#4.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Slide2RETD,
+			In_Advanced_Position=> Slide2ADVD,
+			Faulted=> CLFaults3.2 );
+
+		(*Slide3*)
+		Slide3FB(
+			Retracted_Sensor:= N07.I.4,
+			Advanced_Sensor:= N07.I.5,
+			Retract_Solenoid:= N101.Q.11,
+			Advance_Solenoid:= N101.Q.10,
+			Adv_Delay:= T#0.2S,
+			Ret_Delay:= T#0.2S,
+			Fault_Delay:= T#4.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Slide3RETD,
+			In_Advanced_Position=> Slide3ADVD,
+			Faulted=> CLFaults3.3 );
+
+		(*Slide4*)
+		Slide4FB(
+			Retracted_Sensor:= N07.I.6,
+			Advanced_Sensor:= N07.I.7,
+			Retract_Solenoid:= N101.Q.11,
+			Advance_Solenoid:= N101.Q.10,
+			Adv_Delay:= T#0.2S,
+			Ret_Delay:= T#0.2S,
+			Fault_Delay:= T#4.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Slide4RETD,
+			In_Advanced_Position=> Slide4ADVD,
+			Faulted=> CLFaults3.4 );
+
+		(*Slide5*)
+		Slide5FB(
+			Retracted_Sensor:= N08.I.0,
+			Advanced_Sensor:= N08.I.1,
+			Retract_Solenoid:= N101.Q.11,
+			Advance_Solenoid:= N101.Q.10,
+			Adv_Delay:= T#0.2S,
+			Ret_Delay:= T#0.2S,
+			Fault_Delay:= T#4.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Slide5RETD,
+			In_Advanced_Position=> Slide5ADVD,
+			Faulted=> CLFaults3.5 );
+
+		(*Slide6*)
+		Slide6FB(
+			Retracted_Sensor:= N08.I.0,
+			Advanced_Sensor:= N08.I.1,
+			Retract_Solenoid:= N101.Q.11,
+			Advance_Solenoid:= N101.Q.10,
+			Adv_Delay:= T#0.2S,
+			Ret_Delay:= T#0.2S,
+			Fault_Delay:= T#4.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Slide6RETD,
+			In_Advanced_Position=> Slide6ADVD,
+			Faulted=> CLFaults3.6 );
+
+
+(*Swings*)(*Swings*)(*Swings*)
+(*Swings*)(*Swings*)(*Swings*)
+(*Swings*)(*Swings*)(*Swings*)
+
+		(*Swing1*)
+		Swing1FB(
+			Retracted_Sensor:= N09.I.0,
+			Advanced_Sensor:= N09.I.1,
+			Retract_Solenoid:= N101.Q.1,
+			Advance_Solenoid:= N101.Q.0,
+			Adv_Delay:= T#0.2S,
+			Ret_Delay:= T#0.2S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Swing1RETD,
+			In_Advanced_Position=> Swing1ADVD,
+			Faulted=> CLFaults4.1 );
+
+		(*Swing2*)
+		Swing2FB(
+			Retracted_Sensor:= N09.I.2,
+			Advanced_Sensor:= N09.I.3,
+			Retract_Solenoid:= N101.Q.3,
+			Advance_Solenoid:= N101.Q.2,
+			Adv_Delay:= T#0.2S,
+			Ret_Delay:= T#0.2S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Swing2RETD,
+			In_Advanced_Position=> Swing2ADVD,
+			Faulted=> CLFaults4.2 );
+
+		(*Swing3*)
+		Swing3FB(
+			Retracted_Sensor:= N09.I.4,
+			Advanced_Sensor:= N09.I.5,
+			Retract_Solenoid:= N101.Q.5,
+			Advance_Solenoid:= N101.Q.4,
+			Adv_Delay:= T#0.2S,
+			Ret_Delay:= T#0.2S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Swing3RETD,
+			In_Advanced_Position=> Swing3ADVD,
+			Faulted=> CLFaults4.3 );
+
+		(*Swing4*)
+		Swing4FB(
+			Retracted_Sensor:= N09.I.6,
+			Advanced_Sensor:= N09.I.7,
+			Retract_Solenoid:= N101.Q.7,
+			Advance_Solenoid:= N101.Q.6,
+			Adv_Delay:= T#0.2S,
+			Ret_Delay:= T#0.2S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Swing4RETD,
+			In_Advanced_Position=> Swing4ADVD,
+			Faulted=> CLFaults4.4 );
+
+		(*Swing5*)
+		Swing5FB(
+			Retracted_Sensor:= N10.I.0,
+			Advanced_Sensor:= N10.I.1,
+			Retract_Solenoid:= N101.Q.9,
+			Advance_Solenoid:= N101.Q.8,
+			Adv_Delay:= T#0.2S,
+			Ret_Delay:= T#0.2S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Swing5RETD,
+			In_Advanced_Position=> Swing5ADVD,
+			Faulted=> CLFaults4.5 );
+
+		(*Swing6*)
+		Swing6FB(
+			Retracted_Sensor:= N10.I.2,
+			Advanced_Sensor:= N10.I.3,
+			Retract_Solenoid:= N101.Q.11,
+			Advance_Solenoid:= N101.Q.10,
+			Adv_Delay:= T#0.2S,
+			Ret_Delay:= T#0.2S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Swing6RETD,
+			In_Advanced_Position=> Swing6ADVD,
+			Faulted=> CLFaults4.6 );
+
+
+(*Triple*)(*Triple*)(*Triple*)
+(*Triple*)(*Triple*)(*Triple*)
+(*Triple*)(*Triple*)(*Triple*)
+
+		(*Cyl1, Triple Position*)
+		Cyl1FB(
+			Retracted_Sensor:= N01.I.0,
+			Advanced_Sensor:= N01.I.1,
+			Mid_Sensor:= N01.I.2,
+			Retract_Solenoid:= N100.Q.1,
+			Advance_Solenoid:= N100.Q.0,
+			Mid_Solenoid:= N100.Q.2,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Mid_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Cyl1RETD,
+			In_Advanced_Position=> Cyl1ADVD,
+			In_Mid_Position=> Cyl1MID,
+			Faulted=> CLFaults4.11 );
+
+
+(*QA*)(*QA*)(*QA*)
+(*QA*)(*QA*)(*QA*)
+(*QA*)(*QA*)(*QA*)
+
+		(*QA Check1*)
+		QACheck1FB(
+			Retracted_Sensor:= N04.I.0,
+			Advanced_Sensor:= N04.I.1,
+			Retract_Solenoid:= N100.Q.5,
+			Advance_Solenoid:= N100.Q.4,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> QACheck1RETD,
+			In_Advanced_Position=> QACheck1ADVD,
+			Faulted=> CLFaults4.1 );
+
+		(*QA Check2*)
+		QACheck2FB(
+			Retracted_Sensor:= N04.I.2,
+			Advanced_Sensor:= N04.I.3,
+			Retract_Solenoid:= N100.Q.5,
+			Advance_Solenoid:= N100.Q.4,
+			Ret_Delay:= T#0.1S,
+			Adv_Delay:= T#0.1S,
+			Fault_Delay:= T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> QACheck2RETD,
+			In_Advanced_Position=> QACheck2ADVD,
+			Faulted=> CLFaults4.2 );
+
+
+(*end*)]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Hardware" Id="{48cb8817-9634-4e0d-b75d-b1d63477fbb1}">
+      <Implementation>
+        <ST><![CDATA[
+(*Pass Node States into Array  in order on Physical Fixture*)
+
+		NodeState:=NodeLayout.State;
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$Gather Status Of Hardware $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+	(*Discrete I/O Nodes*)
+	IF (*N00.InfoData.State=8*) (*Fix doesn't have an EP1111*) 
+		(N01.InfoData.State=8 OR (Discrete_In.Input_Node_Count<2))
+		AND (N02.InfoData.State=8 OR (Discrete_In.Input_Node_Count<3))
+		AND (N03.InfoData.State=8 OR (Discrete_In.Input_Node_Count<4))
+		AND (N04.InfoData.State=8 OR (Discrete_In.Input_Node_Count<5))
+		AND (N05.InfoData.State=8 OR (Discrete_In.Input_Node_Count<6))
+		AND (N06.InfoData.State=8 OR (Discrete_In.Input_Node_Count<7))
+		AND (N07.InfoData.State=8 OR (Discrete_In.Input_Node_Count<8))
+		AND (N08.InfoData.State=8 OR (Discrete_In.Input_Node_Count<9))
+		AND (N09.InfoData.State=8 OR (Discrete_In.Input_Node_Count<10))
+		AND (N10.InfoData.State=8 OR (Discrete_In.Input_Node_Count<11))
+		AND (N11.InfoData.State=8 OR (Discrete_In.Input_Node_Count<12))
+		AND (N12.InfoData.State=8 OR (Discrete_In.Input_Node_Count<13))
+		AND (N13.InfoData.State=8 OR (Discrete_In.Input_Node_Count<14))
+		AND (N14.InfoData.State=8 OR (Discrete_In.Input_Node_Count<15))
+		AND (N15.InfoData.State=8 OR (Discrete_In.Input_Node_Count<16))
+		AND (N16.InfoData.State=8 OR (Discrete_In.Input_Node_Count<17))
+		AND (N17.InfoData.State=8 OR (Discrete_In.Input_Node_Count<18))
+		AND (N18.InfoData.State=8 OR (Discrete_In.Input_Node_Count<19))
+		AND (N19.InfoData.State=8 OR (Discrete_In.Input_Node_Count<20))
+		AND (N20.InfoData.State=8 OR (Discrete_In.Input_Node_Count<21))
+		AND (N21.InfoData.State=8 OR (Discrete_In.Input_Node_Count<22))
+		AND (N22.InfoData.State=8 OR (Discrete_In.Input_Node_Count<23))
+		AND (N100_STAT.InfoData.State=8 OR (Discrete_In.VB_Node_Count<1))
+		AND (N101_STAT.InfoData.State=8 OR (Discrete_In.VB_Node_Count<2))
+		AND (N102_STAT.InfoData.State=8 OR (Discrete_In.VB_Node_Count<3))
+
+		THEN
+			DiscreteNode_OK:=TRUE;
+
+	ELSE
+			DiscreteNode_OK:=FALSE;
+
+	END_IF;
+
+
+
+	(*Cable Break Detection*)
+	(*Function Returns Flags to warn of possible cable break*)
+	ECatSlave_Cable_Breaks:= FUN_GTAC_EcatSlaveConnState_64bit(NodeState);	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(*end*)]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Production" Id="{5bb1cb68-a126-4c38-a534-0011016f1ac9}">
+      <Implementation>
+        <ST><![CDATA[(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Production Information $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Increment Production Counter*)
+	Prod_Inc.CLK:= Unload_Complete;
+	Prod_Inc();
+	IF Prod_Inc.Q
+		THEN
+		Production_Count:= Production_Count+1;
+	END_IF;
+	IF Discrete_In.ResetProd
+		THEN
+		Production_Count:= 0;
+	END_IF;
+	Prod_Count_Out:= Production_Count;
+
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Production Report~~~~~~~~~~~~~~~~~~~~~~~~~*)
+	(*Input Data*)
+	Production_Report.Machine_Serial:= GTAC_CONFIG.Machine_Serial;
+	Production_Report.Machine_Common_Name:= GTAC_CONFIG.Machine_Common_Name;
+	Production_Report.Prod_Inc:= Prod_Inc.Q;
+	Production_Report.Scrap_Inc:= In_From_ICxx.QA_Request_RH;
+	Production_Report.Scrap_Dec:= In_From_ICxx.QA_Reinsert_RH;
+	Production_Report.Reference_TimeDate:= MAIN.Local_Time;
+	Production_Report.Reference_Target_Time:= GTAC_CONFIG.ProdConfig_Target_CycleTime; 					(*This is the machine Expected Cycle Time*)
+	Production_Report.Config_Day_TOD:= GTAC_CONFIG.ProdConfig_Day;										(*Pass Each Shift Configuration Structure (Start/End Time, Break Times etc*)
+	Production_Report.Config_Aft_TOD:= GTAC_CONFIG.ProdConfig_Aft;
+	Production_Report.Config_Mid_TOD:= GTAC_CONFIG.ProdConfig_Mid;
+	Production_Report.Config_Shift_Enables:= GTAC_CONFIG.ProdConfig_Common.Shift_Enables;					(*Enable Bits for Shifts*)
+	Production_Report.Config_Break_Count:= GTAC_CONFIG.ProdConfig_Common.Break_Count;						(*Select Amount of Breaks per shift*)
+	Production_Report.Machine_StoppedBy_Fault:= Faults.System_Major_Fault;
+	Production_Report.Enable_InShift_Change:= GTAC_CONFIG.ProdConfig_Option_SelectInShiftChange;				(*Allows Operator 5 mins at start and end of shift for clean up*)
+	(*Call FB*)
+	IF NOT MAIN.Starting_Scan_Pulse
+		THEN
+		Production_Report();
+	END_IF;
+
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Cycle Time Counters ~~~~~~~~~~~~~~~~~~~~~~~~~*)
+	(*Move Previous To Register*)
+	Cycle_Time_Pulse.CLK:= Unload_Complete;
+	Cycle_Time_Pulse();
+	IF Cycle_Time_Pulse.Q
+		THEN
+		PrevCycle_Time_Out:= Cycle_Time_Out;
+	END_IF;
+	(*Monitor Current Cycle Time (Full Cycle Time of Process)*)
+		Cycle_Time.PT:= T#9999S;
+		Cycle_Time.IN:= NOT Cycle_Time_Pulse.Q AND In_Auto;
+		Cycle_Time();
+		Cycle_Time_Out:= Cycle_Time.ET;
+
+	(*Monitor Load Time*)
+		IF In_Auto AND NOT Start_Seal_Robots AND NOT Start_Stud_Robots AND NOT Start_Weld_Robots  AND NOT Weld_Robots_Clear AND NOT Unload_Complete
+			THEN
+			Load_Time_Out:= Load_Time.ET;
+		END_IF;
+		Load_Time.PT:= T#9999S;
+		Load_Time.IN:= In_Auto AND NOT Start_Seal_Robots AND NOT Start_Stud_Robots AND NOT Start_Weld_Robots  AND NOT Weld_Robots_Clear AND NOT Unload_Complete;
+		Load_Time();
+
+	(*Monitor Robot Sealing Time*)
+		IF NOT Seal_Robots_Clear
+			THEN
+			Seal_Time_Out:= Seal_Time.ET;
+		END_IF;
+		Seal_Time.PT:= T#9999S;
+		Seal_Time.IN:= NOT Seal_Robots_Clear;
+		Seal_Time();
+
+	(*Monitor Robot Stud Time*)
+		IF NOT Stud_Robots_Clear
+			THEN
+			Stud_Time_Out:= Stud_Time.ET;
+		END_IF;
+		Stud_Time.PT:= T#9999S;
+		Stud_Time.IN:= NOT Stud_Robots_Clear;
+		Stud_Time();
+
+	(*Monitor Robot Welding Time*)
+		IF NOT Weld_Robots_Clear
+			THEN
+			Weld_Time_Out:= Weld_Time.ET;
+		END_IF;
+		Weld_Time.PT:= T#9999S;
+		Weld_Time.IN:= NOT Weld_Robots_Clear;
+		Weld_Time();
+
+	(*Monitor Robot Turntable Time*)
+		IF NOT Turntable_Clear
+			THEN
+			Turn_Time_Out:= Turn_Time.ET;
+		END_IF;
+		Turn_Time.PT:= T#9999S;
+		Turn_Time.IN:= NOT Turntable_Clear;
+		Turn_Time();
+
+	(*Monitor Unload Time*)
+		IF Welding_Complete
+			THEN
+			Unload_Time_Out:= Unload_Time.ET;
+		END_IF;
+		Unload_Time.PT:= T#9999S;
+		Unload_Time.IN:= Welding_Complete;
+		Unload_Time();
+
+
+
+
+
+
+
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~Product Data Report~~~~~~~~~~~~~~~~~~~~~~~~~*)
+(*Can be used to load and store product specific data (pass fail results, measurements etc) into DB*)
+(*Triggers to start actual storage are contained in GTAC_CONFIG.Reports*)
+
+(*Load Data into area*)
+	(*Capture Load Complete*)
+	IF Load_Complete1_Ack THEN
+		Out_To_ICxx.ProductReport[15].Generic_PassFail_Notes[15]:= 'Comp';
+	END_IF;
+		Out_To_ICxx.ProductReport[21]:= Fix105_ProductData_Pers; 	(*Transfer Product Data to UI, see MAIN.Product_Data*)
+
+
+
+
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Proxies" Id="{81b1c56f-1966-41bb-8bd1-2b06b2feacf0}">
+      <Implementation>
+        <ST><![CDATA[
+
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+
+
+
+	(*Part 1 Present*)
+		Part_Present1FB(
+			Sensor_Input:= N01.I.0,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present1,
+			Faulted=>  PPFaults.1);
+
+	(*Part 2 Present*)
+		Part_Present2FB(
+			Sensor_Input:= N01.I.1,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present2,
+			Faulted=>  PPFaults.2);
+
+	(*Part 3 Present*)
+		Part_Present3FB(
+			Sensor_Input:= N01.I.2,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present3,
+			Faulted=>  PPFaults.3);
+
+	(*Part 4 Present*)
+		Part_Present4FB(
+			Sensor_Input:=N01.I.3,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present4,
+			Faulted=>  PPFaults.4);
+
+	(*Part 5 Present*)
+		Part_Present5FB(
+			Sensor_Input:= N01.I.4,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present5,
+			Faulted=>  PPFaults.5);
+
+	(*Part 6 Present*)
+		Part_Present6FB(
+			Sensor_Input:= N01.I.5,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present6,
+			Faulted=>  PPFaults.6);
+
+	(*Part 7 Present*)
+		Part_Present7FB(
+			Sensor_Input:= N01.I.6,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present7,
+			Faulted=>  PPFaults.7);
+
+	(*Part 8 Present*)
+		Part_Present8FB(
+			Sensor_Input:= N01.I.7,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present8,
+			Faulted=>  PPFaults.8);
+
+	(*Part 9 Present*)
+		Part_Present9FB(
+			Sensor_Input:= N05.I.0,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present9,
+			Faulted=>  PPFaults.9);
+
+	(*Part 10 Present*)
+		Part_Present10FB(
+			Sensor_Input:= N05.I.1,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present10,
+			Faulted=>  PPFaults.10);
+
+	(*Part 11 Present*)
+		Part_Present11FB(
+			Sensor_Input:= N05.I.2,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present11,
+			Faulted=>  PPFaults.11);
+
+	(*Part 12 Present*)
+		Part_Present12FB(
+			Sensor_Input:=  N05.I.3,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present12,
+			Faulted=>  PPFaults.12);
+
+	(*Part 13 Present*)
+		Part_Present13FB(
+			Sensor_Input:= N05.I.4,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present13,
+			Faulted=>  PPFaults.13);
+
+	(*Part 14 Present*)
+		Part_Present14FB(
+			Sensor_Input:= N05.I.5,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present14,
+			Faulted=>  PPFaults.14);
+
+
+	(*Part 15 Present*)
+		Part_Present15FB(
+			Sensor_Input:= N05.I.6,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present15,
+			Faulted=>  PPFaults.15);
+
+	(*Part 16 Present*)
+		Part_Present16FB(
+			Sensor_Input:= N05.I.7,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present16,
+			Faulted=>  PPFaults.16);
+
+	(*Part 17 Present*)
+		Part_Present17FB(
+			Sensor_Input:= N06.I.0,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present17,
+			Faulted=>  PPFaults.17);
+
+	(*Part 18 Present*)
+		Part_Present18FB(
+			Sensor_Input:= N06.I.1,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present18,
+			Faulted=>  PPFaults.18);
+
+	(*Part 19 Present*)
+		Part_Present19FB(
+			Sensor_Input:= N06.I.2,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present19,
+			Faulted=>  PPFaults.19);
+
+	(*Part 20 Present*)
+		Part_Present20FB(
+			Sensor_Input:= N06.I.3,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present20,
+			Faulted=>  PPFaults.20);
+
+	(*Part 21 Present*)
+		Part_Present21FB(
+			Sensor_Input:= N06.I.4,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present21,
+			Faulted=>  PPFaults.21);
+
+	(*Part 22 Present*)
+		Part_Present22FB(
+			Sensor_Input:= N06.I.5,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present22,
+			Faulted=>  PPFaults.22);
+
+	(*Part 23 Present*)
+		Part_Present23FB(
+			Sensor_Input:= N06.I.6,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present23,
+			Faulted=>  PPFaults.23);
+
+	(*Part 24 Present*)
+		Part_Present24FB(
+			Sensor_Input:= N06.I.7,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present24,
+			Faulted=>  PPFaults.24);
+
+	(*Part 25 Present*)
+		Part_Present25FB(
+			Sensor_Input:= N07.I.0,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present25,
+			Faulted=>  PPFaults.25);
+
+	(*Part 26 Present*)
+		Part_Present26FB(
+			Sensor_Input:= N07.I.1,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present26,
+			Faulted=>  PPFaults.26);
+
+	(*Part 27 Present*)
+		Part_Present27FB(
+			Sensor_Input:= N07.I.2,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Status=> Part_Present27,
+			Faulted=>  PPFaults.27);
+
+	(*Part 28 Present*)
+		Part_Present28FB(
+			Sensor_Input:= N07.I.3,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present28,
+			Faulted=>  PPFaults.28);
+
+
+	(*Part 29 Present*)
+		Part_Present29FB(
+			Sensor_Input:= N07.I.4,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present29,
+			Faulted=>  PPFaults1.0);
+
+	(*Part 30 Present*)
+		Part_Present30FB(
+			Sensor_Input:=N07.I.5,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present30,
+			Faulted=>  PPFaults1.1);
+
+	(*Part 31 Present*)
+		Part_Present31FB(
+			Sensor_Input:= N07.I.6,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present31,
+			Faulted=>  PPFaults1.2);
+
+	(*Part 32 Present*)
+		Part_Present32FB(
+			Sensor_Input:= N07.I.7,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present32,
+			Faulted=>  PPFaults1.3);
+
+	(*Part 33 Present*)
+		Part_Present33FB(
+			Sensor_Input:= N08.I.0,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present33,
+			Faulted=>  PPFaults1.4);
+
+	(*Part 34 Present*)
+		Part_Present34FB(
+			Sensor_Input:= N08.I.1,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present34,
+			Faulted=>  PPFaults1.5);
+
+	(*Part 35 Present*)
+		Part_Present35FB(
+			Sensor_Input:= N08.I.2,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present35,
+			Faulted=>  PPFaults1.6);
+
+	(*Part 36 Present*)
+		Part_Present36FB(
+			Sensor_Input:= N08.I.3,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present36,
+			Faulted=>  PPFaults1.7);
+
+	(*Part 37 Present*)
+		Part_Present37FB(
+			Sensor_Input:= N08.I.4,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present37,
+			Faulted=>  PPFaults1.8);
+
+	(*Part 38 Present*)
+		Part_Present38FB(
+			Sensor_Input:= N08.I.5,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present38,
+			Faulted=>  PPFaults1.9);
+
+	(*Part 39 Present*)
+		Part_Present39FB(
+			Sensor_Input:= N08.I.6,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present39,
+			Faulted=>  PPFaults1.10);
+
+	(*Part 40 Present*)
+		Part_Present40FB(
+			Sensor_Input:= N08.I.7,
+			On_Trigger1:= Enable_Motion AND In_Auto AND NOT Unload_Complete,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= Dry_Cycle OR (Cycle_Complete  AND NOT Enable_Motion),
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= FALSE,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present40,
+			Faulted=>  PPFaults1.11);
+
+
+
+(*end*)]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Robot_Registration" Id="{30c0f722-dafb-4e5a-961c-885da0d067ad}">
+      <Implementation>
+        <ST><![CDATA[
+
+(*#################################### Register Robots to Tool ##################################*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+(*NOTE: See Example code in Fix 15 / 16*)
+(*NOTE: See Example code in Fix 15 / 16*)
+
+	(*Data From Load Robot(s)*)
+	Load_Robots_Clear1:= (MAIN.R4.Clear_Of_EquipInterf7 AND NOT (MAIN.R4.Task_ID_Ack=Dropoff_Fix105)) OR MAIN.R4.At_Home;
+	Load_Robots_Clear2:= TRUE;
+	Load_Robots_Clear:=Load_Robots_Clear1 AND Load_Robots_Clear2;
+	Load_Robots_WorkingOK1:= (MAIN.R4.Task_ID_Ack=Dropoff_Fix105) AND MAIN.R4.Operating;
+	Load_Robots_WorkingOK2:= FALSE;
+	IF FALSE
+		THEN
+		Load_Robots_UnclampEarly1:= TRUE;
+	END_IF;
+	IF FALSE
+		THEN
+		Load_Robots_UnclampEarly2:= TRUE;
+	END_IF;
+	Load_Robots_Complete1:= MAIN.R4.At_EquipInterf7 AND (MAIN.R4.Task_ID_Ack=Dropoff_Fix105) AND MAIN.R4.Task_Completed;
+	Load_Robots_Complete2:= FALSE;
+	Load_Robots_PartInEOAT1:= EOAT04.EOAT_Full;
+	Load_Robots_PartInEOAT2:= FALSE;
+
+
+	(*Data From Turntable*)
+	TurntableA_Clear:= TRUE;
+	TurntableB_Clear:= TRUE;
+	Turntable_Clear:= TurntableA_Clear AND TurntableB_Clear AND NOT MAIN.R1.In_Teach;
+	TurntableA_At_Robot:= FALSE;
+	TurntableB_At_Robot:= FALSE;
+	Turntable_WorkingOK:= FALSE;
+	TurntableA_Complete:= FALSE;
+	TurntableB_Complete:= FALSE;
+
+
+	(*Data From Seal Robot(s)*)
+	Seal_Robots_Clear:= TRUE;
+	Seal_Robots_WorkingOK:= FALSE;
+	IF FALSE
+		THEN
+		Seal_Robots_UnclampEarly:= TRUE;
+	END_IF;
+	Seal_Robots_Complete:= FALSE;
+
+
+	(*Data From Stud Robot(s)*)
+	Stud_Robots_Clear:= TRUE;
+	Stud_Robots_WorkingOK:= FALSE;
+	IF FALSE
+		THEN
+		Stud_Robots_UnclampEarly:= TRUE;
+	END_IF;
+	Stud_Robots_Complete:= FALSE;
+
+
+	(*Data From Weld Robot(s)*)
+	Weld_Robots_Clear:= TRUE;
+	Weld_Robots_WorkingOK:= FALSE;
+	IF FALSE
+		THEN
+		Weld_Robots_UnclampEarly:= TRUE;
+	END_IF;
+	Weld_Robots_Complete:= FALSE;
+
+	(*Change Robots for Current Fixture functionality*) (*If no MIG robots Set to True.  Example code is in Fix15/16*) 
+	Mig_Robots_Ready:=	TRUE;	
+
+	(*Data From Unload Robot(s)*)
+	Unload_Robots_Clear1:= TRUE;
+	Unload_Robots_Clear2:= TRUE;
+	Unload_Robots_Clear:= Unload_Robots_Clear1 AND Unload_Robots_Clear2;
+	Unload_Robots_WorkingOK1:= FALSE;
+	Unload_Robots_WorkingOK2:= FALSE;
+	Unload_Robots_Complete1:= FALSE;
+	Unload_Robots_Complete2:= FALSE;
+	Unload_Robots_EOATEmpty1:=FALSE;
+	Unload_Robots_EOATEmpty2:= FALSE;
+
+
+
+	(*Amalgumate All Robots Clear of Tool*)
+	All_Robots_Clear:= Load_Robots_Clear AND Seal_Robots_Clear AND Stud_Robots_Clear AND Turntable_Clear AND Weld_Robots_Clear AND Unload_Robots_Clear;
+
+	(*Data To All Robots*)
+	(*Task ID*)
+	R4_Data.Task_ID[15]:=Task_ID;
+
+	(*Fix ID*)
+	R4_Data.Fix_ID[15]:=Fix_ID;
+
+	(*Model ID*)
+	R4_Data.Model_ID[15]:=Model_ID;
+
+	(*Proceed from Pounce*)
+	R4_Data.Proceed_From_Pounce[15]:= Robots_Clear_ToProceed;
+
+	(*Complete Acks*)
+	R4_Data.Complete_Ack[15]:=(Weld_Complete_Ack AND Weld_Robots_WorkingOK);
+
+	(*Repo Acks*)
+	R4_Data.PeripheralReq_Ack[15]:= Repo_Ack;
+
+(*%%%%%%%%%%%%%% Call Robots to Tool and Give Them, Task ID, Fixture ID and Model ID %%%%%%%%%%%%%%%%%*)
+	(* Perform Call To Tool*)
+	Tool_Call_ForLoadRobots1:= Enable_Motion AND (NOT Cell_In_Services OR NOT Load_Robots_Clear1)
+						AND Start_Load_Robots1 AND NOT Start_Load_Robots2 AND NOT Start_Weld_Robots AND NOT Start_Seal_Robots AND NOT Start_Stud_Robots
+						AND NOT Start_Unload_Robots1 AND NOT Start_Unload_Robots2 AND NOT Start_TurntableA AND NOT Start_TurntableB;
+	Tool_Call_ForLoadRobots2:= Enable_Motion AND (NOT Cell_In_Services OR NOT Load_Robots_Clear2)
+						AND NOT Start_Load_Robots1 AND Start_Load_Robots2 AND NOT Start_Weld_Robots AND NOT Start_Seal_Robots AND NOT Start_Stud_Robots
+						AND NOT Start_Unload_Robots1 AND NOT Start_Unload_Robots2 AND NOT Start_TurntableA AND NOT Start_TurntableB;
+	Tool_Call_ForSealRobots:=Enable_Motion AND (NOT Cell_In_Services OR NOT Seal_Robots_Clear)
+						AND NOT Start_Load_Robots1 AND NOT Start_Load_Robots2 AND NOT Start_Weld_Robots AND Start_Seal_Robots AND NOT Start_Stud_Robots
+						AND NOT Start_Unload_Robots1 AND NOT Start_Unload_Robots2 AND NOT Start_TurntableA AND NOT Start_TurntableB;
+	Tool_Call_ForStudRobots:=Enable_Motion AND (NOT Cell_In_Services OR NOT Stud_Robots_Clear)
+						AND NOT Start_Load_Robots1 AND NOT Start_Load_Robots2 AND NOT Start_Weld_Robots AND NOT Start_Seal_Robots AND Start_Stud_Robots
+						AND NOT Start_Unload_Robots1 AND NOT Start_Unload_Robots2 AND NOT Start_TurntableA AND NOT Start_TurntableB;
+	Tool_Call_ForSweepA:= Enable_Motion AND (NOT Cell_In_Services OR NOT TurntableA_Clear)
+						AND NOT Start_Load_Robots1 AND NOT Start_Load_Robots2 AND NOT Start_Weld_Robots AND NOT Start_Seal_Robots AND NOT Start_Stud_Robots
+						AND NOT Start_Unload_Robots1 AND NOT Start_Unload_Robots2 AND Start_TurntableA AND NOT Start_TurntableB;
+	Tool_Call_ForSweepB:= Enable_Motion AND (NOT Cell_In_Services OR NOT TurntableB_Clear)
+						AND NOT Start_Load_Robots1 AND NOT Start_Load_Robots2 AND NOT Start_Weld_Robots AND NOT Start_Seal_Robots AND NOT Start_Stud_Robots
+						AND NOT Start_Unload_Robots1 AND NOT Start_Unload_Robots2 AND NOT Start_TurntableA AND Start_TurntableB;
+	Tool_Call_ForWeldRobots:= Enable_Motion AND (NOT Cell_In_Services OR NOT Weld_Robots_Clear)
+						AND NOT Start_Load_Robots1 AND NOT Start_Load_Robots2 AND Start_Weld_Robots AND NOT Start_Seal_Robots AND NOT Start_Stud_Robots
+						AND NOT Start_Unload_Robots1 AND NOT Start_Unload_Robots2 AND NOT Start_TurntableA AND NOT Start_TurntableB;
+	Tool_Call_ForUnloadRobots1:= Enable_Motion AND (NOT Cell_In_Services OR NOT Unload_Robots_Clear1)
+						AND NOT Start_Load_Robots1 AND NOT Start_Load_Robots2 AND NOT Start_Weld_Robots AND NOT Start_Seal_Robots AND NOT Start_Stud_Robots
+						AND Start_Unload_Robots1 AND NOT Start_Unload_Robots2 AND NOT Start_TurntableA AND NOT Start_TurntableB;
+	Tool_Call_ForUnloadRobots2:= Enable_Motion AND (NOT Cell_In_Services OR NOT Unload_Robots_Clear2)
+						AND NOT Start_Load_Robots1 AND NOT Start_Load_Robots2 AND NOT Start_Weld_Robots AND NOT Start_Seal_Robots AND NOT Start_Stud_Robots
+						AND NOT Start_Unload_Robots1 AND Start_Unload_Robots2 AND NOT Start_TurntableA AND NOT Start_TurntableB;
+
+
+
+	(*Allow Robots to Proceed Into Tool*)
+	(*!!!!!This is the final OK to allow Robots Into the Tool Area, So it Better Be Ready!!!!!!!*)
+	IF Enable_Motion
+		THEN
+			IF Load_Robots_Proceed1 AND Load_Robots_WorkingOK1 AND Load_Robots_Clear2 AND Seal_Robots_Clear AND Stud_Robots_Clear AND Turntable_Clear AND Weld_Robots_Clear AND Unload_Robots_Clear
+				THEN Robots_Clear_ToProceed:=TRUE;
+			ELSIF Load_Robots_Proceed2 AND Load_Robots_WorkingOK2 AND Load_Robots_Clear1 AND Seal_Robots_Clear AND Stud_Robots_Clear AND Turntable_Clear AND Weld_Robots_Clear AND Unload_Robots_Clear
+				THEN Robots_Clear_ToProceed:=TRUE;
+			ELSIF Seal_Robots_Proceed AND Seal_Robots_WorkingOK AND Load_Robots_Clear AND Stud_Robots_Clear AND Turntable_Clear AND Weld_Robots_Clear AND Unload_Robots_Clear
+				THEN Robots_Clear_ToProceed:=TRUE;
+			ELSIF Stud_Robots_Proceed AND Stud_Robots_WorkingOK AND Load_Robots_Clear AND Seal_Robots_Clear AND Turntable_Clear AND Weld_Robots_Clear AND Unload_Robots_Clear
+				THEN Robots_Clear_ToProceed:=TRUE;
+			ELSIF Weld_Robots_Proceed AND Weld_Robots_WorkingOK AND Load_Robots_Clear AND Seal_Robots_Clear AND Stud_Robots_Clear AND Turntable_Clear AND Unload_Robots_Clear
+				THEN Robots_Clear_ToProceed:=TRUE;
+			ELSIF Unload_Robots_Proceed1 AND Unload_Robots_WorkingOK1 AND Load_Robots_Clear AND Seal_Robots_Clear AND Stud_Robots_Clear AND Turntable_Clear AND Weld_Robots_Clear AND Unload_Robots_Clear2
+				THEN Robots_Clear_ToProceed:=TRUE;
+			ELSIF Unload_Robots_Proceed2 AND Unload_Robots_WorkingOK2 AND Load_Robots_Clear AND Seal_Robots_Clear AND Stud_Robots_Clear AND Turntable_Clear AND Weld_Robots_Clear AND Unload_Robots_Clear1
+				THEN Robots_Clear_ToProceed:=TRUE;
+			ELSE Robots_Clear_ToProceed:= FALSE;
+			END_IF;
+		ELSE Robots_Clear_ToProceed:= FALSE;
+	END_IF;
+
+(*+++++++++++++++++++++++++++++++++++++++++++++++ Task Complete Acks ++++++++++++++++++++++++++*)
+	(*1st Load Complete Ack*)
+	Load_Complete1_Ack:= Load_Robots_Complete1 AND Load_Complete1;
+
+	(*2nd Load Complete Ack*)
+	Load_Complete2_Ack:= Load_Robots_Complete2 AND Load_Complete2;
+
+	(*Seal Complete Ack*)
+	Seal_Complete_Ack:= Seal_Robots_Complete AND Sealing_Complete;
+
+	(*Stud Complete Ack*)
+	Stud_Complete_Ack:= Stud_Robots_Complete AND Stud_Complete;
+
+	(*Sweep Complete ACK*)
+	TurnA_Complete_Ack := TurntableA_Complete AND TurntableA_At_Robot;
+	TurnB_Complete_Ack := TurntableB_Complete AND TurntableB_At_Robot;
+
+	(*Weld Complete Ack*)
+	Weld_Complete_Ack:= Weld_Robots_Complete AND Welding_Complete;
+
+	(*Unload Complete Ack*)
+	Unload_Complete1_Ack:= Unload_Robots_Complete1 AND Unload_Complete;
+
+	(*Unload Complete Ack*)
+	Unload_Complete2_Ack:= Unload_Robots_Complete2 AND Unload_Complete;
+
+
+
+
+(*end*)]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Status_and_Faults" Id="{996d7eb3-3902-40c8-8bad-c06ac5cfdbb0}">
+      <Implementation>
+        <ST><![CDATA[
+
+
+(*^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ General Visualization ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*)
+	(*For Ready to Load Indicators*)
+		(*Flash when tool should be loaded but load is not complete*)
+		IF In_Auto AND Tool_At_Home AND NOT Welding_Complete AND All_Robots_Clear AND NOT All_Sensors_On.2
+			THEN
+				Ready_To_Load:= Pulse_500mS;
+				(*Go solid when tool has been loaded properly*)
+				(*Go solid when tool is ready to be unloaded*)
+		ELSIF In_Auto AND All_Robots_Clear  AND ((Tool_At_Home AND NOT Welding_Complete AND All_Sensors_On.2 AND NOT Enable_Motion)
+			OR (Tool_At_Unload.0 AND Welding_Complete AND (Sealing_Complete OR Sealer_Bypass) AND (Stud_Complete OR Stud_Bypass) AND TurntableA_At_Robot AND NOT All_Sensors_Off))
+			THEN
+				Ready_To_Load:= TRUE;
+		ELSE
+				Ready_To_Load:= FALSE;
+		END_IF;
+	(*For Red Stack Light Indicators*)
+		Red_Lamp_Req:= PPFaults<>0 OR CLFaulted.0 OR CLFaulted.4 OR (NOT Sealer_Bypass AND MAIN.SL01.Disp1_Volume_NotOK AND (MAIN.R1.Task_ID_Ack=Seal_Fix16)) OR Load_Seq01.Faulted;
+
+
+	(*Status Banners*)
+		(*1 - Check Parts On Sub Check*)
+		IF In_Auto AND NOT In_Manual AND NOT Cycle_Complete AND Tool_At_Load.0
+			AND NOT Start_Load_Robots1 AND NOT Start_Load_Robots2 AND NOT Start_Seal_Robots AND NOT Start_Stud_Robots AND NOT Start_TurntableA
+			AND NOT Start_TurntableB AND NOT Start_Weld_Robots AND NOT Start_Unload_Robots1 AND NOT Start_Unload_Robots2
+			THEN
+				IF NOT Dry_Cycle AND NOT All_Sensors_On.0
+					THEN Status:= 1;
+				ELSIF Dry_Cycle AND NOT Load_Complete1
+					THEN Status:=1;
+				END_IF;
+		END_IF;
+		(*2 - Sub Check OK*)
+		IF In_Auto AND NOT In_Manual AND NOT Cycle_Complete AND Tool_At_Load.1
+			AND NOT Start_Load_Robots1 AND NOT Start_Load_Robots2 AND NOT Start_Seal_Robots AND NOT Start_Stud_Robots AND NOT Start_TurntableA
+			AND NOT Start_TurntableB AND NOT Start_Weld_Robots AND NOT Start_Unload_Robots1 AND NOT Start_Unload_Robots2
+			THEN
+				IF NOT Dry_Cycle AND NOT All_Sensors_On.1
+					THEN Status:= 2;
+				ELSIF Dry_Cycle AND NOT Load_Complete2
+					THEN Status:=2;
+				END_IF;
+		END_IF;
+		(*3 - Load Main Part*)
+		IF In_Auto AND NOT In_Manual AND NOT Cycle_Complete AND Tool_At_Home
+			AND NOT Start_Load_Robots1 AND NOT Start_Load_Robots2 AND NOT Start_Seal_Robots AND NOT Start_Stud_Robots AND NOT Start_TurntableA
+			AND NOT Start_TurntableB AND NOT Start_Weld_Robots AND NOT Start_Unload_Robots1 AND NOT Start_Unload_Robots2
+			THEN
+				IF NOT Dry_Cycle AND NOT All_Sensors_On.2
+					THEN Status:= 3;
+				ELSIF Dry_Cycle AND NOT Load_Complete
+					THEN Status:=3;
+				END_IF;
+		END_IF;
+		(*10 - Load Parts Onto Tool*)
+		IF In_Auto AND NOT In_Manual AND NOT Cycle_Complete AND Tool_At_Load.0
+			AND NOT Start_Load_Robots1 AND NOT Start_Load_Robots2 AND NOT Start_Seal_Robots AND NOT Start_Stud_Robots AND NOT Start_TurntableA
+			AND NOT Start_TurntableB AND NOT Start_Weld_Robots AND NOT Start_Unload_Robots1 AND NOT Start_Unload_Robots2
+			THEN
+				IF NOT Dry_Cycle AND NOT All_Sensors_On.2
+					THEN Status:= 10;
+				ELSIF Dry_Cycle AND NOT Load_Complete
+					THEN Status:=10;
+				END_IF;
+		END_IF;
+		(*11 - Robot(s) Loading*)
+		IF ((Start_Load_Robots1 OR  Load_Robots_WorkingOK1) OR (Start_Load_Robots2 OR  Load_Robots_WorkingOK2)) AND In_Auto AND NOT In_Manual
+			AND NOT Start_Seal_Robots AND NOT Start_Stud_Robots AND NOT Start_TurntableA
+			AND NOT Start_TurntableB AND NOT Start_Weld_Robots AND NOT Start_Unload_Robots1 AND NOT Start_Unload_Robots2
+			THEN Status:= 11;
+		END_IF;
+		(*12 - Parts Loaded OK*)
+		IF In_Auto AND NOT In_Manual AND NOT Cycle_Complete
+			AND NOT Start_Load_Robots1 AND NOT Start_Load_Robots2 AND NOT Start_Seal_Robots AND NOT Start_Stud_Robots AND NOT Start_TurntableA
+			 AND NOT Start_TurntableB AND NOT Start_Weld_Robots AND NOT Start_Unload_Robots1 AND NOT Start_Unload_Robots2
+			THEN
+				IF (All_Sensors_On.2 AND Tool_At_Load.0) AND NOT Dry_Cycle
+					THEN Status:= 12;
+				ELSIF Load_Complete
+					THEN Status:= 12;
+				END_IF;
+		END_IF;
+		(*19 - Robot(s) Stud*)
+		IF (Start_Stud_Robots OR Stud_Robots_WorkingOK) AND In_Auto AND NOT In_Manual
+			AND NOT Start_Load_Robots1 AND NOT Start_Load_Robots2 AND NOT Start_Weld_Robots AND NOT Start_Seal_Robots AND NOT Start_TurntableA
+			 AND NOT Start_TurntableB AND NOT Start_Unload_Robots1 AND NOT Start_Unload_Robots2
+			THEN Status:= 19;
+		END_IF;
+		(*20 - Robot(s) Sealing*)
+		IF (Start_Seal_Robots OR Seal_Robots_WorkingOK) AND In_Auto AND NOT In_Manual
+			AND NOT Start_Load_Robots1 AND NOT Start_Load_Robots2 AND NOT Start_Weld_Robots AND NOT Start_Stud_Robots AND NOT Start_TurntableA
+			 AND NOT Start_TurntableB AND NOT Start_Unload_Robots1 AND NOT Start_Unload_Robots2
+			THEN Status:= 20;
+		END_IF;
+		(*21 - Robot(s) Welding*)
+		IF (Start_Weld_Robots OR Weld_Robots_WorkingOK) AND In_Auto AND NOT In_Manual
+			AND NOT Start_Load_Robots1 AND NOT Start_Load_Robots2 AND NOT Start_Seal_Robots AND NOT Start_Stud_Robots AND NOT Start_TurntableA
+			 AND NOT Start_TurntableB AND NOT Start_Unload_Robots1 AND NOT Start_Unload_Robots2
+			THEN Status:= 21;
+		END_IF;
+		(*22 - Welding Complete / Ready for Unload*)
+		IF In_Auto AND NOT In_Manual AND NOT Cycle_Complete AND Welding_Complete
+			AND NOT Start_Load_Robots1 AND NOT Start_Load_Robots2 AND NOT Start_Seal_Robots AND NOT Start_Stud_Robots AND NOT Start_TurntableA
+			AND NOT Start_TurntableB AND NOT Start_Weld_Robots AND NOT Start_Unload_Robots1 AND NOT Start_Unload_Robots2
+			THEN Status:= 22;
+		END_IF;
+		(*26 - Ready for Rotate*)
+		IF (Start_TurntableA OR Start_TurntableB) AND In_Auto AND NOT In_Manual
+			AND NOT Start_Load_Robots1 AND NOT Start_Load_Robots2 AND NOT Start_Seal_Robots AND NOT Start_Stud_Robots
+			AND NOT Start_Weld_Robots AND NOT Start_Unload_Robots1 AND NOT Start_Unload_Robots2
+			THEN Status := 26;
+		END_IF;
+		(*31 - Robot(s) Unloading*)
+		IF (Start_Unload_Robots1 OR Unload_Robots_WorkingOK1 OR Start_Unload_Robots2 OR Unload_Robots_WorkingOK2) AND In_Auto AND NOT In_Manual
+			AND NOT Start_Load_Robots1 AND NOT Start_Load_Robots2 AND NOT Start_Seal_Robots AND NOT Start_Stud_Robots AND NOT Start_TurntableA
+			AND NOT Start_TurntableB AND NOT Start_Weld_Robots
+			THEN Status:= 31;
+		END_IF;
+		(*32 - Unload Complete*)
+		IF In_Auto AND NOT In_Manual AND NOT Cycle_Complete AND Unload_Complete
+			AND NOT Start_Load_Robots1 AND NOT Start_Load_Robots2 AND NOT Start_Seal_Robots AND NOT Start_Stud_Robots AND NOT Start_TurntableA
+			AND NOT Start_TurntableB AND NOT Start_Weld_Robots AND NOT Start_Unload_Robots1 AND NOT Start_Unload_Robots2
+			THEN Status:= 32;
+		END_IF;
+		(*42 - Cycle Complete*)
+		IF In_Auto AND NOT In_Manual AND Cycle_Complete AND All_Sensors_Off
+			THEN Status:= 42;
+		END_IF;
+		(*50 - In Manual*)
+		IF In_Manual
+			THEN Status:= 50;
+		END_IF;
+		(*51 - Clamp Fault*)
+		IF (CLFaults1>0 OR CLFaults2>0 OR CLFaults3>0 OR CLFaults4>0) AND In_Auto AND NOT In_Manual
+			THEN Status:= 51;
+		END_IF;
+		(*52 - Part Present Sensor Fault*)
+		IF PPFaults>0 AND In_Auto AND NOT In_Manual
+			THEN Status:= 52;
+		END_IF;
+		(*53 - Nut Checks Failed Call QA*)
+		IF QAChecks_Failed AND In_Auto AND NOT In_Manual
+			THEN Status:= 53;
+		END_IF;
+		(*54 - Sealer Failed Call QA*)
+		IF NOT Sealer_Bypass AND (MAIN.SL01.Disp1_Volume_NotOK AND (MAIN.R1.Task_ID_Ack=Seal_Fix16)) AND In_Auto AND NOT In_Manual
+			THEN Status:= 54;
+		END_IF;
+		(*55 - Load Sequence Fault Call QA*)
+		IF Load_Seq01.Faulted AND In_Auto AND NOT In_Manual
+			THEN Status:= 55;
+		END_IF;
+
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Faults $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+	(*Clamp/Cylider Faults Group 1*)
+		IF CLFaults1>0
+			THEN CLFaulted.1:=TRUE;
+		ELSE
+			CLFaulted.1:=FALSE;
+		END_IF;
+	(*Clamp/Cylider Faults Group 2*)
+		IF CLFaults2>0
+			THEN CLFaulted.2:=TRUE;
+		ELSE
+			CLFaulted.2:=FALSE;
+		END_IF;
+	(*Clamp/Cylider Faults Group 3*)
+		IF CLFaults3>0
+			THEN CLFaulted.3:=TRUE;
+		ELSE
+			CLFaulted.3:=FALSE;
+		END_IF;
+	(*Clamp/Cylinder Faults Group 4 - Reserved Flag for QA Check Motion Faults*)
+		IF CLFaults4>0
+			THEN CLFaulted.4:=TRUE;
+		ELSE
+			CLFaulted.4:=FALSE;
+		END_IF;
+	(*Bit 0 is designated as ANY Clamp Group Faulted*)
+	IF CLFaulted.1 OR CLFaulted.2 OR CLFaulted.3
+		THEN CLFaulted.0:= TRUE;
+	ELSE CLFaulted.0 := FALSE;
+	END_IF;
+
+	(*Part Present Sensor Faults*)
+		IF (PPFaults>0) OR (PPFaults1>0) OR (PPFaults2>0)
+			THEN PPFaulted.0:=TRUE;
+		ELSE
+			PPFaulted.0:=FALSE;
+		END_IF;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(*end*)]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Task_Fix_Model_IDs" Id="{27fb3754-f720-4df8-97c6-37f8d4a989d8}">
+      <Implementation>
+        <ST><![CDATA[
+
+	(*Develop Task IDs - See Global Variable, "TaskID_Record"*)
+
+	IF (Start_Load_Robots1 OR Start_Load_Robots2) AND Enable_Motion
+		THEN Task_ID:= Dropoff_Fix105;
+	ELSIF Start_Seal_Robots AND Enable_Motion
+		THEN Task_ID:= Seal_Fix105;
+	ELSIF Start_Stud_Robots AND Enable_Motion
+		THEN Task_ID:= Stud_Fix105;
+	ELSIF Start_Weld_Robots AND Enable_Motion
+		THEN Task_ID:= Weld_Fix105;
+	ELSIF Start_TurnTableA AND Enable_Motion
+		THEN Task_ID:= Sweep_Fix105;
+	ELSIF (Start_Unload_Robots1 OR Start_Unload_Robots2) AND Enable_Motion
+		THEN Task_ID:= Pickup_Fix105;
+	ELSE Task_ID:= 0;
+	END_IF;
+
+	(*Develop Fixture ID*)
+	Fix_ID:= N00.ID;					(*In Future Map Beckhoff Dip Switch Data From IP67 Block to Here*)
+
+	(*Develop Model ID*)
+	Model_ID:= Discrete_In.ModelData;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Tool_States" Id="{349e0740-438e-470c-9aa5-56495c52c9eb}">
+      <Implementation>
+        <ST><![CDATA[
+
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+
+	Tool_At_HOME:= Clamp1RETD AND Clamp2RETD AND Clamp3RETD AND Clamp4RETD
+				AND Clamp5RETD AND Clamp6RETD AND Clamp7RETD AND Clamp8RETD
+				AND Clamp9RETD AND Clamp10RETD AND Clamp11RETD AND Clamp12RETD
+				AND Clamp13RETD AND Clamp14RETD AND Clamp15RETD AND Clamp16RETD
+				AND Clamp17RETD AND Clamp18RETD AND Clamp19RETD AND Clamp20RETD
+				AND Clamp21RETD AND Clamp22RETD AND Clamp23RETD AND Clamp24RETD
+				AND Pin1ADVD AND Pin2ADVD AND Pin3ADVD AND Pin4ADVD AND Pin5ADVD AND Pin6ADVD AND Pin7ADVD
+				AND Pin8ADVD AND Pin9ADVD AND Pin10ADVD AND Pin11ADVD AND Pin12ADVD AND Pin13ADVD AND Pin14ADVD
+				AND Slide1RETD AND Slide2RETD AND Slide3RETD AND Slide4RETD AND Slide5RETD AND Slide6RETD
+				AND Swing1ADVD AND Swing2ADVD AND Swing3ADVD AND Swing4ADVD AND Swing5ADVD AND Swing6ADVD;
+
+
+	Tool_At_Load.0:=Clamp1RETD AND Clamp2RETD AND Clamp3RETD AND Clamp4RETD
+				AND Clamp5RETD AND Clamp6RETD AND Clamp7RETD AND Clamp8RETD
+				AND Clamp9RETD AND Clamp10RETD AND Clamp11RETD AND Clamp12RETD
+				AND Clamp13RETD AND Clamp14RETD AND Clamp15RETD AND Clamp16RETD
+				AND Clamp17RETD AND Clamp18RETD AND Clamp19RETD AND Clamp20RETD
+				AND Clamp21RETD AND Clamp22RETD AND Clamp23RETD AND Clamp24RETD
+				AND Pin1ADVD AND Pin2ADVD AND Pin3ADVD AND Pin4ADVD AND Pin5ADVD AND Pin6ADVD AND Pin7ADVD
+				AND Pin8ADVD AND Pin9ADVD AND Pin10ADVD AND Pin11ADVD AND Pin12ADVD AND Pin13ADVD AND Pin14ADVD
+				AND Slide1RETD AND Slide2RETD AND Slide3RETD AND Slide4RETD AND Slide5RETD AND Slide6RETD
+				AND Swing1ADVD AND Swing2ADVD AND Swing3ADVD AND Swing4ADVD AND Swing5ADVD AND Swing6ADVD;
+	Tool_At_Load.1:=FALSE;
+	Tool_At_Load.2:= FALSE;
+	Tool_At_Load.3:= FALSE;
+	Tool_At_Load.4:= FALSE;
+
+
+	Tool_At_Seal.0:= Clamp1ADVD AND Clamp2ADVD AND Clamp3ADVD AND Clamp4ADVD
+				AND Clamp5ADVD AND Clamp6ADVD AND Clamp7ADVD AND Clamp8ADVD
+				AND Clamp9ADVD AND Clamp10ADVD AND Clamp11ADVD AND Clamp12ADVD
+				AND Clamp13ADVD AND Clamp14ADVD AND Clamp15ADVD AND Clamp16ADVD
+				AND Clamp17ADVD AND Clamp18ADVD AND Clamp19ADVD AND Clamp20ADVD
+				AND Clamp21ADVD AND Clamp22ADVD AND Clamp23ADVD AND Clamp24ADVD
+				AND Pin1ADVD AND Pin2ADVD AND Pin3ADVD AND Pin4ADVD AND Pin5ADVD AND Pin6ADVD AND Pin7ADVD
+				AND Pin8ADVD AND Pin9ADVD AND Pin10ADVD AND Pin11ADVD AND Pin12ADVD AND Pin13ADVD AND Pin14ADVD
+				AND Slide1RETD AND Slide2RETD AND Slide3RETD AND Slide4RETD AND Slide5RETD AND Slide6RETD
+				AND Swing1ADVD AND Swing2ADVD AND Swing3ADVD AND Swing4ADVD AND Swing5ADVD AND Swing6ADVD;
+	Tool_At_Seal.1:= FALSE;
+	Tool_At_Seal.2:= FALSE;
+	Tool_At_Seal.3:= FALSE;
+	Tool_At_Seal.4:= FALSE;
+
+
+	Tool_At_Stud.0:= Clamp1ADVD AND Clamp2ADVD AND Clamp3ADVD AND Clamp4ADVD
+				AND Clamp5ADVD AND Clamp6ADVD AND Clamp7ADVD AND Clamp8ADVD
+				AND Clamp9ADVD AND Clamp10ADVD AND Clamp11ADVD AND Clamp12ADVD
+				AND Clamp13ADVD AND Clamp14ADVD AND Clamp15ADVD AND Clamp16ADVD
+				AND Clamp17ADVD AND Clamp18ADVD AND Clamp19ADVD AND Clamp20ADVD
+				AND Clamp21ADVD AND Clamp22ADVD AND Clamp23ADVD AND Clamp24ADVD
+				AND Pin1ADVD AND Pin2ADVD AND Pin3ADVD AND Pin4ADVD AND Pin5ADVD AND Pin6ADVD AND Pin7ADVD
+				AND Pin8ADVD AND Pin9ADVD AND Pin10ADVD AND Pin11ADVD AND Pin12ADVD AND Pin13ADVD AND Pin14ADVD
+				AND Slide1RETD AND Slide2RETD AND Slide3RETD AND Slide4RETD AND Slide5RETD AND Slide6RETD
+				AND Swing1ADVD AND Swing2ADVD AND Swing3ADVD AND Swing4ADVD AND Swing5ADVD AND Swing6ADVD;
+	Tool_At_Stud.1:= FALSE;
+	Tool_At_Stud.2:= FALSE;
+	Tool_At_Stud.3:= FALSE;
+	Tool_At_Stud.4:= FALSE;
+
+
+	Tool_At_Rotate.0:= Clamp1ADVD AND Clamp2ADVD AND Clamp3ADVD AND Clamp4ADVD
+				AND Clamp5ADVD AND Clamp6ADVD AND Clamp7ADVD AND Clamp8ADVD
+				AND Clamp9ADVD AND Clamp10ADVD AND Clamp11ADVD AND Clamp12ADVD
+				AND Clamp13ADVD AND Clamp14ADVD AND Clamp15ADVD AND Clamp16ADVD
+				AND Clamp17ADVD AND Clamp18ADVD AND Clamp19ADVD AND Clamp20ADVD
+				AND Clamp21ADVD AND Clamp22ADVD AND Clamp23ADVD AND Clamp24ADVD
+				AND Pin1ADVD AND Pin2ADVD AND Pin3ADVD AND Pin4ADVD AND Pin5ADVD AND Pin6ADVD AND Pin7ADVD
+				AND Pin8ADVD AND Pin9ADVD AND Pin10ADVD AND Pin11ADVD AND Pin12ADVD AND Pin13ADVD AND Pin14ADVD
+				AND Slide1RETD AND Slide2RETD AND Slide3RETD AND Slide4RETD AND Slide5RETD AND Slide6RETD
+				AND Swing1ADVD AND Swing2ADVD AND Swing3ADVD AND Swing4ADVD AND Swing5ADVD AND Swing6ADVD;
+	Tool_At_Rotate.1:= FALSE;
+	Tool_At_Rotate.2:= FALSE;
+	Tool_At_Rotate.3:= FALSE;
+	Tool_At_Rotate.4:= FALSE;
+
+
+	Tool_At_Weld.0:= Clamp1ADVD AND Clamp2ADVD AND Clamp3ADVD AND Clamp4ADVD
+				AND Clamp5ADVD AND Clamp6ADVD AND Clamp7ADVD AND Clamp8ADVD
+				AND Clamp9ADVD AND Clamp10ADVD AND Clamp11ADVD AND Clamp12ADVD
+				AND Clamp13ADVD AND Clamp14ADVD AND Clamp15ADVD AND Clamp16ADVD
+				AND Clamp17ADVD AND Clamp18ADVD AND Clamp19ADVD AND Clamp20ADVD
+				AND Clamp21ADVD AND Clamp22ADVD AND Clamp23ADVD AND Clamp24ADVD
+				AND Pin1ADVD AND Pin2ADVD AND Pin3ADVD AND Pin4ADVD AND Pin5ADVD AND Pin6ADVD AND Pin7ADVD
+				AND Pin8ADVD AND Pin9ADVD AND Pin10ADVD AND Pin11ADVD AND Pin12ADVD AND Pin13ADVD AND Pin14ADVD
+				AND Slide1RETD AND Slide2RETD AND Slide3RETD AND Slide4RETD AND Slide5RETD AND Slide6RETD
+				AND Swing1ADVD AND Swing2ADVD AND Swing3ADVD AND Swing4ADVD AND Swing5ADVD AND Swing6ADVD;
+	Tool_At_Weld.1:= FALSE;
+	Tool_At_Weld.2:= FALSE;
+	Tool_At_Weld.3:= FALSE;
+	Tool_At_Weld.4:= FALSE;
+
+
+	Tool_At_Unload.0:=Clamp1RETD AND Clamp2RETD AND Clamp3RETD AND Clamp4RETD
+				AND Clamp5RETD AND Clamp6RETD AND Clamp7RETD AND Clamp8RETD
+				AND Clamp9RETD AND Clamp10RETD AND Clamp11RETD AND Clamp12RETD
+				AND Clamp13RETD AND Clamp14RETD AND Clamp15RETD AND Clamp16RETD
+				AND Clamp17RETD AND Clamp18RETD AND Clamp19RETD AND Clamp20RETD
+				AND Clamp21RETD AND Clamp22RETD AND Clamp23RETD AND Clamp24RETD
+				AND Pin1RETD AND Pin2RETD AND Pin3RETD AND Pin4RETD AND Pin5RETD AND Pin6RETD AND Pin7RETD
+				AND Pin8RETD AND Pin9RETD AND Pin10RETD AND Pin11RETD AND Pin12RETD AND Pin13RETD AND Pin14RETD
+				AND Slide1ADVD AND Slide2ADVD AND Slide3ADVD AND Slide4ADVD AND Slide5ADVD AND Slide6ADVD
+				AND Swing1RETD AND Swing2RETD AND Swing3RETD AND Swing4RETD AND Swing5RETD AND Swing6RETD;
+	Tool_At_Unload.1:=FALSE;
+	Tool_At_Unload.2:= FALSE;
+	Tool_At_Unload.3:= FALSE;
+	Tool_At_Unload.4:= FALSE;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(*end*)]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Tool_VBSeq_Repos" Id="{18d4fc0d-470d-4c74-8822-ffc09c271bd1}">
+      <Implementation>
+        <ST><![CDATA[(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+
+
+(*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Tool Motion Control !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*)
+
+(*----------------------------------------- Camp / Unclamp Steps -------------------------------*)
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Develop Clamp and Unclamp Interlocks $$$$$$$$$$$$$$$$$$$$$$*)
+(* Note: This is one method to create valve bank commands for clamp and unclamp sequencing
+you are welcome to use the direct method as well*)
+
+	(*Start Clamp Sequence*)
+	(*First Stage Clamping*)
+	Clamp_Step.0:= Auto_Run AND NOT Welding_Complete AND FALSE;
+	(*Second Stage Clamping*)
+	Clamp_Step.1:=  Clamp_Step.0 AND FALSE;
+	(*Third Stage Clamping*)
+	Clamp_Step.2:= Clamp_Step.1 AND FALSE;
+	(*Forth Stage Clamping*)
+	Clamp_Step.3:= Clamp_Step.2 AND FALSE;
+
+
+	(*Start Unlcamp Sequence*)
+	(*First Stage Unclamping*)
+	Unclamp_Step.0:= Welding_Complete AND FALSE;
+	(*Second Stage Unclamping*)
+	Unclamp_Step.1:= Unclamp_Step.0 AND FALSE;
+	(*Third Stage Unclamping*)
+	Unclamp_Step.2:= Unclamp_Step.1 AND FALSE;
+	(*Fourth Stage Unclamping*)
+	Unclamp_Step.3:= Unclamp_Step.2 AND FALSE;
+
+
+
+(*------------------------------------------- Repositions --------------------------------------*)
+
+	(*Reposition Request#1*)
+	IF FALSE
+		THEN
+			Repo_Reqs.0:= TRUE;
+	END_IF;
+
+	(*Reposition Request#2*)
+	IF FALSE
+		THEN
+			Repo_Reqs.1:= TRUE;
+	END_IF;
+
+	(*Reposition Request#3*)
+	IF FALSE
+		THEN
+			Repo_Reqs.2:= TRUE;
+	END_IF;
+
+	(*Reposition Request#4*)
+	IF FALSE
+		THEN
+			Repo_Reqs.3:= TRUE;
+	END_IF;
+
+	(*Reposition Request#5*)
+	IF FALSE
+		THEN
+			Repo_Reqs.4:= TRUE;
+	END_IF;
+
+	(*Reposition Request#6*)
+	IF FALSE
+		THEN
+			Repo_Reqs.5:= TRUE;
+	END_IF;
+
+	(*Reposition Request#7*)
+	IF FALSE
+		THEN
+			Repo_Reqs.6:= TRUE;
+	END_IF;
+
+	(*Reposition Request#8*)
+	IF FALSE
+		THEN
+			Repo_Reqs.7:= TRUE;
+	END_IF;
+
+	(*Reset All Reposition Acks At the End Of Cycle*)
+	IF Cycle_Complete
+		THEN
+			Repo_Reqs:= 0;
+	END_IF;
+
+(*------------------------- Reposition Acks ---------------------*)
+	Repo_Ack.0:= Repo_Reqs.0 AND FALSE;
+	Repo_Ack.1:= Repo_Reqs.1 AND FALSE;
+	Repo_Ack.2:= Repo_Reqs.2 AND FALSE;
+	Repo_Ack.3:= Repo_Reqs.3 AND FALSE;
+	Repo_Ack.4:= Repo_Reqs.4 AND FALSE;
+	Repo_Ack.5:= Repo_Reqs.5 AND FALSE;
+	Repo_Ack.6:= Repo_Reqs.6 AND FALSE;
+	Repo_Ack.7:= Repo_Reqs.7 AND FALSE;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="ValveBank1" Id="{a2eddce2-4bde-4a7e-96a0-2bb07aec0960}">
+      <Implementation>
+        <ST><![CDATA[
+
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+
+(*+++++++++++VALVE BANK 1 +++++++++++++*)
+(*+++++++++++VALVE BANK 1 +++++++++++++*)
+(*+++++++++++VALVE BANK 1 +++++++++++++*)
+
+
+	(*Valve 1, A+B*)
+	(*spare*)
+		Valve1FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.1S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs.0,
+			In_Manual_SideB_Command:= (Discrete_In.ManReqs.1 OR Discrete_In.Go_Home),
+			SideA_Indicator:= (Clamp1ADVD AND Clamp2ADVD AND Clamp3ADVD AND Clamp4ADVD),
+			SideB_Indicator:= (Clamp1RETD AND Clamp2RETD AND Clamp3RETD AND Clamp4RETD) OR Manual_Ind_HomePrompt,
+			TurnOn_SideA_SOL=> N100.Q.0,
+			TurnOn_SideB_SOL=> N100.Q.1,
+			TurnOn_SideA_Indicator=> Manual_Indicators1.0,
+			TurnOn_SideB_Indicator=> Manual_Indicators1.1
+			 );
+		Valve1FB.In_Auto_SideA_Command:= FALSE;
+		Valve1FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 2, A+B*)
+	(*spare*)
+		Valve2FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs.2,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs.3,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.2,
+			TurnOn_SideB_SOL=> N100.Q.3,
+			TurnOn_SideA_Indicator=> Manual_Indicators1.2,
+			TurnOn_SideB_Indicator=> Manual_Indicators1.3
+			 );
+		Valve2FB.In_Auto_SideA_Command:= FALSE;
+		Valve2FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 3, A+B*)
+	(*spare*)
+		Valve3FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs.4,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs.5,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.4,
+			TurnOn_SideB_SOL=> N100.Q.5,
+			TurnOn_SideA_Indicator=> Manual_Indicators1.4,
+			TurnOn_SideB_Indicator=> Manual_Indicators1.5
+			 );
+		Valve3FB.In_Auto_SideA_Command:= FALSE;
+		Valve3FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 4, A+B*)
+	(*spare*)
+		Valve4FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs.6,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs.7,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.6,
+			TurnOn_SideB_SOL=> N100.Q.7,
+			TurnOn_SideA_Indicator=> Manual_Indicators1.6,
+			TurnOn_SideB_Indicator=> Manual_Indicators1.7
+			 );
+		Valve4FB.In_Auto_SideA_Command:= FALSE;
+		Valve4FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 5, A+B*)
+	(*spare*)
+		Valve5FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs.8,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs.9,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.8,
+			TurnOn_SideB_SOL=> N100.Q.9,
+			TurnOn_SideA_Indicator=> Manual_Indicators1.8,
+			TurnOn_SideB_Indicator=> Manual_Indicators1.9
+			 );
+		Valve5FB.In_Auto_SideA_Command:= FALSE;
+		Valve5FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 6, A+B*)
+	(*spare*)
+		Valve6FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs.10,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs.11,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.10,
+			TurnOn_SideB_SOL=> N100.Q.11,
+			TurnOn_SideA_Indicator=> Manual_Indicators1.10,
+			TurnOn_SideB_Indicator=> Manual_Indicators1.11
+			 );
+		Valve6FB.In_Auto_SideA_Command:= FALSE;
+		Valve6FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 7, A+B*)
+	(*spare*)
+		Valve7FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs.12,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs.13,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.12,
+			TurnOn_SideB_SOL=> N100.Q.13,
+			TurnOn_SideA_Indicator=> Manual_Indicators1.12,
+			TurnOn_SideB_Indicator=> Manual_Indicators1.13
+			 );
+		Valve7FB.In_Auto_SideA_Command:= FALSE;
+		Valve7FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 8, A+B*)
+	(*spare*)
+		Valve8FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs.14,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs.15,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.14,
+			TurnOn_SideB_SOL=> N100.Q.15,
+			TurnOn_SideA_Indicator=> Manual_Indicators1.14,
+			TurnOn_SideB_Indicator=> Manual_Indicators1.15
+			 );
+		Valve8FB.In_Auto_SideA_Command:= FALSE;
+		Valve8FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 9, A+B*)
+	(*spare*)
+		Valve9FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs.16,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs.17,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.16,
+			TurnOn_SideB_SOL=> N100.Q.17,
+			TurnOn_SideA_Indicator=> Manual_Indicators1.16,
+			TurnOn_SideB_Indicator=> Manual_Indicators1.17
+			 );
+		Valve9FB.In_Auto_SideA_Command:= FALSE;
+		Valve9FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 10, A+B*)
+	(*spare*)
+		Valve10FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs.18,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs.19,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.18,
+			TurnOn_SideB_SOL=> N100.Q.19,
+			TurnOn_SideA_Indicator=> Manual_Indicators1.18,
+			TurnOn_SideB_Indicator=> Manual_Indicators1.19
+			 );
+		Valve10FB.In_Auto_SideA_Command:= FALSE;
+		Valve10FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 11, A+B*)
+	(*spare*)
+		Valve11FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs.20,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs.21,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.20,
+			TurnOn_SideB_SOL=> N100.Q.21,
+			TurnOn_SideA_Indicator=> Manual_Indicators1.20,
+			TurnOn_SideB_Indicator=> Manual_Indicators1.21
+			 );
+		Valve11FB.In_Auto_SideA_Command:= FALSE;
+		Valve11FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 12, A+B*)
+	(*spare*)
+		Valve12FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs.22,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs.23,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.22,
+			TurnOn_SideB_SOL=> N100.Q.23,
+			TurnOn_SideA_Indicator=> Manual_Indicators1.22,
+			TurnOn_SideB_Indicator=> Manual_Indicators1.23
+			 );
+		Valve12FB.In_Auto_SideA_Command:= FALSE;
+		Valve12FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 13, A+B*)
+	(*spare*)
+		Valve13FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs.24,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs.25,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.24,
+			TurnOn_SideB_SOL=> N100.Q.25,
+			TurnOn_SideA_Indicator=> Manual_Indicators1.24,
+			TurnOn_SideB_Indicator=> Manual_Indicators1.25
+			 );
+		Valve13FB.In_Auto_SideA_Command:= FALSE;
+		Valve13FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 14, A+B*)
+	(*spare*)
+		Valve14FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs.26,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs.27,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.26,
+			TurnOn_SideB_SOL=> N100.Q.27,
+			TurnOn_SideA_Indicator=> Manual_Indicators1.26,
+			TurnOn_SideB_Indicator=> Manual_Indicators1.27
+			 );
+		Valve14FB.In_Auto_SideA_Command:= FALSE;
+		Valve14FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 15, A+B*)
+	(*spare*)
+		Valve15FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs.28,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs.29,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.28,
+			TurnOn_SideB_SOL=> N100.Q.29,
+			TurnOn_SideA_Indicator=> Manual_Indicators1.28,
+			TurnOn_SideB_Indicator=> Manual_Indicators1.29
+			 );
+		Valve15FB.In_Auto_SideA_Command:= FALSE;
+		Valve15FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 16, A+B*)
+	(*spare*)
+		Valve16FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs.30,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs.31,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.30,
+			TurnOn_SideB_SOL=> N100.Q.31,
+			TurnOn_SideA_Indicator=> Manual_Indicators1.30,
+			TurnOn_SideB_Indicator=> Manual_Indicators1.31
+			 );
+		Valve16FB.In_Auto_SideA_Command:= FALSE;
+		Valve16FB.In_Auto_SideB_Command:= FALSE;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(*end*)]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="ValveBank2" Id="{8a1953ea-5ef9-4e11-be6e-e9c08c2d6629}">
+      <Implementation>
+        <ST><![CDATA[
+
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+
+(*+++++++++++VALVE BANK 2 +++++++++++++*)
+(*+++++++++++VALVE BANK 2 +++++++++++++*)
+(*+++++++++++VALVE BANK 2 +++++++++++++*)
+
+
+	(*Valve 17, A+B*)
+	(*spare*)
+		Valve17FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.1S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs2.0,
+			In_Manual_SideB_Command:= (Discrete_In.ManReqs2.1 OR Discrete_In.Go_Home),
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N101.Q.0,
+			TurnOn_SideB_SOL=> N101.Q.1,
+			TurnOn_SideA_Indicator=> Manual_Indicators2.0,
+			TurnOn_SideB_Indicator=> Manual_Indicators2.1
+			 );
+		Valve17FB.In_Auto_SideA_Command:= FALSE;
+		Valve17FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 18, A+B*)
+	(*spare*)
+		Valve18FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs2.2,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs2.3,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N101.Q.2,
+			TurnOn_SideB_SOL=> N101.Q.3,
+			TurnOn_SideA_Indicator=> Manual_Indicators2.2,
+			TurnOn_SideB_Indicator=> Manual_Indicators2.3
+			 );
+		Valve18FB.In_Auto_SideA_Command:= FALSE;
+		Valve18FB.In_Auto_SideB_Command:= FALSE;
+
+	(*Valve 19, A+B*)
+	(*spare*)
+		Valve19FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs2.4,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs2.5,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N101.Q.4,
+			TurnOn_SideB_SOL=> N101.Q.5,
+			TurnOn_SideA_Indicator=> Manual_Indicators2.4,
+			TurnOn_SideB_Indicator=> Manual_Indicators2.5
+			 );
+		Valve19FB.In_Auto_SideA_Command:= FALSE;
+		Valve19FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 20, A+B*)
+	(*spare*)
+		Valve20FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs2.6,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs2.7,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N101.Q.6,
+			TurnOn_SideB_SOL=> N101.Q.7,
+			TurnOn_SideA_Indicator=> Manual_Indicators2.6,
+			TurnOn_SideB_Indicator=> Manual_Indicators2.7
+			 );
+		Valve20FB.In_Auto_SideA_Command:= FALSE;
+		Valve20FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 21, A+B*)
+	(*spare*)
+		Valve21FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs2.8,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs2.9,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N101.Q.8,
+			TurnOn_SideB_SOL=> N101.Q.9,
+			TurnOn_SideA_Indicator=> Manual_Indicators2.8,
+			TurnOn_SideB_Indicator=> Manual_Indicators2.9
+			 );
+		Valve21FB.In_Auto_SideA_Command:= FALSE;
+		Valve21FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 22, A+B*)
+	(*spare*)
+		Valve22FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs2.10,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs2.11,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N101.Q.10,
+			TurnOn_SideB_SOL=> N101.Q.11,
+			TurnOn_SideA_Indicator=> Manual_Indicators2.10,
+			TurnOn_SideB_Indicator=> Manual_Indicators2.11
+			 );
+		Valve22FB.In_Auto_SideA_Command:= FALSE;
+		Valve22FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 23, A+B*)
+	(*spare*)
+		Valve23FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs2.12,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs2.13,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N101.Q.12,
+			TurnOn_SideB_SOL=> N101.Q.13,
+			TurnOn_SideA_Indicator=> Manual_Indicators2.12,
+			TurnOn_SideB_Indicator=> Manual_Indicators2.13
+			 );
+		Valve23FB.In_Auto_SideA_Command:= FALSE;
+		Valve23FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 24, A+B*)
+	(*spare*)
+		Valve24FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs2.14,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs2.15,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N101.Q.14,
+			TurnOn_SideB_SOL=> N101.Q.15,
+			TurnOn_SideA_Indicator=> Manual_Indicators2.14,
+			TurnOn_SideB_Indicator=> Manual_Indicators2.15
+			 );
+		Valve24FB.In_Auto_SideA_Command:= FALSE;
+		Valve24FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 25, A+B*)
+	(*spare*)
+		Valve25FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs2.16,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs2.17,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N101.Q.16,
+			TurnOn_SideB_SOL=> N101.Q.17,
+			TurnOn_SideA_Indicator=> Manual_Indicators2.16,
+			TurnOn_SideB_Indicator=> Manual_Indicators2.17
+			 );
+		Valve25FB.In_Auto_SideA_Command:= FALSE;
+		Valve25FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 26, A+B*)
+	(*spare*)
+		Valve26FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs2.18,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs2.19,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N101.Q.18,
+			TurnOn_SideB_SOL=> N101.Q.19,
+			TurnOn_SideA_Indicator=> Manual_Indicators2.18,
+			TurnOn_SideB_Indicator=> Manual_Indicators2.19
+			 );
+		Valve26FB.In_Auto_SideA_Command:= FALSE;
+		Valve26FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 27, A+B*)
+	(*spare*)
+		Valve27FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs2.20,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs2.21,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N101.Q.20,
+			TurnOn_SideB_SOL=> N101.Q.21,
+			TurnOn_SideA_Indicator=> Manual_Indicators2.20,
+			TurnOn_SideB_Indicator=> Manual_Indicators2.21
+			 );
+		Valve27FB.In_Auto_SideA_Command:= FALSE;
+		Valve27FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 28, A+B*)
+	(*spare*)
+		Valve28FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs2.22,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs2.23,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N101.Q.22,
+			TurnOn_SideB_SOL=> N101.Q.23,
+			TurnOn_SideA_Indicator=> Manual_Indicators2.22,
+			TurnOn_SideB_Indicator=> Manual_Indicators2.23
+			 );
+		Valve28FB.In_Auto_SideA_Command:= FALSE;
+		Valve28FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 29, A+B*)
+	(*spare*)
+		Valve29FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs2.24,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs2.25,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N101.Q.24,
+			TurnOn_SideB_SOL=> N101.Q.25,
+			TurnOn_SideA_Indicator=> Manual_Indicators2.24,
+			TurnOn_SideB_Indicator=> Manual_Indicators2.25
+			 );
+		Valve29FB.In_Auto_SideA_Command:= FALSE;
+		Valve29FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 30, A+B*)
+	(*spare*)
+		Valve30FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs2.26,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs2.27,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N101.Q.26,
+			TurnOn_SideB_SOL=> N101.Q.27,
+			TurnOn_SideA_Indicator=> Manual_Indicators2.26,
+			TurnOn_SideB_Indicator=> Manual_Indicators2.27
+			 );
+		Valve30FB.In_Auto_SideA_Command:= FALSE;
+		Valve30FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 31, A+B*)
+	(*spare*)
+		Valve31FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs2.28,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs2.29,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N101.Q.28,
+			TurnOn_SideB_SOL=> N101.Q.29,
+			TurnOn_SideA_Indicator=> Manual_Indicators2.28,
+			TurnOn_SideB_Indicator=> Manual_Indicators2.29
+			 );
+		Valve31FB.In_Auto_SideA_Command:= FALSE;
+		Valve31FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 32, A+B*)
+	(*spare*)
+		Valve32FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs2.30,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs2.31,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N101.Q.30,
+			TurnOn_SideB_SOL=> N101.Q.31,
+			TurnOn_SideA_Indicator=> Manual_Indicators2.30,
+			TurnOn_SideB_Indicator=> Manual_Indicators2.31
+			 );
+		Valve32FB.In_Auto_SideA_Command:= FALSE;
+		Valve32FB.In_Auto_SideB_Command:= FALSE;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(*end*)]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="ValveBank3" Id="{dc7d23e0-f7f6-4d03-9c6d-7fcf4ad2d8f7}">
+      <Implementation>
+        <ST><![CDATA[
+
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+
+(*+++++++++++VALVE BANK 3 +++++++++++++*)
+(*+++++++++++VALVE BANK 3 +++++++++++++*)
+(*+++++++++++VALVE BANK 3 +++++++++++++*)
+
+
+	(*Valve 33, A+B*)
+	(*spare*)
+		Valve33FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.1S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs3.0,
+			In_Manual_SideB_Command:= (Discrete_In.ManReqs3.1 OR Discrete_In.Go_Home),
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N102.Q.0,
+			TurnOn_SideB_SOL=> N102.Q.1,
+			TurnOn_SideA_Indicator=> Manual_Indicators3.0,
+			TurnOn_SideB_Indicator=> Manual_Indicators3.1
+			 );
+		Valve33FB.In_Auto_SideA_Command:= FALSE;
+		Valve33FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 34, A+B*)
+	(*spare*)
+		Valve34FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs3.2,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs3.3,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N102.Q.2,
+			TurnOn_SideB_SOL=> N102.Q.3,
+			TurnOn_SideA_Indicator=> Manual_Indicators3.2,
+			TurnOn_SideB_Indicator=> Manual_Indicators3.3
+			 );
+		Valve34FB.In_Auto_SideA_Command:= FALSE;
+		Valve34FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 35, A+B*)
+	(*spare*)
+		Valve35FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs3.4,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs3.5,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N102.Q.4,
+			TurnOn_SideB_SOL=> N102.Q.5,
+			TurnOn_SideA_Indicator=> Manual_Indicators3.4,
+			TurnOn_SideB_Indicator=> Manual_Indicators3.5
+			 );
+		Valve35FB.In_Auto_SideA_Command:= FALSE;
+		Valve35FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 36, A+B*)
+	(*spare*)
+		Valve36FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs3.6,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs3.7,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N102.Q.6,
+			TurnOn_SideB_SOL=> N102.Q.7,
+			TurnOn_SideA_Indicator=> Manual_Indicators3.6,
+			TurnOn_SideB_Indicator=> Manual_Indicators3.7
+			 );
+		Valve36FB.In_Auto_SideA_Command:= FALSE;
+		Valve36FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 37, A+B*)
+	(*spare*)
+		Valve37FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs3.8,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs3.9,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N102.Q.8,
+			TurnOn_SideB_SOL=> N102.Q.9,
+			TurnOn_SideA_Indicator=> Manual_Indicators3.8,
+			TurnOn_SideB_Indicator=> Manual_Indicators3.9
+			 );
+		Valve37FB.In_Auto_SideA_Command:= FALSE;
+		Valve37FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 38, A+B*)
+	(*spare*)
+		Valve38FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs3.10,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs3.11,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N102.Q.10,
+			TurnOn_SideB_SOL=> N102.Q.11,
+			TurnOn_SideA_Indicator=> Manual_Indicators3.10,
+			TurnOn_SideB_Indicator=> Manual_Indicators3.11
+			 );
+		Valve38FB.In_Auto_SideA_Command:= FALSE;
+		Valve38FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 39, A+B*)
+	(*spare*)
+		Valve39FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs3.12,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs3.13,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N102.Q.12,
+			TurnOn_SideB_SOL=> N102.Q.13,
+			TurnOn_SideA_Indicator=> Manual_Indicators3.12,
+			TurnOn_SideB_Indicator=> Manual_Indicators3.13
+			 );
+		Valve39FB.In_Auto_SideA_Command:= FALSE;
+		Valve39FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 40, A+B*)
+	(*spare*)
+		Valve40FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs3.14,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs3.15,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N102.Q.14,
+			TurnOn_SideB_SOL=> N102.Q.15,
+			TurnOn_SideA_Indicator=> Manual_Indicators3.14,
+			TurnOn_SideB_Indicator=> Manual_Indicators3.15
+			 );
+		Valve40FB.In_Auto_SideA_Command:= FALSE;
+		Valve40FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 41, A+B*)
+	(*spare*)
+		Valve41FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs3.16,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs3.17,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N102.Q.16,
+			TurnOn_SideB_SOL=> N102.Q.17,
+			TurnOn_SideA_Indicator=> Manual_Indicators3.16,
+			TurnOn_SideB_Indicator=> Manual_Indicators3.17
+			 );
+		Valve41FB.In_Auto_SideA_Command:= FALSE;
+		Valve41FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 42, A+B*)
+	(*spare*)
+		Valve42FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs3.18,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs3.19,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N102.Q.18,
+			TurnOn_SideB_SOL=> N102.Q.19,
+			TurnOn_SideA_Indicator=> Manual_Indicators3.18,
+			TurnOn_SideB_Indicator=> Manual_Indicators3.19
+			 );
+		Valve42FB.In_Auto_SideA_Command:= FALSE;
+		Valve42FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 43, A+B*)
+	(*spare*)
+		Valve43FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs3.20,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs3.21,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N102.Q.20,
+			TurnOn_SideB_SOL=> N102.Q.21,
+			TurnOn_SideA_Indicator=> Manual_Indicators3.20,
+			TurnOn_SideB_Indicator=> Manual_Indicators3.21
+			 );
+		Valve43FB.In_Auto_SideA_Command:= FALSE;
+		Valve43FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 44, A+B*)
+	(*spare*)
+		Valve44FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs3.22,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs3.23,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N102.Q.22,
+			TurnOn_SideB_SOL=> N102.Q.23,
+			TurnOn_SideA_Indicator=> Manual_Indicators3.22,
+			TurnOn_SideB_Indicator=> Manual_Indicators3.23
+			 );
+		Valve44FB.In_Auto_SideA_Command:= FALSE;
+		Valve44FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 45, A+B*)
+	(*spare*)
+		Valve45FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs3.24,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs3.25,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N102.Q.24,
+			TurnOn_SideB_SOL=> N102.Q.25,
+			TurnOn_SideA_Indicator=> Manual_Indicators3.24,
+			TurnOn_SideB_Indicator=> Manual_Indicators3.25
+			 );
+		Valve45FB.In_Auto_SideA_Command:= FALSE;
+		Valve45FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 46, A+B*)
+	(*spare*)
+		Valve46FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs3.26,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs3.27,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N102.Q.26,
+			TurnOn_SideB_SOL=> N102.Q.27,
+			TurnOn_SideA_Indicator=> Manual_Indicators3.26,
+			TurnOn_SideB_Indicator=> Manual_Indicators3.27
+			 );
+		Valve46FB.In_Auto_SideA_Command:= FALSE;
+		Valve46FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 47, A+B*)
+	(*spare*)
+		Valve47FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs3.28,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs3.29,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N102.Q.28,
+			TurnOn_SideB_SOL=> N102.Q.29,
+			TurnOn_SideA_Indicator=> Manual_Indicators3.28,
+			TurnOn_SideB_Indicator=> Manual_Indicators3.29
+			 );
+		Valve47FB.In_Auto_SideA_Command:= FALSE;
+		Valve47FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 48, A+B*)
+	(*spare*)
+		Valve48FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= In_Auto,
+			Enable_Manual_Commands:= In_Manual AND All_Robots_Clear,
+			In_Manual_SideA_Command:= Discrete_In.ManReqs3.30,
+			In_Manual_SideB_Command:= Discrete_In.ManReqs3.31,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N102.Q.30,
+			TurnOn_SideB_SOL=> N102.Q.31,
+			TurnOn_SideA_Indicator=> Manual_Indicators3.30,
+			TurnOn_SideB_Indicator=> Manual_Indicators3.31
+			 );
+		Valve48FB.In_Auto_SideA_Command:= FALSE;
+		Valve48FB.In_Auto_SideB_Command:= FALSE;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(*end*)]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Xfer_To_UI" Id="{8adeda02-0cbe-42e5-bf46-65369ecc38de}">
+      <Implementation>
+        <ST><![CDATA[(*Transfer General Status of Fixture and I/O Images for Display On HMI*)
+	Discrete_Image.Status:= Status;
+	Discrete_Image.CLFaults1:= CLFaults1;
+	Discrete_Image.CLFaults2:= CLFaults2;
+	Discrete_Image.CLFaults3:= CLFaults3;
+	Discrete_Image.CLFaults4:= CLFaults4;
+	Discrete_Image.CLFaulted:= CLFaulted;
+	Discrete_Image.PPFaults:= PPFaults;
+	Discrete_Image.PPFaults1:= PPFaults1;
+	Discrete_Image.PPFaults2:= PPFaults2;
+	Discrete_Image.PPFaulted:= PPFaulted;
+	Discrete_Image.Model_Data:= Model_ID;
+	Discrete_Image.ToolID:= Fix_ID;
+	Discrete_Image.ProdCount:= Prod_Count_Out;
+	Discrete_Image.CycleTime:= Cycle_Time_Out;
+	Discrete_Image.PrevCycleTime:= PrevCycle_Time_Out;
+	Discrete_Image.LoadTime:= Load_Time_Out;
+	Discrete_Image.WeldTime:= Weld_Time_Out;
+	Discrete_Image.UnloadTime:= Unload_Time_Out;
+
+	Discrete_Image.InAuto:= In_Auto_Mode;
+	Discrete_Image.InManual:= In_Manual_Mode;
+	Discrete_Image.ManInds:= Manual_Indicators1;
+	Discrete_Image.ManInds2:= Manual_Indicators2;
+	Discrete_Image.ManInds3:= Manual_Indicators3;
+	Discrete_Image.At_Home:= Tool_At_Home;
+	Discrete_Image.Enable_Motion:= Enable_Motion;
+	Discrete_Image.All_Sensors_Off:= All_Sensors_Off;
+	Discrete_Image.Bypass_ACKS:= Discrete_In.Bypass_REQS;
+	Discrete_Image.CustomApplication_ACKS:= Discrete_In.CustomApplication_REQS;
+	Discrete_Image.Fixture_Allow_Model_Change:= Fixture_Allow_Model_Change;
+	Discrete_Image.NodeLayout:=NodeLayout;
+	Discrete_Image.NodeState:=NodeState;
+	
+	Discrete_Image.Input_Node_Count:= Discrete_In.Input_Node_Count;
+	Discrete_Image.VB_Node_Count:= Discrete_In.VB_Node_Count;
+	Discrete_Image.Water_Stand_Count:= Discrete_In.Water_Stand_Count;
+
+	IF  (Discrete_Image.Input_Node_Count < 4)
+		THEN Discrete_Image.VB_Screen_Position:= 1;
+	ELSIF  (Discrete_Image.Input_Node_Count < 7)
+		THEN Discrete_Image.VB_Screen_Position:= 2;
+	ELSIF  (Discrete_Image.Input_Node_Count < 10)
+		THEN Discrete_Image.VB_Screen_Position:= 3;
+	ELSIF  (Discrete_Image.Input_Node_Count < 13)
+		THEN Discrete_Image.VB_Screen_Position:= 4;
+	ELSIF  (Discrete_Image.Input_Node_Count < 16)
+		THEN Discrete_Image.VB_Screen_Position:= 5;
+	ELSIF  (Discrete_Image.Input_Node_Count < 19)
+		THEN Discrete_Image.VB_Screen_Position:= 6;
+	ELSIF  (Discrete_Image.Input_Node_Count < 22)
+		THEN Discrete_Image.VB_Screen_Position:= 7;
+	ELSIF  (Discrete_Image.Input_Node_Count < 26)
+		THEN Discrete_Image.VB_Screen_Position:= 8;
+	ELSE
+			Discrete_Image.VB_Screen_Position:= 9;
+	END_IF;
+
+	Discrete_Image.N00:= N00;
+	Discrete_Image.N01:= N01;
+	Discrete_Image.N02:= N02;
+	Discrete_Image.N03:= N03;
+	Discrete_Image.N04:= N04;
+	Discrete_Image.N05:= N05;
+	Discrete_Image.N06:= N06;
+	Discrete_Image.N07:= N07;
+	Discrete_Image.N08:= N08;
+	Discrete_Image.N09:= N09;
+	Discrete_Image.N10:= N10;
+	Discrete_Image.N11:= N11;
+	Discrete_Image.N12:= N12;
+	Discrete_Image.N13:= N13;
+	Discrete_Image.N14:= N14;
+	Discrete_Image.N15:= N15;
+	Discrete_Image.N16:= N16;
+	Discrete_Image.N17:= N17;
+	Discrete_Image.N18:= N18;
+	Discrete_Image.N19:= N19;
+	Discrete_Image.N100:= N100;
+	Discrete_Image.N100_STAT:= N100_STAT;
+	Discrete_Image.N101:= N101;
+	Discrete_Image.N101_STAT:= N101_STAT;
+	Discrete_Image.N102:= N102;
+	Discrete_Image.N102_STAT:= N102_STAT;
+	
+	(*IsEnabled control For UI screen: Default "IsEnabled == True"*)
+	Discrete_Image.Enable_FixtureContext_Clamps:= TRUE;
+	Discrete_Image.Enable_FixtureContext_QA:= TRUE;
+	Discrete_Image.Enable_FixtureContext_Manual:= TRUE;
+
+
+	Discrete_Image.ECatSlave_Cable_Breaks:= ECatSlave_Cable_Breaks;
+
+	Discrete_Image.Operator_Performance_Pen:= Production_Report.Shift_Report[0].Prod_Performance;
+
+
+
+
+
+
+
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="Fix105">
+      <LineId Id="2089" Count="2" />
+      <LineId Id="3075" Count="0" />
+      <LineId Id="2092" Count="0" />
+      <LineId Id="3076" Count="1" />
+      <LineId Id="2093" Count="2" />
+      <LineId Id="4262" Count="0" />
+      <LineId Id="2096" Count="0" />
+      <LineId Id="3661" Count="0" />
+      <LineId Id="3663" Count="0" />
+      <LineId Id="4845" Count="0" />
+      <LineId Id="3673" Count="6" />
+      <LineId Id="4847" Count="7" />
+      <LineId Id="2097" Count="358" />
+      <LineId Id="2493" Count="0" />
+      <LineId Id="2491" Count="1" />
+      <LineId Id="2456" Count="34" />
+      <LineId Id="952" Count="0" />
+    </LineIds>
+    <LineIds Name="Fix105.All_Sensors">
+      <LineId Id="0" Count="377" />
+    </LineIds>
+    <LineIds Name="Fix105.Cylinders">
+      <LineId Id="1596" Count="761" />
+      <LineId Id="797" Count="0" />
+    </LineIds>
+    <LineIds Name="Fix105.Hardware">
+      <LineId Id="101" Count="1" />
+      <LineId Id="198" Count="2" />
+      <LineId Id="132" Count="65" />
+      <LineId Id="99" Count="0" />
+    </LineIds>
+    <LineIds Name="Fix105.Production">
+      <LineId Id="0" Count="109" />
+      <LineId Id="119" Count="3" />
+      <LineId Id="138" Count="7" />
+      <LineId Id="114" Count="3" />
+    </LineIds>
+    <LineIds Name="Fix105.Proxies">
+      <LineId Id="1129" Count="489" />
+      <LineId Id="529" Count="0" />
+    </LineIds>
+    <LineIds Name="Fix105.Robot_Registration">
+      <LineId Id="0" Count="4" />
+      <LineId Id="295" Count="1" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="297" Count="16" />
+      <LineId Id="23" Count="41" />
+      <LineId Id="290" Count="0" />
+      <LineId Id="294" Count="0" />
+      <LineId Id="65" Count="120" />
+      <LineId Id="288" Count="0" />
+    </LineIds>
+    <LineIds Name="Fix105.Status_and_Faults">
+      <LineId Id="0" Count="219" />
+    </LineIds>
+    <LineIds Name="Fix105.Task_Fix_Model_IDs">
+      <LineId Id="0" Count="41" />
+    </LineIds>
+    <LineIds Name="Fix105.Tool_States">
+      <LineId Id="0" Count="150" />
+    </LineIds>
+    <LineIds Name="Fix105.Tool_VBSeq_Repos">
+      <LineId Id="2" Count="1" />
+      <LineId Id="97" Count="0" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="98" Count="1" />
+      <LineId Id="103" Count="1" />
+      <LineId Id="129" Count="2" />
+      <LineId Id="105" Count="19" />
+      <LineId Id="100" Count="2" />
+      <LineId Id="8" Count="87" />
+      <LineId Id="4" Count="0" />
+    </LineIds>
+    <LineIds Name="Fix105.ValveBank1">
+      <LineId Id="0" Count="419" />
+    </LineIds>
+    <LineIds Name="Fix105.ValveBank2">
+      <LineId Id="0" Count="412" />
+    </LineIds>
+    <LineIds Name="Fix105.ValveBank3">
+      <LineId Id="0" Count="419" />
+    </LineIds>
+    <LineIds Name="Fix105.Xfer_To_UI">
+      <LineId Id="0" Count="30" />
+      <LineId Id="97" Count="1" />
+      <LineId Id="31" Count="49" />
+      <LineId Id="99" Count="4" />
+      <LineId Id="81" Count="3" />
+      <LineId Id="96" Count="0" />
+      <LineId Id="85" Count="9" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

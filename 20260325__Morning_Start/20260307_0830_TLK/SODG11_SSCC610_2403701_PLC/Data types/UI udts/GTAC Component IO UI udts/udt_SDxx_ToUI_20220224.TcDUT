@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_SDxx_ToUI_20220224" Id="{351861bf-a4b9-4fb5-90ec-ea1d7ef9531c}">
+    <Declaration><![CDATA[(*udt (user defined type) for interfacing to UI (User Interface)
+this udt represents data that is passed from PLC to EACH UI
+
+	Author(S): Rob Remillard/Brent Lekx-Toniolo of Sodecia GTAC;
+	Version 2015 (Named udt_HMI_Input): August 2010
+		- Initial Concept
+	Version 20160804
+		- Renamed to "...UI specific_SD...." for convention, b.lekx-toniolo
+		- Added Data area for Positioning UI, b.lekx-toniolo
+		- Updated instance of drive image as per it's naming update, b.lekx-toniolo
+	Version 20220224
+	- Overhaul during TcUI Migration project, b.lekx-toniolo / c.drees
+
+*)
+
+TYPE udt_SDxx_ToUI_20220224 :
+	STRUCT
+
+		(*Input and Output Data Images*)
+		Discrete_Image:	udt_Drive_Image_20190816;
+		(*EtherCAT Cable Break Flags*)
+		ECAT_Cable_Breaks: UDINT;
+		(*Confirm Axis Local Control Request*)
+		AxisLocalControl_IC_ACKS: ARRAY[0..2] OF UINT;
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

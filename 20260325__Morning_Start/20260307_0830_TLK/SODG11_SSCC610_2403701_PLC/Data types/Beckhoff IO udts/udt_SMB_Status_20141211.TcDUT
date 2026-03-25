@@ -1,0 +1,46 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_SMB_Status_20141211" Id="{97074ed0-aa2c-4a76-8711-efc88cfb4e34}">
+    <Declaration><![CDATA[(*udt used to create memory space for linking to SMB diagnositcs
+For use with Motherboards that contain LM75 and/or LM78 chips accessed via System Management Bus (SMB)
+
+
+------------------------------------------------------------------------
+REVISION NOTES:
+	Original Author(s): b.lekx-toniolo, JVD, Chris Timmermans (Edge)
+	Version 20141211
+		- First Draft
+
+------------------------------------------------------------------------
+*)
+
+
+
+
+TYPE udt_SMB_Status_20141211 :
+STRUCT
+	Temp_MB: 	UINT; 		(*°C*)
+	Fan_0: 		UINT;		(*RPM*)
+	Fan_1: 		UINT;		(*RPM*)
+	Fan_2: 		UINT;		(*RPM*)
+	Volt_2a: 		UINT;		(*0.01V*)
+	Volt_2b: 		UINT;		(*0.01V*)
+	Volt_33: 		UINT;		(*0.01V*)
+	Volt_5: 		UINT;		(*0.01V*)
+	Volt_12: 		UINT;		(*0.01V*)
+	Volt_neg12: 	UINT;		(*0.01V*)
+	Volt_neg5: 	UINT;		(*0.01V*)
+	Temp_0: 	USINT;		(*°C*)
+	Temp_1: 	USINT;		(*°C*)
+	Temp_2: 	USINT;		(*°C*)
+	Temp_3: 	USINT;		(*°C*)
+	Temp_4: 	USINT;		(*°C*)
+	Temp_5: 	USINT;		(*°C*)
+	Temp_6:		USINT;		(*°C*)
+	Temp_7: 	USINT;		(*°C*)
+
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

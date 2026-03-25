@@ -1,0 +1,542 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_SmartRay_20260119" Id="{4e029ba0-d628-456b-8e10-b92e90f47707}" SpecialFunc="None">
+    <Declaration><![CDATA[(*FB for use SmartRay control/monitoring:
+	Original Author(s): Will.K of Sodecia GTAC; 
+------------------------------------------------------------------------------------------
+REVISION NOTES:
+	Version 20260119: This function block manages the PLC ↔ SmartRay ↔ KUKA robot inspection handshake sequence.
+	                  This version utilizes three signals from the KUKA FB custom inputs (Heartbeat(1 bit), InspectionCompleted(1 bit), and Global Error(1 bit))
+                      to control sequencing and fault handling.(Robot-to-PLC signal mapping is required)
+                      Synchronizes 'PartType' and 'PartID' between PLC and SmartRay before inspection
+                      Provides a 'Robot_Start_Ready' signal once PLC data is validated.
+                      Monitors robot inspection start and inspection completion.
+                      Evaluates inspection results (OK / NOK) from SmartRay.
+                      Monitors communication health via heartbeat supervision.
+                      Reports global fault and communication error status.
+                      Controls inspection completion and reset sequencing.
+                      The inspection result is considered valid only when: 
+                      1. Communication is healthy
+                      2. PartType and PartID match
+                      3. SmartRay signals ResultValid and robot signals InspectionCompleted *)
+FUNCTION_BLOCK FB_SmartRay_20260119
+VAR_INPUT
+	
+	In_Robot_From_SR : udt_SmartRay_Out_To_Robot_IN_20260119;
+	Out_Robot_To_SR : udt_Robot_Out_To_SmartRay_IN_20260119;
+	
+	Discrete_In : udt_SRxx_Input_Image ; // from hmi	
+	
+	Previous_Job_Complete : BOOL; // previous job complete
+	Robot_Inspection_Start : BOOL; // Robot calls the jobs
+
+	PartType : BYTE;
+	PartID : ARRAY[0..19] OF BYTE;
+
+	
+	All_Reset : BOOL;
+END_VAR
+VAR_OUTPUT
+    Discrete_Image : udt_SRxx_DiscreteImage;
+	Profinode_OK :BOOL;
+	Robot_Start_Ready : BOOL; // robot is okay to start the job, plc job is done
+	
+	Error : BOOL; // Global Error 
+	Comm_Error : BOOL; // Comm Error
+	FB_Error : BOOL; // internal fb seq fault
+	
+END_VAR
+
+VAR_OUTPUT PERSISTENT 
+	PLC_Inspection_Complete : BOOL; // robot inspection complete
+	Smart_Ray_OK  : BOOL;
+	Smart_Ray_NOK : BOOL;
+	
+END_VAR
+VAR
+
+    (*Max Attempt count*)
+    Max_Attempt : INT; // Preventing from endless loop
+	Attempt_Flag: BOOL;
+	
+	(*Bypass R_trig*)
+	Bypass_R_trig_ON : R_TRIG;
+	Bypass_R_trig_OFF: R_TRIG;
+ 
+	FB_OK : BOOL;
+	i_step : INT;
+	i_Faulted_step: INT;
+	i_partid: INT;
+	PartID_Match : BOOL;
+	PartID_Not_Match : BOOL;
+	
+	HeartbeatTimer_Robot: TON;
+	CommFaulted_Robot: BOOL;
+	
+	PartID_Check_Start: BOOL;
+	PartID_Check_Delay: TON;
+	(*Map with Profinet Slave I/O*)
+	In_From_SmartRay AT %I* : udt_SmartRay_Out_To_PLC_IN_20260119;
+	Out_To_SmartRay AT %Q* : udt_PLC_Out_To_SmartRay_IN_20260119;
+	
+	(*Status*)
+	Internal_ProfiNet AT %I* : udt_ProfiNet_Status;
+	
+
+	
+    (*PLC Input from Smart Ray*)
+	(*#########################*)
+	(*Byte 0*)
+	In_PartType : BYTE; 
+	(*Byte 2-21*)
+	In_PartID : ARRAY[0..19] OF BYTE;
+	(*Byte 22*)
+	In_QualityOK : BOOL; (*Bit 0*)
+	In_QualityNOK : BOOL; (*Bit 1*)
+	In_ResultValid : BOOL; (*Bit 2*)
+	In_LastTelegramSent : BOOL; (*Bit 7*)
+	(*Byte 24-43*)
+	In_PartIDVisu1 : ARRAY[0..19] OF BYTE;
+	(*Byte 44*)
+	In_WorkerResultOK : BOOL; (*Bit 0*)
+	In_WorkerResultNOK : BOOL; (*Bit 1*)
+	In_ReworkOK : BOOL; (*Bit 2*)
+	In_ReworkDone : BOOL; (*Bit 3*)
+	In_Visu_NextPage : BOOL; (*Bit 4*)
+	In_Visu_NextWeld : BOOL; (*Bit 5*)
+	In_Visu_PreviousWeld : BOOL; (*Bit 6*)
+	(*Byte 45*)
+	In_Visu_WorkerButon :BYTE; 
+	(*Byte 48-67*)
+	In_PartIDVisu2 : ARRAY[0..19] OF BYTE;
+	(*Byte 68*)
+	In_WorkerResultOK2 : BOOL; (*Bit 0*)
+	In_WorkerResultNOK2 : BOOL; (*Bit 1*)
+	In_ReworkOK2 : BOOL; (*Bit 2*)
+	In_ReworkDone2 : BOOL; (*Bit 3*)
+	In_Visu_NextPage2 : BOOL; (*Bit 4*)
+	In_Visu_NextWeld2 : BOOL; (*Bit 5*)
+	In_Visu_PreviousWeld2 : BOOL; (*Bit 6*)
+	(*Byte 69*)
+	In_Vis_WorkerButton2 : BYTE;
+	(*Byte 80-179*)
+	In_WeldResult : ARRAY[0..99] OF BYTE;
+	(*#########################*)
+	
+	(*PLC Output to Smart Ray*)
+	(*#########################*)
+	(*Byte 0*)
+	Out_PartType : BYTE;	
+	(*Byte 2-21*)
+	Out_PartID : ARRAY[0..19] OF BYTE;
+	(*Byte 24-43*)
+	Out_PartIDVisu1 : ARRAY[0..19] OF BYTE;
+	(*Byte 44*)
+	Out_Visu_NextPage : BOOL; (*Bit 4*)
+	Out_Visu_NextWeld : BOOL; (*Bit 5*)
+	Out_Visu_PreviousWeld : BOOL; (*Bit 6*)
+	(*Byte 45*)
+	Out_Visu_WorkerButton : BYTE; 
+	(*Byte 48-67*)
+	Out_PartIDVisu2 : ARRAY[0..19] OF BYTE;
+	(*Byte 68*)
+	Out_Visu_NextPage2 : BOOL; (*Bit 4*)
+	Out_Visu_NextWeld2 : BOOL; (*Bit 5*)
+	Out_Visu_PreviousWeld2 : BOOL; (*Bit 6*)
+	(*Byte 69*)
+	Out_Visu_WorkerButton2 : BYTE;
+	(*#########################*)
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[FB_OK := TRUE; (*true if fb is called*)
+
+(*Invoke Inputs/Outputs*)
+Inputs();
+Outputs();
+
+(*Gather Status Of Hardware*)
+IF Internal_ProfiNet.PnIoBoxState = 0
+	THEN
+	Profinode_OK := TRUE;
+ELSE Profinode_OK := FALSE;
+END_IF
+
+(*Global Error*)
+Error := In_Robot_From_SR.FailureGlobal_Out;
+
+(*Comm status*)
+HeartbeatTimer_Robot(IN:= NOT In_Robot_From_SR.Alive_Out, PT:= T#2S);
+IF HeartbeatTimer_Robot.Q
+	THEN
+	CommFaulted_Robot := TRUE;
+ELSE CommFaulted_Robot := FALSE;
+END_IF
+(*Comm Error*)
+Comm_Error := CommFaulted_Robot;
+
+(*--------*)
+IF Previous_Job_Complete AND NOT PLC_Inspection_Complete AND NOT Discrete_In.Bypass
+	THEN
+	
+	CASE i_step OF 
+	0: // Part type 
+	   Out_PartType := PartType;
+	   IF Out_PartType = In_PartType
+		   THEN
+		   i_step := 1;
+	   END_IF
+	1: // Part ID
+	   Out_PartID := PartID;
+	   	 
+       PartID_Check_Delay.PT := T#0.5S;
+       PartID_Check_Delay();
+	   PartID_Check_Delay.IN := TRUE;
+	   
+	   PartID_Check_Start:= PartID_Check_Delay.Q;
+	   
+	   IF PartID_Check_Start AND Max_Attempt <5 // you can change the max attempt number
+		   THEN
+		   FOR i_partid := 0 TO 19 BY 1 DO
+		        IF (Out_PartID[i_partid] <> In_PartID[i_partid])
+			          THEN
+			          PartID_Match := FALSE;
+			          PartID_Not_Match := TRUE;
+                      Attempt_Flag := TRUE;				 
+			          EXIT;
+		        ELSE PartID_Match := TRUE;  
+                     PartID_Not_Match := FALSE; 
+		        END_IF   
+	       END_FOR
+	   ELSIF Max_Attempt >= 5
+		       THEN
+			   i_Faulted_step := i_step;
+		       i_step := 100; 	   
+	   END_IF
+	   
+	   IF Attempt_Flag
+		   THEN
+		   Max_Attempt := Max_Attempt + 1;
+		   Attempt_Flag := FALSE;
+	   END_IF
+	   
+	   IF PartID_Match AND NOT PartID_Not_Match
+		   THEN
+		   PartID_Check_Delay.IN := FALSE;
+		   IF NOT PartID_Check_Delay.Q
+			   THEN
+			   i_step := 2;   
+		   END_IF
+
+	   END_IF
+	   
+	2:  // plc signal update is done, robot can start the job
+	   Robot_Start_Ready := TRUE;
+	   
+	   IF Robot_Inspection_Start
+		   THEN 
+		   i_step :=3; // robot called the jobs 
+	   END_IF
+	   
+	3: // wait for the result 
+	   IF In_ResultValid AND Out_Robot_To_SR.InspectionCompleted_In
+		   THEN
+		   Smart_Ray_OK := In_QualityOK;
+		   Smart_Ray_NOK := In_QualityNOK; 
+		   i_step :=4;
+	   END_IF
+	   
+	 4: 
+	   IF (Smart_Ray_OK = In_QualityOK) AND 
+          (Smart_Ray_NOK = In_QualityNOK)
+            THEN
+			i_step :=5;
+       END_IF 
+	    
+	5: // Complete 
+       PLC_Inspection_Complete := TRUE;  
+	   
+	100: // Internal seq error  
+        FB_Error := TRUE;  
+		
+		IF Discrete_In.Retry // from HMI
+            THEN
+            FB_Error := FALSE;
+            Max_Attempt := 0;
+            Attempt_Flag := FALSE;
+            PartID_Match := FALSE;
+            PartID_Not_Match := FALSE;
+            PartID_Check_Delay.IN := FALSE;
+            i_step := 0;
+        END_IF
+   
+    END_CASE
+
+END_IF
+(*--------*)
+
+(*Bypass*)
+Bypass_R_trig_ON.CLK := Discrete_In.Bypass ;
+Bypass_R_trig_ON();
+IF Bypass_R_trig_ON.Q 
+	THEN
+	Robot_Start_Ready := TRUE;  
+    Smart_Ray_OK := TRUE;      
+    Smart_Ray_NOK := FALSE;
+    PLC_Inspection_Complete := TRUE;
+    i_step := 0;
+END_IF
+
+Bypass_R_trig_OFF.CLK := NOT Discrete_In.Bypass ;
+Bypass_R_trig_OFF();
+IF Bypass_R_trig_OFF.Q 
+	THEN
+	Robot_Start_Ready := FALSE;  
+    Smart_Ray_OK := FALSE;      
+    Smart_Ray_NOK := FALSE;
+    PLC_Inspection_Complete := FALSE;
+END_IF
+
+(*Reset*)
+IF PLC_Inspection_Complete AND All_Reset
+	THEN
+	Robot_Start_Ready := FALSE;
+	PLC_Inspection_Complete := FALSE;
+	PartID_Check_Start := FALSE;
+	Smart_Ray_OK  := FALSE;
+	Smart_Ray_NOK  := FALSE;
+	PartID_Match := FALSE;
+	PartID_Not_Match := FALSE;
+	i_step := 0;
+	i_Faulted_step := 0;
+	Max_Attempt := 0;
+	Attempt_Flag := FALSE;
+
+END_IF
+
+
+(*Discrete image*)
+Discrete_Image.Profinode_status:= Internal_ProfiNet;
+Discrete_Image.SR_Comm_Error := CommFaulted_Robot;
+Discrete_Image.SR_Error := Error;
+Discrete_Image.SR_PLC_FB_Error := FB_Error;
+Discrete_Image.SR_Smart_Ray_OK := Smart_Ray_OK;
+Discrete_Image.SR_Smart_Ray_NOK := Smart_Ray_nOK;
+]]></ST>
+    </Implementation>
+    <Action Name="Inputs" Id="{8bf799cf-293e-4adc-ab55-185440beb203}">
+      <Implementation>
+        <ST><![CDATA[(*Mapping Information Convertion*)
+
+ (*Smart Ray to PLC*)
+	(*Byte 0*)
+	In_PartType := In_From_SmartRay.Byte_0; 
+	(*Byte 2-21*)
+	In_PartID := In_From_SmartRay.Byte_2_21;
+	(*Byte 22*)
+	In_QualityOK := In_From_SmartRay.Byte_22.0; (*Bit 0*)
+	In_QualityNOK := In_From_SmartRay.Byte_22.1; (*Bit 1*)
+	In_ResultValid := In_From_SmartRay.Byte_22.2; (*Bit 2*)
+	In_LastTelegramSent := In_From_SmartRay.Byte_22.7; (*Bit 7*)
+	(*Byte 24-43*)
+	In_PartIDVisu1 := In_From_SmartRay.Byte_24_43;
+	(*Byte 44*)
+	In_WorkerResultOK := In_From_SmartRay.Byte_44.0; (*Bit 0*)
+	In_WorkerResultNOK := In_From_SmartRay.Byte_44.1; (*Bit 1*)
+	In_ReworkOK := In_From_SmartRay.Byte_44.2; (*Bit 2*)
+	In_ReworkDone := In_From_SmartRay.Byte_44.3; (*Bit 3*)
+	In_Visu_NextPage := In_From_SmartRay.Byte_44.4; (*Bit 4*)
+	In_Visu_NextWeld := In_From_SmartRay.Byte_44.5; (*Bit 5*)
+	In_Visu_PreviousWeld := In_From_SmartRay.Byte_44.6; (*Bit 6*)
+	(*Byte 45*)
+	In_Visu_WorkerButon := In_From_SmartRay.Byte_45; 
+	(*Byte 48-67*)
+	In_PartIDVisu2 := In_From_SmartRay.Byte_48_67 ;
+	(*Byte 68*)
+	In_WorkerResultOK2 := In_From_SmartRay.Byte_68.0; (*Bit 0*)
+	In_WorkerResultNOK2 := In_From_SmartRay.Byte_68.1; (*Bit 1*)
+	In_ReworkOK2 := In_From_SmartRay.Byte_68.2; (*Bit 2*)
+	In_ReworkDone2 := In_From_SmartRay.Byte_68.3; (*Bit 3*)
+	In_Visu_NextPage2 := In_From_SmartRay.Byte_68.4; (*Bit 4*)
+	In_Visu_NextWeld2 := In_From_SmartRay.Byte_68.5; (*Bit 5*)
+	In_Visu_PreviousWeld2 := In_From_SmartRay.Byte_68.6; (*Bit 6*)
+	(*Byte 69*)
+	In_Vis_WorkerButton2 := In_From_SmartRay.Byte_69;
+	(*Byte 80-179*)
+	In_WeldResult := In_From_SmartRay.Byte_80_179;
+
+(*end*)]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Outputs" Id="{516eed06-930e-4fd0-aaf0-53f10c539048}">
+      <Implementation>
+        <ST><![CDATA[(*Mapping Information Convertion*)
+
+ (*PLC to Smart Ray*)
+    (*Byte 0*)
+	Out_To_SmartRay.Byte_0 := Out_PartType;	
+	(*Byte 2-21*)
+	Out_To_SmartRay.Byte_2_21 := Out_PartID;
+	(*Byte 24-43*)
+	Out_To_SmartRay.Byte_24_43 := Out_PartIDVisu1;
+	(*Byte 44*)
+	Out_To_SmartRay.Byte_44.4 := Out_Visu_NextPage; (*Bit 4*)
+	Out_To_SmartRay.Byte_44.5 := Out_Visu_NextWeld; (*Bit 5*)
+	Out_To_SmartRay.Byte_44.6 := Out_Visu_PreviousWeld; (*Bit 6*)
+	(*Byte 45*)
+	Out_To_SmartRay.Byte_45 := Out_Visu_WorkerButton; 
+	(*Byte 48-67*)
+	Out_To_SmartRay.Byte_48_67 := Out_PartIDVisu2;
+	(*Byte 68*)
+	Out_To_SmartRay.Byte_68.4 := Out_Visu_NextPage2; (*Bit 4*)
+	Out_To_SmartRay.Byte_68.5 := Out_Visu_NextWeld2; (*Bit 5*)
+	Out_To_SmartRay.Byte_68.6 := Out_Visu_PreviousWeld2; (*Bit 6*)
+	(*Byte 69*)
+	Out_To_SmartRay.Byte_69 := Out_Visu_WorkerButton2;
+	
+(*end*)]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_SmartRay_20260119">
+      <LineId Id="9" Count="0" />
+      <LineId Id="1077" Count="3" />
+      <LineId Id="553" Count="0" />
+      <LineId Id="483" Count="0" />
+      <LineId Id="555" Count="1" />
+      <LineId Id="558" Count="1" />
+      <LineId Id="557" Count="0" />
+      <LineId Id="564" Count="0" />
+      <LineId Id="113" Count="0" />
+      <LineId Id="484" Count="0" />
+      <LineId Id="574" Count="0" />
+      <LineId Id="567" Count="0" />
+      <LineId Id="544" Count="0" />
+      <LineId Id="568" Count="1" />
+      <LineId Id="571" Count="0" />
+      <LineId Id="573" Count="0" />
+      <LineId Id="570" Count="0" />
+      <LineId Id="491" Count="0" />
+      <LineId Id="545" Count="0" />
+      <LineId Id="543" Count="0" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="119" Count="0" />
+      <LineId Id="123" Count="0" />
+      <LineId Id="135" Count="0" />
+      <LineId Id="132" Count="1" />
+      <LineId Id="143" Count="2" />
+      <LineId Id="147" Count="0" />
+      <LineId Id="146" Count="0" />
+      <LineId Id="139" Count="0" />
+      <LineId Id="149" Count="0" />
+      <LineId Id="767" Count="0" />
+      <LineId Id="1271" Count="0" />
+      <LineId Id="1260" Count="0" />
+      <LineId Id="1272" Count="0" />
+      <LineId Id="793" Count="0" />
+      <LineId Id="526" Count="0" />
+      <LineId Id="523" Count="0" />
+      <LineId Id="527" Count="1" />
+      <LineId Id="531" Count="4" />
+      <LineId Id="762" Count="0" />
+      <LineId Id="536" Count="3" />
+      <LineId Id="530" Count="0" />
+      <LineId Id="751" Count="1" />
+      <LineId Id="1262" Count="0" />
+      <LineId Id="1269" Count="0" />
+      <LineId Id="529" Count="0" />
+      <LineId Id="724" Count="0" />
+      <LineId Id="757" Count="1" />
+      <LineId Id="760" Count="0" />
+      <LineId Id="763" Count="0" />
+      <LineId Id="759" Count="0" />
+      <LineId Id="756" Count="0" />
+      <LineId Id="509" Count="1" />
+      <LineId Id="768" Count="0" />
+      <LineId Id="784" Count="1" />
+      <LineId Id="787" Count="0" />
+      <LineId Id="786" Count="0" />
+      <LineId Id="778" Count="0" />
+      <LineId Id="511" Count="0" />
+      <LineId Id="508" Count="0" />
+      <LineId Id="157" Count="0" />
+      <LineId Id="159" Count="0" />
+      <LineId Id="343" Count="0" />
+      <LineId Id="463" Count="1" />
+      <LineId Id="466" Count="0" />
+      <LineId Id="465" Count="0" />
+      <LineId Id="467" Count="1" />
+      <LineId Id="199" Count="1" />
+      <LineId Id="202" Count="0" />
+      <LineId Id="469" Count="0" />
+      <LineId Id="1280" Count="0" />
+      <LineId Id="201" Count="0" />
+      <LineId Id="1273" Count="0" />
+      <LineId Id="1281" Count="0" />
+      <LineId Id="1274" Count="2" />
+      <LineId Id="1279" Count="0" />
+      <LineId Id="1278" Count="0" />
+      <LineId Id="354" Count="0" />
+      <LineId Id="178" Count="1" />
+      <LineId Id="716" Count="1" />
+      <LineId Id="789" Count="0" />
+      <LineId Id="1085" Count="0" />
+      <LineId Id="1090" Count="0" />
+      <LineId Id="1098" Count="0" />
+      <LineId Id="1091" Count="6" />
+      <LineId Id="1088" Count="0" />
+      <LineId Id="197" Count="0" />
+      <LineId Id="134" Count="0" />
+      <LineId Id="137" Count="0" />
+      <LineId Id="124" Count="0" />
+      <LineId Id="185" Count="0" />
+      <LineId Id="1100" Count="0" />
+      <LineId Id="1099" Count="0" />
+      <LineId Id="1434" Count="1" />
+      <LineId Id="1101" Count="1" />
+      <LineId Id="1105" Count="3" />
+      <LineId Id="1104" Count="0" />
+      <LineId Id="1103" Count="0" />
+      <LineId Id="1445" Count="4" />
+      <LineId Id="1455" Count="2" />
+      <LineId Id="1454" Count="0" />
+      <LineId Id="1439" Count="0" />
+      <LineId Id="492" Count="0" />
+      <LineId Id="130" Count="0" />
+      <LineId Id="186" Count="0" />
+      <LineId Id="194" Count="1" />
+      <LineId Id="188" Count="0" />
+      <LineId Id="765" Count="0" />
+      <LineId Id="192" Count="1" />
+      <LineId Id="540" Count="1" />
+      <LineId Id="196" Count="0" />
+      <LineId Id="723" Count="0" />
+      <LineId Id="747" Count="0" />
+      <LineId Id="764" Count="0" />
+      <LineId Id="771" Count="0" />
+      <LineId Id="189" Count="0" />
+      <LineId Id="930" Count="1" />
+      <LineId Id="929" Count="0" />
+      <LineId Id="932" Count="0" />
+      <LineId Id="934" Count="1" />
+      <LineId Id="937" Count="2" />
+      <LineId Id="121" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_SmartRay_20260119.Inputs">
+      <LineId Id="1" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="3" Count="34" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="38" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_SmartRay_20260119.Outputs">
+      <LineId Id="23" Count="1" />
+      <LineId Id="4" Count="0" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="5" Count="17" />
+      <LineId Id="2" Count="0" />
+      <LineId Id="26" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

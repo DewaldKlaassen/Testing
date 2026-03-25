@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_EP1008_002_v2" Id="{d3ca5a51-3fd9-4bc6-9635-f568733b724c}">
+    <Declaration><![CDATA[(*udt (user defined type) of Beckhoff EP1008-0002 - 8 Point IP67 Rated Digital Input Box:
+	auth. Brent Lekx-Toniolo of Toniolo Research & Development Inc.; 
+	July 2010;
+	Modified for tag reduction by R.Remillard
+	November 2012; version 2.0*)
+
+
+TYPE udt_EP1008_002_v2 :
+STRUCT
+	I: BYTE;						(*Use a single BYTE to replace the 8 BOOLs to reduce the # of tags*)
+
+	Wc_State: BOOL;
+	(*0 = Data valid
+	1 = Data invalid*)
+	InfoData: udt_ECATSlave_Status;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

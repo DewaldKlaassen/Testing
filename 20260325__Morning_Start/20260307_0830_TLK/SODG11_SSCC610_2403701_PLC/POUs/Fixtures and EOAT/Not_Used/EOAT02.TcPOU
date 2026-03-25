@@ -1,0 +1,1564 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="EOAT02" Id="{7ccbf778-d8df-4283-b90b-0b16933c413b}" SpecialFunc="None">
+    <Declaration><![CDATA[(*EOAT*)
+
+
+PROGRAM EOAT02
+
+VAR_INPUT
+(*General Inputs*)
+	Enable_FB: BOOL;
+	Enable_Motion: BOOL;
+	Dry_Cycle: BOOL;
+	NodeLayout:udt_ECATNodeData_20221507;
+	ID: UINT;
+
+	Input_Node_Count: UDINT;
+	Output_Node_Count: UDINT;
+	VB_Node_Count: UDINT;
+	Robot_WorkingOK: BOOL;
+
+(*CMDs (commands)*)
+	CMD_CheckAllSensors_OFF: BOOL;
+	CMD_CheckSensorsOFF_Grp1: BOOL;
+	CMD_CheckSensorsOFF_Grp2: BOOL;
+	CMD_CheckSensorsOFF_Grp3: BOOL;
+	CMD_CheckSensorsOFF_Grp4: BOOL;
+	CMD_CheckSensorsOFF_Grp5: BOOL;
+
+	CMD_CheckAllSensors_ON: BOOL;
+	CMD_CheckSensorsON_Grp1: BOOL;
+	CMD_CheckSensorsON_Grp2: BOOL;
+	CMD_CheckSensorsON_Grp3: BOOL;
+	CMD_CheckSensorsON_Grp4: BOOL;
+	CMD_CheckSensorsON_Grp5: BOOL;
+
+	CMD_Tool_To_WORK: BOOL;
+	CMD_CylToWORK_Grp1: BOOL;
+	CMD_CylToWORK_Grp2: BOOL;
+	CMD_CylToWORK_Grp3: BOOL;
+	CMD_CylToWORK_Grp4: BOOL;
+	CMD_CylToWORK_Grp5: BOOL;
+
+	CMD_Tool_To_HOME: BOOL;
+	CMD_CylToHOME_Grp1: BOOL;
+	CMD_CylToHOME_Grp2: BOOL;
+	CMD_CylToHOME_Grp3: BOOL;
+	CMD_CylToHOME_Grp4: BOOL;
+	CMD_CylToHOME_Grp5: BOOL;
+
+
+END_VAR
+
+VAR
+(*Hardware Related Data Types*)
+			(*Develop "Beckhoff Nodes"*)
+			{attribute 'OPC.UA.DA':='1'}
+			N01 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N02 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N03 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N04 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N05 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N06 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N07 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N08 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N09 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N100 AT %Q*: udt_SMC_EX260_ValveBank;
+			{attribute 'OPC.UA.DA':='1'}
+			N100_STAT AT %I*:udt_SMC_EX260_Stat;
+
+(* Nodes States*)
+	NodeState: ARRAY[0..63] OF UINT;
+	DiscreteNode_OK: BOOL;
+(* Cable Break States*)
+	ECatSlave_Cable_Breaks: ARRAY[0..1]OF DINT;
+
+(*Standard Internal Variables*)
+		(*Generic Sensor Variables*)
+		All_Sensors_On: UINT;
+		All_Sensors_Off: UINT;
+		(*Generic Position Variables*)
+		Tool_At_Home: UINT;
+		Tool_At_Work: UINT;
+		(*General Internals*)
+		CLFaulted: UDINT;
+		PPFaulted: UDINT;
+
+(*Non-Standard Variables*)
+
+		(*FB Instances*)
+		Clamp1FB: FB_Cylinder_Status;
+		Clamp2FB: FB_Cylinder_Status;
+		Clamp3FB: FB_Cylinder_Status;
+		Clamp4FB: FB_Cylinder_Status;
+		Clamp5FB: FB_Cylinder_Status;
+		Clamp6FB: FB_Cylinder_Status;
+		Clamp7FB: FB_Cylinder_Status;
+		Clamp8FB: FB_Cylinder_Status;
+		Clamp9FB: FB_Cylinder_Status;
+		Clamp10FB: FB_Cylinder_Status;
+		Clamp11FB: FB_Cylinder_Status;
+		Clamp12FB: FB_Cylinder_Status;
+		Pin1FB: FB_Cylinder_Status;
+		Pin2FB: FB_Cylinder_Status;
+		Pin3FB: FB_Cylinder_Status;
+		Pin4FB: FB_Cylinder_Status;
+		Pin5FB: FB_Cylinder_Status;
+		Pin6FB: FB_Cylinder_Status;
+
+		Part_Present1FB: FB_PP_Sensor;
+		Part_Present2FB: FB_PP_Sensor;
+		Part_Present3FB: FB_PP_Sensor;
+		Part_Present4FB: FB_PP_Sensor;
+		Part_Present5FB: FB_PP_Sensor;
+		Part_Present6FB: FB_PP_Sensor;
+		Part_Present7FB: FB_PP_Sensor;
+		Part_Present8FB: FB_PP_Sensor;
+
+		(*Valve FBs*)
+		Valve1FB: FB_GTAC_Valve_20170704;
+		Valve2FB: FB_GTAC_Valve_20170704;
+		Valve3FB: FB_GTAC_Valve_20170704;
+		Valve4FB: FB_GTAC_Valve_20170704;
+		Valve5FB: FB_GTAC_Valve_20170704;
+		Valve6FB: FB_GTAC_Valve_20170704;
+		Valve7FB: FB_GTAC_Valve_20170704;
+		Valve8FB: FB_GTAC_Valve_20170704;
+		Valve9FB: FB_GTAC_Valve_20170704;
+		Valve10FB: FB_GTAC_Valve_20170704;
+		Valve11FB: FB_GTAC_Valve_20170704;
+		Valve12FB: FB_GTAC_Valve_20170704;
+		Valve13FB: FB_GTAC_Valve_20170704;
+		Valve14FB: FB_GTAC_Valve_20170704;
+		Valve15FB: FB_GTAC_Valve_20170704;
+		Valve16FB: FB_GTAC_Valve_20170704;
+
+		(*Tool Positions*)
+		Clamp1ADVD: BOOL;
+		Clamp1RETD: BOOL;
+		Clamp2ADVD: BOOL;
+		Clamp2RETD: BOOL;
+		Clamp3ADVD: BOOL;
+		Clamp3RETD: BOOL;
+		Clamp4ADVD: BOOL;
+		Clamp4RETD: BOOL;
+		Clamp5ADVD: BOOL;
+		Clamp5RETD: BOOL;
+		Clamp6ADVD: BOOL;
+		Clamp6RETD: BOOL;
+		Clamp7ADVD: BOOL;
+		Clamp7RETD: BOOL;
+		Clamp8ADVD: BOOL;
+		Clamp8RETD: BOOL;
+		Clamp9ADVD: BOOL;
+		Clamp9RETD: BOOL;
+		Clamp10ADVD: BOOL;
+		Clamp10RETD: BOOL;
+		Clamp11ADVD: BOOL;
+		Clamp11RETD: BOOL;
+		Clamp12ADVD: BOOL;
+		Clamp12RETD: BOOL;
+		Pin1ADVD: BOOL;
+		Pin1RETD: BOOL;
+		Pin2ADVD: BOOL;
+		Pin2RETD: BOOL;
+		Pin3ADVD: BOOL;
+		Pin3RETD: BOOL;
+		Pin4ADVD: BOOL;
+		Pin4RETD: BOOL;
+		Pin5ADVD: BOOL;
+		Pin5RETD: BOOL;
+		Pin6ADVD: BOOL;
+		Pin6RETD: BOOL;
+
+		(*Part Present Sensors*)
+		(*Main Body Present*)
+		Part_Present1: BOOL;
+		Part_Present2: BOOL;
+		Part_Present3: BOOL;
+		Part_Present4: BOOL;
+		Part_Present5: BOOL;
+		Part_Present6: BOOL;
+		Part_Present7: BOOL;
+		Part_Present8: BOOL;
+
+
+
+END_VAR
+
+VAR_OUTPUT
+
+		FB_OK: BOOL;
+		Discrete_Image: udt_EOATxx_Image_20170607;
+
+		EOAT_FLT: BOOL;
+
+		CLFaults1:UDINT;
+		CLFaults2:UDINT;
+		CLFaults3:UDINT;
+		CLFaults4:UDINT;
+		PPFaults: UDINT;
+
+		EOAT_All_Empty: BOOL;
+		EOAT_Part1_Empty: BOOL;
+		EOAT_Part2_Empty: BOOL;
+		EOAT_Part3_Empty: BOOL;
+		EOAT_Part4_Empty: BOOL;
+		EOAT_Part5_Empty: BOOL;
+
+		EOAT_Full: BOOL;
+		Part1_In_EOAT: BOOL;
+		Part2_In_EOAT: BOOL;
+		Part3_In_EOAT: BOOL;
+		Part4_In_EOAT: BOOL;
+		Part5_In_EOAT: BOOL;
+
+	(*ACKS*)
+		ACK_Tool_At_WORK: BOOL;
+		ACK_CylAtWORK_Grp1: BOOL;
+		ACK_CylAtWORK_Grp2: BOOL;
+		ACK_CylAtWORK_Grp3: BOOL;
+		ACK_CylAtWORK_Grp4: BOOL;
+		ACK_CylAtWORK_Grp5: BOOL;
+	
+		ACK_Tool_At_HOME: BOOL;
+		ACK_CylAtHOME_Grp1: BOOL;
+		ACK_CylAtHOME_Grp2: BOOL;
+		ACK_CylAtHOME_Grp3: BOOL;
+		ACK_CylAtHOME_Grp4: BOOL;
+		ACK_CylAtHOME_Grp5: BOOL;
+
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[	(*Set FB_OK to True*)
+	FB_OK:= TRUE;
+
+
+(*---------------------------------------------------- Gather Hardwear ------------------------------------------------------*)
+	Hardware();
+
+
+(*---------------------------------------------------- Gather Clamp Sensor Inputs --------------------------------------*)
+	Cylinders();
+
+
+(*---------------------------------------------------- Gather Part Present Sensor Inputs ------------------------------*)
+	Proxies();
+
+
+(*---------------------------------------------------- Group Clamp Sensors -----------------------------------------------*)
+	Tool_States();
+
+
+(*---------------------------------------------------- Group Part Present Sensors ---------------------------------------*)
+	All_Sensors();
+
+
+
+(*---------------------------------------------------- Status and Faults--------------------------------------------------------*)
+	Status_and_Faults();
+
+
+(*---------------------------------------------------- Transfer to UI -------------------------------------------------------------*)
+	Xfer_To_UI();
+
+
+(*------------------------------------------------------Transfer Valve Outputs ----------------------------------------------*)
+	ValveBank1();
+
+
+(*---------------------------------------------------- Gather Robot Registration-------------------------------------------*)
+
+
+
+
+
+
+
+
+
+(*end*)]]></ST>
+    </Implementation>
+    <Action Name="All_Sensors" Id="{cf15f1f2-87e9-4890-a29d-b073e104907f}">
+      <Implementation>
+        <ST><![CDATA[
+
+(*	Note - In the event there is a left part and a right part, grouping the sensors allows only portions of the sensors to be monitored at a time.
+		If this is not advantageous to the design, there is still the option to group all the sensors as one group instead.
+		In this example, there are all 5 groups set up. 
+		Change this section to suit the specific design you have, where .0 is all, .1 is group one, .2 is group two, etc*)
+
+
+	(*All Sensors Off*)
+	All_Sensors_Off.0:= NOT Part_Present1 AND NOT Part_Present2 AND NOT  Part_Present3
+					AND NOT Part_Present4 AND NOT Part_Present5 AND NOT Part_Present6
+					AND NOT Part_Present7 AND NOT Part_Present8;
+
+	(*All Sensors Off - Group 1*)
+	All_Sensors_Off.1:= NOT Part_Present1 AND NOT Part_Present2 AND NOT  Part_Present3
+					AND NOT Part_Present4 AND NOT Part_Present5;
+
+	(*All Sensors Off - Group 2*)
+	All_Sensors_Off.2:= NOT Part_Present6 AND NOT Part_Present7 AND NOT Part_Present8;
+
+	(*All Sensors Off - Group 3*)
+	All_Sensors_Off.3:= FALSE;
+
+	(*All Sensors Off - Group 4*)
+	All_Sensors_Off.4:= FALSE;
+
+	(*All Sensors Off - Group 5*)
+	All_Sensors_Off.5:= FALSE;
+
+
+
+	(*All Sensors On*)
+	All_Sensors_On.0:= (Part_Present1 AND Part_Present2 AND Part_Present3
+					AND Part_Present4 AND Part_Present5 AND Part_Present6
+					AND Part_Present7 AND Part_Present8)
+					OR (All_Sensors_Off.0 AND Dry_Cycle);
+
+	(*All Sensors On - Group 1*)
+	All_Sensors_On.1:= (Part_Present1 AND Part_Present2 AND Part_Present3 AND Part_Present4 AND Part_Present5)
+					OR (All_Sensors_Off.0 AND Dry_Cycle);
+
+	(*All Sensors On - Group 2*)
+	All_Sensors_On.2:= (Part_Present6 AND Part_Present7 AND Part_Present8)
+					OR (All_Sensors_Off.0 AND Dry_Cycle);
+
+	(*All Sensors On - Group 3*)
+	All_Sensors_On.3:= (FALSE)
+					OR (All_Sensors_Off.0 AND Dry_Cycle);
+
+	(*All Sensors On - Group 4*)
+	All_Sensors_On.4:= (FALSE)
+					OR (All_Sensors_Off.0 AND Dry_Cycle);
+
+	(*All Sensors On - Group 5*)
+	All_Sensors_On.5:= (FALSE)
+					OR (All_Sensors_Off.0 AND Dry_Cycle);
+
+
+
+
+	(*Group all Sensors*)
+	IF CMD_CheckAllSensors_OFF AND All_Sensors_Off.0
+		THEN
+			EOAT_All_Empty:= TRUE;
+			EOAT_Full:= FALSE;
+
+	ELSIF CMD_CheckAllSensors_ON AND All_Sensors_On.0
+		THEN
+			EOAT_All_Empty:= FALSE;
+			EOAT_Full:= TRUE;
+
+	END_IF
+
+	IF CMD_CheckSensorsOFF_Grp1 AND All_Sensors_Off.1
+		THEN
+			EOAT_Part1_Empty:= TRUE;
+			Part1_In_EOAT:= FALSE;
+
+	ELSIF CMD_CheckSensorsON_Grp1 AND All_Sensors_On.1
+		THEN
+			EOAT_Part1_Empty:= FALSE;
+			Part1_In_EOAT:= TRUE;
+
+	END_IF
+
+	IF CMD_CheckSensorsOFF_Grp2 AND All_Sensors_Off.2
+		THEN
+			EOAT_Part2_Empty:= TRUE;
+			Part2_In_EOAT:= FALSE;
+
+	ELSIF CMD_CheckSensorsON_Grp2 AND All_Sensors_On.2
+		THEN
+			EOAT_Part2_Empty:= FALSE;
+			Part2_In_EOAT:= TRUE;
+
+	END_IF
+
+	IF CMD_CheckSensorsOFF_Grp3 AND All_Sensors_Off.3
+		THEN
+			EOAT_Part3_Empty:= TRUE;
+			Part3_In_EOAT:= FALSE;
+
+	ELSIF CMD_CheckSensorsON_Grp3 AND All_Sensors_On.3
+		THEN
+			EOAT_Part3_Empty:= FALSE;
+			Part3_In_EOAT:= TRUE;
+
+	ELSIF CMD_CheckSensorsON_Grp3 AND All_Sensors_On.3
+		THEN
+			EOAT_Part3_Empty:= FALSE;
+			Part3_In_EOAT:= TRUE;
+
+	END_IF
+
+	IF CMD_CheckSensorsOFF_Grp4 AND All_Sensors_Off.4
+		THEN
+			EOAT_Part4_Empty:= TRUE;
+			Part4_In_EOAT:= FALSE;
+	ELSIF CMD_CheckSensorsON_Grp4 AND All_Sensors_On.4
+		THEN
+			EOAT_Part4_Empty:= FALSE;
+			Part4_In_EOAT:= TRUE;
+
+	END_IF
+
+	IF CMD_CheckSensorsOFF_Grp5 AND All_Sensors_Off.5
+		THEN
+			EOAT_Part5_Empty:= TRUE;
+			Part5_In_EOAT:= FALSE;
+	ELSIF CMD_CheckSensorsON_Grp5 AND All_Sensors_On.5
+		THEN
+			EOAT_Part5_Empty:= FALSE;
+			Part5_In_EOAT:= TRUE;
+
+	END_IF
+
+
+
+
+
+
+
+
+
+
+
+
+(*end*)]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Cylinders" Id="{7fd87d14-b9d7-4cbd-8b0d-8c663cf84531}">
+      <Implementation>
+        <ST><![CDATA[(*Clamps*)(*Clamps*)(*Clamps*)
+(*Clamps*)(*Clamps*)(*Clamps*)
+(*Clamps*)(*Clamps*)(*Clamps*)
+
+		(*Clamp1*)
+		Clamp1FB(
+			Retracted_Sensor:= N02.I.0,
+			Advanced_Sensor:= N02.I.1,
+			Retract_Solenoid:= N100.Q.1,
+			Advance_Solenoid:= N100.Q.0,
+			Ret_Delay:= T#0.1s,
+			Adv_Delay:= T#0.1s,
+			Fault_Delay:= T#3s,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp1RETD,
+			In_Advanced_Position=> Clamp1ADVD,
+			Faulted=> CLFaults1.1 );
+
+		(*Clamp2 *)
+		Clamp2FB(
+			Retracted_Sensor:= N02.I.2,
+			Advanced_Sensor:= N02.I.3,
+			Retract_Solenoid:= N100.Q.1,
+			Advance_Solenoid:= N100.Q.0,
+			Ret_Delay:= T#0.1s,
+			Adv_Delay:= T#0.1s,
+			Fault_Delay:= T#3s,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp2RETD,
+			In_Advanced_Position=> Clamp2ADVD,
+			Faulted=> CLFaults1.2 );
+
+		(*Clamp3 *)
+		Clamp3FB(
+			Retracted_Sensor:= N02.I.4,
+			Advanced_Sensor:= N02.I.5,
+			Retract_Solenoid:= N100.Q.5,
+			Advance_Solenoid:= N100.Q.4,
+			Ret_Delay:= T#0.1s,
+			Adv_Delay:= T#0.1s,
+			Fault_Delay:= T#3s,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp3RETD,
+			In_Advanced_Position=> Clamp3ADVD,
+			Faulted=> CLFaults1.3 );
+
+		(*Clamp4 *)
+		Clamp4FB(
+			Retracted_Sensor:= N02.I.6,
+			Advanced_Sensor:= N02.I.7,
+			Retract_Solenoid:= N100.Q.1,
+			Advance_Solenoid:= N100.Q.0,
+			Ret_Delay:= T#0.1s,
+			Adv_Delay:= T#0.1s,
+			Fault_Delay:= T#3s,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp4RETD,
+			In_Advanced_Position=> Clamp4ADVD,
+			Faulted=> CLFaults1.4 );
+
+		(*Clamp5 *)
+		Clamp5FB(
+			Retracted_Sensor:= N03.I.0,
+			Advanced_Sensor:= N03.I.1,
+			Retract_Solenoid:= N100.Q.15,
+			Advance_Solenoid:= N100.Q.14,
+			Ret_Delay:= T#0.1s,
+			Adv_Delay:= T#0.1s,
+			Fault_Delay:= T#3s,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp5RETD,
+			In_Advanced_Position=> Clamp5ADVD,
+			Faulted=> CLFaults2.5 );
+
+		(*Clamp6 *)
+		Clamp6FB(
+			Retracted_Sensor:= N03.I.2,
+			Advanced_Sensor:= N03.I.3,
+			Retract_Solenoid:= N100.Q.11,
+			Advance_Solenoid:= N100.Q.10,
+			Ret_Delay:= T#0.1s,
+			Adv_Delay:= T#0.1s,
+			Fault_Delay:= T#3s,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp6RETD,
+			In_Advanced_Position=> Clamp6ADVD,
+			Faulted=> CLFaults2.6 );
+
+		(*Clamp7 *)
+		Clamp7FB(
+			Retracted_Sensor:= N03.I.4,
+			Advanced_Sensor:= N03.I.5,
+			Retract_Solenoid:= N100.Q.15,
+			Advance_Solenoid:= N100.Q.14,
+			Ret_Delay:= T#0.1s,
+			Adv_Delay:= T#0.1s,
+			Fault_Delay:= T#3s,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp7RETD,
+			In_Advanced_Position=> Clamp7ADVD,
+			Faulted=> CLFaults2.7 );
+
+		(*Clamp8 *)
+		Clamp8FB(
+			Retracted_Sensor:= N03.I.6,
+			Advanced_Sensor:= N03.I.7,
+			Retract_Solenoid:= N100.Q.15,
+			Advance_Solenoid:= N100.Q.14,
+			Ret_Delay:= T#0.1s,
+			Adv_Delay:= T#0.1s,
+			Fault_Delay:= T#3s,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp8RETD,
+			In_Advanced_Position=> Clamp8ADVD,
+			Faulted=> CLFaults2.8 );
+
+		(*Clamp9*)
+		Clamp9FB(
+			Retracted_Sensor:= N04.I.0,
+			Advanced_Sensor:= N04.I.1,
+			Retract_Solenoid:= N100.Q.1,
+			Advance_Solenoid:= N100.Q.0,
+			Ret_Delay:= T#0.1s,
+			Adv_Delay:= T#0.1s,
+			Fault_Delay:= T#3s,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp9RETD,
+			In_Advanced_Position=> Clamp9ADVD,
+			Faulted=> CLFaults2.9 );
+
+		(*Clamp10*)
+		Clamp10FB(
+			Retracted_Sensor:= N04.I.2,
+			Advanced_Sensor:= N04.I.3,
+			Retract_Solenoid:= N100.Q.1,
+			Advance_Solenoid:= N100.Q.0,
+			Ret_Delay:= T#0.1s,
+			Adv_Delay:= T#0.1s,
+			Fault_Delay:= T#3s,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp10RETD,
+			In_Advanced_Position=> Clamp10ADVD,
+			Faulted=> CLFaults2.10 );
+
+		(*Clamp11*)
+		Clamp11FB(
+			Retracted_Sensor:= N04.I.4,
+			Advanced_Sensor:= N04.I.5,
+			Retract_Solenoid:= N100.Q.1,
+			Advance_Solenoid:= N100.Q.0,
+			Ret_Delay:= T#0.1s,
+			Adv_Delay:= T#0.1s,
+			Fault_Delay:= T#3s,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp11RETD,
+			In_Advanced_Position=> Clamp11ADVD,
+			Faulted=> CLFaults2.11 );
+
+		(*Clamp12*)
+		Clamp12FB(
+			Retracted_Sensor:= N04.I.6,
+			Advanced_Sensor:= N04.I.7,
+			Retract_Solenoid:= N100.Q.1,
+			Advance_Solenoid:= N100.Q.0,
+			Ret_Delay:= T#0.1s,
+			Adv_Delay:= T#0.1s,
+			Fault_Delay:= T#3s,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Clamp12RETD,
+			In_Advanced_Position=> Clamp12ADVD,
+			Faulted=> CLFaults2.12 );
+
+
+(*Pins*)(*Pins*)(*Pins*)
+(*Pins*)(*Pins*)(*Pins*)
+(*Pins*)(*Pins*)(*Pins*)
+
+		(*Pin1*)
+		Pin1FB(
+			Retracted_Sensor:=  N03.I.0,
+			Advanced_Sensor:=  N03.I.1,
+			Retract_Solenoid:=  N100.Q.7,
+			Advance_Solenoid:=  N100.Q.6,
+			Adv_Delay:=  T#0.1S,
+			Ret_Delay:=  T#0.1S,
+			Fault_Delay:=  T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Pin1RETD,
+			In_Advanced_Position=> Pin1ADVD,
+			Faulted=> CLFaults1.5);
+
+		(*Pin2*)
+		Pin2FB(
+			Retracted_Sensor:=  N03.I.2,
+			Advanced_Sensor:=  N03.I.3,
+			Retract_Solenoid:=  N100.Q.7,
+			Advance_Solenoid:=  N100.Q.6,
+			Adv_Delay:=  T#0.1S,
+			Ret_Delay:=  T#0.1S,
+			Fault_Delay:=  T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Pin2RETD,
+			In_Advanced_Position=> Pin2ADVD,
+			Faulted=> CLFaults1.6);
+
+		(*Pin3*)
+		Pin3FB(
+			Retracted_Sensor:=  N03.I.4,
+			Advanced_Sensor:=  N03.I.5,
+			Retract_Solenoid:=  N100.Q.7,
+			Advance_Solenoid:=  N100.Q.6,
+			Adv_Delay:=  T#0.1S,
+			Ret_Delay:=  T#0.1S,
+			Fault_Delay:=  T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Pin3RETD,
+			In_Advanced_Position=> Pin3ADVD,
+			Faulted=> CLFaults1.7 );
+
+		(*Pin4*)
+		Pin4FB(
+			Retracted_Sensor:=  N03.I.6,
+			Advanced_Sensor:=  N03.I.7,
+			Retract_Solenoid:=  N100.Q.13,
+			Advance_Solenoid:=  N100.Q.12,
+			Adv_Delay:=  T#0.1S,
+			Ret_Delay:=  T#0.1S,
+			Fault_Delay:=  T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Pin4RETD,
+			In_Advanced_Position=> Pin4ADVD,
+			Faulted=> CLFaults1.8 );
+
+		(*Pin5*)
+		Pin5FB(
+			Retracted_Sensor:=  N04.I.0,
+			Advanced_Sensor:=  N04.I.1,
+			Retract_Solenoid:=  N100.Q.13,
+			Advance_Solenoid:=  N100.Q.12,
+			Adv_Delay:=  T#0.1S,
+			Ret_Delay:=  T#0.1S,
+			Fault_Delay:=  T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Pin5RETD,
+			In_Advanced_Position=> Pin5ADVD,
+			Faulted=> CLFaults1.9);
+
+		(*Pin6*)
+		Pin6FB(
+			Retracted_Sensor:=  N04.I.2,
+			Advanced_Sensor:=  N04.I.3,
+			Retract_Solenoid:=  N100.Q.13,
+			Advance_Solenoid:=  N100.Q.12,
+			Adv_Delay:=  T#0.1S,
+			Ret_Delay:=  T#0.1S,
+			Fault_Delay:=  T#3.0S,
+			Disable_Fault:= FALSE,
+			In_Retracted_Position=> Pin6RETD,
+			In_Advanced_Position=> Pin6ADVD,
+			Faulted=> CLFaults1.10 );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(*end*)]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Hardware" Id="{1ebd526e-0742-4f7a-be13-044a6f5acd2f}">
+      <Implementation>
+        <ST><![CDATA[(*Pass Node States into Array  in order on Physical Fixture*)
+
+	NodeState:=NodeLayout.State;
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$Gather Status Of Hardware $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Discrete I/O Nodes*)
+
+	IF (N01.InfoData.State=8)
+		AND (N01.InfoData.State=8 OR (Input_Node_Count<2))
+		AND (N02.InfoData.State=8 OR (Input_Node_Count<3))
+		AND (N03.InfoData.State=8 OR (Input_Node_Count<4))
+		AND (N04.InfoData.State=8 OR (Input_Node_Count<5))
+		AND (N05.InfoData.State=8 OR (Input_Node_Count<6))
+		AND (N06.InfoData.State=8 OR (Input_Node_Count<7))
+		AND (N07.InfoData.State=8 OR (Input_Node_Count<8))
+		AND (N08.InfoData.State=8 OR (Input_Node_Count<9))
+		AND (N09.InfoData.State=8 OR (Input_Node_Count<10))
+		AND (N100_STAT.InfoData.State=8)
+
+		THEN
+			DiscreteNode_OK:=TRUE;
+
+	ELSE
+			DiscreteNode_OK:=FALSE;
+
+	END_IF;
+
+	(*Cable Break Detection*)
+		ECatSlave_Cable_Breaks:= FUN_GTAC_EcatSlaveConnState_64bit(NodeState);		(*Function Returns Flags to warn of possible cable break*)]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Proxies" Id="{f7fa51b5-e3fe-4c7d-84eb-0fb649d4733c}">
+      <Implementation>
+        <ST><![CDATA[
+
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+
+(*Note - On_Trigger and Off_Trigger need to be changed based on which group in All_Sensors_On the sensor is placed.*)
+
+
+	(*Part 1 Present*)
+		Part_Present1FB(
+			Sensor_Input:= N01.I.0,
+			On_Trigger1:= CMD_CheckAllSensors_ON OR CMD_CheckSensorsON_Grp1 OR EOAT_Full OR Part1_In_EOAT,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= CMD_CheckAllSensors_OFF OR CMD_CheckSensorsOFF_Grp1 OR EOAT_All_Empty OR EOAT_Part1_Empty,
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= Dry_Cycle OR Robot_WorkingOK,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present1,
+			Faulted=>  PPFaults.1);
+
+	(*Part 2 Present*)
+		Part_Present2FB(
+			Sensor_Input:= N01.I.1,
+			On_Trigger1:= CMD_CheckAllSensors_ON OR CMD_CheckSensorsON_Grp1,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= CMD_CheckAllSensors_OFF OR CMD_CheckSensorsOFF_Grp1,
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= Dry_Cycle OR Robot_WorkingOK,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present2,
+			Faulted=>  PPFaults.2);
+
+	(*Part 3 Present*)
+		Part_Present3FB(
+			Sensor_Input:= N01.I.2,
+			On_Trigger1:= CMD_CheckAllSensors_ON OR CMD_CheckSensorsON_Grp1,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= CMD_CheckAllSensors_OFF OR CMD_CheckSensorsOFF_Grp1,
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= Dry_Cycle OR Robot_WorkingOK,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present3,
+			Faulted=>  PPFaults.3);
+
+	(*Part 4 Present*)
+		Part_Present4FB(
+			Sensor_Input:=N01.I.3,
+			On_Trigger1:= CMD_CheckAllSensors_ON OR CMD_CheckSensorsON_Grp1,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= CMD_CheckAllSensors_OFF OR CMD_CheckSensorsOFF_Grp1,
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= Dry_Cycle OR Robot_WorkingOK,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present4,
+			Faulted=>  PPFaults.4);
+
+	(*Part 5 Present*)
+		Part_Present5FB(
+			Sensor_Input:= N01.I.4,
+			On_Trigger1:= CMD_CheckAllSensors_ON OR CMD_CheckSensorsON_Grp1,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= CMD_CheckAllSensors_OFF OR CMD_CheckSensorsOFF_Grp1,
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= Dry_Cycle OR Robot_WorkingOK,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present5,
+			Faulted=>  PPFaults.5);
+
+	(*Part 6 Present*)
+		Part_Present6FB(
+			Sensor_Input:= N01.I.5,
+			On_Trigger1:= CMD_CheckAllSensors_ON OR CMD_CheckSensorsON_Grp2,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= CMD_CheckAllSensors_OFF OR CMD_CheckSensorsOFF_Grp2,
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= Dry_Cycle OR Robot_WorkingOK,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present6,
+			Faulted=>  PPFaults.6);
+
+	(*Part 7 Present*)
+		Part_Present7FB(
+			Sensor_Input:= N01.I.7,
+			On_Trigger1:= CMD_CheckAllSensors_ON OR CMD_CheckSensorsON_Grp2,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= CMD_CheckAllSensors_OFF OR CMD_CheckSensorsOFF_Grp2,
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= Dry_Cycle OR Robot_WorkingOK,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present7,
+			Faulted=>  PPFaults.7);
+
+	(*Part 8 Present*)
+		Part_Present8FB(
+			Sensor_Input:= N09.I.0,
+			On_Trigger1:= CMD_CheckAllSensors_ON OR CMD_CheckSensorsON_Grp2,
+			On_Trigger2:= TRUE,
+			Off_Trigger1:= CMD_CheckAllSensors_OFF OR CMD_CheckSensorsOFF_Grp2,
+			Off_Trigger2:= TRUE,
+			Disable_Faults:= Dry_Cycle OR Robot_WorkingOK,
+			Fault_Delay:= T#1.5s,
+			Status=> Part_Present8,
+			Faulted=>  PPFaults.8);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(*end*)]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Status_and_Faults" Id="{ecfb08a0-4386-425e-937b-8e107a1f9259}">
+      <Implementation>
+        <ST><![CDATA[	(*Clamp/Cylinder Faults*)
+		IF CLFaults1>0
+			THEN CLFaulted.1:=TRUE;
+		ELSE
+			CLFaulted.1:=FALSE;
+		END_IF;
+	(*Spare Fault Word*)
+		IF CLFaults2>0
+			THEN CLFaulted.2:=TRUE;
+		ELSE
+			CLFaulted.2:=FALSE;
+		END_IF;
+	(*Spare Fault Word*)
+		IF CLFaults3>0
+			THEN CLFaulted.3:=TRUE;
+		ELSE
+			CLFaulted.3:=FALSE;
+		END_IF;
+	(*Spare Fault Word*)
+		IF CLFaults4>0
+			THEN CLFaulted.4:=TRUE;
+		ELSE
+			CLFaulted.4:=FALSE;
+		END_IF;
+	(*Bit 0 is designated as ANY Clamp Fault Word Faulted*)
+		IF CLFaulted.1 OR CLFaulted.2 OR CLFaulted.3
+			THEN CLFaulted.0:= TRUE;
+		ELSE
+			CLFaulted.0 := FALSE;
+		END_IF;
+
+	(*Part Present Sensor Faults*)
+		IF PPFaults>0
+			THEN PPFaulted.0:=TRUE;
+		ELSE
+			PPFaulted.0:=FALSE;
+		END_IF;
+
+		EOAT_FLT:= (CLFaulted>0) OR (PPFaulted>0);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(*end*)]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Tool_States" Id="{244777f9-9d45-43b0-80e8-1266bb555bbb}">
+      <Implementation>
+        <ST><![CDATA[(*	Note - In the event there is a left part and a right part, grouping the cylinders allows only portions of the cylinders to be controlled at a time.
+		If this is not advantageous to the design, there is still the option to group all the cylinders as one group instead.
+		In this example, there are all 5 groups set up. 
+		Change this section to suit the specific design you have, where .0 is all, .1 is group one, .2 is group two, etc*)
+
+
+	(*Tool All Home - All Cylinders Home*)
+	Tool_At_Home.0:=Clamp1RETD AND Clamp2RETD AND Clamp3RETD AND Clamp4RETD
+				AND Clamp5RETD AND Clamp6RETD AND Clamp7RETD AND Clamp8RETD
+				AND Clamp9RETD AND Clamp10RETD AND Clamp11RETD AND Clamp12RETD
+				AND Pin1ADVD AND Pin2ADVD AND Pin3ADVD AND Pin4ADVD AND Pin5ADVD AND Pin6ADVD;
+
+	(*Tool All Home - Cylinders Home Group 1*)
+	Tool_At_Home.1:=Clamp1RETD AND Clamp2RETD AND Clamp3RETD AND Clamp4RETD
+				AND Clamp5RETD AND Clamp6RETD AND Clamp7RETD AND Clamp8RETD
+				AND Clamp9RETD AND Clamp10RETD AND Clamp11RETD AND Clamp12RETD
+				AND Pin1ADVD AND Pin2ADVD AND Pin3ADVD AND Pin4ADVD AND Pin5ADVD AND Pin6ADVD;
+
+	(*Tool All Home - Cylinders Home Group 2*)
+	Tool_At_Home.2:=Clamp1RETD AND Clamp2RETD AND Clamp3RETD AND Clamp4RETD
+				AND Clamp5RETD AND Clamp6RETD AND Clamp7RETD AND Clamp8RETD
+				AND Clamp9RETD AND Clamp10RETD AND Clamp11RETD AND Clamp12RETD
+				AND Pin1ADVD AND Pin2ADVD AND Pin3ADVD AND Pin4ADVD AND Pin5ADVD AND Pin6ADVD;
+
+	(*Tool All Home - Cylinders Home Group 3*)
+	Tool_At_Home.3:= FALSE;
+
+	(*Tool All Home - Cylinders Home Group 4*)
+	Tool_At_Home.4:= FALSE;
+
+	(*Tool All Home - Cylinders Home Group 5*)
+	Tool_At_Home.5:= FALSE;
+
+
+
+
+	(*Tool at Work - All Cylinders Work*)
+	Tool_At_Work.0:= Clamp1ADVD AND Clamp2ADVD AND Clamp3ADVD AND Clamp4ADVD
+				AND Clamp5ADVD AND Clamp6ADVD AND Clamp7ADVD AND Clamp8ADVD
+				AND Clamp9ADVD AND Clamp10ADVD AND Clamp11ADVD AND Clamp12ADVD
+				AND Pin1ADVD AND Pin2ADVD AND Pin3ADVD AND Pin4ADVD AND Pin5ADVD AND Pin6ADVD;
+
+	(*Tool at Work - Cylinders Work Group 1*)
+	Tool_At_Work.1:= Clamp1ADVD AND Clamp2ADVD AND Clamp3ADVD AND Clamp4ADVD
+				AND Clamp5ADVD AND Clamp6ADVD AND Clamp7ADVD AND Clamp8ADVD;
+
+	(*Tool at Work - Cylinders Work Group 2*)
+	Tool_At_Work.2:= Clamp9ADVD AND Clamp10ADVD AND Clamp11ADVD AND Clamp12ADVD
+				AND Pin1RETD AND Pin2RETD AND Pin3RETD AND Pin4RETD AND Pin5RETD AND Pin6RETD;
+
+	(*Tool at Work - Cylinders Work Group 3*)
+	Tool_At_Work.3:= FALSE;
+
+	(*Tool at Work - Cylinders Work Group 4*)
+	Tool_At_Work.4:= FALSE;
+
+	(*Tool at Work - Cylinders Work Group 5*)
+	Tool_At_Work.5:= FALSE;
+
+
+
+
+	(*Group all Tool States*)
+	ACK_Tool_At_WORK:= CMD_Tool_To_WORK AND Tool_At_WORK.0;
+	ACK_Tool_At_HOME:= CMD_Tool_To_HOME AND Tool_At_HOME.0;
+
+	ACK_CylAtWORK_Grp1:= CMD_CylToWORK_Grp1 AND Tool_At_WORK.1;
+	ACK_CylAtHOME_Grp1:= CMD_CylToHOME_Grp1 AND Tool_At_HOME.1;
+	ACK_CylAtWORK_Grp2:= CMD_CylToWORK_Grp2 AND Tool_At_WORK.2;
+	ACK_CylAtHOME_Grp2:= CMD_CylToHOME_Grp2 AND Tool_At_HOME.2;
+	ACK_CylAtWORK_Grp3:= CMD_CylToWORK_Grp3 AND Tool_At_WORK.3;
+	ACK_CylAtHOME_Grp3:= CMD_CylToHOME_Grp3 AND Tool_At_HOME.3;
+	ACK_CylAtWORK_Grp4:= CMD_CylToWORK_Grp4 AND Tool_At_WORK.4;
+	ACK_CylAtHOME_Grp4:= CMD_CylToHOME_Grp4 AND Tool_At_HOME.4;
+	ACK_CylAtWORK_Grp5:= CMD_CylToWORK_Grp5 AND Tool_At_WORK.5;
+	ACK_CylAtHOME_Grp5:= CMD_CylToHOME_Grp5 AND Tool_At_HOME.5;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(*end*)]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="ValveBank1" Id="{6f2a15c7-fc29-45f6-a740-9e6851eec7cb}">
+      <Implementation>
+        <ST><![CDATA[(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+
+(*+++++++++++VALVE BANK 1 +++++++++++++*)
+(*+++++++++++VALVE BANK 1 +++++++++++++*)
+(*+++++++++++VALVE BANK 1 +++++++++++++*)
+
+
+	(*Valve 1, A+B*)
+	(*Clamp 1, 2, 3, 4*)
+		Valve1FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= TRUE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.1S,
+			Enable_Auto_Commands:= Enable_Motion,
+			Enable_Manual_Commands:= FALSE,
+			In_Manual_SideA_Command:= FALSE,
+			In_Manual_SideB_Command:= FALSE,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.0,
+			TurnOn_SideB_SOL=> N100.Q.1,
+			TurnOn_SideA_Indicator=> ,
+			TurnOn_SideB_Indicator=>
+			 );
+		Valve1FB.In_Auto_SideA_Command:= CMD_Tool_To_WORK OR CMD_CylToWORK_Grp1;
+		Valve1FB.In_Auto_SideB_Command:= CMD_Tool_To_HOME OR CMD_CylToHOME_Grp1;
+
+
+	(*Valve 2, A+B*)
+	(*Pins 1, 2, 3, 4*)
+		Valve2FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= Enable_Motion,
+			Enable_Manual_Commands:= FALSE,
+			In_Manual_SideA_Command:= FALSE,
+			In_Manual_SideB_Command:= FALSE,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.2,
+			TurnOn_SideB_SOL=> N100.Q.3,
+			TurnOn_SideA_Indicator=> ,
+			TurnOn_SideB_Indicator=>
+			 );
+		Valve2FB.In_Auto_SideA_Command:= (*CMD_Tool_To_WORK OR*) CMD_CylToWORK_Grp2;
+		Valve2FB.In_Auto_SideB_Command:= (*CMD_Tool_To_HOME OR*) CMD_CylToHOME_Grp2;
+
+
+	(*Valve 3, A+B*)
+	(*spare*)
+		Valve3FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,				(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= Enable_Motion,
+			Enable_Manual_Commands:= FALSE,
+			In_Manual_SideA_Command:= FALSE,
+			In_Manual_SideB_Command:= FALSE,
+			SideA_Indicator:= N100.Q.4,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.4,
+			TurnOn_SideB_SOL=> N100.Q.5,
+			TurnOn_SideA_Indicator=> ,
+			TurnOn_SideB_Indicator=>
+			 );
+		Valve3FB.In_Auto_SideA_Command:= FALSE;
+		Valve3FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 4, A+B*)
+	(*spare*)
+		Valve4FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= Enable_Motion,
+			Enable_Manual_Commands:= FALSE,
+			In_Manual_SideA_Command:= FALSE,
+			In_Manual_SideB_Command:= FALSE,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.6,
+			TurnOn_SideB_SOL=> N100.Q.7,
+			TurnOn_SideA_Indicator=> ,
+			TurnOn_SideB_Indicator=>
+			 );
+		Valve4FB.In_Auto_SideA_Command:= FALSE;
+		Valve4FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 5, A+B*)
+	(*spare*)
+		Valve5FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= Enable_Motion,
+			Enable_Manual_Commands:= FALSE,
+			In_Manual_SideA_Command:= FALSE,
+			In_Manual_SideB_Command:= FALSE,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.8,
+			TurnOn_SideB_SOL=> N100.Q.9,
+			TurnOn_SideA_Indicator=> ,
+			TurnOn_SideB_Indicator=>
+			 );
+		Valve5FB.In_Auto_SideA_Command:= FALSE;
+		Valve5FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 6, A+B*)
+	(*spare*)
+		Valve6FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= Enable_Motion,
+			Enable_Manual_Commands:= FALSE,
+			In_Manual_SideA_Command:= FALSE,
+			In_Manual_SideB_Command:= FALSE,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.10,
+			TurnOn_SideB_SOL=> N100.Q.11,
+			TurnOn_SideA_Indicator=> ,
+			TurnOn_SideB_Indicator=>
+			 );
+		Valve6FB.In_Auto_SideA_Command:= FALSE;
+		Valve6FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 7, A+B*)
+	(*spare*)
+		Valve7FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= Enable_Motion,
+			Enable_Manual_Commands:= FALSE,
+			In_Manual_SideA_Command:= FALSE,
+			In_Manual_SideB_Command:= FALSE,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.12,
+			TurnOn_SideB_SOL=> N100.Q.13,
+			TurnOn_SideA_Indicator=> ,
+			TurnOn_SideB_Indicator=>
+			 );
+		Valve7FB.In_Auto_SideA_Command:= FALSE;
+		Valve7FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 8, A+B*)
+	(*spare*)
+		Valve8FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= Enable_Motion,
+			Enable_Manual_Commands:= FALSE,
+			In_Manual_SideA_Command:= FALSE,
+			In_Manual_SideB_Command:= FALSE,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.14,
+			TurnOn_SideB_SOL=> N100.Q.15,
+			TurnOn_SideA_Indicator=> ,
+			TurnOn_SideB_Indicator=>
+			 );
+		Valve8FB.In_Auto_SideA_Command:= FALSE;
+		Valve8FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 9, A+B*)
+	(*spare*)
+		Valve9FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= Enable_Motion,
+			Enable_Manual_Commands:= FALSE,
+			In_Manual_SideA_Command:= FALSE,
+			In_Manual_SideB_Command:= FALSE,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.16,
+			TurnOn_SideB_SOL=> N100.Q.17,
+			TurnOn_SideA_Indicator=> ,
+			TurnOn_SideB_Indicator=>
+			 );
+		Valve9FB.In_Auto_SideA_Command:= FALSE;
+		Valve9FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 10, A+B*)
+	(*spare*)
+		Valve10FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= Enable_Motion,
+			Enable_Manual_Commands:= FALSE,
+			In_Manual_SideA_Command:= FALSE,
+			In_Manual_SideB_Command:= FALSE,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.18,
+			TurnOn_SideB_SOL=> N100.Q.19,
+			TurnOn_SideA_Indicator=> ,
+			TurnOn_SideB_Indicator=>
+			 );
+		Valve10FB.In_Auto_SideA_Command:= FALSE;
+		Valve10FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 11, A+B*)
+	(*spare*)
+		Valve11FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= Enable_Motion,
+			Enable_Manual_Commands:= FALSE,
+			In_Manual_SideA_Command:= FALSE,
+			In_Manual_SideB_Command:= FALSE,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.20,
+			TurnOn_SideB_SOL=> N100.Q.21,
+			TurnOn_SideA_Indicator=> ,
+			TurnOn_SideB_Indicator=>
+			 );
+		Valve11FB.In_Auto_SideA_Command:= FALSE;
+		Valve11FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 12, A+B*)
+	(*spare*)
+		Valve12FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= Enable_Motion,
+			Enable_Manual_Commands:= FALSE,
+			In_Manual_SideA_Command:= FALSE,
+			In_Manual_SideB_Command:= FALSE,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.22,
+			TurnOn_SideB_SOL=> N100.Q.23,
+			TurnOn_SideA_Indicator=> ,
+			TurnOn_SideB_Indicator=>
+			 );
+		Valve12FB.In_Auto_SideA_Command:= FALSE;
+		Valve12FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 13, A+B*)
+	(*spare*)
+		Valve13FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= Enable_Motion,
+			Enable_Manual_Commands:= FALSE,
+			In_Manual_SideA_Command:= FALSE,
+			In_Manual_SideB_Command:= FALSE,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.24,
+			TurnOn_SideB_SOL=> N100.Q.25,
+			TurnOn_SideA_Indicator=> ,
+			TurnOn_SideB_Indicator=>
+			 );
+		Valve13FB.In_Auto_SideA_Command:= FALSE;
+		Valve13FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 14, A+B*)
+	(*spare*)
+		Valve14FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= Enable_Motion,
+			Enable_Manual_Commands:= FALSE,
+			In_Manual_SideA_Command:= FALSE,
+			In_Manual_SideB_Command:= FALSE,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.26,
+			TurnOn_SideB_SOL=> N100.Q.27,
+			TurnOn_SideA_Indicator=> ,
+			TurnOn_SideB_Indicator=>
+			 );
+		Valve14FB.In_Auto_SideA_Command:= FALSE;
+		Valve14FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 15, A+B*)
+	(*spare*)
+		Valve15FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= Enable_Motion,
+			Enable_Manual_Commands:= FALSE,
+			In_Manual_SideA_Command:= FALSE,
+			In_Manual_SideB_Command:= FALSE,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.28,
+			TurnOn_SideB_SOL=> N100.Q.29,
+			TurnOn_SideA_Indicator=> ,
+			TurnOn_SideB_Indicator=>
+			 );
+		Valve15FB.In_Auto_SideA_Command:= FALSE;
+		Valve15FB.In_Auto_SideB_Command:= FALSE;
+
+
+	(*Valve 16, A+B*)
+	(*spare*)
+		Valve16FB
+			(
+			Enable_Motion:= Enable_Motion ,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.10S,
+			Enable_Auto_Commands:= Enable_Motion,
+			Enable_Manual_Commands:= FALSE,
+			In_Manual_SideA_Command:= FALSE,
+			In_Manual_SideB_Command:= FALSE,
+			SideA_Indicator:= FALSE,
+			SideB_Indicator:= FALSE,
+			TurnOn_SideA_SOL=> N100.Q.30,
+			TurnOn_SideB_SOL=> N100.Q.31,
+			TurnOn_SideA_Indicator=> ,
+			TurnOn_SideB_Indicator=>
+			 );
+		Valve16FB.In_Auto_SideA_Command:= FALSE;
+		Valve16FB.In_Auto_SideB_Command:= FALSE;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(*end*)]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Xfer_To_UI" Id="{c89bf87f-d45f-459c-88e7-241bfef5d8cd}">
+      <Implementation>
+        <ST><![CDATA[	(*Transfer General Status and I/O Images for Display On HMI*)
+	Discrete_Image.CLFaults1:= CLFaults1;
+	Discrete_Image.CLFaults2:= CLFaults2;
+	Discrete_Image.CLFaults3:= CLFaults3;
+	Discrete_Image.CLFaults4:= CLFaults4;
+	Discrete_Image.CLFaulted:= CLFaulted;
+	Discrete_Image.PPFaults:= PPFaults;
+	Discrete_Image.PPFaulted:= PPFaulted;
+
+	Discrete_Image.N01:=N01;
+	Discrete_Image.N02:=N02;
+	Discrete_Image.N03:=N03;
+	Discrete_Image.N04:=N04;
+	Discrete_Image.N05:=N05;
+	Discrete_Image.N06:=N06;
+	Discrete_Image.N07:=N07;
+	Discrete_Image.N08:=N08;
+	Discrete_Image.N09:=N09;
+	Discrete_Image.N100:=N100;
+	Discrete_Image.N100_STAT:=N100_STAT;
+	Discrete_Image.NodeLayout:=NodeLayout;
+	Discrete_Image.NodeState:=NodeState;
+	
+	Discrete_Image.ID:= ID;
+	Discrete_Image.ECatSlave_Cable_Breaks:= ECatSlave_Cable_Breaks;
+	Discrete_Image.Input_Node_Count:= Input_Node_Count;
+	Discrete_Image.VB_Node_Count:= VB_Node_Count;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(*end*)]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="EOAT02">
+      <LineId Id="226" Count="47" />
+    </LineIds>
+    <LineIds Name="EOAT02.All_Sensors">
+      <LineId Id="0" Count="147" />
+    </LineIds>
+    <LineIds Name="EOAT02.Cylinders">
+      <LineId Id="295" Count="292" />
+      <LineId Id="293" Count="0" />
+    </LineIds>
+    <LineIds Name="EOAT02.Hardware">
+      <LineId Id="40" Count="2" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="0" Count="22" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="35" Count="0" />
+    </LineIds>
+    <LineIds Name="EOAT02.Proxies">
+      <LineId Id="123" Count="120" />
+      <LineId Id="121" Count="0" />
+    </LineIds>
+    <LineIds Name="EOAT02.Status_and_Faults">
+      <LineId Id="0" Count="54" />
+    </LineIds>
+    <LineIds Name="EOAT02.Tool_States">
+      <LineId Id="0" Count="90" />
+    </LineIds>
+    <LineIds Name="EOAT02.ValveBank1">
+      <LineId Id="0" Count="417" />
+    </LineIds>
+    <LineIds Name="EOAT02.Xfer_To_UI">
+      <LineId Id="0" Count="19" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="21" Count="20" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_SSxx_ToUI_20250704" Id="{fbdbf3d9-2dc8-4cec-8916-50e53b2deb24}">
+    <Declaration><![CDATA[(*udt (user defined type) for interfacing to UI (User Interface)
+this udt represents data that is passed from PLC to EACH UI
+
+	Author(S): Brent Lekx-Toniolo of Sodecia GTAC;
+	Version 20150814
+		- Initial Concept
+	Version 20220224
+	- Overhaul during TcUI Migration project, b.lekx-toniolo / c.drees
+
+*)
+
+TYPE udt_SSxx_ToUI_20250704 :
+	STRUCT
+
+	(*Input and Output Data Images*)
+	Discrete_Image: udt_SSxx_Image_20250704;
+	(*EtherCAT Cable Break Flags*)
+	ECAT_Cable_Breaks: UDINT;
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

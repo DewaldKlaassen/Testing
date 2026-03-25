@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_STxx_ToUI_20220224" Id="{75a92948-4589-4b4b-b114-150e3816fa49}">
+    <Declaration><![CDATA[(*udt (user defined type) for interfacing to UI (User Interface)
+this udt represents data that is passed from PLC to EACH UI
+
+	Author(S): Brent Lekx-Toniolo of Sodecia GTAC;
+	Version 20141020
+		- Initial Concept
+	Version 20200212
+		- Updated Instances for Nelson to Emhart changes, b.lekx-toniolo
+	Version 20220224
+	- Overhaul during TcUI Migration project, b.lekx-toniolo / c.drees
+
+*)
+
+TYPE udt_STxx_ToUI_20220224 :
+	STRUCT
+
+	(*Input and Output Data Images*)
+	In_Image: udt_Emhart_TE1500_Input;
+	Out_Image: udt_Emhart_TE1500_Output;
+	Discrete_Image: udt_STxx_DiscreteNode_20200212;
+	(*EtherCAT Cable Break Flags*)
+	ECAT_Cable_Breaks: UDINT;
+
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

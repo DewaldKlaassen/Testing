@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.2">
+  <DUT Name="E_State" Id="{3bc1ae3d-e8f7-4ecf-8928-98c5cd8bf98b}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+{attribute 'strict'}
+//** = simply adjust these lines if modifying code for own purposes
+ 
+// central declaration of state machine states 
+// (supports easy program modification)
+ 
+TYPE E_State :
+(
+    eState_InitiateStateMachine    		:= 0,     // initiate state machine (set parameters)
+    eState_ReadTCatMajorVerInit       	:= 20,    //** initiate reading Twincat Major Version Number
+    eState_ReadTCatMajorVer    			:= 21,    //** process reading Twincat Major Version Number
+	eState_ReadTCatMinorVerInit   		:= 22,    //** initiate reading Twincat Minor Version Number
+    eState_ReadTCatMinorVerTemp       	:= 23,    //** process reading Twincat Minor Version Number
+	eState_ReadCPUTempInit        		:= 24,    //** initiate reading CPU Temperature
+    eState_ReadCpuTemp		   			:= 25,    //** process reading CPU Temperature
+	eState_ReadFanSpeedInit         	:= 26,    //** initiate reading Fan Speed
+    eState_ReadFanSpeed			   		:= 27,    //** process reading Fan Speed
+	eState_ReadMBoardTempInit        	:= 28,    //** initiate reading Motherboard Temperature
+    eState_ReadMboardTemp			   	:= 29,    //** process reading Motherboard Temperature
+    eState_ReadMBoardBootCountInit    	:= 30,    //** initiate reading Motherboard Boot Count
+    eState_ReadMboardBootCount     		:= 31,    //** process reading Motherboard Boot Count
+	eState_ReadMboardOpMinsInit   		:= 32,    //** initiate reading Motherboard Operational Time
+    eState_ReadMboardOpMins       		:= 33,    //** process reading Motherboard Operational Time
+	eState_Read5VSupplyInit        		:= 34,    //** initiate reading 5V Supply Voltage
+    eState_Read5VSupply		   			:= 35,    //** process reading 5V Supply Voltage
+	eState_Read12VSupplyInit         	:= 36,    //** initiate reading 12V Supply Voltage
+    eState_Read12VSupply			   	:= 37,    //** process reading 12V Supply Voltage
+	eState_ReadBattStatusInit        	:= 38,    //** initiate reading Battery Status
+    eState_ReadBattStatus			   	:= 39,    //** process reading Battery Status
+	eState_ReadBattReplaceDateInit    	:= 40,    //** initiate reading Battery Replacement Date
+    eState_ReadBattReplaceDate		   	:= 41,    //** process reading Battery Replacement Date
+	eState_ReadBattCapcityInit         	:= 42,    //** initiate reading Battery Capacity
+    eState_ReadBattCapacity        		:= 43,    //** initiate reading Battery Capacity
+	eState_ReadBattRuntimeInit        	:= 44,    //** initiate reading Battery Runtime 
+    eState_ReadBattRuntime			   	:= 45,    //** process reading Battery Runtime	
+    eState_IdleState               		:= 100    // idle state 
+) UINT;
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

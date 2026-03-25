@@ -1,0 +1,112 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FB_GTAC_QAcheck_20150529" Id="{97fdba86-eb64-4d02-ad75-1a201d550290}" SpecialFunc="None">
+    <Declaration><![CDATA[(*FB for use as framework for Nut Checnk type functions:
+	Original Author(s): Rob Remillard of Sodecia GTAC; 
+------------------------------------------------------------------------------------------
+REVISION NOTES:
+	Version: 20130620
+	- Original Concept, r.remillard
+	Version: 20150130
+	- Change all naming from "Nut...." to QA....." for more generic uses, b.toniolo/r.remillard
+	Version 20150210
+	- Changed Not Ok Reset routine, r.remillard and b.lekx-toniolo
+	Version 20150529
+	- added QAcheck_release, jvd
+	-changed QAcheck_Reset2 to be QAcheck_Retry, jvd
+	- QA check FB now has a retry option or a release option, in the instance put the reset condition to either input, jvd
+------------------------------------------------------------------------------------------
+*)
+
+FUNCTION_BLOCK FB_GTAC_QAcheck_20150529
+
+VAR_INPUT
+
+	Start_QAcheck:						BOOL;
+	QAcheck_Reset:						BOOL;
+	QAcheck_Retry:						BOOL;
+	QAcheck_Release:					BOOL;
+
+	QAcheck_Adv_In:						BOOL;
+	QAcheck_Ret_In:						BOOL;
+
+	User_Dry_Cycle:						BOOL;
+
+	QAcheck_OK_Delay:					TIME;
+	QAcheck_Fault_Delay:					TIME;
+
+END_VAR
+
+VAR_OUTPUT
+
+	QAcheck_OK:						BOOL;
+	QAcheck_Failed:						BOOL;
+	Fire_QAchecks:						BOOL;
+
+END_VAR
+
+
+VAR
+	QAcheck_OK_Time:					TON;
+	QAcheck_Fault_Time:					TON;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Move Delay times into timers*)
+	QAcheck_OK_Time.PT:= QAcheck_OK_Delay;
+	QAcheck_OK_Time();
+	QAcheck_Fault_Time.PT:= QAcheck_Fault_Delay;
+	QAcheck_Fault_Time();
+
+
+(*Tigger QA Check*)
+IF Start_QAcheck AND NOT QAcheck_OK AND NOT QAcheck_Reset
+	THEN
+		Fire_QAchecks:= TRUE;
+ELSE
+		Fire_QAchecks:= FALSE;
+
+END_IF;
+
+
+(*QA Check OK Routine*)
+IF ((Start_QAcheck AND QAcheck_Adv_In) OR QAcheck_OK OR (User_Dry_Cycle AND NOT QAcheck_Ret_In))
+     	AND NOT QAcheck_Reset  AND NOT QAcheck_Failed
+	THEN
+		QAcheck_OK_Time.IN:= TRUE;
+		IF QAcheck_OK_Time.Q
+			THEN
+				QAcheck_OK:= TRUE;
+		END_IF;
+
+ELSE
+		QAcheck_OK:= FALSE;
+		QAcheck_OK_Time.IN:= FALSE;
+END_IF;
+
+IF QAcheck_Release  AND QAcheck_Failed
+	THEN
+	QAcheck_OK := TRUE;
+	QAcheck_Failed := FALSE;
+END_IF;
+
+
+(*QA Check NOT OK Routine*)
+IF (Start_QAcheck AND NOT QAcheck_OK OR QAcheck_Failed)
+      AND NOT QAcheck_Retry  AND NOT User_Dry_Cycle
+	THEN
+		QAcheck_Fault_Time.IN:= TRUE;
+		IF QAcheck_Fault_Time.Q
+			THEN
+				QAcheck_Failed:= TRUE;
+		END_IF;
+ELSE
+		QAcheck_Failed:= FALSE;
+		QAcheck_Fault_Time.IN:= FALSE;
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_GTAC_QAcheck_20150529">
+      <LineId Id="50" Count="51" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

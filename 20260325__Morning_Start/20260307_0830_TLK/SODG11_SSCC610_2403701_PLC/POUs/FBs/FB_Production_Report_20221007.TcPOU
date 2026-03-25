@@ -1,0 +1,955 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_Production_Report_20221007" Id="{4802b374-0961-45ef-8c1a-a4f1a83a1335}" SpecialFunc="None">
+    <Declaration><![CDATA[(*FB FOR use to generate OEE based Data production reports for a 1-3 shift manufacturing facility with ability to configure shift structure.
+
+
+	Original Author(S): Rob Remillard and Brent Lekx-Toniolo of Sodecia GTAC
+------------------------------------------------------------------------------------------
+	REVISION NOTES:
+	DATE: 2008
+	- original concept, r.remillad and b.lekx-toniolo
+	Version 20141030:
+	- Changed name to include date stamped version control
+	- Added Element [0] to Shift Report Array and code to dump curent data to this element, b.lekx-toniolo
+	Version 20150819:
+	- Re-typed Variables "Production_Count" and "Running_Target _Count" from INT to UNIT to avoid compiler warnings, b.lekx-toniolo
+	Version 20160229
+		- Updated shift report udt instance, b.lekx-toniolo
+	Version 20160513
+		- Changed Reporting structure so that only Report[0] was curent, all others were kept until shift end, b.lekx-toniolo
+	Version 20160519
+		- Added Configurability to shift structures, b.lekx-toniolo		
+	Version 20191125
+		- Changes / Additions during 2019 production reporting code upgrades (for config via UI), b.lekx-toniolo		
+	Version 20221007
+		- Uopdates to report udt to add in Target_Cycle_Time to report capturing, b.lekx-toniolo	
+	Version 20252801
+		- Added Shift Letter to code - starts Line 114, r.jones
+
+------------------------------------------------------------------------------------------
+*)
+
+
+
+FUNCTION_BLOCK FB_Production_Report_20221007
+VAR_INPUT
+	Enable_FB: BOOL;
+	StartEnd_Mode: UINT;
+	Manual_Start: BOOL;
+	Manual_End: BOOL;
+	Prod_Inc: BOOL;
+	Scrap_Inc: BOOL;
+	Scrap_Dec: BOOL;
+	Reference_TimeDate: TimeStruct;
+	Reference_Target_Time: TIME;
+	Enable_InShift_Change: BOOL;
+
+	Config_Day_TOD: udt_Generic_ShiftConfigTOD_20160527;
+	Config_Aft_TOD: udt_Generic_ShiftConfigTOD_20160527;
+	Config_Mid_TOD: udt_Generic_ShiftConfigTOD_20160527;
+	Config_Shift_Enables: UINT;		(*Enable Flags for shifts in a 24 hour period*)
+	Config_Break_Count: UINT;			(*Amount of breaks per shift*)
+
+	Static_Target: UINT;
+	Machine_Serial: STRING;
+	Machine_Common_Name: STRING;
+	Operator_ID: UINT;
+	Model_Data:UINT;
+	Fix_ID: UINT;
+	Machine_StoppedBy_Fault: BOOL;
+	Test_Start: BOOL;
+	Test_End: BOOL;
+
+END_VAR
+VAR
+	Report_In_Auto: BOOL;
+	Report_In_Override: BOOL;
+	Reference_Time_TOD: TOD;
+	Config_Day: udt_Generic_ShiftConfig_20160519;
+	Config_Aft: udt_Generic_ShiftConfig_20160519;
+	Config_Mid: udt_Generic_ShiftConfig_20160519;
+		Day_Shift_ConfigOK: BOOL;
+		Mid_Shift_ConfigOK: BOOL;
+		Aft_Shift_ConfigOK: BOOL;
+
+		Day_Shift_Enabled: BOOL;
+		Aft_Shift_Enabled: BOOL;
+		Mid_Shift_Enabled: BOOL;
+		Break1_Enabled: BOOL;
+		Break2_Enabled: BOOL;
+		Break3_Enabled: BOOL;
+
+
+	Shift_Report: ARRAY [0..3] OF udt_Generic_Production_20221007;
+
+	In_Day_Shift: BOOL;
+	In_Aft_Shift: BOOL;
+	In_Mid_Shift: BOOL;
+	In_Shift_Code: UINT;
+	In_Hour_Code: UINT;
+	In_Break: BOOL;
+	In_Shift_Change: BOOL;
+	Machine_Running: BOOL;
+
+	Running_Difference: DINT;
+
+	Running_TotalTime: TIME;
+	Running_TotalBy_Expected: REAL;
+	Running_UpTime: TIME;
+	Running_AvailabilityEFF: REAL;
+	Running_PerformanceEFF: REAL;
+	Running_QualityEFF: REAL;
+	Running_OEE: REAL;
+
+	Start_Shift_Trigger: R_TRIG;
+	Hourly_Trigger: R_TRIG;
+	End_Shift_Trigger: R_TRIG;
+	Target_Trigger: R_TRIG;
+	FaultCount_Inc_Trigger: R_TRIG;
+	Not_Faulted_Trigger: R_TRIG;
+	Scrap_Inc_Trigger:R_TRIG;
+	Scrap_Dec_Trigger:R_TRIG;
+
+	Target_TMR: TON;
+	Faulted_TMR: TON;
+	Status: STRING;
+	Gross_Shift_Duration: REAL;
+	Net_Shift_Duration: REAL;
+
+END_VAR
+
+VAR PERSISTENT
+	Production_Count: UINT;
+	Running_Target_Count: UINT;
+	Running_Target_CountPrevHourTotal: UINT;
+	Running_Scrap_Count: UINT;
+	Total_Faulted_Time: TIME;
+	Previous_Faulted_Time: TIME;
+	Total_Fault_Count: UDINT;
+	PartsLost_From_Faults: REAL;
+
+END_VAR
+
+
+VAR_OUTPUT
+	FB_Ok: BOOL;
+	Shift_Letter : STRING[1] ;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*---------------------------------------------------Type Converstions to allow both type of time formats to be avalable -----------------------------------*)
+
+(*Convert Shift Report Structrues from TOD to OTStruct*)
+
+	ShiftConfigs_TOD_To_OTSTRUCT();
+
+(*Convert Reference Time to TOD Type*)
+ 	Reference_Time_TOD:= FUN_GTAC_TIMESTRUCTtoTOD(Reference_TimeDate);
+
+(*------------------------------------------------------ Check for some basics on Config Information --------------------------------------------------------------------*)
+
+	(*Check some general validity to shift configuratons (MAY NOT CATCH ALL CONFIG MISTAKES)*)
+	(*Set FB_OK to True*)
+		Day_Shift_ConfigOK:=  ((Config_Day_TOD.Shift_StartTime < Config_Day_TOD.Shift_EndTime
+			AND ((Config_Day_TOD.Break1_StartTime < Config_Day_TOD.Break1_EndTime) OR NOT Break1_Enabled)
+			AND ((Config_Day_TOD.Break2_StartTime < Config_Day_TOD.Break2_EndTime) OR NOT Break2_Enabled)
+			AND ((Config_Day_TOD.Break3_StartTime < Config_Day_TOD.Break3_EndTime) OR NOT Break3_Enabled))
+			OR NOT Day_Shift_Enabled);
+
+		Aft_Shift_ConfigOK:= ((Config_Aft_TOD.Shift_StartTime <Config_Aft_TOD.Shift_EndTime
+			AND ((Config_Aft_TOD.Break1_StartTime < Config_Aft_TOD.Break1_EndTime) OR NOT Break1_Enabled)
+			AND ((Config_Aft_TOD.Break2_StartTime < Config_Aft_TOD.Break2_EndTime) OR NOT Break2_Enabled)
+			AND ((Config_Aft_TOD.Break3_StartTime < Config_Aft_TOD.Break3_EndTime) OR NOT Break3_Enabled))
+			OR NOT Aft_Shift_Enabled);
+
+		Mid_Shift_ConfigOK:= ((Config_Mid_TOD.Shift_StartTime > Config_Mid_TOD.Shift_EndTime (*Midnight Shift must fall over the midnight change*)
+			AND(
+				(((((Config_Mid_TOD.Break1_StartTime > TOD#12:00:00 AND Config_Mid_TOD.Break1_EndTime >TOD#12:00:00)
+					OR
+				(Config_Mid_TOD.Break1_StartTime < TOD#12:00:00 AND Config_Mid_TOD.Break1_EndTime <TOD#12:00:00)) AND
+					Config_Mid_TOD.Break1_StartTime < Config_Mid_TOD.Break1_EndTime)
+				OR ((Config_Mid_TOD.Break1_StartTime > TOD#12:00:00 AND Config_Mid_TOD.Break1_EndTime <TOD#12:00:00) AND Config_Mid_TOD.Break1_StartTime > Config_Mid_TOD.Break1_EndTime))
+				OR NOT Break1_Enabled)
+
+			AND (((((Config_Mid_TOD.Break2_StartTime > TOD#12:00:00 AND Config_Mid_TOD.Break2_EndTime >TOD#12:00:00)
+					OR
+				(Config_Mid_TOD.Break2_StartTime < TOD#12:00:00 AND Config_Mid_TOD.Break2_EndTime <TOD#12:00:00)) AND
+					Config_Mid_TOD.Break2_StartTime < Config_Mid_TOD.Break2_EndTime)
+				OR ((Config_Mid_TOD.Break2_StartTime > TOD#12:00:00 AND Config_Mid_TOD.Break2_EndTime <TOD#12:00:00) AND Config_Mid_TOD.Break2_StartTime > Config_Mid_TOD.Break2_EndTime))
+				OR NOT Break2_Enabled)
+			AND (((((Config_Mid_TOD.Break3_StartTime > TOD#12:00:00 AND Config_Mid_TOD.Break3_EndTime >TOD#12:00:00)
+					OR
+				(Config_Mid_TOD.Break3_StartTime < TOD#12:00:00 AND Config_Mid_TOD.Break3_EndTime <TOD#12:00:00)) AND
+					Config_Mid_TOD.Break3_StartTime < Config_Mid_TOD.Break3_EndTime)
+				OR ((Config_Mid_TOD.Break3_StartTime > TOD#12:00:00 AND Config_Mid_TOD.Break3_EndTime <TOD#12:00:00) AND Config_Mid_TOD.Break3_StartTime > Config_Mid_TOD.Break3_EndTime))
+				OR NOT Break3_Enabled)
+				))
+
+			OR NOT Mid_Shift_Enabled);
+
+
+
+(*Develop FB_OK from above*)
+
+	FB_OK:= Day_Shift_ConfigOK AND
+			Aft_Shift_ConfigOK AND
+			Mid_Shift_ConfigOK;
+
+(*----------------------------------------------------- Decode Shift and Break Enables --------------------------------------------------------------------------------------------------*)
+
+	Day_Shift_Enabled:= Config_Shift_Enables.1 AND FB_OK;
+	Aft_Shift_Enabled:= Config_Shift_Enables.2 AND FB_OK;
+	Mid_Shift_Enabled:= Config_Shift_Enables.3 AND FB_OK;
+
+
+	Break1_Enabled:= (Config_Break_Count>=1) AND (Config_Shift_Enables>0) AND FB_OK;
+	Break2_Enabled:= (Config_Break_Count>=2) AND (Config_Shift_Enables>0) AND FB_OK;
+	Break3_Enabled:= (Config_Break_Count>=3) AND (Config_Shift_Enables>0) AND FB_OK;
+
+
+(*------------------------------------------------------------------------------------------ Production Report FB ---------------------------------------------------------------------------*)
+
+(*Determine Shift Report Mode*)
+
+	(*Report In Auto, So Start Stop at Shift Change*)
+	IF StartEnd_Mode=0
+		THEN
+			Report_In_Auto:= TRUE;
+			Report_In_Override:= FALSE;
+	END_IF;
+
+	(*Report In Override, So Start and Stop Given By Operator*)
+	IF StartEnd_Mode=1
+		THEN
+			Report_In_Auto:= FALSE;
+			Report_In_Override:= TRUE;
+	END_IF;
+
+(*------------------------------------------------------------- Calculate Shift Duration Times ----------------------------------------------------------------*)
+
+	IF In_Day_Shift
+		THEN
+		Gross_Shift_Duration:= FUN_GTAC_ReturnGrossShiftDuration(Config_Day_TOD);
+		Net_Shift_Duration:= FUN_GTAC_ReturnNetShiftDuration(Config_Day_TOD, Config_Break_Count);
+	ELSIF In_Aft_Shift
+		THEN
+		Gross_Shift_Duration:= FUN_GTAC_ReturnGrossShiftDuration(Config_Aft_TOD);
+		Net_Shift_Duration:= FUN_GTAC_ReturnNetShiftDuration(Config_Aft_TOD, Config_Break_Count);
+	ELSIF In_Mid_Shift
+		THEN
+		Gross_Shift_Duration:= FUN_GTAC_ReturnGrossShiftDuration(Config_Mid_TOD);
+		Net_Shift_Duration:= FUN_GTAC_ReturnNetShiftDuration(Config_Mid_TOD, Config_Break_Count);
+	END_IF;
+
+(* Subtract 10 minutes for In Shift Change (5 minutes at start and end of shift) if enabled*)
+	IF Enable_InShift_Change AND (In_Day_Shift OR In_Aft_Shift OR In_Mid_Shift)
+		THEN
+			Net_Shift_Duration:= Net_Shift_Duration - 0.1666666; (*Subtract a total of 10 minutes from shift (10/60)*)
+	END_IF;
+
+(*------------------------------------------------------------------------- Shift Report Auto Mode Code -------------------------------------------------------*)
+
+	(*In Day Shift*)
+	IF Day_Shift_Enabled AND
+		Reference_Time_TOD >= Config_Day_TOD.Shift_StartTime AND
+		Reference_Time_TOD < Config_Day_TOD.Shift_EndTime
+		THEN
+			In_Day_Shift:= TRUE;
+			In_Aft_Shift:= FALSE;
+			In_Mid_Shift:= FALSE;
+			In_Shift_Code:=1;
+			Shift_Letter := 'A';
+	(*In Afternoon Shift*)
+	ELSIF Aft_Shift_Enabled AND
+			Reference_Time_TOD >= Config_Aft_TOD.Shift_StartTime AND
+			Reference_Time_TOD < Config_Aft_TOD.Shift_EndTime
+		THEN
+			In_Day_Shift:= FALSE;
+			In_Aft_Shift:= TRUE;
+			In_Mid_Shift:= FALSE;
+			In_Shift_Code:=2;
+		    Shift_Letter := 'B';
+	(*In Midnight Shift*)
+	ELSIF Mid_Shift_Enabled AND
+			((Reference_Time_TOD <=TOD#23:59:59) AND Reference_Time_TOD >= Config_Mid_TOD.Shift_StartTime)
+		 	OR ((Reference_Time_TOD >= TOD#00:00:00) AND Reference_Time_TOD < Config_Mid_TOD.Shift_EndTime)
+		THEN
+			In_Day_Shift:= FALSE;
+			In_Aft_Shift:= FALSE;
+			In_Mid_Shift:= TRUE;
+			In_Shift_Code:=3;
+			Shift_Letter := 'C';
+	ELSE
+			In_Day_Shift:= FALSE;
+			In_Aft_Shift:= FALSE;
+			In_Mid_Shift:= FALSE;
+			In_Shift_Code:=0;
+			Shift_Letter := '';
+	END_IF;
+(*Perform Limit Check*)
+	IF In_Shift_Code<0
+		THEN
+			In_Shift_Code:=0;
+	ELSIF In_Shift_Code>3
+		THEN
+			In_Shift_Code:=3;
+	END_IF;
+
+
+(*-------------------- Generate Hour Code --------------------*)
+(*The hour code is which hour are we into compared to shift start
+Examples:
+	1. Shift starts at 7:00am, current time is 8:29am. Therefore we are in "Hour 2" (as Hour 1 is 7:00am to 7:59, Hour 2 is 8:00am to 8:59)
+	2. Shift starts at 7:30am, current time is 8:29am. Therefore we are in "Hour 1" (as Hour 1 is 7:30am to 8:29, Hour 2 is 8:30am to 9:29)
+*)
+	IF In_Day_Shift AND Reference_TimeDate.wHour>0
+		THEN
+			In_Hour_Code:= UDINT_TO_UINT(((TOD_TO_UDINT(Reference_Time_TOD)/60000) - (TOD_TO_UDINT(Config_Day_TOD.Shift_StartTime)/60000))/60+1);
+	ELSIF In_Aft_Shift
+		THEN
+		IF (Reference_TimeDate.wHour >= Config_Aft.Shift_StartTime.wHour)
+			THEN
+			In_Hour_Code:= UDINT_TO_UINT(((TOD_TO_UDINT(Reference_Time_TOD)/60000) - (TOD_TO_UDINT(Config_Aft_TOD.Shift_StartTime)/60000))/60+1);
+		ELSIF (Reference_TimeDate.wHour < Config_Aft.Shift_StartTime.wHour)
+			THEN
+			In_Hour_Code:= UDINT_TO_UINT((((86400000 - TOD_TO_UDINT(Config_Aft_TOD.Shift_StartTime))/60000) + (TOD_TO_UDINT(Reference_Time_TOD)/60000)) /60+1);
+		END_IF;
+	ELSIF In_Mid_Shift
+		THEN
+		IF (Reference_TimeDate.wHour >= Config_Mid.Shift_StartTime.wHour)
+			THEN
+			In_Hour_Code:= UDINT_TO_UINT(((TOD_TO_UDINT(Reference_Time_TOD)/60000) - (TOD_TO_UDINT(Config_Mid_TOD.Shift_StartTime)/60000))/60+1);
+		ELSIF (Reference_TimeDate.wHour < Config_Mid.Shift_StartTime.wHour)
+			THEN
+			In_Hour_Code:= UDINT_TO_UINT((((86400000 - TOD_TO_UDINT(Config_Mid_TOD.Shift_StartTime))/60000) + (TOD_TO_UDINT(Reference_Time_TOD)/60000)) /60+1);
+		END_IF;
+	END_IF;
+(*Perform Limit Check*)
+	IF In_Hour_Code<1
+		THEN
+			In_Hour_Code:=1;
+	ELSIF In_Hour_Code>12
+		THEN
+			In_Hour_Code:=12;
+	END_IF;
+
+(*------------------------- In Break Time------------------------*)
+
+	IF In_Day_Shift AND
+				((Reference_Time_TOD >= Config_Day_TOD.Break1_StartTime AND  Reference_Time_TOD < Config_Day_TOD.Break1_EndTime)
+				OR (Reference_Time_TOD >= Config_Day_TOD.Break2_StartTime AND  Reference_Time_TOD < Config_Day_TOD.Break2_EndTime)
+				OR (Reference_Time_TOD >= Config_Day_TOD.Break3_StartTime AND  Reference_Time_TOD < Config_Day_TOD.Break3_EndTime))
+		THEN
+		In_Break:= TRUE;
+	ELSIF In_Aft_Shift AND
+				 ((Reference_Time_TOD >= Config_Aft_TOD.Break1_StartTime AND  Reference_Time_TOD < Config_Aft_TOD.Break1_EndTime)
+				OR (Reference_Time_TOD >= Config_Aft_TOD.Break2_StartTime AND  Reference_Time_TOD < Config_Aft_TOD.Break2_EndTime)
+				OR (Reference_Time_TOD >= Config_Aft_TOD.Break3_StartTime AND  Reference_Time_TOD < Config_Aft_TOD.Break3_EndTime))
+		THEN
+		In_Break:= TRUE;
+	ELSIF In_Mid_Shift AND
+				((Reference_Time_TOD >= Config_Mid_TOD.Break1_StartTime AND  Reference_Time_TOD < Config_Mid_TOD.Break1_EndTime)
+				OR (Reference_Time_TOD >= Config_Mid_TOD.Break2_StartTime AND  Reference_Time_TOD < Config_Mid_TOD.Break2_EndTime)
+				OR (Reference_Time_TOD >= Config_Mid_TOD.Break3_StartTime AND  Reference_Time_TOD < Config_Mid_TOD.Break3_EndTime))
+		THEN
+		In_Break:= TRUE;
+	ELSE
+		In_Break:= FALSE;
+	END_IF;
+
+(*---------------------- In Shift Change -----------------------*)
+(*If enabled by config, the expected count will cease to take place for a 5 minute period at start and end of shift*)
+(*10 minutes is also removed from the machine full running time*)
+
+	IF Enable_InShift_Change AND In_Day_Shift AND
+					((Reference_TimeDate.wHour=Config_Day.Shift_StartTime.wHour AND Reference_TimeDate.wMinute>=Config_Day.Shift_StartTime.wMinute AND Reference_TimeDate.wMinute<=Config_Day.Shift_StartTime.wMinute+5)
+					OR (Reference_TimeDate.wHour >= Config_Day.Shift_EndTime.wHour-1 AND Reference_Time_TOD > UDINT_TO_TOD(TOD_TO_UDINT(Config_Day_TOD.Shift_EndTime) - 300000)))
+		THEN
+		In_Shift_Change:= TRUE;
+	ELSIF Enable_InShift_Change AND In_Aft_Shift AND
+					((Reference_TimeDate.wHour=Config_Aft.Shift_StartTime.wHour AND Reference_TimeDate.wMinute>=Config_Aft.Shift_StartTime.wMinute AND Reference_TimeDate.wMinute<=Config_Aft.Shift_StartTime.wMinute+5)
+					OR (Reference_TimeDate.wHour >= Config_Aft.Shift_EndTime.wHour-1 AND Reference_Time_TOD > UDINT_TO_TOD(TOD_TO_UDINT(Config_Aft_TOD.Shift_EndTime) - 300000)))
+		THEN
+		In_Shift_Change:= TRUE;
+	ELSIF Enable_InShift_Change AND In_Mid_Shift AND
+					((Reference_TimeDate.wHour=Config_Mid.Shift_StartTime.wHour AND Reference_TimeDate.wMinute>=Config_Mid.Shift_StartTime.wMinute AND Reference_TimeDate.wMinute<=Config_Mid.Shift_StartTime.wMinute+5)
+					OR  (((Reference_Time_TOD >= TOD#00:00:00) AND Reference_Time_TOD < Config_Mid_TOD.Shift_EndTime) AND
+						(Reference_TimeDate.wHour >= Config_Mid.Shift_EndTime.wHour-1 AND Reference_Time_TOD > UDINT_TO_TOD(TOD_TO_UDINT(Config_Mid_TOD.Shift_EndTime) - 300000))))
+		THEN
+		In_Shift_Change:= TRUE;
+	ELSE
+		In_Shift_Change:= FALSE;
+	END_IF;
+
+(*------------ Generate Start of Shift, Hourly and End Of Shift Triggers (1 Scan Pulses) ------------*)
+
+	(*Start of Shift Trigger*)
+	Start_Shift_Trigger.CLK:= In_Day_Shift AND ((Reference_TimeDate.wHour = Config_Day.Shift_StartTime.wHour AND Reference_TimeDate.wMinute = Config_Day.Shift_StartTime.wMinute) OR Test_Start)
+							OR (In_Aft_Shift AND ((Reference_TimeDate.wHour = Config_Aft.Shift_StartTime.wHour AND Reference_TimeDate.wMinute = Config_Aft.Shift_StartTime.wMinute) OR Test_Start))
+							OR (In_Mid_Shift AND ((Reference_TimeDate.wHour = Config_Mid.Shift_StartTime.wHour AND Reference_TimeDate.wMinute = Config_Mid.Shift_StartTime.wMinute) OR Test_Start));
+	Start_Shift_Trigger();
+
+	(*Hourly Trigger*)
+	Hourly_Trigger.CLK:= Reference_TimeDate.wMinute = 0 AND Reference_TimeDate.wSecond = 0;
+	Hourly_Trigger();
+
+	(*End of Shift Trigger*)
+	End_Shift_Trigger.CLK:= (In_Day_Shift AND Reference_Time_TOD > UDINT_TO_TOD(TOD_TO_UDINT(Config_Day_TOD.Shift_EndTime)-1000))
+							OR (In_Aft_Shift AND Reference_Time_TOD > UDINT_TO_TOD(TOD_TO_UDINT(Config_Aft_TOD.Shift_EndTime)-1000))
+							OR (In_Mid_Shift AND (Reference_Time_TOD <Config_Mid_TOD.Shift_EndTime) AND Reference_Time_TOD > UDINT_TO_TOD(TOD_TO_UDINT(Config_Mid_TOD.Shift_EndTime)-1000));
+
+	End_Shift_Trigger();
+
+
+(*----------------------------------------------------- Generate Target Cycle Time ----------------------------------------------------------------------------------------*)
+
+	Target_TMR.PT:= Reference_Target_Time;
+	Target_TMR.IN:= (NOT Target_Trigger.Q AND (In_Day_Shift OR In_Aft_Shift OR In_Mid_Shift));
+	Target_TMR();
+
+(*------------------ Generate Running Target Time Trigger ---------------*)
+
+	Target_Trigger.CLK:= Target_TMR.Q;
+	Target_Trigger();
+
+(*----------------- Generate Running Target ---------------------------*)
+
+	IF Target_Trigger.Q AND NOT In_Break AND NOT In_Shift_Change
+		THEN
+			Running_Target_Count:= Running_Target_Count+1;
+	END_IF;
+
+(*Track Running Target Count for Use in Calcing Hourly TargetCount*)
+	IF NOT Hourly_Trigger.Q
+		THEN
+		IF In_Hour_Code=1
+			THEN
+				Running_Target_CountPrevHourTotal:= 0;
+		ELSIF In_Hour_Code=2
+			THEN
+				Running_Target_CountPrevHourTotal:= Shift_Report[0].Expected_Count[1];
+		ELSIF In_Hour_Code=3
+			THEN
+				Running_Target_CountPrevHourTotal:= Shift_Report[0].Expected_Count[1]+
+													Shift_Report[0].Expected_Count[2];
+		ELSIF In_Hour_Code=4
+			THEN
+				Running_Target_CountPrevHourTotal:= Shift_Report[0].Expected_Count[1]+
+													Shift_Report[0].Expected_Count[2]+
+													Shift_Report[0].Expected_Count[3];
+		ELSIF In_Hour_Code=5
+			THEN
+				Running_Target_CountPrevHourTotal:= Shift_Report[0].Expected_Count[1]+
+													Shift_Report[0].Expected_Count[2]+
+													Shift_Report[0].Expected_Count[3]+
+													Shift_Report[0].Expected_Count[4];
+		ELSIF In_Hour_Code=6
+			THEN
+				Running_Target_CountPrevHourTotal:= Shift_Report[0].Expected_Count[1]+
+													Shift_Report[0].Expected_Count[2]+
+													Shift_Report[0].Expected_Count[3]+
+													Shift_Report[0].Expected_Count[4]+
+													Shift_Report[0].Expected_Count[5];
+		ELSIF In_Hour_Code=7
+			THEN
+				Running_Target_CountPrevHourTotal:= Shift_Report[0].Expected_Count[1]+
+													Shift_Report[0].Expected_Count[2]+
+													Shift_Report[0].Expected_Count[3]+
+													Shift_Report[0].Expected_Count[4]+
+													Shift_Report[0].Expected_Count[5]+
+													Shift_Report[0].Expected_Count[6];
+		ELSIF In_Hour_Code=8
+			THEN
+				Running_Target_CountPrevHourTotal:= Shift_Report[0].Expected_Count[1]+
+													Shift_Report[0].Expected_Count[2]+
+													Shift_Report[0].Expected_Count[3]+
+													Shift_Report[0].Expected_Count[4]+
+													Shift_Report[0].Expected_Count[5]+
+													Shift_Report[0].Expected_Count[6]+
+													Shift_Report[0].Expected_Count[7];
+		ELSIF In_Hour_Code=9
+			THEN
+				Running_Target_CountPrevHourTotal:= Shift_Report[0].Expected_Count[1]+
+													Shift_Report[0].Expected_Count[2]+
+													Shift_Report[0].Expected_Count[3]+
+													Shift_Report[0].Expected_Count[4]+
+													Shift_Report[0].Expected_Count[5]+
+													Shift_Report[0].Expected_Count[6]+
+													Shift_Report[0].Expected_Count[7]+
+													Shift_Report[0].Expected_Count[8];
+		ELSIF In_Hour_Code=10
+			THEN
+				Running_Target_CountPrevHourTotal:= Shift_Report[0].Expected_Count[1]+
+													Shift_Report[0].Expected_Count[2]+
+													Shift_Report[0].Expected_Count[3]+
+													Shift_Report[0].Expected_Count[4]+
+													Shift_Report[0].Expected_Count[5]+
+													Shift_Report[0].Expected_Count[6]+
+													Shift_Report[0].Expected_Count[7]+
+													Shift_Report[0].Expected_Count[8]+
+													Shift_Report[0].Expected_Count[9];
+		ELSIF In_Hour_Code=11
+			THEN
+				Running_Target_CountPrevHourTotal:= Shift_Report[0].Expected_Count[1]+
+													Shift_Report[0].Expected_Count[2]+
+													Shift_Report[0].Expected_Count[3]+
+													Shift_Report[0].Expected_Count[4]+
+													Shift_Report[0].Expected_Count[5]+
+													Shift_Report[0].Expected_Count[6]+
+													Shift_Report[0].Expected_Count[7]+
+													Shift_Report[0].Expected_Count[8]+
+													Shift_Report[0].Expected_Count[9]+
+													Shift_Report[0].Expected_Count[10];
+		ELSIF In_Hour_Code=12
+			THEN
+				Running_Target_CountPrevHourTotal:= Shift_Report[0].Expected_Count[1]+
+													Shift_Report[0].Expected_Count[2]+
+													Shift_Report[0].Expected_Count[3]+
+													Shift_Report[0].Expected_Count[4]+
+													Shift_Report[0].Expected_Count[5]+
+													Shift_Report[0].Expected_Count[6]+
+													Shift_Report[0].Expected_Count[7]+
+													Shift_Report[0].Expected_Count[8]+
+													Shift_Report[0].Expected_Count[9]+
+													Shift_Report[0].Expected_Count[10]+
+													Shift_Report[0].Expected_Count[11];
+		END_IF;
+	END_IF;
+
+(*Reset At Shift Change*)
+	IF Start_Shift_Trigger.Q
+		THEN
+		Running_Target_Count:= 0;
+	END_IF;
+
+(*----------------- Monitor Production Increments ----------------*)
+
+	IF Prod_Inc AND (In_Day_Shift OR In_Aft_Shift OR In_Mid_Shift)
+		THEN
+		Production_Count:= Production_Count+1;
+	END_IF;
+
+	(*Reset At Shift Change*)
+	IF Start_Shift_Trigger.Q
+		THEN
+		Production_Count:= 0;
+	END_IF;
+
+(*--------------- Generate Difference ---------------------------*)
+
+	Running_Difference:= (Production_Count - Running_Target_Count);
+
+(*------------------- Monitor Scrap Count -----------------------*)
+
+	(*Increment Scrap Counter*)
+	Scrap_Inc_Trigger.CLK:= Scrap_Inc;
+	Scrap_Inc_Trigger();
+	IF Scrap_Inc_Trigger.Q
+		THEN
+			Running_Scrap_Count:=Running_Scrap_Count+1;
+	END_IF;
+	(*Decrement Scrap Counter*)
+	Scrap_Dec_Trigger.CLK:= Scrap_Dec;
+	Scrap_Dec_Trigger();
+	IF Scrap_Dec_Trigger.Q
+		THEN
+			Running_Scrap_Count:=Running_Scrap_Count-1;
+	END_IF;
+
+	(*Reset At Shift Change*)
+	IF Start_Shift_Trigger.Q
+		THEN
+		Running_Scrap_Count:= 0;
+	END_IF;
+
+(*---------------- Monitor Machine Stopped By Fault Time and capture fault count -------------*)
+
+		(*Capture previouslly occured fault time once fault ceases to exist*)
+		Not_Faulted_Trigger.CLK:= NOT Machine_StoppedBy_Fault OR End_Shift_Trigger.Q;
+		Not_Faulted_Trigger();
+		IF Not_Faulted_Trigger.Q
+			THEN
+				Previous_Faulted_Time:= Total_Faulted_Time;
+		END_IF;
+
+		(*Capture Currently Occuring fault time*)
+		Faulted_TMR.PT:= T#12H0M0S0MS;
+		Faulted_TMR.IN:= (In_Day_Shift OR In_Aft_Shift OR In_Mid_Shift) AND
+							Machine_StoppedBy_Fault AND NOT In_Break AND NOT In_Shift_Change
+							AND NOT Start_Shift_Trigger.Q AND NOT End_Shift_Trigger.Q;
+		Faulted_TMR();
+
+		(*Display out total of previously captured faults + currently occuring faults for Total Time Faulted in real time*)
+		Total_Faulted_Time:= Previous_Faulted_Time + Faulted_TMR.ET;
+
+		(*Capture Fault event into a total count of faults for shift*)
+		FaultCount_Inc_Trigger.CLK:= Faulted_TMR.IN;
+		FaultCount_Inc_Trigger();
+		IF FaultCount_Inc_Trigger.Q
+			THEN
+				Total_Fault_Count:= Total_Fault_Count+1;
+		END_IF;
+
+
+		(*Reset both fault times and fault event count at shift change*)
+		IF Start_Shift_Trigger.Q
+			THEN
+				Previous_Faulted_Time:= T#0H0M0S;
+				Total_Faulted_Time:= T#0H0M0S;
+				Total_Fault_Count:= 0;
+		END_IF;
+
+(*------------------ Calculate Machine Running Time  ---------------*)
+
+		Running_TotalBy_Expected:= UINT_TO_REAL(Running_Target_Count) * TIME_TO_REAL(Reference_Target_Time); (*In ms*)
+		Running_TotalTime:= REAL_TO_TIME(Running_TotalBy_Expected) + Target_TMR.ET;
+
+(*------------------ Calculate Machine Uptime -----------------------*)
+
+	IF Running_TotalTime >=Total_Faulted_Time
+		THEN
+		Running_UpTime:= Running_TotalTime-Total_Faulted_Time;
+	ELSE
+		Running_UpTime:= INT_TO_TIME(0);
+	END_IF;
+
+(*------------------ Generate KPI - OEE ---------------------------------*)
+
+	(*Calc Availability Eff. -  Percentage of time was the machine available when it was supposed to be*)
+	IF TIME_TO_UINT(Running_TotalTime)>0
+		THEN
+			Running_AvailabilityEFF:= ((TIME_TO_REAL(Running_UpTime)/TIME_TO_REAL(Running_TotalTime))*100);
+	ELSE
+			Running_AvailabilityEFF:=0;
+	END_IF;
+
+	(*Calc Perfromance Eff. - Percentage of speed machine ran at vs expected (IE Operator performance)*)
+	(*First calc virtual parts lost during faulted time*)
+	IF TIME_TO_UINT(Reference_Target_Time)>0
+		THEN
+			PartsLost_From_Faults:= TIME_TO_REAL(Total_Faulted_Time)/TIME_TO_REAL(Reference_Target_Time);
+	ELSE
+			PartsLost_From_Faults:= 0;
+	END_IF;
+	(*Then calc performance*)
+	IF Running_Target_Count>=1 AND (UINT_TO_REAL(Running_Target_Count)>=PartsLost_From_Faults) AND NOT Start_Shift_Trigger.Q
+		THEN
+			Running_PerformanceEFF:= (((UINT_TO_REAL(Production_Count)+PartsLost_From_Faults) /
+										UINT_TO_REAL(Running_Target_Count)) *100);
+	ELSIF Running_Target_Count>=1 AND (UINT_TO_REAL(Running_Target_Count)<PartsLost_From_Faults) AND NOT Start_Shift_Trigger.Q
+		THEN
+			Running_PerformanceEFF:= 100;
+
+	ELSIF Start_Shift_Trigger.Q
+		THEN
+			Running_PerformanceEFF:=0;
+	END_IF;
+
+	(*Calc Quality Eff*)
+	IF Production_Count>0
+		THEN
+			Running_QualityEFF:= ((UINT_TO_REAL(Production_Count) - UINT_TO_REAL(Running_Scrap_Count))/
+								UINT_TO_REAL(Production_Count)*100);
+	ELSE
+		Running_QualityEFF:=100;
+	END_IF;
+
+	(*Calc KPI OEE*)
+
+		Running_OEE:= (Running_AvailabilityEFF * Running_PerformanceEFF * Running_QualityEFF) / 10000;
+
+(* ------------------ Generate Report Status ------------------*)
+
+	IF  FB_OK AND (In_Day_Shift OR In_Aft_Shift OR In_Mid_Shift)
+		AND NOT In_Shift_Change AND NOT End_Shift_Trigger.CLK
+		THEN
+		(*In Shift messages*)
+		IF In_Day_Shift
+			THEN
+			IF Faulted_TMR.IN
+				THEN
+					Status:= CONCAT('Day Shift, Faulted, Hour #', UINT_TO_STRING(In_Hour_Code));
+			ELSIF In_Break
+				THEN
+					Status:= CONCAT('Day Shift, In Break, Hour #', UINT_TO_STRING(In_Hour_Code));
+			ELSE
+				Status:= CONCAT('Day Shift, Running, Hour #', UINT_TO_STRING(In_Hour_Code));
+			END_IF;
+
+		ELSIF In_Aft_Shift
+			THEN
+			IF Faulted_TMR.IN
+				THEN
+					Status:= CONCAT('Afternoon Shift, Faulted, Hour #', UINT_TO_STRING(In_Hour_Code));
+			ELSIF In_Break
+				THEN
+					Status:= CONCAT('Afternoon Shift, In Break, Hour #', UINT_TO_STRING(In_Hour_Code));
+			ELSE
+				Status:= CONCAT('Afternoon Shift, Running, Hour #', UINT_TO_STRING(In_Hour_Code));
+			END_IF;
+
+		ELSIF In_Mid_Shift
+			THEN
+			IF Faulted_TMR.IN
+				THEN
+					Status:= CONCAT('Midnight Shift, Faulted, Hour #', UINT_TO_STRING(In_Hour_Code));
+			ELSIF In_Break
+				THEN
+					Status:= CONCAT('Midnight Shift, In Break, Hour #', UINT_TO_STRING(In_Hour_Code));
+			ELSE
+				Status:= CONCAT('Midnight Shift, Running, Hour #', UINT_TO_STRING(In_Hour_Code));
+			END_IF;
+
+		END_IF;
+
+	(*Paused for Shift Change*)
+	ELSIF In_Shift_Change AND NOT End_Shift_Trigger.CLK
+		THEN
+		Status:= 'Paused for Shift Change';
+
+	ELSIF End_Shift_Trigger.CLK
+		THEN
+		Status:= 'Ending Shift';
+
+	(*Not in shift message*)
+	ELSIF FB_OK AND NOT In_Day_Shift AND NOT In_Aft_Shift AND NOT In_Mid_Shift
+		THEN
+		Status:= 'Not in a Shift';
+
+	(*Config Fault Messages*)
+	ELSIF NOT FB_OK
+		THEN
+		IF NOT Day_Shift_ConfigOK
+			THEN
+			Status:= 'Day Shift Configuration Fault';
+		ELSIF NOT Aft_Shift_ConfigOK
+			THEN
+			Status:= 'Afternoon Shift Configuration Fault';
+		ELSIF NOT Mid_Shift_ConfigOK
+			THEN
+			Status:= 'Midnight Shift Configuration Fault';
+		END_IF;
+
+	ELSE
+			Status:= 'unknown status, see FW dev.';
+	END_IF;
+
+(* --------------- Generate Shift Report -------------------------*)
+
+	(*Generate Auto Shift Report*)
+	IF (In_Day_Shift OR In_Aft_Shift OR In_Mid_Shift) AND Report_In_Auto
+		THEN
+
+			(*Generate Empty Data Area At Start Of Shift and Stamp With Time and Date*)
+			IF Start_Shift_Trigger.Q AND NOT End_Shift_Trigger.Q
+				THEN
+					(*Set Time and Date Stamps*)
+					Shift_Report[0].Start_Shift_TimeDate:= Reference_TimeDate;
+					(*Blank Shift End Time*)
+					Shift_Report[0].End_Shift_TimeDate.wYear:=0;
+					Shift_Report[0].End_Shift_TimeDate.wMonth:=0;
+					Shift_Report[0].End_Shift_TimeDate.wDay:=0;
+					Shift_Report[0].End_Shift_TimeDate.wDayOfWeek:=0;
+					Shift_Report[0].End_Shift_TimeDate.wHour:=0;
+					Shift_Report[0].End_Shift_TimeDate.wMinute:=0;
+					Shift_Report[0].End_Shift_TimeDate.wSecond:=0;
+					Shift_Report[0].End_Shift_TimeDate.wMilliseconds:=0;
+					(*Blank Shift Durations*)
+					Shift_Report[0].Gross_Shift_Duration:= 0;
+					Shift_Report[0].Net_Shift_Duration:= 0;
+					(*Blank Machine and Common Data*)
+					Shift_Report[0].Machine_Serial:= '';
+					Shift_Report[0].Machine_Common_Name:= '';
+					Shift_Report[0].Operator_ID:= 0;
+					Shift_Report[0].Target_Cycle_Time:=T#0H0M0S;
+					Shift_Report[0].Prod_Static_Target:=0;
+					Shift_Report[0].Prod_Running_Target:=0;
+					Shift_Report[0].Prod_Count_Total:=0;
+					Shift_Report[0].Prod_Count_Scrap:=0;
+					Shift_Report[0].Prod_Difference:=0;
+					Shift_Report[0].Prod_Availability:=0;
+					Shift_Report[0].Prod_Performance:=0;
+					Shift_Report[0].Prod_Quality:=0;
+					Shift_Report[0].Prod_Running_OEE:=0;
+					Shift_Report[0].Prod_AvgFinal_PPH:=0;
+					Shift_Report[0].Total_Fault_Time:=T#0H0M0S;
+					Shift_Report[0].Total_Fault_Count:= 0;
+					Shift_Report[0].Running_Up_Time:= T#0H0M0S;
+					Shift_Report[0].Status:='';
+					(*Blank Hourly Shift Data*)
+					Shift_Report[0].Hour_Count[1]:=0;
+					Shift_Report[0].Hour_Count[2]:=0;
+					Shift_Report[0].Hour_Count[3]:=0;
+					Shift_Report[0].Hour_Count[4]:=0;
+					Shift_Report[0].Hour_Count[5]:=0;
+					Shift_Report[0].Hour_Count[6]:=0;
+					Shift_Report[0].Hour_Count[7]:=0;
+					Shift_Report[0].Hour_Count[8]:=0;
+					Shift_Report[0].Hour_Count[9]:=0;
+					Shift_Report[0].Hour_Count[10]:=0;
+					Shift_Report[0].Hour_Count[11]:=0;
+					Shift_Report[0].Hour_Count[12]:=0;
+					Shift_Report[0].Total_Count[1]:=0;
+					Shift_Report[0].Total_Count[2]:=0;
+					Shift_Report[0].Total_Count[3]:=0;
+					Shift_Report[0].Total_Count[4]:=0;
+					Shift_Report[0].Total_Count[5]:=0;
+					Shift_Report[0].Total_Count[6]:=0;
+					Shift_Report[0].Total_Count[7]:=0;
+					Shift_Report[0].Total_Count[8]:=0;
+					Shift_Report[0].Total_Count[9]:=0;
+					Shift_Report[0].Total_Count[10]:=0;
+					Shift_Report[0].Total_Count[11]:=0;
+					Shift_Report[0].Total_Count[12]:=0;
+					Shift_Report[0].Expected_Count[1]:=0;
+					Shift_Report[0].Expected_Count[2]:=0;
+					Shift_Report[0].Expected_Count[3]:=0;
+					Shift_Report[0].Expected_Count[4]:=0;
+					Shift_Report[0].Expected_Count[5]:=0;
+					Shift_Report[0].Expected_Count[6]:=0;
+					Shift_Report[0].Expected_Count[7]:=0;
+					Shift_Report[0].Expected_Count[8]:=0;
+					Shift_Report[0].Expected_Count[9]:=0;
+					Shift_Report[0].Expected_Count[10]:=0;
+					Shift_Report[0].Expected_Count[11]:=0;
+					Shift_Report[0].Expected_Count[12]:=0;
+			(*Build Current Report*)
+			ELSIF NOT Start_Shift_Trigger.Q AND NOT End_Shift_Trigger.Q
+				THEN
+							(*Set Machine and Operator Data and Target CT*)
+							Shift_Report[0].Machine_Serial:= Machine_Serial;
+							Shift_Report[0].Machine_Common_Name:= Machine_Common_Name;
+							Shift_Report[0].Operator_ID:= Operator_ID;
+							Shift_Report[0].Target_Cycle_Time:= Reference_Target_Time;
+							(*Capture shift configuration data*)
+							Shift_Report[0].ProdConfig_Common.Break_Count:= Config_Break_Count;
+							Shift_Report[0].ProdConfig_Common.Shift_Enables:= Config_Shift_Enables;
+							Shift_Report[0].ProdConfig_Common.Config_Option_Flags.0:= Enable_InShift_Change;
+								IF In_Day_Shift
+									THEN
+									Shift_Report[0].ProdConfig_Times:= FUN_GTAC_TODtoUDINT(Config_Day_TOD);
+								ELSIF In_Aft_Shift
+									THEN
+									Shift_Report[0].ProdConfig_Times:= FUN_GTAC_TODtoUDINT(Config_Aft_TOD);
+								ELSIF In_Mid_Shift
+									THEN
+									Shift_Report[0].ProdConfig_Times:= FUN_GTAC_TODtoUDINT(Config_Mid_TOD);
+								END_IF;
+							(*Set Shift Durations*)
+							Shift_Report[0].Gross_Shift_Duration:= Gross_Shift_Duration;
+							Shift_Report[0].Net_Shift_Duration:= Net_Shift_Duration;
+							(*Transfer Common Data*)
+							Shift_Report[0].Prod_Static_Target:= Static_Target;
+							Shift_Report[0].Prod_Running_Target:= Running_Target_Count;
+							Shift_Report[0].Prod_Count_Total:= Production_Count;
+							Shift_Report[0].Prod_Count_Scrap:=Running_Scrap_Count;
+							Shift_Report[0].Prod_Difference:= Running_Difference;
+							Shift_Report[0].Prod_Availability:= Running_AvailabilityEFF;
+							Shift_Report[0].Prod_Performance:= Running_PerformanceEFF;
+							Shift_Report[0].Prod_Quality:= Running_QualityEFF;
+							Shift_Report[0].Prod_Running_OEE:= Running_OEE;
+							Shift_Report[0].Total_Fault_Time:=Total_Faulted_Time;
+							Shift_Report[0].Total_Fault_Count:= Total_Fault_Count;
+							Shift_Report[0].Running_Up_Time:= Running_UpTime;
+							Shift_Report[0].Status:= Status;
+							(*Transfer Hourly Data*)
+							Shift_Report[0].Total_Count[In_Hour_Code]:= Shift_Report[0].Prod_Count_Total;
+							IF In_Hour_Code=1
+								THEN
+									(*Calc Hourly Production*)
+									Shift_Report[0].Hour_Count[In_Hour_Code]:= Shift_Report[0].Prod_Count_Total;
+									(*Calc Hourly Expected*)
+									Shift_Report[0].Expected_Count[In_Hour_Code]:= Shift_Report[0].Prod_Running_Target;
+							ELSIF In_Hour_Code>=2
+								THEN
+									(*Calc Hourly Production*)
+									Shift_Report[0].Hour_Count[In_Hour_Code]:=
+										Shift_Report[0].Prod_Count_Total - Shift_Report[0].Total_Count[In_Hour_Code - 1];
+									(*Calc Hourly Expected*)
+									Shift_Report[0].Expected_Count[In_Hour_Code]:=
+										Shift_Report[0].Prod_Running_Target - Running_Target_CountPrevHourTotal;
+							END_IF;
+			(*Finazlize Report At End Of Shift*)
+			ELSIF End_Shift_Trigger.Q
+				THEN
+					(*Take Snap Shot of End of Shift Time*)
+					Shift_Report[0].End_Shift_TimeDate:= Reference_TimeDate;
+					(*Mark Report Status as completed*)
+					Shift_Report[0].Status:= 'Shift Completed';
+					(*Calc Totals etc*)
+					IF Net_Shift_Duration>0
+						THEN
+						Shift_Report[0].Prod_AvgFinal_PPH:= UINT_TO_REAL(Shift_Report[0].Prod_Count_Total) / Net_Shift_Duration;
+					ELSE
+						Shift_Report[0].Prod_AvgFinal_PPH:= Shift_Report[0].Prod_Count_Total/8; (*Default*)
+					END_IF;
+					IF In_Shift_Code >0 AND In_Shift_Code <=3
+						THEN
+						Shift_Report[In_Shift_Code]:=Shift_Report[0];	(*At End Of Shift, Capture Current Shift Data to Current Shift History Area*)
+					END_IF;
+			END_IF;
+	ELSE (*Not in Any Shift then Allow Status through for indication of "Not in Shift"*)
+		Shift_Report[0].Status:= Status;
+	END_IF;(*End Of Auto Report Generator*)
+
+(*------------------------------------------------------------------------- Shift Report Override Mode Code -------------------------------------------------------*)
+(*!!!!!!!!!!!For Future Development!!!!!!!!!!!!*)
+]]></ST>
+    </Implementation>
+    <Action Name="ShiftConfigs_TOD_To_OTSTRUCT" Id="{8f065936-8838-460b-a680-e728f1c8dfda}">
+      <Implementation>
+        <ST><![CDATA[	(*Day Shift*)
+	Config_Day.Shift_StartTime:= FUN_GTAC_TODtoOTSTRUCT(Config_Day_TOD.Shift_StartTime);
+		Config_Day.Break1_StartTime:= FUN_GTAC_TODtoOTSTRUCT(Config_Day_TOD.Break1_StartTime);
+		Config_Day.Break1_EndTime:= FUN_GTAC_TODtoOTSTRUCT(Config_Day_TOD.Break1_EndTime);
+		Config_Day.Break2_StartTime:= FUN_GTAC_TODtoOTSTRUCT(Config_Day_TOD.Break2_StartTime);
+		Config_Day.Break2_EndTime:= FUN_GTAC_TODtoOTSTRUCT(Config_Day_TOD.Break2_EndTime);
+		Config_Day.Break3_StartTime:= FUN_GTAC_TODtoOTSTRUCT(Config_Day_TOD.Break3_StartTime);
+		Config_Day.Break3_EndTime:= FUN_GTAC_TODtoOTSTRUCT(Config_Day_TOD.Break3_EndTime);
+	Config_Day.Shift_EndTime:= FUN_GTAC_TODtoOTSTRUCT(Config_Day_TOD.Shift_EndTime);
+
+
+	(*Afternoon Shift*)
+	Config_Aft.Shift_StartTime:= FUN_GTAC_TODtoOTSTRUCT(Config_Aft_TOD.Shift_StartTime);
+		Config_Aft.Break1_StartTime:= FUN_GTAC_TODtoOTSTRUCT(Config_Aft_TOD.Break1_StartTime);
+		Config_Aft.Break1_EndTime:= FUN_GTAC_TODtoOTSTRUCT(Config_Aft_TOD.Break1_EndTime);
+		Config_Aft.Break2_StartTime:= FUN_GTAC_TODtoOTSTRUCT(Config_Aft_TOD.Break2_StartTime);
+		Config_Aft.Break2_EndTime:= FUN_GTAC_TODtoOTSTRUCT(Config_Aft_TOD.Break2_EndTime);
+		Config_Aft.Break3_StartTime:= FUN_GTAC_TODtoOTSTRUCT(Config_Aft_TOD.Break3_StartTime);
+		Config_Aft.Break3_EndTime:= FUN_GTAC_TODtoOTSTRUCT(Config_Aft_TOD.Break3_EndTime);
+	Config_Aft.Shift_EndTime:= FUN_GTAC_TODtoOTSTRUCT(Config_Aft_TOD.Shift_EndTime);
+
+
+	(*Midnight Shift*)
+	Config_Mid.Shift_StartTime:= FUN_GTAC_TODtoOTSTRUCT(Config_Mid_TOD.Shift_StartTime);
+		Config_Mid.Break1_StartTime:= FUN_GTAC_TODtoOTSTRUCT(Config_Mid_TOD.Break1_StartTime);
+		Config_Mid.Break1_EndTime:= FUN_GTAC_TODtoOTSTRUCT(Config_Mid_TOD.Break1_EndTime);
+		Config_Mid.Break2_StartTime:= FUN_GTAC_TODtoOTSTRUCT(Config_Mid_TOD.Break2_StartTime);
+		Config_Mid.Break2_EndTime:= FUN_GTAC_TODtoOTSTRUCT(Config_Mid_TOD.Break2_EndTime);
+		Config_Mid.Break3_StartTime:= FUN_GTAC_TODtoOTSTRUCT(Config_Mid_TOD.Break3_StartTime);
+		Config_Mid.Break3_EndTime:= FUN_GTAC_TODtoOTSTRUCT(Config_Mid_TOD.Break3_EndTime);
+	Config_Mid.Shift_EndTime:= FUN_GTAC_TODtoOTSTRUCT(Config_Mid_TOD.Shift_EndTime);
+]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_Production_Report_20221007">
+      <LineId Id="132" Count="120" />
+      <LineId Id="1286" Count="0" />
+      <LineId Id="253" Count="8" />
+      <LineId Id="1287" Count="0" />
+      <LineId Id="262" Count="8" />
+      <LineId Id="1288" Count="0" />
+      <LineId Id="271" Count="4" />
+      <LineId Id="1289" Count="0" />
+      <LineId Id="276" Count="475" />
+      <LineId Id="1149" Count="0" />
+      <LineId Id="752" Count="57" />
+      <LineId Id="1150" Count="0" />
+      <LineId Id="810" Count="73" />
+    </LineIds>
+    <LineIds Name="FB_Production_Report_20221007.ShiftConfigs_TOD_To_OTSTRUCT">
+      <LineId Id="0" Count="31" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

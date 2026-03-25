@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <DUT Name="udt_Schneider_VFD_Outputs_20190123" Id="{dcf4953a-716c-42be-ab00-b75421e87b96}">
+    <Declaration><![CDATA[(*udt (user defined type) for Schneider Electric VFD I/O Module
+	Author(S): Justin Vandongen of Sodecia GTAC;
+
+------------------------------------------------------------------------
+	REVISION NOTES:
+
+	Version 20180808
+		- Initial Concept, j.vandongen
+		- tested on ATV320 v1.11 ethercat module from schneider, j.vandongen
+	Version 20190123
+		- re-organized for more consistancy to generic device udts, b.lekx-toniolo
+------------------------------------------------------------------------
+*)
+
+TYPE udt_Schneider_VFD_Outputs_20190123 :
+	STRUCT
+	Control_Word: UINT;
+	Target_Velocity: INT;
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

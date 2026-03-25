@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FUN_GTAC_ASCIItoSTRING" Id="{d860bd2b-8b49-40a5-8e60-e3ab40d8d427}" SpecialFunc="None">
+    <Declaration><![CDATA[(*Takes up to 16 ASCII codes and packs into a STRING return
+	author: Brent Lekx-Toniolo and Rob Remillard Of Sodecia GTAC
+	date: Nov 2016
+	version 1.0
+		- initial concept
+
+
+	Last Edit: 28-Nov-2016, blt/rr
+*)
+
+
+
+
+FUNCTION FUN_GTAC_ASCIItoSTRING : STRING
+VAR_INPUT
+	ASCII_1: BYTE;
+	ASCII_2: BYTE;
+	ASCII_3: BYTE;
+	ASCII_4: BYTE;
+	ASCII_5: BYTE;
+	ASCII_6: BYTE;
+	ASCII_7: BYTE;
+	ASCII_8: BYTE;
+	ASCII_9: BYTE;
+	ASCII_10: BYTE;
+	ASCII_11: BYTE;
+	ASCII_12: BYTE;
+	ASCII_13: BYTE;
+	ASCII_14: BYTE;
+	ASCII_15: BYTE;
+	ASCII_16: BYTE;
+
+END_VAR
+VAR
+
+	Chars: ARRAY [1..16] OF STRING[1];
+	StringArray: ARRAY [1..16] OF STRING[16];
+
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*-------------------------------------------------------------------------- Convert Ascis Codes to Chars ----------------------------------------------*)
+Chars[1]:= F_ToCHR( ASCII_1);
+Chars[2]:= F_ToCHR( ASCII_2);
+Chars[3]:= F_ToCHR( ASCII_3);
+Chars[4]:= F_ToCHR( ASCII_4);
+Chars[5]:= F_ToCHR( ASCII_5);
+Chars[6]:= F_ToCHR( ASCII_6);
+Chars[7]:= F_ToCHR( ASCII_7);
+Chars[8]:= F_ToCHR( ASCII_8);
+Chars[9]:= F_ToCHR( ASCII_9);
+Chars[10]:= F_ToCHR( ASCII_10);
+Chars[11]:= F_ToCHR( ASCII_11);
+Chars[12]:= F_ToCHR( ASCII_12);
+Chars[13]:= F_ToCHR( ASCII_13);
+Chars[14]:= F_ToCHR( ASCII_14);
+Chars[15]:= F_ToCHR( ASCII_15);
+Chars[16]:= F_ToCHR( ASCII_16);
+
+(*-------------------------------------------------------------------------- Load Chars to String Return ----------------------------------------------*)
+
+StringArray[16]:= CONCAT(Chars[15],Chars[16]);
+StringArray[15]:= CONCAT(Chars[14],StringArray[16]);
+StringArray[14]:= CONCAT(Chars[13],StringArray[15]);
+StringArray[13]:= CONCAT(Chars[12],StringArray[14]);
+StringArray[12]:= CONCAT(Chars[11],StringArray[13]);
+StringArray[11]:= CONCAT(Chars[10],StringArray[12]);
+StringArray[10]:= CONCAT(Chars[9],StringArray[11]);
+StringArray[9]:= CONCAT(Chars[8],StringArray[10]);
+StringArray[8]:= CONCAT(Chars[7],StringArray[9]);
+StringArray[7]:= CONCAT(Chars[6],StringArray[8]);
+StringArray[6]:= CONCAT(Chars[5],StringArray[7]);
+StringArray[5]:= CONCAT(Chars[4],StringArray[6]);
+StringArray[4]:= CONCAT(Chars[3],StringArray[5]);
+StringArray[3]:= CONCAT(Chars[2],StringArray[4]);
+StringArray[2]:= CONCAT(Chars[1],StringArray[3]);
+
+(*------------------------------------------------------ Return ----------------------------------------*)
+
+FUN_GTAC_ASCIItoSTRING:= StringArray[2];]]></ST>
+    </Implementation>
+    <LineIds Name="FUN_GTAC_ASCIItoSTRING">
+      <LineId Id="40" Count="38" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

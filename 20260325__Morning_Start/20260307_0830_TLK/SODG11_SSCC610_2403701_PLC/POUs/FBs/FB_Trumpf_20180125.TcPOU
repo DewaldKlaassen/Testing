@@ -1,0 +1,530 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FB_Trumpf_20180125" Id="{d31c8764-110a-4e31-a01f-0fae33b7412c}" SpecialFunc="None">
+    <Declaration><![CDATA[(*FB for use with Trumpf Laser Weld Controller. Programmed to a TruDisk5001 Unit:
+	Original Author(s): Justin Vandongen of Sodecia GTAC; 
+------------------------------------------------------------------------------------------
+REVISION NOTES:
+	Version 20171002
+		- Initial Concept, j.vandongen
+	Verson 20180125
+		- added in some additional fault logic as some scenarios are not captured, j.vandongen
+
+------------------------------------------------------------------------------------------
+*)
+
+
+
+FUNCTION_BLOCK FB_Trumpf_20180125
+	VAR_INPUT
+		Enable_Motion: BOOL;
+		Safety_RST: BOOL;				(*Used to reset TwinSAFE Faults*)
+		All_Safeties_OK: BOOL;
+		Prev_EcatNode_Present: BOOL;
+
+		(*Word 0*)
+		Request_Laser: BOOL; 			(*Word 0.0*)
+		Pilot_Laser_On: BOOL;				(*Word 0.1*)
+		Unsync_Pstart: BOOL;				(*Word 0.2*)
+		Simulation: BOOL;					(*Word 0.3*)
+		(*reserved*)						(*Word 0.4*)
+		Inquiry1: BOOL;					(*Word 0.5*)
+		Inquiry2: BOOL;					(*Word 0.6*)
+		Fault_EXT: BOOL;					(*Word 0.7*)
+		Reset: BOOL;						(*Word 0.8*)
+		Prog_Stop: BOOL; 				(*Word 0.9*)
+		Pstart_Dyn: BOOL;					(*Word 0.10*)
+		Pstart_Statical: BOOL; 				(*Word 0.11*)
+		Laser_Standby: BOOL;				(*Word 0.12*)
+		Laser_on: BOOL;					(*Word 0.13*)
+		Lock_Operating_Panel: BOOL; 		(*Word 0.14*)
+		Ext_Activation: BOOL;				(*Word 0.15*)
+
+		(*Word 1*)
+		Program_No:	UINT;				(*Word 1.0 - Word 1.7*)
+		Light_Path_No:UINT;				(*Word 1.8 - Word 1.15*)
+
+		(*Word 2*)
+		Laser_No: UINT;					(*Word 2.0 - Word 2.7*)
+		AD_No: UINT;					(*Word 2.8 - Word 2.15*)
+
+		(*Word 3 - 63*)
+		(*Parameters for laser, PFO and cutting. This will be handled inside TruControl*)
+
+
+	END_VAR
+
+	VAR
+	(*Hardware Data Types*)
+		LSRT01 AT %I*: udt_EL6692_20121204;	(*EtherCAT bridge for Laser controller*)
+	(*Develope EtherCAT Interface*)
+		In_From_ECAT AT %I*: udt_EtherCat_Trumpf_InputWords_20171002;
+		Out_To_ECAT AT %Q*: udt_EtherCat_Trumpf_OutputWords_20171002;
+
+	(* Nodes/Interface States*)
+		DiscreteNode_OK: BOOL;
+		EtherCATNode_OK: BOOL;
+		EtherCATConn_OK: BOOL;
+
+	(*Cable Break Warning Flags*)
+		ECatSlave_Cable_Breaks: UDINT;
+		EL6692_NotPresent :BOOL;			(*Bridge Terminal is not on Bus when expected*)
+		EL6692_PortC_MissingLink: BOOL;
+
+
+	(*Delay Timers*)
+		Delay_Time0: TON;
+		Delay_Time1: TON;
+		Delay_Time2: TON;
+		Delay_Time3: TON;
+		Delay_Time4: TON;
+
+	(*Internal Variables*)
+		Laser_Power_Prev: UDINT;
+		Energy_Prev: UDINT;
+		Laser_Power_CurrentVal: UDINT;
+		Energy_CurrentVal: UDINT;
+
+	(*Fault Timers and flags*)
+		Ext_Act_Fault_TMR: TON;
+		Laser_On_Fault_TMR: TON;
+		Req_Laser_Fault_TMR: TON;
+
+	END_VAR
+
+	VAR_OUTPUT
+		FB_OK: BOOL;
+
+		Input_Image:udt_EtherCat_Trumpf_InputWords_20171002;
+		Output_Image:udt_EtherCat_Trumpf_OutputWords_20171002;
+
+		Discrete_Image: udt_TrumpfImage_20171017;
+
+		Laser_Faulted: BOOL;
+		Welding_Complete: BOOL;
+
+		(*Word 0*)
+		Laser_Warning_Lamp_Is_On: BOOL;		(*Word 0.0*)
+		Pilot_Laser_Is_On: BOOL;				(*Word 0.1*)
+		Power_Limit: BOOL; 					(*Word 0.2*)
+		Laser_Assigned: BOOL; 				(*Word 0.3*)
+		Fault_Laser: BOOL;					(*Word 0.4*)
+		Monitoring: BOOL; 						(*Word 0.5*)
+		Sik_Open: BOOL;						(*Word 0.6*)
+		Set_3: BOOL;							(*Word 0.7*)
+		Set_2: BOOL;							(*Word 0.8*)
+		Set_1:BOOL;							(*Word 0.9*)
+		Prog_Cancelled: BOOL;				(*Word 0.10*)
+		Prog_Completed: BOOL;				(*Word 0.11*)
+		Prog_Active: BOOL;					(*Word 0.12*)
+		Laser_Ready: BOOL;					(*Word 0.13*)
+		Laser_Is_On: BOOL;					(*Word 0.14*)
+		Ext_Activation_Active: BOOL;			(*Word 0.15*)
+
+		(*Word 1*)
+		Program_No_ACK: UINT;				(*Word 1.0 - 1.7*)
+		Light_Path_No_ACK: UINT;				(*Word 1.8 - 1.15*)
+
+		(*Word 2*)
+		Shutter_Switch: UINT;					(*Word 2.0 - 2.7*)
+		Fault_Slot: BOOL;						(*Word 2.8*)
+		Monitoring_Slot: BOOL;					(*Word 2.9*)
+		(*reserved*)							(*Word 2.10*)
+		Focusing_Optics_Avail: BOOL;			(*Word 2.11*)
+		Focusing_Optics_Ready: BOOL;			(*Word 2.12*)
+		Application_Values_In_Range: BOOL;	(*Word 2.13*)
+		Protective_Glass_Soiled: BOOL;			(*Word 2.14*)
+		Protective_Glass_Life_Reached: BOOL;	(*Word 2.15*)
+
+		(*Word 3*)
+		Measuring_Value_Out_Active: BOOL;		(*Word 3.0*)
+		Maintenance: BOOL;					(*Word 3.1*)
+		Chiller_Rinsing_Heating: BOOL;			(*Word 3.2*)
+		Calibration_Self_Test: BOOL;			(*Word 3.3*)
+		Alive_Tick: BOOL;						(*Word 3.4*)
+		Ext_Cooling_On: BOOL;				(*Word 3.5*)
+		(*reserved*)							(*Word 3.6*)
+		(*reserved*)							(*Word 3.7*)
+		Laser_No_ACK: UINT;					(*Word 3.8 - 3.15*)
+
+		(*Word 4*)
+		Message_Num: UINT;					(*Word 4.0 - 4.7*)
+		Message_ID: UINT;					(*Word 4.8 - 4.15*)
+
+		(*Word 5*)
+		Measuring_Value_ID: UINT;				(*Word 5*)
+
+		(*Word 6*)
+		Laser_Power: UINT;					(*Word 6*)
+
+		(*Word 7*)
+		Energy: UINT;						(*Word 7*)
+
+		(*Word 8 - 63*)
+		(*Other parameters not currently being used*)
+
+
+
+	END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[	(*Set FB_OK to True*)
+	FB_OK:= TRUE;
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$Gather Status Of Hardware $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+	IF LSRT01.InfoData.State=8
+		THEN DiscreteNode_OK:= TRUE;
+	ELSE DiscreteNode_OK:= FALSE;
+	END_IF;
+
+	(*Develop Port Connection Warning Flags*)
+	IF LSRT01.InfoData.State=257 (*State Machine for Slave Not Present*)
+		THEN EL6692_NotPresent:= TRUE;
+	ELSE EL6692_NotPresent := FALSE;
+	END_IF;
+
+	IF LSRT01.InfoData.State= 9224 (*State Machine for Link Missing at Port C*)
+		THEN EL6692_PortC_MissingLink:= TRUE; (*PortC is OUT Port*)
+	ELSE EL6692_PortC_MissingLink := FALSE;
+	END_IF;
+
+	(*Wrap up break Flags to Variable for shipment to UI*)
+	ECatSlave_Cable_Breaks.0:= EL6692_NotPresent AND Prev_EcatNode_Present;
+	ECatSlave_Cable_Breaks.1:= EL6692_PortC_MissingLink;
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$Gather All Standard and System Inputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+(* ------------------------- System Inputs Section ----------------------*)
+
+	(*In From EtherCAT Word 0*)
+		Laser_Warning_Lamp_Is_On:= In_From_ECAT.Laser_Out[0].0;
+		Pilot_Laser_Is_On:= In_From_ECAT.Laser_Out[0].1;
+		Power_Limit:= In_From_ECAT.Laser_Out[0].2;
+		Laser_Assigned:= In_From_ECAT.Laser_Out[0].3;
+		Fault_Laser:= In_From_ECAT.Laser_Out[0].4;
+		Monitoring:= In_From_ECAT.Laser_Out[0].5;
+		Sik_Open:= In_From_ECAT.Laser_Out[0].6;
+		Set_3:= In_From_ECAT.Laser_Out[0].7;
+		Set_2:= In_From_ECAT.Laser_Out[0].8;
+		Set_1:= In_From_ECAT.Laser_Out[0].9;
+		Prog_Cancelled:= In_From_ECAT.Laser_Out[0].10;
+		Prog_Completed:= In_From_ECAT.Laser_Out[0].11;
+		Prog_Active:= In_From_ECAT.Laser_Out[0].12;
+		Laser_Ready:= In_From_ECAT.Laser_Out[0].13;
+		Laser_Is_On:= In_From_ECAT.Laser_Out[0].14;
+		Ext_Activation_Active:= In_From_ECAT.Laser_Out[0].15;
+
+	(*In From EtherCAT Word 1*)
+		Program_No_ACK.0:= In_From_ECAT.Laser_Out[1].0;
+		Program_No_ACK.1:= In_From_ECAT.Laser_Out[1].1;
+		Program_No_ACK.2:= In_From_ECAT.Laser_Out[1].2;
+		Program_No_ACK.3:= In_From_ECAT.Laser_Out[1].3;
+		Program_No_ACK.4:= In_From_ECAT.Laser_Out[1].4;
+		Program_No_ACK.5:= In_From_ECAT.Laser_Out[1].5;
+		Program_No_ACK.6:= In_From_ECAT.Laser_Out[1].6;
+		Program_No_ACK.7:= In_From_ECAT.Laser_Out[1].7;
+		Light_Path_No_ACK.0:= In_From_ECAT.Laser_Out[1].8;
+		Light_Path_No_ACK.1:= In_From_ECAT.Laser_Out[1].9;
+		Light_Path_No_ACK.2:= In_From_ECAT.Laser_Out[1].10;
+		Light_Path_No_ACK.3:= In_From_ECAT.Laser_Out[1].11;
+		Light_Path_No_ACK.4:= In_From_ECAT.Laser_Out[1].12;
+		Light_Path_No_ACK.5:= In_From_ECAT.Laser_Out[1].13;
+		Light_Path_No_ACK.6:= In_From_ECAT.Laser_Out[1].14;
+		Light_Path_No_ACK.7:= In_From_ECAT.Laser_Out[1].15;
+
+	(*In From EtherCAT Word 2*)
+		Shutter_Switch.0:= In_From_ECAT.Laser_Out[2].0;
+		Shutter_Switch.1:= In_From_ECAT.Laser_Out[2].1;
+		Shutter_Switch.2:= In_From_ECAT.Laser_Out[2].2;
+		Shutter_Switch.3:= In_From_ECAT.Laser_Out[2].3;
+		Shutter_Switch.4:= In_From_ECAT.Laser_Out[2].4;
+		Shutter_Switch.5:= In_From_ECAT.Laser_Out[2].5;
+		Shutter_Switch.6:= In_From_ECAT.Laser_Out[2].6;
+		Shutter_Switch.7:= In_From_ECAT.Laser_Out[2].7;
+		Fault_Slot:= In_From_ECAT.Laser_Out[2].8;
+		Monitoring_Slot:= In_From_ECAT.Laser_Out[2].9;
+		(*Reserved, not used := In_From_ECAT.Laser_Out[2].10;*)
+		Focusing_Optics_Avail:= In_From_ECAT.Laser_Out[2].11;
+		Focusing_Optics_Ready:= In_From_ECAT.Laser_Out[2].12;
+		Application_Values_In_Range:= In_From_ECAT.Laser_Out[2].13;
+		Protective_Glass_Soiled:= In_From_ECAT.Laser_Out[2].14;
+		Protective_Glass_Life_Reached:= In_From_ECAT.Laser_Out[2].15;
+
+	(*In From EtherCAT Word 3*)
+		Measuring_Value_Out_Active:= In_From_ECAT.Laser_Out[3].0;
+		Maintenance:= In_From_ECAT.Laser_Out[3].1;
+		Chiller_Rinsing_Heating:= In_From_ECAT.Laser_Out[3].2;
+		Calibration_Self_Test:= In_From_ECAT.Laser_Out[3].3;
+		Alive_Tick:= In_From_ECAT.Laser_Out[3].4;
+		Ext_Cooling_On:= In_From_ECAT.Laser_Out[3].5;
+		(*Reserved, not used := In_From_ECAT.Laser_Out[3].6;*)
+		(*Reserved, not used := In_From_ECAT.Laser_Out[3].7;*)
+		Laser_No_ACK.0:= In_From_ECAT.Laser_Out[3].8;
+		Laser_No_ACK.1:= In_From_ECAT.Laser_Out[3].9;
+		Laser_No_ACK.2:= In_From_ECAT.Laser_Out[3].10;
+		Laser_No_ACK.3:= In_From_ECAT.Laser_Out[3].11;
+		Laser_No_ACK.4:= In_From_ECAT.Laser_Out[3].12;
+		Laser_No_ACK.5:= In_From_ECAT.Laser_Out[3].13;
+		Laser_No_ACK.6:= In_From_ECAT.Laser_Out[3].14;
+		Laser_No_ACK.7:= In_From_ECAT.Laser_Out[3].15;
+
+	(*In From EtherCAT Word 4*)
+		Message_Num.0:= In_From_ECAT.Laser_Out[4].0;
+		Message_Num.1:= In_From_ECAT.Laser_Out[4].1;
+		Message_Num.2:= In_From_ECAT.Laser_Out[4].2;
+		Message_Num.3:= In_From_ECAT.Laser_Out[4].3;
+		Message_Num.4:= In_From_ECAT.Laser_Out[4].4;
+		Message_Num.5:= In_From_ECAT.Laser_Out[4].5;
+		Message_Num.6:= In_From_ECAT.Laser_Out[4].6;
+		Message_Num.7:= In_From_ECAT.Laser_Out[4].7;
+		Message_ID.0:= In_From_ECAT.Laser_Out[4].8;
+		Message_ID.1:= In_From_ECAT.Laser_Out[4].9;
+		Message_ID.2:= In_From_ECAT.Laser_Out[4].10;
+		Message_ID.3:= In_From_ECAT.Laser_Out[4].11;
+		Message_ID.4:= In_From_ECAT.Laser_Out[4].12;
+		Message_ID.5:= In_From_ECAT.Laser_Out[4].13;
+		Message_ID.6:= In_From_ECAT.Laser_Out[4].14;
+		Message_ID.7:= In_From_ECAT.Laser_Out[4].15;
+
+	(*In From EtherCAT Word 5*)
+		Measuring_Value_ID.0:= In_From_ECAT.Laser_Out[5].0;
+		Measuring_Value_ID.1:= In_From_ECAT.Laser_Out[5].1;
+		Measuring_Value_ID.2:= In_From_ECAT.Laser_Out[5].2;
+		Measuring_Value_ID.3:= In_From_ECAT.Laser_Out[5].3;
+		Measuring_Value_ID.4:= In_From_ECAT.Laser_Out[5].4;
+		Measuring_Value_ID.5:= In_From_ECAT.Laser_Out[5].5;
+		Measuring_Value_ID.6:= In_From_ECAT.Laser_Out[5].6;
+		Measuring_Value_ID.7:= In_From_ECAT.Laser_Out[5].7;
+		Measuring_Value_ID.8:= In_From_ECAT.Laser_Out[5].8;
+		Measuring_Value_ID.9:= In_From_ECAT.Laser_Out[5].9;
+		Measuring_Value_ID.10:= In_From_ECAT.Laser_Out[5].10;
+		Measuring_Value_ID.11:= In_From_ECAT.Laser_Out[5].11;
+		Measuring_Value_ID.12:= In_From_ECAT.Laser_Out[5].12;
+		Measuring_Value_ID.13:= In_From_ECAT.Laser_Out[5].13;
+		Measuring_Value_ID.14:= In_From_ECAT.Laser_Out[5].14;
+		Measuring_Value_ID.15:= In_From_ECAT.Laser_Out[5].15;
+
+	(*In From EtherCAT Word 6*)
+		Laser_Power.0:= In_From_ECAT.Laser_Out[6].0;
+		Laser_Power.1:= In_From_ECAT.Laser_Out[6].1;
+		Laser_Power.2:= In_From_ECAT.Laser_Out[6].2;
+		Laser_Power.3:= In_From_ECAT.Laser_Out[6].3;
+		Laser_Power.4:= In_From_ECAT.Laser_Out[6].4;
+		Laser_Power.5:= In_From_ECAT.Laser_Out[6].5;
+		Laser_Power.6:= In_From_ECAT.Laser_Out[6].6;
+		Laser_Power.7:= In_From_ECAT.Laser_Out[6].7;
+		Laser_Power.8:= In_From_ECAT.Laser_Out[6].8;
+		Laser_Power.9:= In_From_ECAT.Laser_Out[6].9;
+		Laser_Power.10:= In_From_ECAT.Laser_Out[6].10;
+		Laser_Power.11:= In_From_ECAT.Laser_Out[6].11;
+		Laser_Power.12:= In_From_ECAT.Laser_Out[6].12;
+		Laser_Power.13:= In_From_ECAT.Laser_Out[6].13;
+		Laser_Power.14:= In_From_ECAT.Laser_Out[6].14;
+		Laser_Power.15:= In_From_ECAT.Laser_Out[6].15;
+
+	(*In From EtherCAT Word 7*)
+		Energy.0:= In_From_ECAT.Laser_Out[7].0;
+		Energy.1:= In_From_ECAT.Laser_Out[7].1;
+		Energy.2:= In_From_ECAT.Laser_Out[7].2;
+		Energy.3:= In_From_ECAT.Laser_Out[7].3;
+		Energy.4:= In_From_ECAT.Laser_Out[7].4;
+		Energy.5:= In_From_ECAT.Laser_Out[7].5;
+		Energy.6:= In_From_ECAT.Laser_Out[7].6;
+		Energy.7:= In_From_ECAT.Laser_Out[7].7;
+		Energy.8:= In_From_ECAT.Laser_Out[7].8;
+		Energy.9:= In_From_ECAT.Laser_Out[7].9;
+		Energy.10:= In_From_ECAT.Laser_Out[7].10;
+		Energy.11:= In_From_ECAT.Laser_Out[7].11;
+		Energy.12:= In_From_ECAT.Laser_Out[7].12;
+		Energy.13:= In_From_ECAT.Laser_Out[7].13;
+		Energy.14:= In_From_ECAT.Laser_Out[7].14;
+		Energy.15:= In_From_ECAT.Laser_Out[7].15;
+
+	(*In From EtherCAT Word  8 - 63*)
+		(*Other parameters not currently being used*)
+
+
+
+
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Internal Code $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+
+	(*Weld Complete*)
+		IF Enable_Motion AND All_Safeties_OK AND Laser_Assigned
+			AND (Unsync_Pstart OR Pstart_Dyn OR Pstart_Statical)
+			AND Prog_Completed
+				THEN Welding_Complete:= TRUE;
+		ELSIF NOT Unsync_Pstart AND NOT Pstart_Dyn AND NOT Pstart_Statical
+				THEN Welding_Complete:= FALSE;
+		END_IF;
+
+
+	(*Delay Timers for Synchonizing outputs to the laser controller*)
+	Delay_Time1(
+			IN:= Enable_Motion AND All_Safeties_OK AND Ext_Activation_Active,
+			PT:= T#125ms,
+			Q=> ,
+			ET=> );
+
+	Delay_Time2(
+			IN:= Enable_Motion AND All_Safeties_OK AND Laser_Is_On,
+			PT:= T#125ms,
+			Q=> ,
+			ET=> );
+
+
+	(*Capture Power and Energy results from laser*)
+	IF (Unsync_Pstart OR Pstart_Dyn OR Pstart_Statical) AND NOT Prog_Completed
+		THEN
+		Laser_Power_CurrentVal:= Laser_Power;
+		Energy_CurrentVal:= Energy;
+	END_IF;
+
+	IF Prog_Completed
+		THEN
+		Laser_Power_Prev:= Laser_Power_CurrentVal;
+		Energy_Prev:= Energy_CurrentVal;
+	END_IF;
+
+	Request_Laser:= Enable_Motion AND All_Safeties_OK AND Laser_Is_On AND Delay_Time2.Q;
+	Laser_on:= Enable_Motion AND All_Safeties_OK AND Ext_Activation_Active AND Delay_Time1.Q;
+ 	Ext_Activation:= Enable_Motion AND All_Safeties_OK AND NOT Laser_Faulted;
+
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Transfer Standard Outputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+	(*Transfer I/O Images for Display On HMI*)
+	Input_Image:= In_From_ECAT;
+	Output_Image:= Out_To_ECAT;
+
+	Discrete_Image.LSRT01:= LSRT01;
+	Discrete_Image.Program_REQ:= Program_No;
+	Discrete_Image.Program_ACK:=Program_No_ACK;
+	Discrete_Image.Light_Path_REQ:= Light_Path_No;
+	Discrete_Image.Light_Path_ACK:= Light_Path_No_ACK;
+	Discrete_Image.Laser_No_REQ:= Laser_No;
+	Discrete_Image.Laser_No_ACK:= Laser_No_ACK;
+	Discrete_Image.Laser_Power:= Laser_Power;
+	Discrete_Image.Laser_Power_Prev:= Laser_Power_Prev;
+	Discrete_Image.Energy:= Energy;
+	Discrete_Image.Energy_Prev:= Energy_Prev;
+	Discrete_Image.Faulted:= Laser_Faulted;
+	Discrete_Image.Weld_Complete:= Welding_Complete;
+
+
+
+
+
+	(*--------------- System Outputs to Laser System Inputs -------------------------*)
+
+	(*Out To EtherCAT Word 0*)
+		Out_To_ECAT.Laser_In[0].0:= Request_Laser;
+		Out_To_ECAT.Laser_In[0].1:= Pilot_Laser_On;
+		Out_To_ECAT.Laser_In[0].2:= Unsync_Pstart AND Enable_Motion AND All_Safeties_OK AND Laser_Assigned;
+		Out_To_ECAT.Laser_In[0].3:= Simulation;
+		(*Out_To_ECAT.Laser_In[0].4:= Reserved;*)
+		Out_To_ECAT.Laser_In[0].5:= Inquiry2;
+		Out_To_ECAT.Laser_In[0].6:= Inquiry1;
+		Out_To_ECAT.Laser_In[0].7:= Fault_EXT;
+		Out_To_ECAT.Laser_In[0].8:= Reset AND Laser_Faulted;
+		Out_To_ECAT.Laser_In[0].9:= Prog_Stop;
+		Out_To_ECAT.Laser_In[0].10:= Pstart_Dyn AND Enable_Motion AND All_Safeties_OK AND Laser_Assigned;
+		Out_To_ECAT.Laser_In[0].11:= Pstart_Statical AND Enable_Motion AND All_Safeties_OK AND Laser_Assigned;
+		Out_To_ECAT.Laser_In[0].12:= Laser_Standby;
+		Out_To_ECAT.Laser_In[0].13:= Laser_on;
+		Out_To_ECAT.Laser_In[0].14:= Lock_Operating_Panel;
+		Out_To_ECAT.Laser_In[0].15:= Ext_Activation;
+
+	(*Out To EtherCAT Word 1*)
+		Out_To_ECAT.Laser_In[1].0:= Program_No.0;
+		Out_To_ECAT.Laser_In[1].1:= Program_No.1;
+		Out_To_ECAT.Laser_In[1].2:= Program_No.2;
+		Out_To_ECAT.Laser_In[1].3:= Program_No.3;
+		Out_To_ECAT.Laser_In[1].4:= Program_No.4;
+		Out_To_ECAT.Laser_In[1].5:= Program_No.5;
+		Out_To_ECAT.Laser_In[1].6:= Program_No.6;
+		Out_To_ECAT.Laser_In[1].7:= Program_No.7;
+		Out_To_ECAT.Laser_In[1].8:= Light_Path_No.0;
+		Out_To_ECAT.Laser_In[1].9:= Light_Path_No.1;
+		Out_To_ECAT.Laser_In[1].10:= Light_Path_No.2;
+		Out_To_ECAT.Laser_In[1].11:= Light_Path_No.3;
+		Out_To_ECAT.Laser_In[1].12:= Light_Path_No.4;
+		Out_To_ECAT.Laser_In[1].13:= Light_Path_No.5;
+		Out_To_ECAT.Laser_In[1].14:= Light_Path_No.6;
+		Out_To_ECAT.Laser_In[1].15:= Light_Path_No.7;
+
+	(*Out To EtherCAT Word 2*)
+		Out_To_ECAT.Laser_In[2].0:= Laser_No.0;
+		Out_To_ECAT.Laser_In[2].1:= Laser_No.1;
+		Out_To_ECAT.Laser_In[2].2:= Laser_No.2;
+		Out_To_ECAT.Laser_In[2].3:= Laser_No.3;
+		Out_To_ECAT.Laser_In[2].4:= Laser_No.4;
+		Out_To_ECAT.Laser_In[2].5:= Laser_No.5;
+		Out_To_ECAT.Laser_In[2].6:= Laser_No.6;
+		Out_To_ECAT.Laser_In[2].7:= Laser_No.7;
+		Out_To_ECAT.Laser_In[2].8:= AD_No.0;
+		Out_To_ECAT.Laser_In[2].9:= AD_No.1;
+		Out_To_ECAT.Laser_In[2].10:= AD_No.2;
+		Out_To_ECAT.Laser_In[2].11:= AD_No.3;
+		Out_To_ECAT.Laser_In[2].12:= AD_No.4;
+		Out_To_ECAT.Laser_In[2].13:= AD_No.5;
+		Out_To_ECAT.Laser_In[2].14:= AD_No.6;
+		Out_To_ECAT.Laser_In[2].15:= AD_No.7;
+
+	(*Out To EtherCAT Word 3 - 63*)
+		(*Parameters for laser, PFO and cutting. This will be handled inside TruControl*)
+
+
+
+
+
+	(*Faults*)
+		(*External Activation Fault Timer*)
+		Ext_Act_Fault_TMR(
+					IN:= Ext_Activation AND NOT Ext_Activation_Active,
+					PT:= T#5s,
+					Q=> ,
+					ET=> );
+
+		(*Laser On Fault Timer*)
+		Laser_On_Fault_TMR(
+					IN:= Laser_on AND NOT Laser_Is_On,
+					PT:= T#5s,
+					Q=> ,
+					ET=> );
+
+		(*Request Laser Fault Timer*)
+		Req_Laser_Fault_TMR(
+					IN:= Request_Laser AND NOT Laser_Assigned,
+					PT:= T#5s,
+					Q=> ,
+					ET=> );
+
+		(*Gather all Faults*)
+		Laser_Faulted:= Fault_Laser
+					OR Fault_Slot
+					OR Monitoring_Slot
+					OR Protective_Glass_Soiled
+					OR Prog_Cancelled
+					OR Protective_Glass_Life_Reached
+					OR Ext_Act_Fault_TMR.Q
+					OR Laser_On_Fault_TMR.Q
+					OR Req_Laser_Fault_TMR.Q;
+
+
+
+
+
+
+
+(*end*)]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Trumpf_20180125">
+      <LineId Id="166" Count="353" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <DUT Name="udt_Generic_ServoDrive_FBIN_20211214" Id="{4f238dd8-495e-4277-b7e7-f4447e9c9766}">
+    <Declaration><![CDATA[(*
+udt (user defined type) for generic FB Inputs required for GTAC standard Servo Drive Profile
+	auth. Brent Lekx-Toniolo of Sodecia GTAC. 
+
+	Version 20160809:
+	- Intial concept, b.lekx-toniolo
+	Version 20161124
+	- Broke out sperated Enable Motions per axis
+	Version 20161214
+	- Added Soft Limits, b.lekx-toniolo
+	- Added Home Position Inputs, b.lekx-toniolo
+	- Added Direct Home Input, b.lekx-toniolo
+	- Added Homing Type Input, b.lekx-toniolo
+	- Added Axis_ID Input, b.lekx-toniolo
+	Version 20180731
+	- Added position variable to the UDT - b.donnell
+	- Added teach enabled bit - b.donnell
+	- Added safe tool position bit for manual mode, b.donnell
+	Version 20210203
+	- Added Max_Torque Inputs
+	Version 20211115
+	- Changed Array size from [1..15] to [0..15] for Position, and AutoControls - C.drees
+	Version 20211214
+	- Updates to allow input of Reference Position from outside of FB, c.drees / b.lekx-toniolo
+	- Changed data types of Max_Torque vars for use to map to PDO inputs, c.drees / b.lekx-toniolo
+	
+*)
+TYPE udt_Generic_ServoDrive_FBIN_20211214 :
+STRUCT
+		Enable_Motion: ARRAY[1..2] OF BOOL;
+		Option_Type: UINT; 			(*0=AX5000 drive, 10=EL72xx terminal drive*)
+		Option_Axis_Count: UINT;		(*Option Axis Count->  max 1 for 72xx drive, max 2 for AX52xx series drive*)
+		ECAT_AmsID: STRING;
+		Prev_EcatNode_Present: BOOL;
+
+		Axis_Common_Name: ARRAY[1..2] OF STRING [30];
+		Rotary_Axis: ARRAY[1..2] OF BOOL;						(*Axis is a rotary table*)
+		Axis_Is_Absolute: ARRAY[1..2] OF BOOL;					(*Axis is Absolute Type*)
+		System_Max_Velocity: ARRAY[1..2] OF REAL;				(*Pass Servo System Maximum Velocity in Here*)
+		System_Stop_Decel: ARRAY [1..2] OF REAL;				(*Set System MC_Stop Decel rate, default hard coded in FB if not entered*)
+		Soft_Limit_Max: ARRAY[1..2] OF REAL;					(*Pass Softwarer limits here*)
+		Soft_Limit_Min: ARRAY[1..2] OF REAL;
+		Disable_Soft_Limits: ARRAY[1..2] OF BOOL;				(*Run Servo System without Soft Limits*)
+		Home_Position_Switch: ARRAY[1..2] OF BOOL;			(*Home (Callibration) switch*)
+		Quick_Home_REQ: ARRAY[1..2] OF BOOL;				(*Request a quick Home where the homing request is sent to system with no delay, good for on the fly homing*)
+		Homing_Type: ARRAY[1..2] OF MC_HomingMode;			(*Pass Homing Type, see beckhoff documents for various homing routine types*)
+		Homing_Offset: ARRAY[1..2] OF REAL;					(*Pass Homing Offset for QuickHome*)
+		MicroInch_Value: ARRAY[1..2] OF REAL;					(*Value to Micro Inch*)
+		Mode_Select: ARRAY[1..2] OF INT;
+		Error_Reset: ARRAY[1..2] OF BOOL;
+		Program_Reset: ARRAY[1..2] OF BOOL;
+
+		Position: ARRAY[1..2] OF ARRAY[0..15] OF REAL;
+		Auto_Vel: ARRAY[1..2] OF ARRAY[0..15] OF REAL;
+		Auto_Accel: ARRAY[1..2] OF ARRAY[0..15] OF REAL;
+		Auto_Decel: ARRAY[1..2] OF ARRAY[0..15] OF REAL;
+		Auto_MoveType: ARRAY[1..2] OF ARRAY[0..15] OF INT;
+		Auto_EndFlag: ARRAY[1..2] OF ARRAY[0..15] OF BOOL;
+		Teach_Enable: ARRAY[1..2] OF BOOL;
+		Max_Torque: ARRAY[1..2] OF INT;
+		
+		PlayBack_Speed_Percentage: ARRAY[1..2] OF REAL;
+		Explicit_Step_REQ: ARRAY[1..2] OF UINT;
+		Start_Explicit_StepCall: ARRAY[1..2] OF BOOL;
+		Start_PlayBack: ARRAY[1..2] OF BOOL;
+		Stop_PlayBack: ARRAY[1..2] OF BOOL;
+		PlayBack_StepPermit: ARRAY[1..2] OF BOOL;
+
+
+		Safe_Tool_Pos: ARRAY[1..2] OF BOOL;
+		Teach_Params: ARRAY[1..2] OF udt_SingleAxis_MoveData_20160908; (*Struct of Teach paramaeters*)
+		Teach_Servo_HomePos: ARRAY[1..2] OF BOOL;
+		Teach_JogFast_Plus: ARRAY[1..2] OF BOOL;
+		Teach_JogFast_Minus: ARRAY[1..2] OF BOOL;
+		Teach_JogSlow_Plus: ARRAY[1..2] OF BOOL;
+		Teach_JogSlow_Minus: ARRAY[1..2] OF BOOL;
+		Teach_Inch_Plus: ARRAY[1..2] OF BOOL;
+		Teach_Inch_Minus: ARRAY[1..2] OF BOOL;
+		Teach_MicroInch_Enable: ARRAY[1..2] OF BOOL;
+		Teach_Record_CurrentPos: ARRAY[1..2] OF BOOL;
+		Teach_ParamsOverwrite_Flag: ARRAY[1..2] OF BOOL;
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

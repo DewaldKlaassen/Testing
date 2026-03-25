@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <DUT Name="udt_RobotDiscreteNode_Image" Id="{d4625df4-9bdd-4612-bcd1-4c2f67c5c0f9}">
+    <Declaration><![CDATA[TYPE udt_RobotDiscreteNode_Image :
+	STRUCT
+		T01: udt_EK1100;				(*Ecat Bus Coupler*)
+		(*T02_STAT: udt_EL6900_STAT;	(*EL Safety CPU*)
+		T02_CMD: udt_EL6900_CMD;*)
+		T03: udt_EL1904;				(*EL Safety Inputs*)
+		T04: udt_EL1904;				(*EL Safety Inputs*)
+		T05: udt_EL1904;				(*EL Safety Inputs*)
+		T06: udt_EL1904;				(*EL Safety Inputs*)
+		T07: udt_EL1904;				(*EL Safety Inputs*)
+		T08: udt_EL2904RO;			(*EL Safety Outputs, Set to "I" as this terminal is safety rated, therefore read only!*)
+		T09: udt_EL2904RO; 			(*EL Safety Outputs, Set to "I" as this terminal is safety rated, therefore read only!*)
+		T10: udt_EL94xx;				(*EBUS Power Restoration*)
+		T11: udt_EL1004;				(*EL Inputs*)
+		T12: udt_EL2622;				(*EL Outpus*)
+		T12_STAT: udt_EL2622_STAT;	(*EL Output Card Status*)
+		T13: udt_EL1004;				(*EL Inputs, TO BE REPLACED WITH ANALOG CARD PENDING DELIVERY*)
+		T14: udt_EL6731;				(*EL Profibus Mater Terminal*)
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

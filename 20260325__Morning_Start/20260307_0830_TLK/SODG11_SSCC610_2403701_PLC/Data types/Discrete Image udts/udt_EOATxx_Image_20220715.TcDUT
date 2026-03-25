@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_EOATxx_Image_20220715" Id="{4239aa0f-601f-4b0c-9606-4011c3f013b5}">
+    <Declaration><![CDATA[(*udt (user defined type) for all generic EOAT (End of Arm Tools)
+	auth. Brent Lekx-Toniolo of Sodecia GTAC
+
+------------------------------------------------------------------------
+REVISION NOTES:
+
+	Version 20151103:
+	- initial concept, b.lekx-toniolo	
+	Version 20170607
+	- unknown changes or editor
+	Version 20220715
+	-Added Node Layout for Auto Node identification
+------------------------------------------------------------------------
+
+*)
+
+TYPE udt_EOATxx_Image_20220715 :
+	STRUCT
+			(*Input nodes*)
+			N01: udt_EP1008_002_v2;
+			N02: udt_EP1008_002_v2;
+			N03: udt_EP1008_002_v2;
+			N04: udt_EP1008_002_v2;
+			N05: udt_EP1008_002_v2;
+			N06: udt_EP1008_002_v2;
+			N07: udt_EP1008_002_v2;
+			N08: udt_EP1008_002_v2;
+			N09: udt_EP1008_002_v2;
+
+			(*Valve Bank*)
+			N100: udt_SMC_EX260_ValveBank;
+			N100_STAT: udt_SMC_EX260_STAT;
+			(*Cable Break States*)
+			ECatSlave_Cable_Breaks: UDINT;
+			(*Node Counts*)
+			NodeLayout:udt_ECATNodeData_20221507;
+			Input_Node_Count: UDINT;
+			VB_Node_Count: UDINT;
+			Output_Node_Count:UDINT;
+			
+			(*Developed Data*)
+			CLFaults1: UDINT;
+			CLFaults2: UDINT;
+			CLFaults3: UDINT;
+			CLFaults4: UDINT;
+			CLFaulted: UDINT;
+			PPFaults: UDINT;
+			PPFaulted: UDINT;
+			(*ID*)
+			ID: UINT;
+			strID: STRING[255];
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

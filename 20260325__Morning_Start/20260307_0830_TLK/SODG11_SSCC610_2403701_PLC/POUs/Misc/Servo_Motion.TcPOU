@@ -1,0 +1,300 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="Servo_Motion" Id="{437d97ee-eee2-43c5-a0a7-ba6e09f6e54e}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM Servo_Motion
+VAR
+(*Servo Drives*)
+			SD: ARRAY[0..30] OF  FB_GTAC_ServoSystem_20211214;
+			IC_LoopIndex: UINT;
+			SD_LoopIndex: UINT;
+			Axis_LoopIndex: UINT;
+			
+			IC_Requesting_LocalControl: UDINT;
+			SD_Requested: UDINT;
+			Axis_Requested: UDINT;
+			Axis2_Requested: UDINT;
+			In_Local_Control: BOOL;
+			Local_Control_Stop: ARRAY [0..2] OF BOOL;
+			
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*--------------------------------------- Service Common Servo Drive Requests from UI(s) ------------------------------------------------*)
+
+	Handle_LocalControl_Requests();
+
+
+(*------------------------------------ Setup Individual Servo Drive Data -------------------------------*)
+(* DEBUG, EXAMPLE ONLY*)
+
+(*Servo Drive 1*)
+(*Axis1 = add axis description here*)
+(*Axis2 = add axis description here*)
+	(*Inputs*)
+	SD[1].FB_In.Enable_Motion[1]:= MAIN.Control_Power_ON										(*DEBUG, remove FALSE and add in other code as required to enable drive, blt*)
+								OR TRUE;
+	SD[1].FB_In.Enable_Motion[2]:= MAIN.Control_Power_ON										(*DEBUG, remove FALSE and add in other code as required to enable drive, blt*)
+								OR TRUE;
+	SD[1].FB_In.ECAT_AmsID:= MAIN.ECAT_Master.AmsID;
+	SD[1].FB_In.Prev_EcatNode_Present:= NOT MAIN.IS01.EK1100_NotPresent; 						(*Ensure Previous Node Exists to determine Ecat Cable Break of this Devices Input Cable*)
+	SD[1].FB_In.Teach_Enable[1]:= TRUE;															(*Set Input to true to allow UI teaching of servo, set to false to hard code program positional data*)
+	SD[1].FB_In.Teach_Enable[2]:= TRUE;															(*Set Input to true to allow UI teaching of servo, set to false to hard code program positional data*)
+	SD[1].FB_In.Axis_Common_Name[1]:= 'add axis 1 name here';
+	SD[1].FB_In.Axis_Common_Name[2]:= 'add axis 2 name here';
+	SD[1].FB_In.Option_Type:= 0;																(*0=AX5xxx type, 10=EL72xx type*)
+	SD[1].FB_In.Option_Axis_Count:= 2; 															(*Min 1, Max 2*)
+	SD[1].FB_In.Axis_Is_Absolute[1]:= FALSE;
+	SD[1].FB_In.Axis_Is_Absolute[2]:= FALSE;
+	
+	SD[1].FB_In.Home_Position_Switch[1]:= TRUE;												(*Map Home Position Verification Switch here/Axis*)
+	SD[1].FB_In.Quick_Home_REQ[1]:= FALSE;													(*Alternate Request to Directly Home axis - Specify homing type below*)
+	SD[1].FB_In.Homing_Type[1]:= MC_DefaultHoming;											(*Non-Delayed Home Request Type Select*)
+	SD[1].FB_In.Homing_Offset[1]:= 0.0;														(*Value of Reference position when homed*)
+	SD[1].FB_In.Home_Position_Switch[2]:= TRUE;												(*Map Home Position Verification Switch here/Axis*)
+	SD[1].FB_In.Quick_Home_REQ[2]:= FALSE;													(*Alternate Request to home axis  - Specify homing type below*)
+	SD[1].FB_In.Homing_Type[2]:= MC_DefaultHoming;											(*Non-Delayed Home Request Type Select*)
+	SD[1].FB_In.Homing_Offset[2]:= 0.0;														(*Value of Reference position when homed*)
+
+	SD[1].FB_In.Soft_Limit_Max[1]:=1000;															(*Set Axis1 Pos Software Limit here*)
+	SD[1].FB_In.Soft_Limit_Min[1]:= -1000;															(*Set Axis1 Neg Software Limit here*)
+	SD[1].FB_In.Soft_Limit_Max[2]:= 1000;															(*Set Axis2 Pos Software Limit here*)
+	SD[1].FB_In.Soft_Limit_Min[2]:= -1000;															(*Set Axis2 Neg Software Limit here*)
+	SD[1].FB_In.Disable_Soft_Limits[1]:= FALSE;													(*Allow this Axis to run without softlimits*)
+	SD[1].FB_In.Disable_Soft_Limits[2]:= FALSE;													(*Allow this Axis to run without softlimits*)
+
+	SD[1].FB_In.Max_Torque[1]:= 1000;															(*Axis1 Maximum Torque, Eg: 1000 = 100.0%, 800 = 80.0%*)
+	SD[1].FB_In.Max_Torque[2]:= 1000;															(*Axis1 Maximum Torque, Eg. 1000 = 100.0%, 800 = 80.0%*)
+	SD[1].FB_In.System_Max_Velocity[1]:= 8733;													(*Must be set per System / Axis (find maximum velcity value in Config)*)
+	SD[1].FB_In.System_Max_Velocity[2]:= 1500;													(*Must be set per System / Axis (find maximum velcity value in Config)*)
+
+	SD[1].FB_In.MicroInch_Value[1]:=0.1;															(*Value Servo Will Micro Inch*)
+	SD[1].FB_In.MicroInch_Value[2]:=0.1;															(*Value Servo Will Micro Inch*)
+	SD[1].FB_In.Error_Reset[1]:= In_From_ICxx.ControlPower1 OR MAIN.Starting_Scan_Pulse;			(*Will handle all levels of faults*)
+	SD[1].FB_In.Error_Reset[2]:= In_From_ICxx.ControlPower1 OR MAIN.Starting_Scan_Pulse;			(*Will handle all levels of faults*)
+	SD[1].FB_In.Program_Reset[1]:= FALSE;														(*Map Requirements for full program reset here*)
+	SD[1].FB_In.Program_Reset[2]:= FALSE;														(*Map Requirements for full program reset here*)
+	SD[1].FB_In.PlayBack_StepPermit[1]:= TRUE;													(*Map process interlocks here to halt playback at each step*)
+	SD[1].FB_In.PlayBack_StepPermit[2]:= TRUE;													(*Map process interlocks here to halt playback at each step*)
+	(*Last Call on Stopping Motion*)
+	SD[1].FB_In.Stop_PlayBack[1]:= Local_Control_Stop[1] OR FALSE;										(*Stop All Playback, add custom application stop requirements instad of False*)
+	SD[1].FB_In.Stop_PlayBack[2]:= Local_Control_Stop[2] OR FALSE;										(*Stop All Playback, add custom application stop requirements instad of False*)
+
+
+	(*EXAMPLE ONLY of explicit step call type of motion, programmed motion can be done as well*)
+(*
+	(*Override Playback Mode Inputs Here with Higher Level Commands*)
+	IF Fix101.In_Manual AND NOT In_Local_Control AND SD[1].Homed[1] AND SD[1].Homed[2]
+		THEN
+			SD[1].FB_In.Mode_Select[1]:= 2;
+			SD[1].FB_In.Mode_Select[2]:= 2;
+			SD[1].FB_In.Stop_PlayBack[1]:= NOT SD[1].FB_In.Start_Explicit_StepCall[1];
+			SD[1].FB_In.Stop_PlayBack[2]:= NOT SD[1].FB_In.Start_Explicit_StepCall[2];
+		IF Fix101.OP103_Data.Home_REQ AND Fix101.OP103_Data.Tool_At_Position.30
+			THEN
+			SD[1].FB_In.Explicit_Step_REQ[1]:= 1;
+		END_IF;
+			SD[1].FB_In.Start_Explicit_StepCall[1]:= Fix101.OP103_Data.Home_REQ AND SD[1].FB_In.Explicit_Step_REQ[1]=1;
+		IF Fix101.OP104_Data.Home_REQ AND Fix101.OP103_Data.Tool_At_Position.30
+									AND Fix101.OP104_Data.Tool_At_Position.29
+			THEN
+			SD[1].FB_In.Explicit_Step_REQ[2]:= 1;
+		END_IF;
+			SD[1].FB_In.Start_Explicit_StepCall[2]:= Fix101.OP104_Data.Home_REQ AND SD[1].FB_In.Explicit_Step_REQ[2]=1;
+	END_IF;
+	IF Fix101.In_Auto
+		THEN
+		(*Play Mode Inputs*)
+		SD[1].FB_In.Mode_Select[1]:= 1;
+		SD[1].FB_In.Mode_Select[2]:= 1;
+		SD[1].FB_In.PlayBack_Speed_Percentage[1]:= 100;											(*Set Auto Playback Speed Here*)
+		SD[1].FB_In.PlayBack_Speed_Percentage[2]:= 100;											(*Set Auto Playback Speed Here*)
+		(*Set Playback Here Axis 1*)
+			SD[1].FB_In.Start_Explicit_StepCall[1]:= (Fix101.OP103_DataPers.Step_Complete.0 AND NOT Fix101.OP103_DataPers.Step_Complete.1 AND Fix101.OP110_Data.Interlocks_ToNext.29 AND (SD[1].FB_In.Explicit_Step_REQ[1] = 2))
+												OR (Fix101.OP103_DataPers.Step_Complete.6 AND NOT Fix101.OP103_DataPers.Step_Complete.7 AND (SD[1].FB_In.Explicit_Step_REQ[1] = 1));
+				IF Fix101.OP103_DataPers.Step_Complete.0 AND NOT Fix101.OP103_DataPers.Step_Complete.1 AND Fix101.OP110_Data.Interlocks_ToNext.29
+					THEN
+					SD[1].FB_In.Explicit_Step_REQ[1]:= 2;
+				ELSIF Fix101.OP103_DataPers.Step_Complete.6 AND NOT Fix101.OP103_DataPers.Step_Complete.7
+					THEN
+					SD[1].FB_In.Explicit_Step_REQ[1]:= 1;
+				ELSE
+					SD[1].FB_In.Explicit_Step_REQ[1]:= 0;
+				END_IF;
+
+		(*Set Playback Here Axis 2*)
+			SD[1].FB_In.Start_Explicit_StepCall[2]:= (Fix101.OP104_DataPers.Step_Complete.1 AND NOT Fix101.OP104_DataPers.Step_Complete.2 AND (SD[1].FB_In.Explicit_Step_REQ[2] = Fix101.Model_ID + 10))
+												OR  (Fix101.OP104_DataPers.Step_Complete.5 AND NOT Fix101.OP104_DataPers.Step_Complete.6 AND (SD[1].FB_In.Explicit_Step_REQ[2] = 1));
+				IF Fix101.OP104_DataPers.Step_Complete.1 AND NOT Fix101.OP104_DataPers.Step_Complete.2
+					THEN
+					SD[1].FB_In.Explicit_Step_REQ[2]:= Fix101.Model_ID + 10;
+				ELSIF Fix101.OP104_DataPers.Step_Complete.5 AND NOT Fix101.OP104_DataPers.Step_Complete.6
+					THEN
+					SD[1].FB_In.Explicit_Step_REQ[2]:= 1;
+				ELSE
+					SD[1].FB_In.Explicit_Step_REQ[2]:= 0;
+				END_IF;
+
+
+			SD[1].FB_In.Start_PlayBack[1]:= FALSE;
+			SD[1].FB_In.Start_PlayBack[2]:= FALSE;
+			(*Map process interlocks here to halt playback at each step*)
+			SD[1].FB_In.PlayBack_StepPermit[1]:= TRUE;
+			SD[1].FB_In.PlayBack_StepPermit[2]:= TRUE;
+	END_IF;
+*)
+	(*Call actual FB*)
+	SD[1]();
+	
+	(*Output Data*)
+	Out_To_ICxx.SD[1].Discrete_Image:= SD[1].Discrete_Image;
+	Out_To_ICxx.SD[1].ECAT_Cable_Breaks:= SD[1].ECatSlave_Cable_Breaks;
+	
+
+]]></ST>
+    </Implementation>
+    <Action Name="Handle_LocalControl_Requests" Id="{9a4b46a5-63d4-480b-94b5-5cf5345c18b5}">
+      <Implementation>
+        <ST><![CDATA[(*DEBUG, Brent working on this during TcUI Migration, this will require more testing, blt*)
+(*DEBUG, need to finalize local control code, REQS and ACKS added to UI udts, blt*)
+
+(*------------------------------------------- Handle Local Control Requests from UI ---------------------------------------*)
+
+(*Set some default values upon machine bootup*)
+	IF MAIN.Starting_Scan_Pulse
+		THEN
+		FOR SD_LoopIndex:= 1 TO GTAC_CONFIG.Option_SD_Count DO
+
+		In_From_ICxx.SD[SD_LoopIndex].PlayBack_Speed_Percentage[1]:= 50;	 (*Set default playback speed to 50% of maximum system velocity*)
+		In_From_ICxx.SD[SD_LoopIndex].PlayBack_Speed_Percentage[2]:= 50;	 (*Set default playback speed to 50% of maximum system velocity*)
+		In_From_ICxx.SD[SD_LoopIndex].Teach_Params[1].Velocity:= 25;		(*Set default playback speed to 25% of maximum system velocity*)
+		In_From_ICxx.SD[SD_LoopIndex].Teach_Params[2].Velocity:= 25;		(*Set default playback speed to 25% of maximum system velocity*)
+		In_From_ICxx.SD[SD_LoopIndex].Teach_Params[1].Accel:= 5000;
+		In_From_ICxx.SD[SD_LoopIndex].Teach_Params[1].Decel:= 5000;
+		In_From_ICxx.SD[SD_LoopIndex].Teach_Params[2].Accel:= 5000;
+		In_From_ICxx.SD[SD_LoopIndex].Teach_Params[2].Decel:= 5000;
+		END_FOR;
+	END_IF;
+
+(*First Blank All Requests Regardless*)
+		FOR SD_LoopIndex:= 1 TO GTAC_CONFIG.Option_SD_Count DO
+			SD[SD_LoopIndex].FB_In.Explicit_Step_REQ[1]:= 0;
+			SD[SD_LoopIndex].FB_In.Explicit_Step_REQ[2]:= 0;
+			SD[SD_LoopIndex].FB_In.Start_Explicit_StepCall[1]:= FALSE;
+			SD[SD_LoopIndex].FB_In.Start_Explicit_StepCall[2]:= FALSE;
+			SD[SD_LoopIndex].FB_In.Start_PlayBack[1]:= FALSE;
+			SD[SD_LoopIndex].FB_In.Start_PlayBack[2]:= FALSE;
+			SD[SD_LoopIndex].FB_In.Stop_PlayBack[1]:= FALSE;
+			SD[SD_LoopIndex].FB_In.Stop_PlayBack[2]:= FALSE;
+
+			(*Teach Mode Inputs*)
+			SD[SD_LoopIndex].FB_In.Teach_Servo_HomePos[1]:= FALSE;
+			SD[SD_LoopIndex].FB_In.Teach_Servo_HomePos[2]:= FALSE;
+			SD[SD_LoopIndex].FB_In.Teach_JogFast_Plus[1]:= FALSE;
+			SD[SD_LoopIndex].FB_In.Teach_JogFast_Plus[2]:= FALSE;
+			SD[SD_LoopIndex].FB_In.Teach_JogFast_Minus[1]:= FALSE;
+			SD[SD_LoopIndex].FB_In.Teach_JogFast_Minus[2]:= FALSE;
+			SD[SD_LoopIndex].FB_In.Teach_JogSlow_Plus[1]:= FALSE;
+			SD[SD_LoopIndex].FB_In.Teach_JogSlow_Plus[2]:= FALSE;
+			SD[SD_LoopIndex].FB_In.Teach_JogSlow_Minus[1]:= FALSE;
+			SD[SD_LoopIndex].FB_In.Teach_JogSlow_Minus[2]:= FALSE;
+			SD[SD_LoopIndex].FB_In.Teach_Inch_Plus[1]:= FALSE;
+			SD[SD_LoopIndex].FB_In.Teach_Inch_Plus[2]:= FALSE;
+			SD[SD_LoopIndex].FB_In.Teach_Inch_Minus[1]:= FALSE;
+			SD[SD_LoopIndex].FB_In.Teach_Inch_Minus[2]:= FALSE;
+			SD[SD_LoopIndex].FB_In.Teach_MicroInch_Enable[1]:= FALSE;
+			SD[SD_LoopIndex].FB_In.Teach_MicroInch_Enable[2]:= FALSE;
+			SD[SD_LoopIndex].FB_In.Teach_Record_CurrentPos[1]:= FALSE;
+			SD[SD_LoopIndex].FB_In.Teach_Record_CurrentPos[2]:= FALSE;
+			SD[SD_LoopIndex].FB_In.Teach_ParamsOverwrite_Flag[1]:= FALSE;
+			SD[SD_LoopIndex].FB_In.Teach_ParamsOverwrite_Flag[2]:= FALSE;
+		END_FOR;
+
+		
+		
+
+(*Transfer User Requests to Specific Servo System*)
+	FOR SD_LoopIndex:= 1 TO GTAC_CONFIG.Option_SD_Count DO
+		(*Handle Local Control Requests from UI(s)*)
+		Out_To_ICxx.SD[SD_LoopIndex].AxisLocalControl_IC_ACKS:= In_From_ICxx.SD[SD_LoopIndex].AxisLocalControl_IC_REQS;		
+		FOR Axis_LoopIndex:= 1 TO 2 DO
+			IF (Out_To_ICxx.SD[SD_LoopIndex].AxisLocalControl_IC_ACKS[Axis_LoopIndex] >0) AND (Out_To_ICxx.SD[SD_LoopIndex].AxisLocalControl_IC_ACKS[Axis_LoopIndex] < GTAC_Config.Option_IC_Count)
+				THEN
+
+				
+				(*Mode Select*)
+				SD[SD_LoopIndex].FB_In.Mode_Select[Axis_LoopIndex]:= In_From_ICxx.SD[SD_LoopIndex].Mode_Select[Axis_LoopIndex];
+	
+				(*Play Mode Inputs*)
+				SD[SD_LoopIndex].FB_In.PlayBack_Speed_Percentage[Axis_LoopIndex]:= In_From_ICxx.SD[SD_LoopIndex].PlayBack_Speed_Percentage[Axis_LoopIndex];
+				SD[SD_LoopIndex].FB_In.Explicit_Step_REQ[Axis_LoopIndex]:= In_From_ICxx.SD[SD_LoopIndex].Explicit_Step_REQ[Axis_LoopIndex];
+				SD[SD_LoopIndex].FB_In.Start_Explicit_StepCall[Axis_LoopIndex]:= In_From_ICxx.SD[SD_LoopIndex].Start_Explicit_StepCall[Axis_LoopIndex];
+				SD[SD_LoopIndex].FB_In.Start_PlayBack[Axis_LoopIndex]:= In_From_ICxx.SD[SD_LoopIndex].Start_PlayBack[Axis_LoopIndex];
+				Local_Control_Stop[Axis_LoopIndex]:= In_From_ICxx.SD[SD_LoopIndex].Stop_PlayBack[Axis_LoopIndex] OR In_From_ICxx.Cycle_Hold;
+	
+				(*Teach Mode Inputs*)
+				SD[SD_LoopIndex].FB_In.Teach_Params[Axis_LoopIndex]:= In_From_ICxx.SD[SD_LoopIndex].Teach_Params[Axis_LoopIndex];
+				SD[SD_LoopIndex].FB_In.Teach_JogFast_Plus[Axis_LoopIndex]:= In_From_ICxx.SD[SD_LoopIndex].Teach_JogFast_Plus[Axis_LoopIndex];
+				SD[SD_LoopIndex].FB_In.Teach_JogFast_Minus[Axis_LoopIndex]:= In_From_ICxx.SD[SD_LoopIndex].Teach_JogFast_Minus[Axis_LoopIndex];
+				SD[SD_LoopIndex].FB_In.Teach_JogSlow_Plus[Axis_LoopIndex]:= In_From_ICxx.SD[SD_LoopIndex].Teach_JogSlow_Plus[Axis_LoopIndex];
+				SD[SD_LoopIndex].FB_In.Teach_JogSlow_Minus[Axis_LoopIndex]:= In_From_ICxx.SD[SD_LoopIndex].Teach_JogSlow_Minus[Axis_LoopIndex];
+				SD[SD_LoopIndex].FB_In.Teach_Inch_Plus[Axis_LoopIndex]:= In_From_ICxx.SD[SD_LoopIndex].Teach_Inch_Plus[Axis_LoopIndex];
+				SD[SD_LoopIndex].FB_In.Teach_Inch_Minus[Axis_LoopIndex]:= In_From_ICxx.SD[SD_LoopIndex].Teach_Inch_Minus[Axis_LoopIndex];
+				SD[SD_LoopIndex].FB_In.Teach_MicroInch_Enable[Axis_LoopIndex]:= In_From_ICxx.SD[SD_LoopIndex].Teach_MicroInch_Enable[Axis_LoopIndex];
+				SD[SD_LoopIndex].FB_In.Teach_Record_CurrentPos[Axis_LoopIndex]:= In_From_ICxx.SD[SD_LoopIndex].Teach_Record_CurrentPos[Axis_LoopIndex];
+				SD[SD_LoopIndex].FB_In.Teach_ParamsOverwrite_Flag[Axis_LoopIndex]:= In_From_ICxx.SD[SD_LoopIndex].Teach_ParamsOverwrite_Flag[Axis_LoopIndex];
+					 (*Requires home Position Switch to be on and performs an MC_Direct Home when Callibrate Button is pushed for 5 seconds - Also see Quick_Home_REQ in Servo_Motion as an alternate type of homing*)
+					SD[SD_LoopIndex].FB_In.Teach_Servo_HomePos[Axis_LoopIndex]:= In_From_ICxx.SD[SD_LoopIndex].Teach_Servo_HomePos[Axis_LoopIndex];
+			END_IF;
+		END_FOR;
+	END_FOR;
+
+
+]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="Servo_Motion">
+      <LineId Id="13" Count="25" />
+      <LineId Id="149" Count="0" />
+      <LineId Id="39" Count="2" />
+      <LineId Id="147" Count="0" />
+      <LineId Id="42" Count="2" />
+      <LineId Id="148" Count="0" />
+      <LineId Id="45" Count="4" />
+      <LineId Id="51" Count="1" />
+      <LineId Id="151" Count="0" />
+      <LineId Id="150" Count="0" />
+      <LineId Id="152" Count="0" />
+      <LineId Id="53" Count="1" />
+      <LineId Id="153" Count="0" />
+      <LineId Id="55" Count="76" />
+      <LineId Id="161" Count="4" />
+      <LineId Id="132" Count="1" />
+    </LineIds>
+    <LineIds Name="Servo_Motion.Handle_LocalControl_Requests">
+      <LineId Id="134" Count="2" />
+      <LineId Id="0" Count="4" />
+      <LineId Id="132" Count="0" />
+      <LineId Id="131" Count="0" />
+      <LineId Id="5" Count="7" />
+      <LineId Id="133" Count="0" />
+      <LineId Id="13" Count="2" />
+      <LineId Id="29" Count="31" />
+      <LineId Id="165" Count="0" />
+      <LineId Id="61" Count="0" />
+      <LineId Id="142" Count="0" />
+      <LineId Id="86" Count="1" />
+      <LineId Id="138" Count="0" />
+      <LineId Id="234" Count="1" />
+      <LineId Id="233" Count="0" />
+      <LineId Id="239" Count="1" />
+      <LineId Id="232" Count="0" />
+      <LineId Id="137" Count="0" />
+      <LineId Id="103" Count="22" />
+      <LineId Id="238" Count="0" />
+      <LineId Id="241" Count="0" />
+      <LineId Id="126" Count="1" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="242" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

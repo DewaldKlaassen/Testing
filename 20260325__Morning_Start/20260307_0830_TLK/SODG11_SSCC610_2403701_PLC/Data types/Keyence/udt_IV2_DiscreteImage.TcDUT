@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_IV2_DiscreteImage" Id="{ee3ffa7a-a5cd-4a63-adbd-4923100ce148}">
+    <Declaration><![CDATA[TYPE udt_IV2_DiscreteImage :
+STRUCT
+	ProgramNumber:INT;
+	TriggerOutput:BOOL;
+	ErrorStatus:BOOL;
+	ErrorCode:UINT;
+	Running:BOOL;
+	Busy:BOOL;
+	TriggerReady:BOOL;
+	InfoData:udt_ECATSlave_Status;
+	ResultAvailable:BOOL;
+	OverallJudgementOK:BOOL;
+	TriggerResponse:BOOL;
+	TriggerFailed:BOOL;
+	PortB_MissingLink: BOOL;
+	Faulted: BOOL;
+	
+	IV_Check_OK : BOOL;
+	IV_Check_NOK : BOOL;	
+	
+	Fault_Failure_Recovery : ARRAY[1..15] OF BOOL;
+	Failure_Max_Attempt_Fault : BOOL;
+		
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

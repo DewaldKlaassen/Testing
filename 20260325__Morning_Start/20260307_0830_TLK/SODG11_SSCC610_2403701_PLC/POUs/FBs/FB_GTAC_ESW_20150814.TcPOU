@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FB_GTAC_ESW_20150814" Id="{481a826a-3d2a-4198-915e-6edc7d764e65}" SpecialFunc="None">
+    <Declaration><![CDATA[(*FB used to Handle Enable Switch Plate I/O
+
+------------------------------------------------------------------------
+REVISION NOTES:
+	Original Author(s): b.lekx-toniolo of Sodecia GTAC (broken out from Original grouped FB created by r.remillard); 
+	Version 2015
+		- Broke out from originally grouped "WS" FB, b.lekx-toniolo
+------------------------------------------------------------------------
+*)
+
+FUNCTION_BLOCK FB_GTAC_ESW_20150814
+
+VAR_INPUT
+
+	Prev_EcatNode_Present: BOOL;
+
+END_VAR
+
+VAR
+
+	N01 AT %I*: udt_EP1908_002;
+
+(*Node States*)
+	DiscreteNode_OK: BOOL;
+	EP1908_NotPresent: BOOL;
+	EP1908_PortB_MissingLink: BOOL;
+
+(*Cable Break States*)
+	ECatSlave_Cable_Breaks: UDINT;
+
+END_VAR
+
+VAR_OUTPUT
+
+	EStopOK: BOOL;
+	Enabling_Switch_On: BOOL;
+	Disabling_Key_OK: BOOL;
+	Enabling_Switch_Active: BOOL;
+	Discrete_Image: udt_ESWxx_Image_20150814;
+
+
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$Gather Status Of Hardware $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Enable Switch Discrete I/O Nodes*)
+	IF N01.InfoData.State=8
+		THEN
+			DiscreteNode_OK:=TRUE;
+	ELSE
+			DiscreteNode_OK:=FALSE;
+	END_IF;
+
+
+	(*Enable Switch Plate Cable Break Detection*)
+	IF N01.InfoData.State=257 (*State Machine for Slave Not Present AND Previous Node is Present*)
+		THEN EP1908_NotPresent:= TRUE;
+	ELSE EP1908_NotPresent:= FALSE;
+	END_IF;
+
+	IF N01.InfoData.State=9224 (*Missing link, Port B*)
+		THEN EP1908_PortB_MissingLink:= TRUE;
+	ELSE EP1908_PortB_MissingLink:= FALSE;
+	END_IF;
+
+EcatSlave_Cable_Breaks.0:= EP1908_NotPresent AND Prev_EcatNode_Present;
+EcatSlave_Cable_Breaks.1:= EP1908_PortB_MissingLink;
+
+(*----------------------------------------------------- Map I/O---------------------------------------------*)
+
+(*EP1908*)
+EStopOK:= N01.I.0 AND N01.I.1;
+Enabling_Switch_On:= N01.I.2 AND N01.I.3;
+Disabling_Key_OK:= N01.I.4 AND N01.I.5;
+Enabling_Switch_Active:= NOT N01.I.6 OR NOT N01.I.7;
+
+(*Transfer Discrete Image*)
+Discrete_Image.N01:= N01;
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_GTAC_ESW_20150814">
+      <LineId Id="44" Count="34" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

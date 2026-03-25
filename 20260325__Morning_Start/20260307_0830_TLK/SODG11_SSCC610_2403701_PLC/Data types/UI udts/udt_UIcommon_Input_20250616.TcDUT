@@ -1,0 +1,318 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_UIcommon_Input_20250616" Id="{e8415f5b-32e6-4b22-9e3a-de001f562aa4}">
+    <Declaration><![CDATA[(*udt (user defined type) for interfacing to UI (User Interface)
+this udt represents data that is passed from ALL UIs to PLC
+
+	Author(S): Rob Remillard/Brent Lekx-Toniolo of Sodecia GTAC;
+	Version 1.0 (Named udt_HMI_Input): August 2010
+		- Initial Concept
+	Version 20141014
+		- Increase for 30 Robot framework + Fix Renaming, b.lekx-toniolo
+	Version 20150519
+		- Added Report_Trigger_Reqs, b.lekx-toniolo
+		- Added Rxx_ToolChange_Reqs, b.lekx-toniolo
+	Version 20161129
+		-Custom Setup for SIC marking, RRemillard
+	Version 20161206
+		-added Sealer bits, J.vandongen
+	Version 20170626
+		- added local dry cycle enables, b.lekx-toniolo / c.drees (edge automation)
+	Version 20170801
+		-added bit to control monitoring spaces from plc, RRemillard
+	Version 20170804
+		-added cycle hold, j.vandongen
+	Version 20200611
+		- added Rxx_Dress_Req, j.vandongen
+	Version 20220224
+		- overhaul during TcUI migration project, b.lekx-toniolo / c.drees
+	Version 20240620
+		- added rxx_tracctcp_req,  w. griffiths / b.lekx-toniolo 
+	Version 20250616
+		- Added in Nut Weld Based LVDT Input Image, b.lekx-toniolo	
+
+*)
+
+TYPE udt_UIcommon_Input_20250616 :
+	STRUCT
+(*Standard Inputs from UI*)
+	(*Common to Cell*)
+	StartRobots: BOOL;
+	StopRobots: BOOL;
+	Cycle_Hold: BOOL;
+	RelaseSGK1: BOOL;
+	RelaseSGK2: BOOL;
+	LockSGK1: BOOL;
+	LockSGK2: BOOL;
+	ControlPower1: BOOL;
+	ControlPower2: BOOL;
+	Force_TipChange: BOOL;
+	TipChange_Complete: BOOL;
+	Reset_ChangeCount: BOOL;
+	Enable_Dry_Cycle: BOOL;
+	Local_DryCycle_Enables: UDINT;
+	QA_Request_LH: BOOL;
+	QA_Request_RH: BOOL;
+	QA_Reinsert_LH: BOOL;
+	QA_Reinsert_RH: BOOL;
+	QA_Reset: UINT;
+	QA_NOK_BinCount_Resets: UINT;	
+	QA_NOK_Consecutive_Resets: UINT;
+	
+	Global_Robot_Speed: BYTE;
+	Low_Speed_Req: BOOL;
+	Force_Master_Test: BOOL;
+	Force_Brake_Test: BOOL;
+	Bypass_REQS: UDINT;
+	CustomApplication_REQS: UDINT;
+	Rxx_ToolChange_REQS: UDINT;
+	T1_Zone_Test: BOOL;
+	Production_Report_Trigger_ACKS: UDINT;
+	Product_Report_Trigger_ACKS: UDINT;
+
+	(*Sealer Related Bits*)
+	SL01_Purge_REQS: UINT;
+	SL02_Purge_REQS: UINT;
+	SL03_Purge_REQS: UINT;
+	SL04_Purge_REQS: UINT;
+	SL01_Dispense_Bypass: UINT;
+	SL02_Dispense_Bypass: UINT;
+	SL03_Dispense_Bypass: UINT;
+	SL04_Dispense_Bypass: UINT;
+
+
+
+(*Standard UI Control For Operator Stations and Status of TWCAT Driver Sheet Comms*)
+	(*IC01*)
+	IC01_Requests: INT;				(*Bit 1 = Production, 2 = Materials, 3 = Maintenance*)
+	IC01_COMM_STAT: INT;			(*Communication Status of Twincat driver sheet in Indusoft*)
+	(*IC02*)
+	IC02_Requests: INT;				(*Bit 1 = Production, 2 = Materials, 3 = Maintenance*)
+	IC02_COMM_STAT: INT;			(*Communication Status of Twincat driver sheet in Indusoft*)
+	(*IC03*)
+	IC03_Requests: INT;				(*Bit 1 = Production, 2 = Materials, 3 = Maintenance*)
+	IC03_COMM_STAT: INT;			(*Communication Status of Twincat driver sheet in Indusoft*)
+	(*IC04*)
+	IC04_Requests: INT;				(*Bit 1 = Production, 2 = Materials, 3 = Maintenance*)
+	IC04_COMM_STAT: INT;			(*Communication Status of Twincat driver sheet in Indusoft*)
+	(*IC05*)
+	IC05_Requests: INT;				(*Bit 1 = Production, 2 = Materials, 3 = Maintenance*)
+	IC05_COMM_STAT: INT;			(*Communication Status of Twincat driver sheet in Indusoft*)
+	(*IC06*)
+	IC06_Requests: INT;				(*Bit 1 = Production, 2 = Materials, 3 = Maintenance*)
+	IC06_COMM_STAT: INT;			(*Communication Status of Twincat driver sheet in Indusoft*)
+	(*IC07*)
+	IC07_Requests: INT;				(*Bit 1 = Production, 2 = Materials, 3 = Maintenance*)
+	IC07_COMM_STAT: INT;			(*Communication Status of Twincat driver sheet in Indusoft*)
+	(*IC08*)
+	IC08_Requests: INT;				(*Bit 1 = Production, 2 = Materials, 3 = Maintenance*)
+	IC08_COMM_STAT: INT;			(*Communication Status of Twincat driver sheet in Indusoft*)
+
+(*Specific Inputs from UI*)
+	(*Robot Control*)
+	Rxx_Weld_Inhibit: BOOL;
+	Rxx_Dress_Req: BOOL;
+	Rxx_TraccTCP_Req: BOOL;
+	R1_Weld_Inhibit: BOOL;
+	R1_Disable_Power: BOOL;
+	R1_Temp_Start: BOOL;
+	R1_Dress_Req: BOOL;
+	R1_TraccTCP_Req: BOOL;
+	R2_Weld_Inhibit: BOOL;
+	R2_Disable_Power: BOOL;
+	R2_Temp_Start: BOOL;
+	R2_Dress_Req: BOOL;
+	R2_TraccTCP_Req: BOOL;
+	R3_Weld_Inhibit: BOOL;
+	R3_Disable_Power: BOOL;
+	R3_Temp_Start: BOOL;
+	R3_Dress_Req: BOOL;
+	R3_TraccTCP_Req: BOOL;
+	R4_Weld_Inhibit: BOOL;
+	R4_Disable_Power: BOOL;
+	R4_Temp_Start: BOOL;
+	R4_Dress_Req: BOOL;
+	R4_TraccTCP_Req: BOOL;
+	R5_Weld_Inhibit: BOOL;
+	R5_Disable_Power: BOOL;
+	R5_Temp_Start: BOOL;
+	R5_Dress_Req: BOOL;
+	R5_TraccTCP_Req: BOOL;
+	R6_Weld_Inhibit: BOOL;
+	R6_Disable_Power: BOOL;
+	R6_Temp_Start: BOOL;
+	R6_Dress_Req: BOOL;
+	R6_TraccTCP_Req: BOOL;
+	R7_Weld_Inhibit: BOOL;
+	R7_Disable_Power: BOOL;
+	R7_Temp_Start: BOOL;
+	R7_Dress_Req: BOOL;
+	R7_TraccTCP_Req: BOOL;
+	R8_Weld_Inhibit: BOOL;
+	R8_Disable_Power: BOOL;
+	R8_Temp_Start: BOOL;
+	R8_Dress_Req: BOOL;
+	R8_TraccTCP_Req: BOOL;
+	R9_Weld_Inhibit: BOOL;
+	R9_Disable_Power: BOOL;
+	R9_Temp_Start: BOOL;
+	R9_Dress_Req: BOOL;
+	R9_TraccTCP_Req: BOOL;
+	R10_Weld_Inhibit: BOOL;
+	R10_Disable_Power: BOOL;
+	R10_Temp_Start: BOOL;
+	R10_Dress_Req: BOOL;
+	R10_TraccTCP_Req: BOOL;
+	R11_Weld_Inhibit: BOOL;
+	R11_Disable_Power: BOOL;
+	R11_Temp_Start: BOOL;
+	R11_Dress_Req: BOOL;
+	R11_TraccTCP_Req: BOOL;
+	R12_Weld_Inhibit: BOOL;
+	R12_Disable_Power: BOOL;
+	R12_Temp_Start: BOOL;
+	R12_Dress_Req: BOOL;
+	R12_TraccTCP_Req: BOOL;
+	R13_Weld_Inhibit: BOOL;
+	R13_Disable_Power: BOOL;
+	R13_Temp_Start: BOOL;
+	R13_Dress_Req: BOOL;
+	R13_TraccTCP_Req: BOOL;
+	R14_Weld_Inhibit: BOOL;
+	R14_Disable_Power: BOOL;
+	R14_Temp_Start: BOOL;
+	R14_Dress_Req: BOOL;
+	R14_TraccTCP_Req: BOOL;
+	R15_Weld_Inhibit: BOOL;
+	R15_Disable_Power: BOOL;
+	R15_Temp_Start: BOOL;
+	R15_Dress_Req: BOOL;
+	R15_TraccTCP_Req: BOOL;
+	R16_Weld_Inhibit: BOOL;
+	R16_Disable_Power: BOOL;
+	R16_Temp_Start: BOOL;
+	R16_Dress_Req: BOOL;
+	R16_TraccTCP_Req: BOOL;
+	R17_Weld_Inhibit: BOOL;
+	R17_Disable_Power: BOOL;
+	R17_Temp_Start: BOOL;
+	R17_Dress_Req: BOOL;
+	R17_TraccTCP_Req: BOOL;
+	R18_Weld_Inhibit: BOOL;
+	R18_Disable_Power: BOOL;
+	R18_Temp_Start: BOOL;
+	R18_Dress_Req: BOOL;
+	R18_TraccTCP_Req: BOOL;
+	R19_Weld_Inhibit: BOOL;
+	R19_Disable_Power: BOOL;
+	R19_Temp_Start: BOOL;
+	R19_Dress_Req: BOOL;
+	R19_TraccTCP_Req: BOOL;
+	R20_Weld_Inhibit: BOOL;
+	R20_Disable_Power: BOOL;
+	R20_Temp_Start: BOOL;
+	R20_Dress_Req: BOOL;
+	R20_TraccTCP_Req: BOOL;
+	R21_Weld_Inhibit: BOOL;
+	R21_Disable_Power: BOOL;
+	R21_Temp_Start: BOOL;
+	R21_Dress_Req: BOOL;
+	R21_TraccTCP_Req: BOOL;
+	R22_Weld_Inhibit: BOOL;
+	R22_Disable_Power: BOOL;
+	R22_Temp_Start: BOOL;
+	R22_Dress_Req: BOOL;
+	R22_TraccTCP_Req: BOOL;
+	R23_Weld_Inhibit: BOOL;
+	R23_Disable_Power: BOOL;
+	R23_Temp_Start: BOOL;
+	R23_Dress_Req: BOOL;
+	R23_TraccTCP_Req: BOOL;
+	R24_Weld_Inhibit: BOOL;
+	R24_Disable_Power: BOOL;
+	R24_Temp_Start: BOOL;
+	R24_Dress_Req: BOOL;
+	R24_TraccTCP_Req: BOOL;
+	R25_Weld_Inhibit: BOOL;
+	R25_Disable_Power: BOOL;
+	R25_Temp_Start: BOOL;
+	R25_Dress_Req: BOOL;
+	R25_TraccTCP_Req: BOOL;
+	R26_Weld_Inhibit: BOOL;
+	R26_Disable_Power: BOOL;
+	R26_Temp_Start: BOOL;
+	R26_Dress_Req: BOOL;
+	R26_TraccTCP_Req: BOOL;
+	R27_Weld_Inhibit: BOOL;
+	R27_Disable_Power: BOOL;
+	R27_Temp_Start: BOOL;
+	R27_Dress_Req: BOOL;
+	R27_TraccTCP_Req: BOOL;
+	R28_Weld_Inhibit: BOOL;
+	R28_Disable_Power: BOOL;
+	R28_Temp_Start: BOOL;
+	R28_Dress_Req: BOOL;
+	R28_TraccTCP_Req: BOOL;
+	R29_Weld_Inhibit: BOOL;
+	R29_Disable_Power: BOOL;
+	R29_Temp_Start: BOOL;
+	R29_Dress_Req: BOOL;
+	R29_TraccTCP_Req: BOOL;
+	R30_Weld_Inhibit: BOOL;
+	R30_Disable_Power: BOOL;
+	R30_Temp_Start: BOOL;
+	R30_Dress_Req: BOOL;
+	R30_TraccTCP_Req: BOOL;
+
+	(*Fixture Control*)
+	Fix01_Discrete_In: udt_FixXX_Input_Image_20180202;
+	Fix02_Discrete_In: udt_FixXX_Input_Image_20180202;
+	Fix03_Discrete_In: udt_FixXX_Input_Image_20180202;
+	Fix04_Discrete_In: udt_FixXX_Input_Image_20180202;
+	Fix05_Discrete_In: udt_FixXX_Input_Image_20180202;
+	Fix06_Discrete_In: udt_FixXX_Input_Image_20180202;
+	Fix07_Discrete_In: udt_FixXX_Input_Image_20180202;
+	Fix08_Discrete_In: udt_FixXX_Input_Image_20180202;
+	Fix09_Discrete_In: udt_FixXX_Input_Image_20180202;
+	Fix10_Discrete_In: udt_FixXX_Input_Image_20180202;
+	Fix11_Discrete_In: udt_FixXX_Input_Image_20180202;
+	Fix12_Discrete_In: udt_FixXX_Input_Image_20180202;
+	Fix13_Discrete_In: udt_FixXX_Input_Image_20180202;
+	Fix14_Discrete_In: udt_FixXX_Input_Image_20180202;
+	Fix15_Discrete_In: udt_FixXX_Input_Image_20180202;
+	Fix16_Discrete_In: udt_FixXX_Input_Image_20180202;
+
+	Fix101_Discrete_In: udt_FixXX_Input_Image_20180202;
+	Fix102_Discrete_In: udt_FixXX_Input_Image_20180202;
+	Fix103_Discrete_In: udt_FixXX_Input_Image_20180202;
+	Fix104_Discrete_In: udt_FixXX_Input_Image_20180202;
+	Fix105_Discrete_In: udt_FixXX_Input_Image_20180202;
+	Fix106_Discrete_In: udt_FixXX_Input_Image_20180202;
+	Fix107_Discrete_In: udt_FixXX_Input_Image_20180202;
+	Fix108_Discrete_In: udt_FixXX_Input_Image_20180202;
+	Fix109_Discrete_In: udt_FixXX_Input_Image_20180202;
+	Fix110_Discrete_In: udt_FixXX_Input_Image_20180202;
+	Fix111_Discrete_In: udt_FixXX_Input_Image_20180202;
+	Fix112_Discrete_In: udt_FixXX_Input_Image_20180202;
+
+	(*Nut Weld based LVDTs*)
+	NutWeld_LVDT_Discrete_In: ARRAY [0..5] OF udt_NutWeldLVDT_Input_Image_20250616;
+	
+	(*Custom addition for SIC marking units*)
+	SIC01_BypassReq: BOOL;
+	SIC02_BypassReq: BOOL;
+
+
+	(*Generic Servo Control*)
+	SD: ARRAY [0..30] OF udt_SDxx_FromUI_20220224;
+	
+	(*IV2/3 UI Inputs*)
+	IVx_Discrete_In: ARRAY [0..5] OF udt_IVxx_Input_Image_20250812;
+	
+	(*SRxx*)
+	SRx_Discrete_In : ARRAY [0..1] OF udt_SRxx_Input_Image;	
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

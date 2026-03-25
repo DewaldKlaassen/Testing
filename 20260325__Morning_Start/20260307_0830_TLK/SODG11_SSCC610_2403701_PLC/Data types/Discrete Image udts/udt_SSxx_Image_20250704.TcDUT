@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_SSxx_Image_20250704" Id="{8c2d86d4-9fa3-4616-b401-17ab5530a522}">
+    <Declaration><![CDATA[(*udt (user defined type) for all generic SS (Services Stand) I/O Required
+	auth. Brent Lekx-Toniolo of Sodecia GTAC
+
+------------------------------------------------------------------------
+REVISION NOTES:
+
+	Version 20150814:
+	- initial concept, b.lekx-toniolo (broken from original udt created by r.remillard)	
+	Version 20250714:
+	- Added in 9128, and 9214. Rearranged N02/N03, r.jones
+------------------------------------------------------------------------
+
+*)
+
+TYPE udt_SSxx_Image_20250704 :
+STRUCT
+	N01: 							udt_EP9128_20250704;
+	N02: 							udt_EP1008_002_v2;
+	N03: 							udt_EP2028_002_v2;
+	N03_STAT: 						udt_EP2028_002_STAT;
+	N04_CMD: 						udt_EP9214_CMD_20250704;
+	N04_STAT: 						udt_EP9214_STAT_20250704;
+		
+	(*Optional Power Distribution Blocks*)
+	N999_STAT AT %I*: udt_EP9214_STAT_20250704;
+	N999_CMD AT %Q*: udt_EP9214_CMD_20250704;
+	N1000_STAT AT %I*: udt_EP9214_STAT_20250704;
+	N1000_CMD AT %Q*: udt_EP9214_CMD_20250704;
+	N1001_STAT AT %I*: udt_EP9214_STAT_20250704;
+	N1001_CMD AT %Q*: udt_EP9214_CMD_20250704;	
+	Option_EP9214_Count: INT;
+			
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

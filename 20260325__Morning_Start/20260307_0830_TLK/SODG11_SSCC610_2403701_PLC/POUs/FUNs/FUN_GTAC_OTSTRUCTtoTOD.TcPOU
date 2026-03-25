@@ -1,0 +1,41 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FUN_GTAC_OTSTRUCTtoTOD" Id="{4acf96ab-7849-4d3c-9919-79d7d2bece51}" SpecialFunc="None">
+    <Declaration><![CDATA[(*Take Individual time elements of a OTSTRUCT and create a TOD type return
+	author: Brent Lekx-Toniolo Of Sodecia GTAC
+	date: May 2016
+	version 1.0
+		- initial concept
+
+
+	Last Edit: 27-May-2016, blt
+*)
+
+FUNCTION FUN_GTAC_OTSTRUCTtoTOD : TOD
+VAR_INPUT
+	OTSTRUCT: OTSTRUCT;
+
+END_VAR
+VAR
+	Hours_as_MS: UDINT;
+	Minutes_as_MS: UDINT;
+	Seconds_as_MS: UDINT;
+	Milliseconds_as_MS: UDINT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Calculate Millsecond Value of each OTSTRUCT Element*)
+
+	Hours_as_MS:= OTSTRUCT.wHour * 360000;
+	Minutes_as_MS:= OTSTRUCT.wMinute * 60000;
+	Seconds_as_MS:= OTSTRUCT.wSecond * 1000;
+	Milliseconds_as_MS:= OTSTRUCT.wMilliseconds;
+
+(*Return Total Value in Milliseconds, this is TOD*)
+
+FUN_GTAC_OTSTRUCTtoTOD:= UDINT_TO_TOD(Hours_As_MS + Minutes_As_MS + Seconds_As_MS + Milliseconds_As_MS);]]></ST>
+    </Implementation>
+    <LineIds Name="FUN_GTAC_OTSTRUCTtoTOD">
+      <LineId Id="21" Count="9" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

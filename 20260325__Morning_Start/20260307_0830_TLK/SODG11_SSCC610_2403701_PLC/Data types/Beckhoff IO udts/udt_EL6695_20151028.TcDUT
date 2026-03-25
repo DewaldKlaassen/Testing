@@ -1,0 +1,40 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_EL6695_20151028" Id="{e018e244-7abe-4dda-a9ab-bd610965d11f}">
+    <Declaration><![CDATA[(*udt (user defined type) of Beckhoff EL6695-1001 - EtherCAT Bridge (Specific to Kuka FSoE):
+	auth. Brent Lekx-Toniolo of Sodecia GTAC.; 
+	Version 20151028
+		- initial concept, blt
+*)
+
+TYPE udt_EL6695_20151028 :
+STRUCT
+
+(*Data from Module 1, Sync Inputs*)
+	TxPDO_Toogle: BOOL;
+		(*	Bit toggles when new data from other side received*)
+	TxPDO_State: BOOL;
+		(*	0: Other side is in OP state
+			>0: Error*)
+	External_device_not_connected: BOOL;
+		(*	0: External device connected
+			1: External device not connected*)
+
+(*Inputs and Outputs from Module 2, Safety Data*)
+	FSOE_Inputs_Data_0: UINT;
+	FSOE_Inputs_Data_1: UINT;
+	FSOE_Inputs_Data_2: UINT;
+	FSOE_Inputs_Data_3: UINT;
+	FSOE_Inputs_ConnID: UINT;
+
+	FSOE_Outputs_Data_0: UINT;
+	FSOE_Outputs_Data_1: UINT;
+	FSOE_Outputs_Data_2: UINT;
+	FSOE_Outputs_Data_3: UINT;
+
+
+	InfoData: udt_ECATSlave_StatusEXT;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

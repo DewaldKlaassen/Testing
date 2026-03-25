@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_ProfiNode_Status" Id="{fede9e56-b483-4a2a-8ca9-29885cc92c17}">
+    <Declaration><![CDATA[(*udt (user data type) of Generic Profibus Node to Store Data for Status of any Profibus Modules:
+	auth. brent lekx-toniolo; April 2008
+	version 1.0*)
+
+
+TYPE udt_ProfiNode_Status :
+	STRUCT
+		DpState: USINT;
+		(*0 = No error
+		1 = Station deactivated
+		2 = Station not exists
+		3 = Master lock
+		4 = Invalid slave response
+		5 = Parameter fault
+		6 = Not supported
+		7 = Config fault
+		8 = Station not ready
+		9 = Static diagnosis
+		10 = Diagnosis overflow
+		11 = Physical fault
+		12 = Data-Exchange left
+		13 = Severe bus fault
+		14 = Telegram fault
+		15 = Station has no ressources
+		16 = Service not activated
+		17 = Unexpected telegram
+		18 = Station ready
+		128 = slave, waiting for data transfer
+		129	= slave, waiting for configuration
+		130	= slave, waiting for parameter*)
+		ExtDiagFlag: BOOL;
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

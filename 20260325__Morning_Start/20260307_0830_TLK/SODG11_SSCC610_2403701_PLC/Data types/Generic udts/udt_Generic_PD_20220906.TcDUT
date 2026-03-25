@@ -1,0 +1,37 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_Generic_PD_20220906" Id="{8d54d20d-64f7-4225-8cc3-5856b53ffb9f}">
+    <Declaration><![CDATA[(*udt (user defined type) for all generic PD (Power Distribution Panel) Data Required
+	auth. Brent Lekx-Toniolo of Toniolo Research & Development Inc.; 
+	August 2010; version 1.0
+
+	Version 20150812:
+	- Updated name to include date rev, b.lekx-toniolo
+	- Modified per V5.00 requirements, b.lekx-toniolo
+	Version 20150928:
+	- Added Ecat_Master_AmsNetID, CoE_Read_Trigger, b.lekx-toniolo
+	Version 20170307
+	- Added Enable Inputs for Split Relays and EP9224, b.lekx-toniolo
+	Version 20190924
+	- added Enable to Profibus (EL6731), j.vandongen
+	Version 20220906
+	-Changed Boolean Enable to numerical Count for EP9224 , C.Drees
+
+
+*)
+
+TYPE udt_Generic_PD_20220906:
+	STRUCT
+		Safety_RST: BOOL;
+		Enable_Motion: BOOL;
+		Ecat_Master_AmsNetID: STRING;
+		CoE_Read_Trigger: BOOL;
+		Prev_EcatNode_Present: BOOL;
+		Option_Enable_SplitRelays: BOOL;
+		Option_EP9224_Count: INT;
+		Option_Enable_Pbus: BOOL;
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

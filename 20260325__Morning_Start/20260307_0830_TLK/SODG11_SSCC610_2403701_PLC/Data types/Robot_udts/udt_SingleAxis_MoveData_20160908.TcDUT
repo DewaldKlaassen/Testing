@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <DUT Name="udt_SingleAxis_MoveData_20160908" Id="{2269b123-c4b9-496b-95bf-9c3b24b56e17}">
+    <Declaration><![CDATA[(*udt (user defined type) to create data type for storing single Axis Movement Data Parameters:
+	
+	Author(S): Brent Lekx-Toniolo of Sodecia GTAC;
+
+	Version 20150119
+		- Initial Concept
+	Version 20160908
+		- Added Move_Type for vel vs pos type moves, b.lekx-toniolo
+
+
+*)
+
+
+
+TYPE udt_SingleAxis_MoveData_20160908 :
+STRUCT
+		Move_Type: UINT; 	(*Specify Move type during teaching*)
+		Position: LREAL; 		(*Actual Stored Position Data*)
+		Velocity: REAL; 		(*Target Velocity*)
+		Accel: REAL; 			(*Target Acceleration Rate*)
+		Decel: REAL;			(*Target Decceleration Rate*)
+		End_Flag: BOOL;		(*Flag to Indicate Last Step In Program*)
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

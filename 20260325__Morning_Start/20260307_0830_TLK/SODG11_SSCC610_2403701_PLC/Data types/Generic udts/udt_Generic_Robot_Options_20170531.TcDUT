@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <DUT Name="udt_Generic_Robot_Options_20170531" Id="{ea742d34-7ace-42d7-985e-5176019c9a80}">
+    <Declaration><![CDATA[(*udt (user defined type) for generic Robot Add-In Option Configuration
+	Version 20160204:
+	- Initial Concept, b.lekx-toniolo
+	Version 20170531:
+	- Added Mig controller amount, b.lekx-toniolo
+
+
+*)
+TYPE udt_Generic_Robot_Options_20170531 :
+	STRUCT
+		(*Option Config Inputs*)
+		WeldCont_Amount: UINT;
+		MIGCont_Amount: UINT;
+		WaterStand_Amount: UINT;
+		Reamer_Amount: UINT;
+		EOAT_Amount: UINT;
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

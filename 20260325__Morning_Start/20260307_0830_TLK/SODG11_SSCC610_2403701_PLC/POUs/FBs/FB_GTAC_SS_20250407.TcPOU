@@ -1,0 +1,402 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_GTAC_SS_20250407" Id="{313c1a1d-9b9a-4cda-947e-8b804799876e}" SpecialFunc="None">
+    <Declaration><![CDATA[(*FB used to Handle Large Service Stand I/O
+
+------------------------------------------------------------------------
+REVISION NOTES:
+	Original Author(s): b.lekx-toniolo of Sodecia GTAC (broken out from Original grouped FB created by r.remillard); 
+	Version 2015
+		- Broke out from originally grouped "WS" FB, b.lekx-toniolo
+	Version 20151209
+		- Added changes for redundant valves, b.lekx-toniolo
+	Version 20160713
+		- Modified I/O structure to clean things up with redudant valve, b.lekx-toniolo
+		- Added EDM_Fault to check for improper redundant valve action, b.lekx-toniolo
+	Version 20171031
+		-Added external control of outputs, j.vandongen
+	Version 20250704
+		-Adding in EP9218, r.jones
+------------------------------------------------------------------------
+*)
+
+
+FUNCTION_BLOCK FB_GTAC_SS_20250407
+
+VAR_INPUT
+
+	Prev_EcatNode_Present: BOOL;
+	Output_REQ: UDINT;
+	Option_EP9214_Count: INT;
+	FB_In: udt_Generic_EP9214_20250714;
+
+END_VAR
+
+VAR
+
+	N01 AT %I*: udt_EP9128_20250704;
+	N02 AT %I*: udt_EP1008_002_v2;
+	N03 AT %Q*: udt_EP2028_002_v2;
+	N03_STAT AT %I*: udt_EP2028_002_STAT;
+	N04_STAT AT %I*: udt_EP9214_STAT_20250704;
+	N04_CMD AT %Q*: udt_EP9214_CMD_20250704;
+	(*Optional Power Distribution Blocks*)
+	N999_STAT AT %I*: udt_EP9214_STAT_20250704;
+	N999_CMD AT %Q*: udt_EP9214_CMD_20250704;
+	N1000_STAT AT %I*: udt_EP9214_STAT_20250704;
+	N1000_CMD AT %Q*: udt_EP9214_CMD_20250704;
+	N1001_STAT AT %I*: udt_EP9214_STAT_20250704;
+	N1001_CMD AT %Q*: udt_EP9214_CMD_20250704;	
+
+
+	(*Cable Break Warning Flags*)(*Node States*)
+	DiscreteNode_OK: BOOL;
+	EP2028_NotPresent: BOOL;
+	EP2028_PortB_MissingLnk: BOOL;
+	EP1008_NotPresent: BOOL;
+	EP1008_PortB_MissingLink: BOOL;
+	ECatSlave_Cable_Breaks: UDINT;
+	EP9128_NotPresent :BOOL;				(*is Not Present*)
+	EP9128_PortD_MissingLink: BOOL;			(*SectionD Link 1 is for X2*)
+	EP9128_PortD_MissingLink2: BOOL;		(*SectionD Link 2 is for X3*)
+	EP9128_PortD_MissingLink3: BOOL;		(*SectionD Link 3 is for X6*)
+	EP9128_PortB_MissingLink: BOOL;			(*SectionB Link 1 is for X4*)
+	EP9128_PortB_MissingLink2: BOOL;		(*SectionB Link 2 is for X5*)
+	EP9128_PortB_MissingLink3: BOOL;		(*SectionB Link 2 is for X7*)
+	EP9128_PortC_MissingLink: BOOL;			(*SectionC is for Second section of Internal Fixtures X8*)
+	EP9214_NotPresent :BOOL;	
+	EP9214_PortB_MissingLnk: BOOL;
+	N999_Missing: BOOL;
+	N1000_Missing:BOOL; 					(*Second EP9224 Missing*)
+	N1001_Missing:BOOL;						(*Third EP9224 Missing*)
+
+END_VAR
+
+VAR_OUTPUT
+
+	Air_PressureOK: BOOL;
+	Valve1_Off: BOOL;
+	Valve2_Off: BOOL;
+	Valves_Off: BOOL;
+	EDM_Fault: BOOL;
+	Discrete_Image: udt_SSxx_Image_20250704;
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$Gather Status Of Hardware $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Discrete I/O Node*)
+	IF (N01.InfoData.State=8) AND (N01.InfoDataB.State=8) AND (N01.InfoDataC.State=8) AND (N02.InfoData.State=8)
+		AND (N03_STAT.InfoData.State=8) AND (N04_STAT.InfoData.State=8)
+		AND ((N999_STAT.InfoData.State=8) OR FB_In.Option_EP9214_Count < 1)
+		AND ((N1000_STAT.InfoData.State=8) OR FB_In.Option_EP9214_Count < 2)
+		AND ((N1001_STAT.InfoData.State=8) OR FB_In.Option_EP9214_Count < 3)
+		THEN DiscreteNode_OK:=TRUE;
+	ELSE DiscreteNode_OK:=FALSE;
+	END_IF;
+	
+	IF ((N01.InfoData.State=257) AND (N01.InfoDataB.State=257) AND (N01.InfoDataC.State=257))
+		THEN EP9128_NotPresent:= TRUE;				(*Port X1*)
+	ELSE EP9128_NotPresent:= FALSE;
+	END_IF;	
+	
+	IF ((N01.InfoData.State=33800) OR (N01.InfoData.State=41992))
+		THEN EP9128_PortD_MissingLink:= TRUE;		(*PortD Attached at Port X2*)
+	ELSE EP9128_PortD_MissingLink:= FALSE;
+	END_IF;
+
+	IF  ((N01.InfoData.State=9224) OR (N01.InfoData.State=41992))
+		THEN EP9128_PortB_MissingLink:= TRUE;		(*PortB Attached at Port X3*)
+	ELSE EP9128_PortB_MissingLink:= FALSE;
+	END_IF;
+
+	IF ((N01.InfoDataB.State=33800) OR (N01.InfoDataB.State=41992))
+		THEN EP9128_PortD_MissingLink2:= TRUE;		(*PortD Attached at Port X4*)
+	ELSE EP9128_PortD_MissingLink2:= FALSE;
+	END_IF;
+
+	IF  ((N01.InfoDataB.State=9224) OR (N01.InfoDataB.State=41992))
+		THEN EP9128_PortB_MissingLink2:= TRUE;		(*PortB Attached at Port X5*)
+	ELSE EP9128_PortB_MissingLink2:= FALSE;
+	END_IF;
+
+	IF ((N01.InfoDataC.State=33800) OR (N01.InfoDataC.State=41992)
+		OR (N01.InfoDataC.State=50184) OR (N01.InfoDataC.State=58376))
+		THEN EP9128_PortD_MissingLink3:= TRUE;		(*PortD Attached at Port X6*)
+	ELSE EP9128_PortD_MissingLink3:= FALSE;
+	END_IF;
+
+	IF  ((N01.InfoDataC.State=9224) OR (N01.InfoDataC.State=25608)
+		OR (N01.InfoDataC.State=41992) OR (N01.InfoDataC.State=58376))
+		THEN EP9128_PortB_MissingLink3:= TRUE;		(*PortB Attached at Port X7*)
+	ELSE EP9128_PortB_MissingLink3:= FALSE;
+	END_IF;
+
+	IF  ((N01.InfoDataC.State=17416) OR (N01.InfoDataC.State=25608)
+		OR (N01.InfoDataC.State=50184) OR (N01.InfoDataC.State=58376))
+		THEN EP9128_PortC_MissingLink:= TRUE;		(*PortC Attached at Port X8*)
+	ELSE EP9128_PortC_MissingLink:= FALSE;
+	END_IF;
+	
+	IF N02.InfoData.State = 257 (*State Machine for Slave Not Present*)
+		THEN EP1008_NotPresent:= TRUE;
+	ELSE EP1008_NotPresent:= FALSE;
+	END_IF;
+
+	IF N03_STAT.InfoData.State = 257  (*State Machine for Slave Not Present*)
+		THEN EP2028_NotPresent:= TRUE;
+	ELSE EP2028_NotPresent:= FALSE;
+	END_IF;
+
+	IF N04_STAT.InfoData.State = 257  (*State Machine for Slave Not Present*)
+		THEN EP9214_NotPresent:= TRUE;
+	ELSE EP9214_NotPresent:= FALSE;
+	END_IF;
+	
+	IF N04_STAT.InfoData.State = 9224  (*State Machine for Slave Not Present Port B*)
+		THEN EP9214_PortB_MissingLnk:= TRUE;
+	ELSE EP9214_PortB_MissingLnk:= FALSE;
+	END_IF;
+	
+	IF (N999_Stat.InfoData.State=9224) AND (FB_In.Option_EP9214_Count >=1) (*State 9224 is missing link on port B*)
+		THEN N999_Missing:= TRUE;
+	ELSE N999_Missing := FALSE;
+	END_IF;
+	
+	IF (N1000_Stat.InfoData.State=9224) AND (FB_In.Option_EP9214_Count >=2) (*State 9224 is missing link on port B*)
+		THEN N1000_Missing:= TRUE;
+	ELSE N1000_Missing := FALSE;
+	END_IF;
+	
+	IF (N1001_Stat.InfoData.State=9224) AND (FB_In.Option_EP9214_Count >=3) (*State 9224 is missing link on port B*)
+		THEN N1001_Missing:= TRUE;
+	ELSE N1001_Missing := FALSE;
+	END_IF;
+	
+	(*Wrap up break Flags to Variable for shipment to UI*)
+	ECatSlave_Cable_Breaks.0:= EP9128_NotPresent AND Prev_EcatNode_Present;
+	ECatSlave_Cable_Breaks.1:= EP1008_NotPresent AND NOT EP9128_NotPresent;
+	ECatSlave_Cable_Breaks.2:= EP2028_NotPresent AND NOT EP1008_NotPresent;
+	ECatSlave_Cable_Breaks.3:= EP9214_NotPresent AND NOT EP2028_NotPresent;
+	ECatSlave_Cable_Breaks.4:= EP9214_PortB_MissingLnk;
+
+	ECatSlave_Cable_Breaks.17:= EP9128_PortD_MissingLink; (*x2*)
+	ECatSlave_Cable_Breaks.18:= EP9128_PortB_MissingLink; (*x3*)
+	ECatSlave_Cable_Breaks.19:= EP9128_PortD_MissingLink2; (*x4*)
+	ECatSlave_Cable_Breaks.20:= EP9128_PortB_MissingLink2; (*x5*)
+	ECatSlave_Cable_Breaks.21:= EP9128_PortD_MissingLink3; (*x6*)
+	ECatSlave_Cable_Breaks.22:= EP9128_PortB_MissingLink3; (*x7*)
+	ECatSlave_Cable_Breaks.23:= EP9128_PortC_MissingLink; (*x8*)
+	EcatSlave_Cable_Breaks.24:= N999_Missing;	
+	EcatSlave_Cable_Breaks.25:= N1000_Missing;
+	EcatSlave_Cable_Breaks.26:= N1001_Missing;
+
+(*----------------------------------------------------- Map I/O---------------------------------------------*)
+
+(*EP1008*)
+Valve1_Off:= (*N02.I.0*) NOT N02.I.2;
+Valve2_Off:= (*N02.I.1*) NOT N02.I.3;
+Valves_Off:= Valve1_Off AND Valve2_Off;
+
+Air_PressureOK:= (*N02.I.2*)N02.I.3;
+
+(*EP2028*)
+N03.Q.0:= Output_Req.0;			(*Enable Valve Sol.1*)
+N03.Q.1:= Output_Req.1;			(*Enable Valve Sol.2*)
+N03.Q.2:= Output_Req.2;
+N03.Q.3:= Output_Req.3;
+N03.Q.4:= Output_Req.4;
+N03.Q.5:= Output_Req.5;
+N03.Q.6:= Output_Req.6;
+N03.Q.7:= Output_Req.7;
+
+
+(*--------------------------------------------------- Faults -------------------------------------------------------*)
+
+EDM_Fault:= (N03.Q.0 AND Valve1_Off) OR
+			(NOT N03.Q.0 AND NOT Valve1_Off) OR
+			(N03.Q.1 AND Valve2_Off) OR
+			(NOT N03.Q.1 AND NOT Valve1_Off);
+
+
+
+(*-------------------------------------- Transfer Discrete Image -----------------------------------------*)
+	Discrete_Image.N01:= N01;
+	Discrete_Image.N02:= N02;
+	Discrete_Image.N03:= N03;
+	Discrete_Image.N03_STAT:= N03_STAT;
+	Discrete_Image.N04_CMD:= N04_CMD;
+	Discrete_Image.N04_STAT:= N04_STAT;
+	(*Option Power Distribution Nodes*)
+	Discrete_Image.N999_STAT:=N999_STAT;
+	Discrete_Image.N999_CMD:=N999_CMD;
+	Discrete_Image.N1000_STAT:=N1000_STAT;
+	Discrete_Image.N1000_CMD:=N1000_CMD;
+	Discrete_Image.N1001_STAT:=N1001_STAT;
+	Discrete_Image.N1001_CMD:=N1001_CMD;
+
+(*Transfer Option Variables for Display on UI*)
+	Discrete_Image.Option_EP9214_Count:= FB_In.Option_EP9214_Count;
+
+(*Transfer Commands TO Power Distribution Node Outputs*)
+	(*Device Level*)
+	N04_CMD.Device.Enable_Control_Via_Fieldbus:= FALSE;
+	N04_CMD.Device.Global_Reset:= FB_In.Safety_RST;
+	(*Channel1 Level*)
+	N04_CMD.Channel1.Output_Us:= TRUE OR FB_In.Channel1_Output_Us;;
+	N04_CMD.Channel1.Output_Up:= FB_In.Enable_Motion OR FB_In.Channel1_Output_Up;
+	N04_CMD.Channel1.Reset_Us:= FB_In.Safety_RST OR FB_In.Channel1_Reset_Us;
+	N04_CMD.Channel1.Reset_Up:= FB_In.Safety_RST OR FB_In.Channel1_Reset_Up;
+	(*Channel2Level*)
+	N04_CMD.Channel2.Output_Us:= TRUE OR FB_In.Channel2_Output_Us;;
+	N04_CMD.Channel2.Output_Up:= FB_In.Enable_Motion OR FB_In.Channel2_Output_Up;
+	N04_CMD.Channel2.Reset_Us:= FB_In.Safety_RST OR FB_In.Channel2_Reset_Us;
+	N04_CMD.Channel2.Reset_Up:= FB_In.Safety_RST OR FB_In.Channel2_Reset_Up;
+	(*Channel3Level*)
+	N04_CMD.Channel3.Output_Us:= TRUE OR FB_In.Channel3_Output_Us;;
+	N04_CMD.Channel3.Output_Up:= FB_In.Enable_Motion OR FB_In.Channel3_Output_Up;
+	N04_CMD.Channel3.Reset_Us:= FB_In.Safety_RST OR FB_In.Channel3_Reset_Us;
+	N04_CMD.Channel3.Reset_Up:= FB_In.Safety_RST OR FB_In.Channel3_Reset_Up;
+	(*Channel4Level*)
+	N04_CMD.Channel4.Output_Us:= TRUE OR FB_In.Channel4_Output_Us;
+	N04_CMD.Channel4.Output_Up:= FB_In.Enable_Motion OR FB_In.Channel4_Output_Up;
+	N04_CMD.Channel4.Reset_Us:= FB_In.Safety_RST OR FB_In.Channel4_Reset_Us;
+	N04_CMD.Channel4.Reset_Up:= FB_In.Safety_RST OR FB_In.Channel4_Reset_Up;
+	
+		(*Device Level*)
+	N999_CMD.Device.Enable_Control_Via_Fieldbus:= FALSE;
+	N999_CMD.Device.Global_Reset:= FB_In.Safety_RST;
+	(*Channel1 Level*)
+	N999_CMD.Channel1.Output_Us:= TRUE;
+	N999_CMD.Channel1.Output_Up:= FB_In.Enable_Motion;
+	N999_CMD.Channel1.Reset_Us:= FB_In.Safety_RST;
+	N999_CMD.Channel1.Reset_Up:= FB_In.Safety_RST;
+	(*Channel2Level*)
+	N999_CMD.Channel2.Output_Us:= TRUE;
+	N999_CMD.Channel2.Output_Up:= FB_In.Enable_Motion;
+	N999_CMD.Channel2.Reset_Us:= FB_In.Safety_RST;
+	N999_CMD.Channel2.Reset_Up:= FB_In.Safety_RST;
+	(*Channel3Level*)
+	N999_CMD.Channel3.Output_Us:= TRUE;
+	N999_CMD.Channel3.Output_Up:= FB_In.Enable_Motion;
+	N999_CMD.Channel3.Reset_Us:= FB_In.Safety_RST;
+	N999_CMD.Channel3.Reset_Up:= FB_In.Safety_RST;
+	(*Channel4Level*)
+	N999_CMD.Channel4.Output_Us:= TRUE;
+	N999_CMD.Channel4.Output_Up:= FB_In.Enable_Motion;
+	N999_CMD.Channel4.Reset_Us:= FB_In.Safety_RST;
+	N999_CMD.Channel4.Reset_Up:= FB_In.Safety_RST;
+	
+		(*Device Level*)
+	N1000_CMD.Device.Enable_Control_Via_Fieldbus:= FALSE;
+	N1000_CMD.Device.Global_Reset:= FB_In.Safety_RST;
+	(*Channel1 Level*)
+	N1000_CMD.Channel1.Output_Us:= TRUE;
+	N1000_CMD.Channel1.Output_Up:= FB_In.Enable_Motion;
+	N1000_CMD.Channel1.Reset_Us:= FB_In.Safety_RST;
+	N1000_CMD.Channel1.Reset_Up:= FB_In.Safety_RST;
+	(*Channel2Level*)
+	N1000_CMD.Channel2.Output_Us:= TRUE;
+	N1000_CMD.Channel2.Output_Up:= FB_In.Enable_Motion;
+	N1000_CMD.Channel2.Reset_Us:= FB_In.Safety_RST;
+	N1000_CMD.Channel2.Reset_Up:= FB_In.Safety_RST;
+	(*Channel3Level*)
+	N1000_CMD.Channel3.Output_Us:= TRUE;
+	N1000_CMD.Channel3.Output_Up:= FB_In.Enable_Motion;
+	N1000_CMD.Channel3.Reset_Us:= FB_In.Safety_RST;
+	N1000_CMD.Channel3.Reset_Up:= FB_In.Safety_RST;
+	(*Channel4Level*)
+	N1000_CMD.Channel4.Output_Us:= TRUE;
+	N1000_CMD.Channel4.Output_Up:= FB_In.Enable_Motion;
+	N1000_CMD.Channel4.Reset_Us:= FB_In.Safety_RST;
+	N1000_CMD.Channel4.Reset_Up:= FB_In.Safety_RST;
+		
+		(*Device Level*)
+	N1001_CMD.Device.Enable_Control_Via_Fieldbus:= FALSE;
+	N1001_CMD.Device.Global_Reset:= FB_In.Safety_RST;
+	(*Channel1 Level*)
+	N1001_CMD.Channel1.Output_Us:= TRUE;
+	N1001_CMD.Channel1.Output_Up:= FB_In.Enable_Motion;
+	N1001_CMD.Channel1.Reset_Us:= FB_In.Safety_RST;
+	N1001_CMD.Channel1.Reset_Up:= FB_In.Safety_RST;
+	(*Channel2Level*)
+	N1001_CMD.Channel2.Output_Us:= TRUE;
+	N1001_CMD.Channel2.Output_Up:= FB_In.Enable_Motion;
+	N1001_CMD.Channel2.Reset_Us:= FB_In.Safety_RST;
+	N1001_CMD.Channel2.Reset_Up:= FB_In.Safety_RST;
+	(*Channel3Level*)
+	N1001_CMD.Channel3.Output_Us:= TRUE;
+	N1001_CMD.Channel3.Output_Up:= FB_In.Enable_Motion;
+	N1001_CMD.Channel3.Reset_Us:= FB_In.Safety_RST;
+	N1001_CMD.Channel3.Reset_Up:= FB_In.Safety_RST;
+	(*Channel4Level*)
+	N1001_CMD.Channel4.Output_Us:= TRUE;
+	N1001_CMD.Channel4.Output_Up:= FB_In.Enable_Motion;
+	N1001_CMD.Channel4.Reset_Us:= FB_In.Safety_RST;
+	N1001_CMD.Channel4.Reset_Up:= FB_In.Safety_RST;
+	
+	
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_GTAC_SS_20250407">
+      <LineId Id="401" Count="0" />
+      <LineId Id="180" Count="2" />
+      <LineId Id="661" Count="2" />
+      <LineId Id="186" Count="3" />
+      <LineId Id="925" Count="0" />
+      <LineId Id="922" Count="2" />
+      <LineId Id="326" Count="0" />
+      <LineId Id="218" Count="37" />
+      <LineId Id="309" Count="0" />
+      <LineId Id="296" Count="7" />
+      <LineId Id="831" Count="0" />
+      <LineId Id="927" Count="3" />
+      <LineId Id="926" Count="0" />
+      <LineId Id="936" Count="0" />
+      <LineId Id="933" Count="2" />
+      <LineId Id="932" Count="0" />
+      <LineId Id="832" Count="3" />
+      <LineId Id="1019" Count="4" />
+      <LineId Id="836" Count="4" />
+      <LineId Id="294" Count="1" />
+      <LineId Id="267" Count="2" />
+      <LineId Id="580" Count="1" />
+      <LineId Id="317" Count="0" />
+      <LineId Id="271" Count="6" />
+      <LineId Id="829" Count="0" />
+      <LineId Id="1017" Count="0" />
+      <LineId Id="830" Count="0" />
+      <LineId Id="178" Count="0" />
+      <LineId Id="87" Count="1" />
+      <LineId Id="475" Count="5" />
+      <LineId Id="474" Count="0" />
+      <LineId Id="481" Count="0" />
+      <LineId Id="89" Count="8" />
+      <LineId Id="104" Count="11" />
+      <LineId Id="329" Count="0" />
+      <LineId Id="116" Count="0" />
+      <LineId Id="118" Count="0" />
+      <LineId Id="473" Count="0" />
+      <LineId Id="331" Count="0" />
+      <LineId Id="330" Count="0" />
+      <LineId Id="752" Count="0" />
+      <LineId Id="747" Count="4" />
+      <LineId Id="746" Count="0" />
+      <LineId Id="745" Count="0" />
+      <LineId Id="743" Count="0" />
+      <LineId Id="742" Count="0" />
+      <LineId Id="483" Count="24" />
+      <LineId Id="753" Count="0" />
+      <LineId Id="755" Count="21" />
+      <LineId Id="754" Count="0" />
+      <LineId Id="777" Count="0" />
+      <LineId Id="779" Count="21" />
+      <LineId Id="778" Count="0" />
+      <LineId Id="804" Count="22" />
+      <LineId Id="803" Count="0" />
+      <LineId Id="801" Count="1" />
+      <LineId Id="482" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

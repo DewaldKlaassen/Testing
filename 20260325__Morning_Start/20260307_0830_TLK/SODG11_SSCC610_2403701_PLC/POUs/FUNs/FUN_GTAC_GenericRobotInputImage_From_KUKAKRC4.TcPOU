@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FUN_GTAC_GenericRobotInputImage_From_KUKAKRC4" Id="{748c667b-5642-4968-8964-3475471b6743}" SpecialFunc="None">
+    <Declaration><![CDATA[(*Function used during SIM to map KUKA FB Bit Typed Output Data to HW Byte Array Typed Image, simply for UI display
+	author: Brent Lekx-Toniolo of Sodecia GTAC
+	date: January 2024
+
+	Last Edit: Jan 22, 2024, BLT
+*)
+
+FUNCTION FUN_GTAC_GenericRobotInputImage_From_KUKAKRC4 : udt_GenericRobot_AnyFieldbus_InputBytes_20220421
+VAR_INPUT
+	BitBased_Data: udt_EtherCAT_Kuka_InputBits_20121204;
+
+
+END_VAR
+VAR
+	Bit_Index: INT;
+	Byte_Index: INT;
+	BytesBit_Index: BYTE;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Ensure Index is reset*)
+Bit_Index:= 1;
+(*Gathering of Robot Specific Data Type Points to Map to Generic Byte Typed Array*)
+FOR Byte_Index:=1 TO 64 BY 1 DO
+			FUN_GTAC_GenericRobotInputImage_From_KUKAKRC4.Byte_[Byte_Index].0:= BitBased_Data.Robot_OUT[Bit_Index];
+			Bit_Index:=Bit_Index+1;
+			FUN_GTAC_GenericRobotInputImage_From_KUKAKRC4.Byte_[Byte_Index].1:= BitBased_Data.Robot_OUT[Bit_Index];
+			Bit_Index:=Bit_Index+1;
+			FUN_GTAC_GenericRobotInputImage_From_KUKAKRC4.Byte_[Byte_Index].2:= BitBased_Data.Robot_OUT[Bit_Index];
+			Bit_Index:=Bit_Index+1;
+			FUN_GTAC_GenericRobotInputImage_From_KUKAKRC4.Byte_[Byte_Index].3:= BitBased_Data.Robot_OUT[Bit_Index];
+			Bit_Index:=Bit_Index+1;
+			FUN_GTAC_GenericRobotInputImage_From_KUKAKRC4.Byte_[Byte_Index].4:= BitBased_Data.Robot_OUT[Bit_Index];
+			Bit_Index:=Bit_Index+1;
+			FUN_GTAC_GenericRobotInputImage_From_KUKAKRC4.Byte_[Byte_Index].5:= BitBased_Data.Robot_OUT[Bit_Index];
+			Bit_Index:=Bit_Index+1;
+			FUN_GTAC_GenericRobotInputImage_From_KUKAKRC4.Byte_[Byte_Index].6:= BitBased_Data.Robot_OUT[Bit_Index];
+			Bit_Index:=Bit_Index+1;
+			FUN_GTAC_GenericRobotInputImage_From_KUKAKRC4.Byte_[Byte_Index].7:= BitBased_Data.Robot_OUT[Bit_Index];
+			Bit_Index:=Bit_Index+1;
+	END_FOR;]]></ST>
+    </Implementation>
+    <LineIds Name="FUN_GTAC_GenericRobotInputImage_From_KUKAKRC4">
+      <LineId Id="22" Count="20" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FUN_GTAC_DEGtoINDEX" Id="{8cb813e9-d330-434a-bac6-a44a310efe22}" SpecialFunc="None">
+    <Declaration><![CDATA[(*
+Function to dirve Robot Animation Symbol on UI,
+	- Two Inputs are exposed to the programmer:
+		- i_Raw_Degrees (Int), this is a 0-360 degree value sent from the Robot S-Axis
+		- i_Home_Offset (Int), a stsic value set by a Robot FB Input to orient the Animations "Zero position" to match the physical instal position of the robot with resepct to 12 o'clock
+
+	author(s): Brent Lekx-Toniolo and JVD OF Sodecia GTAC
+	UI Symbol author(s): Chris TImmermans of Edge Automation
+	DATE: November 2014
+	version 1.0
+		- initial concept
+
+
+	Last Edit: November, 2014, BLT
+*)
+
+FUNCTION FUN_GTAC_DEGtoINDEX : INT
+VAR_INPUT
+	i_Raw_Degrees: INT;
+	i_Home_Offset: INT;		(*To Re-Orient the Robot from -180 to +180 degrees*)
+
+END_VAR
+VAR
+	i_Raw_Degrees_Bound: INT;
+	i_Homed_Degrees: INT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Develop Homed Position based on raw data plus install offset*)
+
+IF (i_Raw_Degrees >=0) AND (i_Raw_Degrees<=360) (*Do Bound Checking on Raw Position*)
+	THEN
+	i_Raw_Degrees_Bound:= i_Raw_Degrees;
+ELSIF (i_Raw_Degrees >360)
+	THEN
+	i_Raw_Degrees_Bound:= 360;
+ELSIF (i_Raw_Degrees <0)
+	THEN
+	i_Raw_Degrees_Bound:= 0;
+END_IF;
+
+
+
+	IF (i_Home_Offset >=0) AND (i_Home_Offset<360) (*Do Bound Checking on Offset Position*)
+		THEN
+		IF ((i_Raw_Degrees_Bound+i_Home_Offset-186)>=0) AND ((i_Raw_Degrees_Bound+i_Home_Offset-186)<=360) (*If Raw Data from Robot + Home Offset value reachs bounds of 0 or 360, then wrap around*)
+			THEN
+				i_Homed_Degrees:= i_Raw_Degrees_Bound+i_Home_Offset-186;
+		ELSIF ((i_Raw_Degrees_Bound+i_Home_Offset)>186)
+			THEN
+				i_Homed_Degrees:= ((i_Raw_Degrees_Bound+i_Home_Offset-186)-360);
+		ELSIF ((i_Raw_Degrees_Bound+i_Home_Offset)<=186)
+			THEN
+				i_Homed_Degrees:= 360-((360-(i_Raw_Degrees_Bound+i_Home_Offset-186))-360);
+		END_IF;
+	END_IF;
+
+(*Set 10 Degree Slices as bounds for Indexing trigger points to UI Images*)
+FUN_GTAC_DEGtoINDEX:= (i_Homed_Degrees/10)*10;]]></ST>
+    </Implementation>
+    <LineIds Name="FUN_GTAC_DEGtoINDEX">
+      <LineId Id="26" Count="30" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

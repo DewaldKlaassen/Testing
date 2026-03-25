@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FB_PP_Sensor" Id="{3a5b9d36-6687-4002-a770-51a717533bce}" SpecialFunc="None">
+    <Declaration><![CDATA[(*FB for replacement of typical part present sesnors fault checking
+	Original Author(s):. Brent Lekx-Toniolo of Toniolo Research & Development Inc.; 
+	August 2010; version 2.0*)
+
+
+FUNCTION_BLOCK FB_PP_Sensor
+VAR_INPUT
+		Enable_FB: BOOL;
+		Sensor_Input: BOOL;
+		On_Trigger1: BOOL;
+		On_Trigger2: BOOL;
+		Off_Trigger1: BOOL;
+		Off_Trigger2: BOOL;
+		Disable_Faults: BOOL;
+		Fault_Delay: TIME;
+END_VAR
+VAR
+		NotON_FLT_TMR: TON;
+		NotOFF_FLT_TMR: TON;
+
+END_VAR
+
+VAR_OUTPUT
+		FB_OK: BOOL;
+		Status: BOOL;
+		Faulted: BOOL;
+		NotON_Fault: BOOL;
+		NotOFF_Fault: BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[	(*Set FB_OK to True*)
+	FB_OK:= TRUE;
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Internal Code $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Pass Status Straight Thru*)
+	Status:= Sensor_Input;
+
+	(*Pass Faults*)
+	Faulted:= NotON_Fault OR NotOff_Fault;
+
+	(*Develop Not On When Required Fault*)
+	NotOn_FLT_TMR.PT:= Fault_Delay;
+	NotOn_FLT_TMR.IN:= On_Trigger1 AND On_Trigger2 AND NOT Sensor_Input AND NOT Disable_Faults;
+	NotOn_FLT_TMR();
+	NotOn_Fault:= NotOn_FLT_TMR.Q;
+
+	(*Develop Not Off When Required Fault*)
+	NotOff_FLT_TMR.PT:= Fault_Delay;
+	NotOff_FLT_TMR.IN:= Off_Trigger1 AND Off_Trigger2 AND Sensor_Input AND NOT Disable_Faults;
+	NotOff_FLT_TMR();
+	NotOff_Fault:= NotOff_FLT_TMR.Q;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_PP_Sensor">
+      <LineId Id="30" Count="19" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

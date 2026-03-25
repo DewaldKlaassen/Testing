@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_VFDxx_ToUI_20250723" Id="{1ae946f8-f636-4256-b28a-5f8f0da38263}">
+    <Declaration><![CDATA[(*udt (user defined type) for interfacing to UI (User Interface)
+this udt represents data that is passed from PLC to EACH UI
+
+	Author(S): Rich Jones;
+	Version 20250723
+	- Initial Concept
+	
+*)
+
+TYPE udt_VFDxx_ToUI_20250723 :
+	STRUCT
+
+	(*Input and Output Data Images*)
+	Discrete_Image: udt_Schneider_VFD_Image_20180808;
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

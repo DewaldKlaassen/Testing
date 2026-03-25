@@ -1,0 +1,53 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FUN_GTAC_TODtoOTSTRUCT" Id="{98b64ce7-b2fa-4cc1-973d-b40f22ea9c1d}" SpecialFunc="None">
+    <Declaration><![CDATA[(*Take INPUT from Time_Of_Day to FILTER and RETURN as OTSTRUCT data type
+	author: Jessy Underhill OF Sodecia GTAC
+	date: May 2016
+	version 1.0
+		- initial concept
+
+
+	Last Edit: May 20th, 2016, JAU
+*)
+
+
+FUNCTION FUN_GTAC_TODtoOTSTRUCT : OTSTRUCT
+VAR_INPUT
+	TimeOfDay: TOD;
+END_VAR
+VAR
+
+
+	iWeek: UDINT;
+	iDay: UDINT;
+	iHour: UDINT;
+	iMinute: UDINT;
+	iSecond: UDINT;
+	iMilliseconds: UDINT;
+	UDINT_Milliseconds: UDINT;
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Convert TimeOfDay into UDINT to break down into OTSTRUCT WORDS*)
+UDINT_Milliseconds:=TOD_TO_UDINT(TimeOfDay);
+
+(*Convert UDINT_Milliseconds into UDINTs for Hours, Minutes, and Seconds*)
+iHour:= UDINT_Milliseconds/3600000;
+iMinute:= UDINT_Milliseconds/60000-(iHour*60);
+iSecond:= (UDINT_Milliseconds/1000)-(iMinute*60)-(iHour*3600);
+
+(*Take filtered data from Time_Of_Day and RETURN into OTSTRUCT data type*)
+(*Week, Day, and Milliseconds are NOT USED and RETURN ZERO*)
+FUN_GTAC_TODtoOTSTRUCT.wWeek:=0;
+FUN_GTAC_TODtoOTSTRUCT.wDay:=0;
+FUN_GTAC_TODtoOTSTRUCT.wHour:= UDINT_TO_WORD(iHour);
+FUN_GTAC_TODtoOTSTRUCT.wMinute:= UDINT_TO_WORD(iMinute);
+FUN_GTAC_TODtoOTSTRUCT.wSecond:= UDINT_TO_WORD(iSecond);
+FUN_GTAC_TODtoOTSTRUCT.wMilliseconds:= 0;]]></ST>
+    </Implementation>
+    <LineIds Name="FUN_GTAC_TODtoOTSTRUCT">
+      <LineId Id="27" Count="15" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

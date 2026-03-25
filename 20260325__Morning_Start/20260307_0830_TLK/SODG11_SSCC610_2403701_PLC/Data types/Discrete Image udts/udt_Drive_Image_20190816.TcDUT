@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_Drive_Image_20190816" Id="{286689ca-a9e3-4388-b102-5a0ddfd6c3ae}">
+    <Declaration><![CDATA[(*udt (user defined type) of Beckhoff Type for Storage of Visualization for Servo Drive Data
+	auth. Brent Lekx-Toniolo of Toniolo Research & Development Inc.; 
+	SORT OF RUSHED!!!
+	Sept 2010; version 1.0
+
+	Version 1.0: Sept2010
+		- Initial Concept
+	Version 1.1
+		- A little less RUSHED, r.remillard
+	Version 1.2
+		- Added extra var for error April 21 2015 Chris Timmermans
+	Version20160804
+		- Changed Name for convention, b.lekx-toniolo
+		- Moved Safety Diag and Safety Status Words from UI section to this udt, b.lekx-toniolo
+		- Created Arrays for Multi axis use per drive system, b.lekx-toniolo
+		- Added Seperated Error IDs and Strings, b.lekx-toniolo
+		- Added Axis ID Strings, b.lekx-toniolo
+	Version 20180801
+		- teach enabled added, b.donnell 
+	Version 20190816
+		-added "Corrected Positon" var for crankshaft/coupling conversions for UI displaying purposes, j.underhill (Fork Drilling Machine)
+*)
+
+
+
+TYPE udt_Drive_Image_20190816 :
+	STRUCT
+
+	(*Identification String for general purpose UI*)
+	Axis_Common_Name: ARRAY[0..2] OF STRING[30];
+
+	(*General Status of Drive SYSTEM and FB*)
+	In_Play_ACK: ARRAY[0..2] OF BOOL;
+	In_Teach_ACK: ARRAY[0..2] OF BOOL;
+	Homed: ARRAY[0..2] OF BOOL;
+	In_Motion: ARRAY[0..2] OF BOOL;
+	In_Requested_Position: ARRAY[0..2] OF BOOL;
+	Current_Step_Pointer: ARRAY[0..2] OF UDINT;
+	At_Current_Step: ARRAY[0..2] OF UINT;
+	Prev_Step_Data: ARRAY[0..2] OF udt_SingleAxis_MoveData_20160908;
+	Current_Step_Data: ARRAY[0..2] OF udt_SingleAxis_MoveData_20160908;
+	Next_Step_Data: ARRAY[0..2] OF udt_SingleAxis_MoveData_20160908;
+	Cycle_Complete: ARRAY[0..2] OF BOOL;
+	Teach_Enable: ARRAY[0..2] OF BOOL;
+
+	(*Status of Physical Drive Unit and Axis*)
+	AX5xxx: udt_AX5206_20160804;
+	EL7xxx: udt_EL7211_20150115;
+
+	AX5805: udt_AX5805_20160804;
+	Safety_DIAG: 	udt_AX5805_DiagData;
+	Safety_STAT: DINT;
+
+	Drive_Type_Message: ARRAY[0..2] OF STRING;
+	Drive_OperationalState: ARRAY[0..2] OF E_AX5000_DriveOpMode;
+
+	Drive_In_Error: ARRAY[0..2] OF BOOL;
+	Drive_Status: ARRAY[0..2] OF UINT;
+	Drive_StatusStruct: ARRAY[0..2] OF ST_AX5000DriveStatus;
+	Drive_Status_Message: ARRAY[0..2] OF STRING;
+	Drive_Diag_ErrorID: ARRAY[0..2] OF UDINT;
+	Drive_Diag_Message: ARRAY[0..2] OF STRING;
+	Drive_C1D_ErrorID: ARRAY[0..2] OF UINT;
+	Drive_C1D_ErrorStruct: ARRAY [0..2] OF ST_AX5000_C1D;
+	Drive_C1D_Error_Message: ARRAY[0..2] OF STRING;
+
+	Axis_Motor_Message: ARRAY[0..2] OF STRING;
+	Axis_In_Error: ARRAY[0..2] OF BOOL;
+	Axis_ErrorID: ARRAY[0..2] OF DWORD;
+	Axis_ErrorMessage: ARRAY[0..2] OF STRING;
+
+	Corrected_Position: ARRAY[0..2] OF LREAL;
+	Actual_Position: ARRAY[0..2] OF LREAL;
+	Software_Limit_Exceeded: ARRAY[0..2]OF BOOL;
+	Is_Calibrated: ARRAY[0..2] OF BOOL;
+	StateDWord: ARRAY[0..2] OF DWORD;
+	Ready: ARRAY[0..2] OF BOOL;
+
+
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,260 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FUN_GTAC_EcatSlaveConnState" Id="{a104c1f7-faa8-4bc3-b45f-d3f86941fa7c}" SpecialFunc="None">
+    <Declaration><![CDATA[(*Function used to check for cable breaks between ECAT slaves grouped as a fixture (or any large group of A+B port ECAT SLAVES)
+	author: Brent Lekx-Toniolo of Sodecia GTAC
+	date: April 2013
+	version 1.0
+		- initial concept
+	Late Edit: 06-May-2016
+		-update to handle 30 slaves, b.lekx-toniolo
+
+*)
+
+FUNCTION FUN_GTAC_EcatSlaveConnState : UDINT
+VAR_INPUT
+	Slave1_State: INT;
+	Slave2_State: INT;
+	Slave3_State: INT;
+	Slave4_State: INT;
+	Slave5_State: INT;
+	Slave6_State: INT;
+	Slave7_State: INT;
+	Slave8_State: INT;
+	Slave9_State: INT;
+	Slave10_State: INT;
+	Slave11_State: INT;
+	Slave12_State: INT;
+	Slave13_State: INT;
+	Slave14_State: INT;
+	Slave15_State: INT;
+	Slave16_State: INT;
+	Slave17_State: INT;
+	Slave18_State: INT;
+	Slave19_State: INT;
+	Slave20_State: INT;
+	Slave21_State: INT;
+	Slave22_State: INT;
+	Slave23_State: INT;
+	Slave24_State: INT;
+	Slave25_State: INT;
+	Slave26_State: INT;
+	Slave27_State: INT;
+	Slave28_State: INT;
+	Slave29_State: INT;
+	Slave30_State: INT;
+
+
+END_VAR
+VAR
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Check State of Each Slave and look for "Port B Missling Link State, if exists cable break is likely
+If Cable Break is Likely, flag appropriate bit*)
+
+IF Slave1_State=257 (*Missing Slave, might be input cable*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.0:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.0:= FALSE;
+END_IF;
+
+IF Slave1_State=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.1:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.1:= FALSE;
+END_IF;
+IF Slave2_State=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.2:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.2:= FALSE;
+END_IF;
+IF Slave3_State=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.3:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.3:= FALSE;
+END_IF;
+IF Slave4_State=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.4:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.4:= FALSE;
+END_IF;
+IF Slave5_State=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.5:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.5:= FALSE;
+END_IF;
+IF Slave6_State=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.6:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.6:= FALSE;
+END_IF;
+IF Slave7_State=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.7:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.7:= FALSE;
+END_IF;
+IF Slave8_State=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.8:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.8:= FALSE;
+END_IF;
+IF Slave9_State=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.9:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.9:= FALSE;
+END_IF;
+IF Slave10_State=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.10:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.10:= FALSE;
+END_IF;
+IF Slave11_State=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.11:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.11:= FALSE;
+END_IF;
+IF Slave12_State=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.12:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.12:= FALSE;
+END_IF;
+IF Slave13_State=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.13:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.13:= FALSE;
+END_IF;
+IF Slave14_State=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.14:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.14:= FALSE;
+END_IF;
+IF Slave15_State=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.15:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.15:= FALSE;
+END_IF;
+IF Slave16_State=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.16:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.16:= FALSE;
+END_IF;
+IF Slave17_State=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.17:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.17:= FALSE;
+END_IF;
+IF Slave18_State=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.18:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.18:= FALSE;
+END_IF;
+IF Slave19_State=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.19:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.19:= FALSE;
+END_IF;
+IF Slave20_State=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.20:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.20:= FALSE;
+END_IF;
+IF Slave21_State=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.21:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.21:= FALSE;
+END_IF;
+IF Slave22_State=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.22:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.22:= FALSE;
+END_IF;
+IF Slave23_State=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.23:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.23:= FALSE;
+END_IF;
+IF Slave24_State=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.24:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.24:= FALSE;
+END_IF;
+IF Slave25_State=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.25:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.25:= FALSE;
+END_IF;
+IF Slave26_State=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.26:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.26:= FALSE;
+END_IF;
+IF Slave27_State=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.27:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.27:= FALSE;
+END_IF;
+IF Slave28_State=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.28:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.28:= FALSE;
+END_IF;
+IF Slave29_State=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.29:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.29:= FALSE;
+END_IF;
+IF Slave30_State=9224 (*Missing link, Port B*)
+	THEN
+	FUN_GTAC_EcatSlaveConnState.30:= TRUE;
+	ELSE
+	FUN_GTAC_EcatSlaveConnState.30:= FALSE;
+END_IF;
+
+
+
+
+
+
+
+
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FUN_GTAC_EcatSlaveConnState">
+      <LineId Id="47" Count="189" />
+      <LineId Id="296" Count="0" />
+      <LineId Id="237" Count="9" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

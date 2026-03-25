@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FUN_RailMove_To_ICxx" Id="{c3f66e7e-f887-4697-a766-5dbb45e780af}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION FUN_RailMove_To_ICxx : REAL
+FUNCTION FUN_Railmove_To_ICxx : REAL;
+VAR_INPUT
+    InValue   : INT;   // Based on Sim  Robot Axis value (-15700 … +200) 
+    P_Min    : REAL;   // Page min (e.g. 550)
+    P_Max    : REAL;   // Page max (e.g. 750)
+	R_Min     : REAL;  //  axis min of the robot on each line overview
+    R_MAX     : REAL;  //  axis max of the robot on each line overview
+END_VAR
+ 
+VAR
+    ScaleFactor : REAL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+
+ScaleFactor := (P_Max - P_Min) / (R_Max - R_Min);
+FUN_Railmove_To_ICxx := (InValue - R_Min) * ScaleFactor + P_Min;]]></ST>
+    </Implementation>
+    <LineIds Name="FUN_RailMove_To_ICxx">
+      <LineId Id="23" Count="2" />
+      <LineId Id="7" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

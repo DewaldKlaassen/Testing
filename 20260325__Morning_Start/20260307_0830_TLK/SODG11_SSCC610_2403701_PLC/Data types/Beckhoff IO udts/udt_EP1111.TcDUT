@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_EP1111" Id="{4098e7f8-db89-4661-990e-1446cd89020c}">
+    <Declaration><![CDATA[(*udt (user defined type) of Beckhoff EP1111 -  IP67 Rated ID Box:
+	auth. Rob Remillard; 
+	March 2014;*)
+
+
+TYPE udt_EP1111 :
+STRUCT
+	ID: UINT;
+
+	Wc_State: BOOL;
+	(*0 = Data valid
+	1 = Data invalid*)
+	InfoData: udt_ECATSlave_Status;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

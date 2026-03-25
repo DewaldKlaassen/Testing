@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_IV2_Inputs" Id="{d1ddd3c0-4861-415f-98b7-4056d898124b}">
+    <Declaration><![CDATA[TYPE udt_IV2_Inputs :
+STRUCT
+	Error_Status:BOOL;
+	ErrorCode:UINT;
+	PositionAdjMatch:DINT;
+	ToolMatch:ARRAY [1..13] OF DINT;
+	ToolResult:ARRAY[1..13] OF BOOL;
+	ProgramSwitchOK:BOOL;
+	ProgramSwitchFailed:BOOL;
+	ResultAvailable:BOOL;
+	OverallJudgementOK:BOOL;
+	ProgramNumber:INT;
+	TriggerResponse:BOOL;
+	TriggerFailed:BOOL;
+	ResultUpdateComplete:BOOL;
+	PositionCorrectionStatus:BOOL;
+	MasterRegResponse:BOOL;
+	MasterRegFailed:BOOL;
+	SDCardStopResponse:BOOL;
+	SDCardStopFailed:BOOL;
+	LogicResult:ARRAY[1..4] OF BOOL;
+	StatsResetResponse:BOOL;
+	Running:BOOL;
+	ErrorClearResponse:BOOL;
+	Busy:BOOL;
+	TriggerReady:BOOL;
+	NoFreeSpaceSD:BOOL;
+	InfoData:udt_ECATSlave_Status;
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

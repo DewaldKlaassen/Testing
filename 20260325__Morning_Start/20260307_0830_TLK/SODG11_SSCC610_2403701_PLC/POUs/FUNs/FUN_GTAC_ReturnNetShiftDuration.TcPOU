@@ -1,0 +1,113 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FUN_GTAC_ReturnNetShiftDuration" Id="{aa219ae5-9ea6-4a33-ab7b-462b8e4846a5}" SpecialFunc="None">
+    <Declaration><![CDATA[(*Uses Shift Configuration Structure and calculates total Net duration of shift time (in hours)
+	original author: Brent Lekx-Toniolo Of Sodecia GTAC
+
+----------------------------------------------------------------------------------------------------------------------
+REVISION NOTES: 
+	Date: May 19, 2016:
+	- initial concept, blt
+	Date: Jan 22, 2020:
+	- added in shift enables during production code updates, blt
+	- changed all calcs and interface to remove the need of OTSTRUCT type data, blt
+	Date: October 25, 2022
+	- Added type conversaion to supress build warning, b.lekx-toniolo
+
+
+------------------------------------------------------------------------------------------------------------------------	
+
+*)
+
+FUNCTION FUN_GTAC_ReturnNetShiftDuration: REAL
+VAR_INPUT
+	Shift_Config_TOD: udt_Generic_ShiftConfigTOD_20160527;
+	Break_Count: UINT;
+END_VAR
+VAR
+	Gross_Duration_Milliseconds: REAL;
+	Break1_Duration_Milliseconds: REAL;
+	Break2_Duration_Milliseconds: REAL;
+	Break3_Duration_Milliseconds: REAL;
+
+	Net_Duration_Milliseconds: REAL;
+	Net_Duration_Hours: REAL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Calcuate Gross Shift Duration in milliseconds*)
+	IF Shift_Config_TOD.Shift_EndTime > Shift_Config_TOD.Shift_StartTime
+		THEN
+		Gross_Duration_Milliseconds:= UDINT_TO_REAL(TOD_TO_UDINT(Shift_Config_TOD.Shift_EndTime) - TOD_TO_UDINT(Shift_Config_TOD.Shift_StartTime));
+	ELSIF Shift_Config_TOD.Shift_EndTime < Shift_Config_TOD.Shift_StartTime
+		THEN
+		Gross_Duration_Milliseconds:= UDINT_TO_REAL(( 86400000 - TOD_TO_UDINT(Shift_Config_TOD.Shift_StartTime)) + TOD_TO_UDINT(Shift_Config_TOD.Shift_EndTime));
+	END_IF;
+
+
+(*Calcuate Break1 Duration*)
+	IF (Break_Count >=1)
+		THEN
+		(*Calc break duration*)
+		IF Shift_Config_TOD.Break1_EndTime > Shift_Config_TOD.Break1_StartTime
+			THEN
+		Break1_Duration_Milliseconds:= UDINT_TO_REAL(TOD_TO_UDINT(Shift_Config_TOD.Break1_EndTime) - TOD_TO_UDINT(Shift_Config_TOD.Break1_StartTime));
+		ELSIF Shift_Config_TOD.Break1_EndTime < Shift_Config_TOD.Break1_StartTime
+			THEN
+		Break1_Duration_Milliseconds:= UDINT_TO_REAL(( 86400000 - TOD_TO_UDINT(Shift_Config_TOD.Break1_StartTime)) + TOD_TO_UDINT(Shift_Config_TOD.Break1_EndTime));
+		END_IF;
+	ELSE
+	(*If break is disable, blank duration*)
+	Break1_Duration_Milliseconds:= 0;
+	END_IF;
+
+(*Calcuate Break2 Duration*)
+	IF (Break_Count >=2)
+		THEN
+		(*Calc break duration*)
+		IF Shift_Config_TOD.Break2_EndTime > Shift_Config_TOD.Break2_StartTime
+			THEN
+		Break2_Duration_Milliseconds:= UDINT_TO_REAL(TOD_TO_UDINT(Shift_Config_TOD.Break2_EndTime) - TOD_TO_UDINT(Shift_Config_TOD.Break2_StartTime));
+		ELSIF Shift_Config_TOD.Break2_EndTime < Shift_Config_TOD.Break2_StartTime
+			THEN
+		Break2_Duration_Milliseconds:= UDINT_TO_REAL(( 86400000 - TOD_TO_UDINT(Shift_Config_TOD.Break2_StartTime)) + TOD_TO_UDINT(Shift_Config_TOD.Break2_EndTime));
+		END_IF;
+	ELSE
+	(*If break is disable, blank duration*)
+	Break2_Duration_Milliseconds:= 0;
+	END_IF;
+
+(*Calcuate Break3 Duration*)
+	IF (Break_Count >=3)
+		THEN
+		(*Calc break duration*)
+		IF Shift_Config_TOD.Break3_EndTime > Shift_Config_TOD.Break3_StartTime
+			THEN
+		Break3_Duration_Milliseconds:= UDINT_TO_REAL(TOD_TO_UDINT(Shift_Config_TOD.Break3_EndTime) - TOD_TO_UDINT(Shift_Config_TOD.Break3_StartTime));
+		ELSIF Shift_Config_TOD.Break3_EndTime < Shift_Config_TOD.Break3_StartTime
+			THEN
+		Break3_Duration_Milliseconds:= UDINT_TO_REAL(( 86400000 - TOD_TO_UDINT(Shift_Config_TOD.Break3_StartTime)) + TOD_TO_UDINT(Shift_Config_TOD.Break3_EndTime));
+		END_IF;
+	ELSE
+	(*If break is disable, blank duration*)
+	Break3_Duration_Milliseconds:= 0;
+	END_IF;
+
+(*----------------------------------------------------------------------------------------- Generate Function Output ----------------------------------------------------------------*)
+(*Remove break durations from gross duration*)
+	Net_Duration_Milliseconds:= Gross_Duration_Milliseconds - Break1_Duration_Milliseconds - Break2_Duration_Milliseconds - Break3_Duration_Milliseconds;
+
+(*Calcualte Milliseconds to Hours*)
+	Net_Duration_Hours:= Net_Duration_Milliseconds / UDINT_TO_REAL((60*60*1000));
+
+(*Finally, Return Value*)
+	FUN_GTAC_ReturnNetShiftDuration:= Net_Duration_Hours;
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FUN_GTAC_ReturnNetShiftDuration">
+      <LineId Id="31" Count="69" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,76 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Crc="409665950" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{16725f26-64e0-47db-85fe-842925b13a04}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <OldToolsVersion>2.0</OldToolsVersion>
+    <TargetSystem>EL6900</TargetSystem>
+    <ProgrammingLanguage>Graphical Editor</ProgrammingLanguage>
+    <Worker>Name of the author</Worker>
+    <IntProjName>IC02.T02.EL6900</IntProjName>
+    <NextSdsId>32</NextSdsId>
+    <SPlcProjVersion>1.8.0.0</SPlcProjVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DebugSymbols>false</DebugSymbols>
+    <OutputPath>bin\Release\</OutputPath>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="GVLs\IC02_GVL.sgvl" />
+    <None Include="IC02_Function_Blocks\Alias Devices\IC02T03_EL1904.sds" />
+    <None Include="IC02_Function_Blocks\Alias Devices\IC02T04_EL1904.sds" />
+    <None Include="IC02_Function_Blocks\Alias Devices\IC02T05_EL1904.sds" />
+    <None Include="IC02_Function_Blocks\Alias Devices\IC02T06_EL1904.sds" />
+    <None Include="IC02_Function_Blocks\Alias Devices\IC02T07_EL1904.sds" />
+    <None Include="IC02_Function_Blocks\Alias Devices\IC02T08_EL1904.sds" />
+    <None Include="IC02_Function_Blocks\Alias Devices\IC02T09_EL2904.sds" />
+    <None Include="IC02_Function_Blocks\Alias Devices\IC02T10_EL2904.sds" />
+    <None Include="IC02_Function_Blocks\Alias Devices\MAINAccess_Violation_IC02.sds" />
+    <None Include="IC02_Function_Blocks\Alias Devices\MAINIC02T02_CMDFBs_ControlPowerPB.sds" />
+    <None Include="IC02_Function_Blocks\Alias Devices\MAINIC02T02_CMDSGs_ERRAck.sds" />
+    <None Include="IC02_Function_Blocks\Alias Devices\MAINIC02T02_CMDSGs_RUNSTOP.sds" />
+    <None Include="IC02_Function_Blocks\Alias Devices\MAINIC02T02_STATFBs_FB_ERR_B00.sds" />
+    <None Include="IC02_Function_Blocks\Alias Devices\MAINIC02T02_STATFBs_FB_ERR_B08.sds" />
+    <None Include="IC02_Function_Blocks\Alias Devices\MAINIC02T02_STATFBs_FB_ERR_B17.sds" />
+    <None Include="IC02_Function_Blocks\Alias Devices\MAINIC02T02_STATFBs_FB_ERR_B16.sds" />
+    <None Include="IC02_Function_Blocks\Alias Devices\MAINIC02T02_STATSGs_COM_ERR.sds" />
+    <None Include="IC02_Function_Blocks\Alias Devices\MAINIC02T02_STATSGs_FB_ERR.sds" />
+    <None Include="IC02_Function_Blocks\Alias Devices\MAINIC02T02_STATSGs_OUT_ERR.sds" />
+    <None Include="IC02_Function_Blocks\Alias Devices\MAINIC02T09Q.sds" />
+    <None Include="IC02_Function_Blocks\Alias Devices\MAINIC02T09Q_1.sds" />
+    <None Include="IC02_Function_Blocks\Alias Devices\MAINIC02T10Q.sds" />
+    <None Include="IC02_Function_Blocks\Alias Devices\MAINIC02T10Q_1.sds" />
+    <None Include="IC02_Function_Blocks\Alias Devices\VeriGuard_N02_EP1908.sds" />
+    <None Include="IC02_Function_Blocks\IC02_Function_Blocks.sal" />
+    <None Include="IC02_Function_Blocks\IC02_Function_Blocks.sal.diagram">
+      <Visible>false</Visible>
+      <DependentUpon>IC02_Function_Blocks\IC02_Function_Blocks.sal</DependentUpon>
+    </None>
+    <None Include="IC02_To_IC01_Decouple\Alias Devices\IC01_Connection.sds" />
+    <None Include="IC02_To_IC01_Decouple\Alias Devices\MAINIC02T02_CMDSGs_ERRAck.sds" />
+    <None Include="IC02_To_IC01_Decouple\Alias Devices\MAINIC02T02_CMDSGs_RUNSTOP.sds" />
+    <None Include="IC02_To_IC01_Decouple\Alias Devices\MAINIC02T02_STATSGs_COM_ERR.sds" />
+    <None Include="IC02_To_IC01_Decouple\Alias Devices\MAINIC02T02_STATSGs_FB_ERR.sds" />
+    <None Include="IC02_To_IC01_Decouple\Alias Devices\MAINIC02T02_STATSGs_OUT_ERR.sds" />
+    <None Include="IC02_To_IC01_Decouple\IC02_To_IC01_Decouple.sal" />
+    <None Include="IC02_To_IC01_Decouple\IC02_To_IC01_Decouple.sal.diagram">
+      <Visible>false</Visible>
+      <DependentUpon>IC02_To_IC01_Decouple\IC02_To_IC01_Decouple.sal</DependentUpon>
+    </None>
+    <None Include="TargetSystemConfig.xml">
+      <Visible>false</Visible>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="GVLs" />
+    <Folder Include="IC02_Function_Blocks" />
+    <Folder Include="IC02_Function_Blocks\Alias Devices" />
+    <Folder Include="IC02_To_IC01_Decouple" />
+    <Folder Include="IC02_To_IC01_Decouple\Alias Devices" />
+    <Folder Include="User FBs" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_EP6224" Id="{aeca40c2-770b-4c27-90d7-b869911223a5}">
+    <Declaration><![CDATA[(*udt (user defined type) of Beckhoff EP6224-0002 - 4 Point IP67 Rated IO-Link Box:
+	Version 20190506
+		- initial creation, j.vandongen
+
+
+*)
+
+
+TYPE udt_EP6224 :
+STRUCT
+
+	Device_Diag: BOOL;
+	Device_Stat: BOOL;
+
+
+(* DeviceState Inputs:
+	0x_0 = Port disabled
+	0x_1 = Port in std dig in
+	0x_2 = Port in std dig out
+	0x_3 = Port in communikation OP
+	0x_4 = Port in communikation COMSTOP
+	0x1_ = Watchdog detected
+	0x2_ = internal Error
+	0x3_ = invalid Device ID
+	0x4_ = invalid Vendor ID
+	0x5_ = invalid IO-Link Version
+	0x6_ = invalid Frame Capability
+	0x7_ = invalid Cycle Time
+	0x8_ = invalid PD in length
+	0x9_ = invalid PD out length
+	0xA_ = no Device detected
+	0xB_ = error Preoperate
+*)
+	State_Ch1: USINT;
+	State_Ch2: USINT;
+	State_Ch3: USINT;
+	State_Ch4: USINT;
+
+
+	Port1_ProcessData: ARRAY [0..7] OF USINT;
+	Port2_ProcessData: ARRAY [0..7] OF USINT;
+	Port3_ProcessData: ARRAY [0..7] OF USINT;
+	Port4_ProcessData: ARRAY [0..7] OF USINT;
+
+
+	InfoData: udt_ECATSlave_StatusADS;
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

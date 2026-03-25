@@ -1,0 +1,401 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_GTAC_ISxx_20241121" Id="{73c3625e-d0c0-48d2-b9db-d21dfc26470b}" SpecialFunc="None">
+    <Declaration><![CDATA[(*FB for use with Generic PDxx Panel conforming to SSCC V5xx
+
+	Original Author(s):: Brent Lekx-Toniolo; 
+------------------------------------------------------------------------------------------
+REVISION NOTES:
+	Version 20150812
+		- Initial Concept, b.lekx-toniolo
+	Version 20150928:
+		- Added CoE reads fto gather EL6900 temperatue data, b.lekx-toniolo
+	Version 20170303:
+		- Split Power Relays to Estop and Safety Gate Relays, j.underhill
+		- updated some unfinifshed sections of Eca cable breaks (more to come), j.underhill
+	Version 20170307
+		- Added Options to run split or non split relays and EP9224, b.lekx-toniolo
+		- Added N999 (EP9224), b.lekx-toniolo
+	Version 20170720
+		- updated cable break for T05, j.vandongen
+	Version 20180507
+		- updated cable breaks, j.vandongen
+	Version 20190924
+		- changed T05 to EL6731, moved EK1110 to T06, j.vandongen (corrected comment 20221027, blt)
+		- added Option input for EL6731, j.vandongen
+	Version 20220907
+		-Added N1000, N1001 to the discrete Image, C.drees
+	Version 20241121
+		-PD to IS rename, as per GH SSCC610 repo Issue#162, b.lekx-toniolo
+		
+------------------------------------------------------------------------------------------
+*)
+
+FUNCTION_BLOCK FB_GTAC_ISxx_20241121
+	VAR_INPUT
+		Enable_FB: BOOL;
+		FB_In: udt_Generic_PD_20220906; (*Inputs to FB*)
+	END_VAR
+
+	VAR
+(*Hardware Data Types*)
+		(*Develop Discrete Nodes*)
+		T01 AT %I*: udt_EK1100;						(*Ecat Bus Coupler*)
+		T02_STAT AT %I*: udt_EL6900_STAT_20160426;	(*EL Safety CPU*)
+		T02_CMD AT %Q*: udt_EL6900_CMD_20121204;
+		T03 AT %I*: udt_EL1904_v2;						(*EL Safety Inputs*)
+		T04 AT %I*: udt_EL2904RO_v2;					(*EL Safety Outputs, Set to "I" as this terminal is safety rated, therefore read only!*)
+		T05 AT %I*: udt_EL6731;						(*EL Profibus Master*)
+		T06 AT %I*: udt_EK1110_20150812;				(*Ecat Extension Terminal*)
+
+		N01 AT %I*: udt_CU1128_20180507;				(*Ecat Junction Switch*)
+
+		N999_STAT AT %I*: udt_EP9224_STAT_20161207;
+		N999_CMD AT %Q*: udt_EP9224_CMD_20161207;
+		N1000_STAT AT %I*: udt_EP9224_STAT_20161207;
+		N1000_CMD AT %Q*: udt_EP9224_CMD_20161207;
+		N1001_STAT AT %I*: udt_EP9224_STAT_20161207;
+		N1001_CMD AT %Q*: udt_EP9224_CMD_20161207;		
+
+
+
+(* Nodes States*)
+		DiscreteNode_OK: BOOL;
+		ProfiNode_OK: BOOL;
+
+(*Cable Break Warning Flags*)
+		ECatSlave_Cable_Breaks: UDINT;
+		EK1100_NotPresent :BOOL;				(*Coupler is Not Present on Bus when expected*)
+		EK1100_PortC_MissingLink: BOOL; 		(*Port C of EK1100 is OUT*)
+		EK1110_PortB_MissingLink: BOOL; 		(*Port B of EK1110 is X1*)
+		CU1128_PortD_MissingLink: BOOL;			(*SectionD Link 1 is for X2*)
+		CU1128_PortD_MissingLink2: BOOL;		(*SectionD Link 2 is for X3*)
+		CU1128_PortD_MissingLink3: BOOL;		(*SectionD Link 3 is for X6*)
+		CU1128_PortB_MissingLink: BOOL;			(*SectionB Link 1 is for X4*)
+		CU1128_PortB_MissingLink2: BOOL;		(*SectionB Link 2 is for X5*)
+		CU1128_PortB_MissingLink3: BOOL;		(*SectionB Link 2 is for X7*)
+		CU1128_PortC_MissingLink: BOOL;			(*SectionC is for Second section of Internal Fixtures X8*)
+		N1000_Missing:BOOL; 					(*Second EP9224 Missing*)
+		N1001_Missing:BOOL;						(*Third EP9224 Missing*)
+			
+(*CoE Read*)
+		CoE_ReadFB_1: FB_EcCoESdoReadEx; 		(*FB to retrieve Data from terminals via CoE*)
+		CoE_ReadBuffer_1: ARRAY [0..7] OF BYTE;	(*Variable, 8 bytes, for receiving data*)
+		CoE_ReadErr_1: BOOL;					(*CoE Read Error Flag*)
+		CoE_ReadErrID_1: UDINT;					(*CoE Read Error Identification*)
+		EL6900_Overtemperature: BOOL;			(*Flag for result of CoE Read*)
+
+(*Safety Internals*)
+		Estop_Relays_On: BOOL;
+		Estop_Relays_Off: BOOL;
+		Gate_Relays_On: BOOL;
+		Gate_Relays_Off: BOOL;
+(*Standard Internals*)
+
+		(*Fault Flags*)
+		Estop_RelayFLT: BOOL;
+		Gate_RelayFLT: BOOL;
+
+	END_VAR
+
+	VAR_OUTPUT
+		FB_OK: BOOL;
+		Discrete_Image: udt_ISxx_Image_20241121;
+		Enable_SplitRelays AT%Q*: BOOL;				(*For mapping into Safety to Enable/Disable Second relay bank enable*)
+
+	END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+
+	(*Set FB_OK to True*)
+	FB_OK:= TRUE;
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$Gather Status Of Hardware $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Discrete I/O Node*)
+	IF (T01.InfoData.State=8) AND (T02_Stat.InfoData.State=8) AND (T03.InfoData.State=8) AND (T04.InfoData.State=8) AND ((T05.InfoData.State=8) OR NOT FB_In.Option_Enable_Pbus) AND (T06.InfoData.State=8)
+		AND (N01.InfoData.State=8) AND (N01.InfoDataB.State=8) AND (N01.InfoDataC.State=8)
+		AND ((N999_STAT.InfoData.State=8) OR FB_In.Option_EP9224_Count < 1)
+		AND ((N1000_STAT.InfoData.State=8) OR FB_In.Option_EP9224_Count < 2)
+		AND ((N1001_STAT.InfoData.State=8) OR FB_In.Option_EP9224_Count < 3)
+		THEN DiscreteNode_OK:=TRUE;
+	ELSE DiscreteNode_OK:=FALSE;
+	END_IF;
+
+	(*ProfiBus Node*)
+	IF FB_In.Option_Enable_Pbus AND 
+		(T05.InfoData.State<>0) AND		(*Ensure the termnal is at least alive*)
+		(T05.Error=0) 
+		THEN ProfiNode_OK:= TRUE;
+	ELSE
+		ProfiNode_OK:= FALSE;			
+	END_IF;
+
+	
+
+	(*Develop Port Connection Warning Flags*)
+	IF T01.InfoData.State=257  (*State Machine for Slave Not Present*)
+		THEN EK1100_NotPresent:= TRUE;
+	ELSE EK1100_NotPresent := FALSE;
+	END_IF;
+
+	IF T01.InfoData.State=17416 (*State Machine for Link Missing at Port C*)
+		THEN EK1100_PortC_MissingLink:= TRUE; (*PortC is OUT Port*)
+	ELSE EK1100_PortC_MissingLink := FALSE;
+	END_IF;
+
+	IF (T06.InfoData.State=9224)
+		THEN EK1110_PortB_MissingLink:= TRUE;
+	ELSE EK1110_PortB_MissingLink := FALSE;
+	END_IF;
+
+
+	IF ((N01.InfoData.State=33800) OR (N01.InfoData.State=41992))
+		THEN CU1128_PortD_MissingLink:= TRUE;		(*PortD Attached at Port X2*)
+	ELSE CU1128_PortD_MissingLink:= FALSE;
+	END_IF;
+
+	IF  ((N01.InfoData.State=9224) OR (N01.InfoData.State=41992))
+		THEN CU1128_PortB_MissingLink:= TRUE;		(*PortB Attached at Port X3*)
+	ELSE CU1128_PortB_MissingLink:= FALSE;
+	END_IF;
+
+	IF ((N01.InfoDataB.State=33800) OR (N01.InfoDataB.State=41992))
+		THEN CU1128_PortD_MissingLink2:= TRUE;		(*PortD Attached at Port X4*)
+	ELSE CU1128_PortD_MissingLink2:= FALSE;
+	END_IF;
+
+	IF  ((N01.InfoDataB.State=9224) OR (N01.InfoDataB.State=41992))
+		THEN CU1128_PortB_MissingLink2:= TRUE;		(*PortB Attached at Port X5*)
+	ELSE CU1128_PortB_MissingLink2:= FALSE;
+	END_IF;
+
+	IF ((N01.InfoDataC.State=33800) OR (N01.InfoDataC.State=41992)
+		OR (N01.InfoDataC.State=50184) OR (N01.InfoDataC.State=58376))
+		THEN CU1128_PortD_MissingLink3:= TRUE;		(*PortD Attached at Port X6*)
+	ELSE CU1128_PortD_MissingLink3:= FALSE;
+	END_IF;
+
+	IF  ((N01.InfoDataC.State=9224) OR (N01.InfoDataC.State=25608)
+		OR (N01.InfoDataC.State=41992) OR (N01.InfoDataC.State=58376))
+		THEN CU1128_PortB_MissingLink3:= TRUE;		(*PortB Attached at Port X7*)
+	ELSE CU1128_PortB_MissingLink3:= FALSE;
+	END_IF;
+
+	IF  ((N01.InfoDataC.State=17416) OR (N01.InfoDataC.State=25608)
+		OR (N01.InfoDataC.State=50184) OR (N01.InfoDataC.State=58376))
+		THEN CU1128_PortC_MissingLink:= TRUE;		(*PortC Attached at Port X8*)
+	ELSE CU1128_PortC_MissingLink:= FALSE;
+	END_IF;
+	
+	IF (N999_Stat.InfoData.State=9224) AND (FB_In.Option_EP9224_Count >1) (*State 9224 is missing link on port B*)
+		THEN N1000_Missing:= TRUE;
+	ELSE N1000_Missing := FALSE;
+	END_IF;
+	
+	IF (N1000_Stat.InfoData.State=9224) AND (FB_In.Option_EP9224_Count >2) (*State 9224 is missing link on port B*)
+		THEN N1001_Missing:= TRUE;
+	ELSE N1001_Missing := FALSE;
+	END_IF;
+
+	(*Wrap up break Flags to Variable for shipment to UI*)
+	ECatSlave_Cable_Breaks.0:= EK1100_NotPresent AND FB_In.Prev_EcatNode_Present;
+	ECatSlave_Cable_Breaks.1:= EK1100_PortC_MissingLink;
+
+	ECatSlave_Cable_Breaks.16:= EK1110_PortB_MissingLink; (*X1*)
+	ECatSlave_Cable_Breaks.17:= CU1128_PortD_MissingLink; (*x2*)
+	ECatSlave_Cable_Breaks.18:= CU1128_PortD_MissingLink2 (*x3*);
+	ECatSlave_Cable_Breaks.19:= CU1128_PortD_MissingLink3; (*x4*)
+	ECatSlave_Cable_Breaks.20:= CU1128_PortB_MissingLink; (*x5*)
+	ECatSlave_Cable_Breaks.21:= CU1128_PortB_MissingLink2; (*x6*)
+	ECatSlave_Cable_Breaks.22:= CU1128_PortB_MissingLink3; (*x7*)
+	ECatSlave_Cable_Breaks.23:= CU1128_PortC_MissingLink; (*x8*)
+	EcatSlave_Cable_Breaks.24:= N1000_Missing;
+	EcatSlave_Cable_Breaks.25:= N1001_Missing;
+	
+
+
+	(*------------ CoE Reads ------------*)
+
+	(*Read EL6900 Primaray Temperature Data*)
+
+	(*FB Inputs*)
+	CoE_ReadFB_1.bExecute:= FB_In.CoE_Read_Trigger
+							AND (T02_Stat.InfoData.State=8);						(*Execute Upon Trigger*)
+	CoE_ReadFB_1.sNetId:= FB_In.Ecat_Master_AmsNetID;
+	CoE_ReadFB_1.nSlaveAddr:= T02_STAT.InfoData.AdsAddr.port;						(*Address of Ecat Slave being Read*)
+	CoE_ReadFB_1.nIndex:= 16#FA80;												(*CANopen SDO Index of Object (FA80 = Hardware Diag Object)*)
+	CoE_ReadFB_1.nSubIndex:= 16#01;												(*CANopen SDO SubIndex (Location from Index) of Object (1 = Primary Temperature)*)
+	CoE_ReadFB_1.cbBufLen:= 8;													(*Limit on Receive Length (bytes)*)
+	CoE_ReadFB_1.pDstBuf:= ADR(CoE_ReadBuffer_1);								(*Pointer to Receive Buffer*)
+	CoE_ReadFB_1.tTimeout:= T#2s;												(*TImeout for Read*)
+	CoE_ReadFB_1.bCompleteAccess:= TRUE;										(*Allow Complete Access to Full SDO Object*)
+
+	(*Execute FB*)
+	CoE_ReadFB_1();
+
+	(*FB Outputs*)
+	CoE_ReadErr_1:= CoE_ReadFB_1.bError;										(*Error Flag of Read*)
+	CoE_ReadErrID_1:= CoE_ReadFB_1.nErrId;										(*Error ID of Read (See ADS Return Codes)*)
+
+	(*Tranfer Data to Image*)
+	IF (T02_Stat.InfoData.State=8) AND NOT CoE_ReadErr_1
+		THEN
+		T02_STAT.CoE_Temperature_1:= FUN_GTAC_BYTEStoINT(CoE_ReadBuffer_1[0],CoE_ReadBuffer_1[1]);	(*Grab bytes 0 and 1 of read buffer, this is Primary Temperature*)
+		T02_STAT.CoE_Temperature_2:= FUN_GTAC_BYTEStoINT(CoE_ReadBuffer_1[2],CoE_ReadBuffer_1[3]);	(*Grab bytes 2 and 3 of read buffer, this is Secondary Temperature*)
+	ELSE
+		(*If Read Error, then blank data*)
+		T02_STAT.CoE_Temperature_1:=0;
+		T02_STAT.CoE_Temperature_2:=0;
+	END_IF;
+
+	(*Finally Evaluate Temperature Vs Upper Limit Restrictions*)
+	IF (T02_STAT.CoE_Temperature_1>=90) OR (T02_STAT.CoE_Temperature_2>=90)
+		THEN
+		EL6900_Overtemperature:= TRUE;
+	ELSE
+		EL6900_Overtemperature:= FALSE;
+	END_IF;
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Gather Safety Inputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+	(*Estop Relays (Contactors), Also Used as Power Relays in event of Option_Enable_SplitRelays being false*)
+	Estop_Relays_On:= NOT T03.I.0;
+	Estop_Relays_Off:= T03.I.0;
+
+	(*Gate Relays (Contactors)*)
+	IF FB_In.Option_Enable_SplitRelays
+		THEN
+		Gate_Relays_On:= NOT T03.I.1;
+		Gate_Relays_Off:= T03.I.1;
+	ELSE
+		Gate_Relays_On:= FALSE;
+		Gate_Relays_Off:= FALSE;
+	END_IF;
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Gather Standard Inputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*gather safety input data here*)
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Internal Code $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*add internal code here*)
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Faults $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+
+	(*Estop/Power Relays EDM Fault*)
+	Estop_RelayFLT:= ((T04.Q.0 AND NOT Estop_Relays_On) OR (NOT T04.Q.0 AND NOT Estop_Relays_Off)); (*Note, used as Power Relays if Split relay option is false*)
+
+	(*Gate Relays EDM Fault*)
+	IF FB_In.Option_Enable_SplitRelays
+		THEN
+		Gate_RelayFLT:= ((T04.Q.2 AND NOT Gate_Relays_On) OR (NOT T04.Q.2 AND NOT Gate_Relays_Off));
+	ELSE
+		Gate_RelayFLT:= FALSE;
+	END_IF;
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Transfer Standard Outputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Transfer I/O Images for Display On UI*)
+	Discrete_Image.T01:=T01;
+	Discrete_Image.T02_STAT:=T02_STAT;
+	Discrete_Image.T03:=T03;
+	Discrete_Image.T04:=T04;
+	Discrete_Image.T05:=T05;
+	Discrete_Image.T06:=T06;
+	Discrete_Image.N01:=N01;
+
+	Discrete_Image.N999_STAT:=N999_STAT;
+	Discrete_Image.N999_CMD:=N999_CMD;
+	Discrete_Image.N1000_STAT:=N1000_STAT;
+	Discrete_Image.N1000_CMD:=N1000_CMD;
+	Discrete_Image.N1001_STAT:=N1001_STAT;
+	Discrete_Image.N1001_CMD:=N1001_CMD;
+	
+	(*Transfer Option Variables for Display on UI*)
+	Discrete_Image.Option_Enable_SplitRelays:= FB_In.Option_Enable_SplitRelays;
+	Discrete_Image.Option_EP9224_Count:= FB_In.Option_EP9224_Count;
+	Discrete_Image.Option_Enable_Pbus:= FB_In.Option_Enable_Pbus;
+
+	(*Transfer Split Relay Option to Physical Output*)
+	Enable_SplitRelays:= FB_In.Option_Enable_SplitRelays;
+	
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Transfer Safety Outputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+(*Transfer Commands to Power Distribution Node Outputs*)
+	(*Device Level*)
+	N999_CMD.Device.Enable_Control_Via_Fieldbus:= FALSE;
+	N999_CMD.Device.Global_Reset:= FB_In.Safety_RST;
+	(*Channel1 Level*)
+	N999_CMD.Channel1.Output_Us:= TRUE;
+	N999_CMD.Channel1.Output_Up:= FB_In.Enable_Motion;
+	N999_CMD.Channel1.Reset_Us:= FB_In.Safety_RST;
+	N999_CMD.Channel1.Reset_Up:= FB_In.Safety_RST;
+	(*Channel2Level*)
+	N999_CMD.Channel2.Output_Us:= TRUE;
+	N999_CMD.Channel2.Output_Up:= FB_In.Enable_Motion;
+	N999_CMD.Channel2.Reset_Us:= FB_In.Safety_RST;
+	N999_CMD.Channel2.Reset_Up:= FB_In.Safety_RST;
+	(*Channel3Level*)
+	N999_CMD.Channel3.Output_Us:= TRUE;
+	N999_CMD.Channel3.Output_Up:= FB_In.Enable_Motion;
+	N999_CMD.Channel3.Reset_Us:= FB_In.Safety_RST;
+	N999_CMD.Channel3.Reset_Up:= FB_In.Safety_RST;
+	(*Channel4Level*)
+	N999_CMD.Channel4.Output_Us:= TRUE;
+	N999_CMD.Channel4.Output_Up:= FB_In.Enable_Motion;
+	N999_CMD.Channel4.Reset_Us:= FB_In.Safety_RST;
+	N999_CMD.Channel4.Reset_Up:= FB_In.Safety_RST;
+
+	(*Set All Safety Groups to Run*)
+		T02_CMD.SGs_RUNSTOP:= TRUE;
+	(*Reset Of Safety Group Errors*)
+		T02_CMD.SGs_ERRAck:= FB_In.Safety_RST;
+	(*Reset Only Used FBs With In Safety Group*)
+		(*Reset of Estop, Safety Gate and Misc FBs*)
+		T02_CMD.FBs_ControlPowerPB:= FB_In.Safety_RST;
+
+
+
+
+
+
+
+
+
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_GTAC_ISxx_20241121">
+      <LineId Id="93" Count="9" />
+      <LineId Id="421" Count="1" />
+      <LineId Id="103" Count="2" />
+      <LineId Id="760" Count="0" />
+      <LineId Id="752" Count="1" />
+      <LineId Id="770" Count="0" />
+      <LineId Id="761" Count="0" />
+      <LineId Id="763" Count="0" />
+      <LineId Id="759" Count="0" />
+      <LineId Id="757" Count="1" />
+      <LineId Id="751" Count="0" />
+      <LineId Id="106" Count="12" />
+      <LineId Id="423" Count="2" />
+      <LineId Id="122" Count="40" />
+      <LineId Id="431" Count="2" />
+      <LineId Id="427" Count="0" />
+      <LineId Id="434" Count="0" />
+      <LineId Id="436" Count="2" />
+      <LineId Id="435" Count="0" />
+      <LineId Id="163" Count="13" />
+      <LineId Id="645" Count="0" />
+      <LineId Id="644" Count="0" />
+      <LineId Id="177" Count="88" />
+      <LineId Id="538" Count="0" />
+      <LineId Id="267" Count="0" />
+      <LineId Id="539" Count="0" />
+      <LineId Id="268" Count="0" />
+      <LineId Id="540" Count="2" />
+      <LineId Id="269" Count="6" />
+      <LineId Id="649" Count="0" />
+      <LineId Id="277" Count="45" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FUN_GTAC_FindStringInArray" Id="{dabbd17f-052d-4557-98d9-8a1989bc426c}" SpecialFunc="None">
+    <Declaration><![CDATA[(*Function to return a portion of source string (from a provided string) based on return length specified (starting at element 0 of source)
+	author: Brent Lekx-Toniolo OF Sodecia GTAC
+	date: May 2016
+	version 1.0
+		- initial concept
+	Last Edit: 11-May-2016, 
+		- create FUN, blt
+
+*)
+
+
+FUNCTION FUN_GTAC_FindStringInArray : UINT
+VAR_INPUT
+	Search_String: STRING[5];											(*String to Search for*)
+	ptrArray_To_Search: POINTER TO ARRAY[0..100] OF STRING [5];		(*Pointer to Array to Search through*)
+END_VAR
+
+VAR
+	Search_Index: UINT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*-------------------------------------- Search through Array Passed for String -----------------------------------*)
+
+	FOR Search_Index:= 0 TO 99 DO
+		IF (ptrArray_To_Search^[Search_Index]= Search_String)		(*Dereference (^) pointer in order to access the data in the object referenced by pointer, then compare to the string being requested*)
+			THEN
+			FUN_GTAC_FindStringInArray:= Search_Index;			(*Capture Array Location*)
+		END_IF;
+
+	END_FOR;]]></ST>
+    </Implementation>
+    <LineIds Name="FUN_GTAC_FindStringInArray">
+      <LineId Id="20" Count="8" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

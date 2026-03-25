@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_EL2904" Id="{1b9c556a-a9cb-466f-b868-7336b9a0f7dc}">
+    <Declaration><![CDATA[(*udt (user defined type) of Beckhoff EL2904 - 4 Point PNP Safety Type Output Terminal:
+	auth. Brent Lekx-Toniolo of Toniolo Research & Development Inc.; 
+	July 2010; version 1.0*)
+
+
+TYPE udt_EL2904 :
+STRUCT
+	Q0: BOOL;
+	Q1: BOOL;
+	Q2: BOOL;
+	Q3: BOOL;
+	InfoData: udt_ECATSlave_Status;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,134 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FB_GTAC_RollDoor_20190108" Id="{cdae41f9-37ea-4fd7-9e5e-3c7ff2e586d6}" SpecialFunc="None">
+    <Declaration><![CDATA[(*FB for use with Rite Hite Roll Up Doors
+
+	Original Author(s): Justin Vandongen of Sodecia GTAC.; 
+------------------------------------------------------------------------------------------
+REVISION NOTES:
+	Version 20181023
+		- intial concept, J.Vandongen
+	Version 20190108
+		- modified controls for door close using In_auto and in_manual, j.vandongen
+------------------------------------------------------------------------------------------
+*)
+
+
+FUNCTION_BLOCK FB_GTAC_RollDoor_20190108
+VAR_INPUT
+		Enable_FB: BOOL;
+		Enable_Motion: BOOL;
+		Enable_Latch: BOOL;
+
+		DoorClose_REQ: BOOL;		(*Request to close the door*)
+		DoorOpen_REQ: BOOL;		(*Request to open the door*)
+
+		DoorClosed_Switches: BOOL;	(*Switches to detect Door Closed*)
+		DoorOpened_Switches: BOOL;	(*Switches to detect Door opened*)
+
+		Fault_Time: TIME;
+END_VAR
+
+VAR
+		Door_CloseSR: SR;	(*Latch to Close the door*)
+		Door_OpenSR: SR;	(*Latch to Open the door*)
+
+		DoorOpened_TMR: TON;		(*Timer to say door is open, no door open switches*)
+		DoorClosed_TMR: TON;	(*Timer to say door is closed*)
+
+		Fault_TMR: TON;
+
+END_VAR
+
+VAR_OUTPUT
+		FB_OK: BOOL;
+
+		DoorClose_CMD: BOOL;	(*Command the door to close*)
+		DoorOpen_CMD: BOOL;	(*Command the door to open*)
+		Door_Closed: BOOL;		(*Door is closed*)
+		Door_Opened: BOOL;		(*Door is open*)
+
+		Faulted: BOOL;
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[	(*Set FB_OK to True*)
+	FB_OK:= TRUE;
+
+
+	(*Set Door to Close*)
+	Door_CloseSR(
+			SET1:= Enable_Motion AND Enable_Latch AND DoorClose_REQ AND NOT DoorOpen_REQ,
+			RESET:= NOT Enable_Motion OR NOT Enable_Latch OR DoorOpen_REQ OR Door_Closed,
+			Q1=>
+			);
+
+	(*Set Door to Open*)
+	Door_OpenSR(
+			SET1:= Enable_Latch AND DoorOpen_REQ AND NOT DoorClose_REQ,
+			RESET:= NOT Enable_Latch OR DoorClose_REQ OR Door_Opened,
+			Q1=>
+			);
+
+	(*Output to Open or Close the Door*)
+	DoorClose_CMD:= Enable_Motion AND ((Enable_Latch AND Door_CloseSR.Q1) OR (NOT Enable_Latch AND DoorClose_REQ)) AND NOT Door_OpenSR.Q1;
+	DoorOpen_CMD:= ((Enable_Latch AND Door_OpenSR.Q1) OR (NOT Enable_Latch AND DoorOpen_REQ)) AND NOT Door_CloseSR.Q1;
+
+	(*Door Opened Timer*)
+	DoorOpened_TMR(
+			IN:= NOT DoorClosed_Switches AND DoorOpen_CMD,
+			PT:= T#2.75s,
+			Q=> ,
+			ET=>
+			);
+
+	(*Door Closed Timer*)
+	DoorClosed_TMR(
+			IN:= DoorClosed_Switches,
+			PT:= T#500ms,
+			Q=> ,
+			ET=>
+			);
+
+
+	(*Capture Door Closed*)
+	IF DoorClosed_Switches AND DoorClosed_TMR.Q
+		THEN
+			Door_Closed:= TRUE;
+			Door_Opened:= FALSE;
+	ELSIF NOT DoorClosed_Switches AND DoorOpened_TMR.Q
+		THEN
+			Door_Closed:= FALSE;
+			Door_Opened:= TRUE;
+	END_IF;
+
+
+	(*Capture Door Faults*)
+	Fault_TMR(
+			IN:= (DoorClose_CMD AND NOT Door_Closed) OR (DoorOpen_CMD AND NOT Door_Opened),
+			PT:= Fault_Time,
+			Q=> Faulted,
+			ET=> );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(*end*)]]></ST>
+    </Implementation>
+    <LineIds Name="FB_GTAC_RollDoor_20190108">
+      <LineId Id="51" Count="72" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

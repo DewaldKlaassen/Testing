@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Crc="990761541" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Build">
+  <PropertyGroup>
+    <Configuration Condition="'$(Configuration)' == ''">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{f7a44d81-6a34-4c24-8ea7-9d757f38b475}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <OldToolsVersion>2.0</OldToolsVersion>
+    <TargetSystem>EL6900</TargetSystem>
+    <ProgrammingLanguage>Graphical Editor</ProgrammingLanguage>
+    <Worker>Name of the author</Worker>
+    <IntProjName>PD01.T02.EL6900</IntProjName>
+    <NextSdsId>25</NextSdsId>
+    <SPlcProjVersion>1.8.0.0</SPlcProjVersion>
+    <Name>IS01.T02.EL6900</Name>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DebugSymbols>false</DebugSymbols>
+    <OutputPath>bin\Release\</OutputPath>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="IS01_To_IC01_Decouple\Alias Devices\MAINIS01T02_CMDSGs_ERRAck.sds" />
+    <None Include="IS01_To_IC01_Decouple\Alias Devices\MAINIS01T02_CMDSGs_RUNSTOP.sds" />
+    <None Include="IS01_To_IC01_Decouple\Alias Devices\MAINIS01T02_STATSGs_COM_ERR.sds" />
+    <None Include="IS01_To_IC01_Decouple\Alias Devices\MAINIS01T02_STATSGs_FB_ERR.sds" />
+    <None Include="IS01_To_IC01_Decouple\Alias Devices\MAINIS01T02_STATSGs_OUT_ERR.sds" />
+    <None Include="IS01_To_IC01_Decouple\Alias Devices\IC01_Connection.sds" />
+    <None Include="IS01_To_IC01_Decouple\IS01_To_IC01_Decouple.sal" />
+    <None Include="IS01_To_IC01_Decouple\IS01_To_IC01_Decouple.sal.diagram">
+      <Visible>false</Visible>
+      <DependentUpon>IS01_To_IC01_Decouple\IS01_To_IC01_Decouple.sal</DependentUpon>
+    </None>
+    <None Include="TargetSystemConfig.xml">
+      <Visible>false</Visible>
+    </None>
+    <None Include="IS01_Function_Blocks\Alias Devices\MAINIS01T02_CMDSGs_ERRAck.sds" />
+    <None Include="IS01_Function_Blocks\Alias Devices\MAINIS01T02_CMDSGs_RUNSTOP.sds" />
+    <None Include="IS01_Function_Blocks\Alias Devices\MAINIS01T02_STATSGs_COM_ERR.sds" />
+    <None Include="IS01_Function_Blocks\Alias Devices\MAINIS01T02_STATSGs_FB_ERR.sds" />
+    <None Include="IS01_Function_Blocks\Alias Devices\MAINIS01T02_STATSGs_OUT_ERR.sds" />
+    <None Include="IS01_Function_Blocks\Alias Devices\MAINIS01T04Q.sds" />
+    <None Include="IS01_Function_Blocks\Alias Devices\MAINIS01T04Q_1.sds" />
+    <None Include="IS01_Function_Blocks\Alias Devices\MAINIS01T04Q_2.sds" />
+    <None Include="IS01_Function_Blocks\Alias Devices\MAINIS01T04Q_3.sds" />
+    <None Include="IS01_Function_Blocks\Alias Devices\IS01T03_EL1904.sds" />
+    <None Include="IS01_Function_Blocks\Alias Devices\IS01T04_EL2904.sds" />
+    <None Include="IS01_Function_Blocks\IS01_Function_Blocks.sal" />
+    <None Include="IS01_Function_Blocks\IS01_Function_Blocks.sal.diagram">
+      <Visible>false</Visible>
+      <DependentUpon>IS01_Function_Blocks\IS01_Function_Blocks.sal</DependentUpon>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="IS01_To_IC01_Decouple" />
+    <Folder Include="IS01_To_IC01_Decouple\Alias Devices" />
+    <Folder Include="IS01_Function_Blocks" />
+    <Folder Include="IS01_Function_Blocks\Alias Devices" />
+    <Folder Include="User FBs" />
+  </ItemGroup>
+</Project>

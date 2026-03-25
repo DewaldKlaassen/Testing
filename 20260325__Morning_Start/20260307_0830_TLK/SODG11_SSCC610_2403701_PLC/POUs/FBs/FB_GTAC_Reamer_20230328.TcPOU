@@ -1,0 +1,287 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_GTAC_Reamer_20230328" Id="{5ca92a5e-4941-44b0-b5e0-271fcfaf7cf6}" SpecialFunc="None">
+    <Declaration><![CDATA[(*FB for use with Mig Robot Tip Reamers
+
+	Original Author(s): Brent Lekx-Toniolo of Sodecia GTAC.; 
+------------------------------------------------------------------------------------------
+REVISION NOTES:
+	Version 20160210
+		- intial concept, b.lekx-toniolo
+	Version 20160831
+		- added inputs and outputs for reaming, jvd
+		-developed code to ream, jvd
+	Version 20170327
+		- added selection for Binzel/Fronius selection., j.vandongen
+	Version 20170525
+		- Cycle Correction for the Fronius., A. Lopez
+	Version 20170531
+		- Cycle Complete Correction for the Fronius. It sees the Cylinder Sensor too Quick. Added a Delay for the Cycle Completion., A. Lopez
+	Version 20180405
+		- changed N20 to N30 to follow new standards.
+	Version 20230328
+		- modified specific for this cell, due to the difference in wiring of each reamer, j.underhill
+------------------------------------------------------------------------------------------
+*)
+
+
+
+FUNCTION_BLOCK FB_GTAC_Reamer_20230328
+
+VAR_INPUT
+	Enable_FB: BOOL;
+	Enable_Motion: BOOL;
+
+	Fronius_Ream: BOOL;
+	Binzel_Ream: BOOL;
+
+	WireCutter_REQ: BOOL;
+	Injector_REQ: BOOL;
+	Lift_REQ: BOOL;
+	Clamp_REQ: BOOL;
+
+	Ream_REQ: BOOL;
+	Ream_Time: TIME;
+	
+	Ream_Clamp_Open: BOOL;
+	
+	(*NEW - AB*)
+	F_WireCutter_REQ: BOOL;
+	F_WireCutter_Time: TIME;
+	
+	Spray_REQ: BOOL;
+	Spray_Time: TIME;
+	
+END_VAR
+
+VAR
+(*Hardware Related Data Types*)
+			(*Develop "Beckhoff Nodes"*)
+			N01 AT %I*: udt_EP1008_002_v2;
+			N30 AT %Q*: udt_EP2028_002_v2;
+			N30_STAT AT %I*: udt_EP2028_002_STAT;
+
+(* Nodes States*)
+	DiscreteNode_OK: BOOL;
+(* Cabel Break States*)
+	ECatSlave_Cable_Breaks: UDINT;
+
+	Ream_Step: UINT;
+	LifterDown: BOOL;
+	Clamp_Delay: TON;
+	Ream_Delay: TON;
+	Injector_Delay: TON;
+	WireCutter_Delay: TON;
+	LifterUp_Delay: TON;
+	Reaming_Complete_Delay: TON;
+	Spray_Delay: TON;
+
+END_VAR
+
+VAR_OUTPUT
+
+		FB_OK: BOOL;
+		Discrete_Image: udt_Reamerxx_Image_20180405;
+
+		LifterUp_ACK: BOOL;
+		Clamp_ACK: BOOL;
+		Injector_ACK: BOOL;
+		WireCutter_ACK: BOOL;
+		Reaming_Complete: BOOL;
+		
+END_VAR
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[	(*Set FB_OK to True*)
+	FB_OK:= TRUE;
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$Gather Status Of Hardware $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Discrete I/O Nodes*)
+
+	IF N01.InfoData.State=8 AND N30_STAT.InfoData.State=8
+		THEN
+			DiscreteNode_OK:=TRUE;
+	ELSE
+			DiscreteNode_OK:=FALSE;
+
+	END_IF;
+
+	(*Cable Break Detection*)
+	ECatSlave_Cable_Breaks:= FUN_GTAC_EcatSlaveConnState
+							(N01.InfoData.State,
+							N30_STAT.InfoData.State,
+							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0); (*Function Returns Flags to warn of possible cable break*)
+
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Transfer Standard Outputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Transfer I/O Images for Display On UI (User Interface)*)
+	Discrete_Image.N01:=N01;
+	Discrete_Image.N30:=N30;
+	Discrete_Image.N30_STAT:=N30_STAT;
+
+	Discrete_Image.ECatSlave_Cable_Breaks:= ECatSlave_Cable_Breaks;
+
+
+(*????????????????????????????????????????????????? Develop Reaming Sequence Interlocks ???????????????????????????????????????????????????????????????*)
+
+	IF Fronius_Ream (*Fronius Ream Selected*)
+		THEN
+			IF Reaming_Complete_Delay.Q
+				THEN
+					Reaming_Complete:= TRUE;
+			ELSIF NOT Ream_Req
+				THEN
+					Reaming_Complete:=FALSE;
+			END_IF;
+
+			(*Fronius Cycle Complete Delay Timer*)
+			Reaming_Complete_Delay(
+					IN:= (F_WireCutter_REQ AND NOT WireCutter_Delay.Q) AND (Spray_REQ AND Spray_Delay.Q) AND (Ream_Req AND Ream_Delay.Q AND Ream_Clamp_Open),
+					PT:= T#1s,
+					Q=> ,
+					ET=> );
+
+			(*Reaming Delay Timer*)
+			Ream_Delay(
+					IN:= Ream_Req,
+					PT:= Ream_Time,
+					Q=> ,
+					ET=> );
+					
+			(*Reaming Delay Timer*)
+			Spray_Delay(
+					IN:= Spray_REQ,
+					PT:= Spray_Time,
+					Q=> ,
+					ET=> );
+					
+			(*Reaming Delay Timer*)
+			WireCutter_Delay(
+					IN:= F_WireCutter_REQ,
+					PT:= F_WireCutter_Time,
+					Q=> ,
+					ET=> );
+			
+		(*Reaming Output*)	(*NOTE - AB - Mapped to outputs due to wiring inconsistencies*)
+			N30.Q.0:= Ream_Req AND NOT Ream_Delay.Q; (*REAM*) (*90*)
+			N30.Q.1:= Spray_REQ AND NOT Spray_Delay.Q; (*SPRAY*) (*91*)
+			N30.Q.2:= F_WireCutter_REQ AND NOT WireCutter_Delay.Q; (*CUTTER*) (*93*)
+			N30.Q.3:= F_WireCutter_REQ AND NOT WireCutter_Delay.Q; (*CUTTER*) (*93*)
+			N30.Q.4:= FALSE; (*NOT USED*)
+			N30.Q.5:= FALSE; (*NOT USED*)
+			N30.Q.6:= FALSE; (*NOT USED*)
+			N30.Q.7:= FALSE; (*NOT USED*)
+
+	ELSIF Binzel_Ream (*Binzel Ream Selected*)
+		THEN
+			(*Reaming Step 1 - Clamp*)
+			Ream_Step.0 := Enable_Motion AND Ream_REQ AND NOT Reaming_Complete;
+
+			(*Reaming Step 2 - Lifter*)
+			Ream_Step.1 := Enable_Motion AND Ream_REQ AND NOT Reaming_Complete AND Clamp_Delay.Q;
+
+			(*Ream_Step 3 - Lifter Down*)
+			Ream_Step.2 := Enable_Motion AND Ream_REQ AND NOT Reaming_Complete AND Ream_Delay.Q;
+
+			(*Ream_Step 4 - Clamp Release *)
+			Ream_Step.3 := Enable_Motion AND Ream_REQ AND Reaming_Complete;
+
+			(*Clamp Delay Timer*)
+			Clamp_Delay(
+					IN:= Ream_Step.0 OR Clamp_REQ,
+					PT:= T#1s,
+					Q=> ,
+					ET=> );
+
+			(*Reaming Delay Timer*)
+			Ream_Delay(
+					IN:= Ream_Step.1,
+					PT:= Ream_Time,
+					Q=> ,
+					ET=> );
+
+			(*Injector Delay Timer*)
+			Injector_Delay(
+					IN:= Injector_REQ,
+					PT:= T#0.5s,
+					Q=> ,
+					ET=> );
+
+			(*Cut Delay*)
+			WireCutter_Delay(
+					IN:= WireCutter_REQ,
+					PT:= T#1s,
+					Q=> ,
+					ET=> );
+
+			(*Lifter Up Delay*)
+			LifterUp_Delay(
+					IN:= NOT LifterDown,
+					PT:= T#1s,
+					Q=> ,
+					ET=> );
+
+			(*Lifter Down*)
+			LifterDown:=N01.I.0;
+
+			(*Lifter Up Ack*)
+			 LifterUp_ACK:= LifterUp_Delay.Q;
+
+			(*Clamp Ack*)
+			Clamp_ACK := (Ream_REQ OR Clamp_REQ) AND Clamp_Delay.Q;
+
+			(*Ream Complete ACK*)
+			IF Ream_REQ AND NOT LifterUp_ACK AND Ream_Step.2
+				THEN
+				Reaming_Complete := TRUE;
+			END_IF;
+
+			IF Reaming_Complete AND NOT Ream_REQ
+				THEN
+				Reaming_Complete := FALSE;
+			END_IF;
+
+			(*Injector ACK*)
+			Injector_ACK:= Injector_REQ AND Injector_Delay.Q;
+
+			(*Wire Cutter ACK*)
+			WireCutter_ACK:= WireCutter_REQ AND WireCutter_Delay.Q;
+
+			(*Wire Cutter*)
+			N30.Q.0 := WireCutter_REQ AND NOT WireCutter_Delay.Q;
+
+			(*Injector*)
+			N30.Q.1:= Injector_REQ AND NOT Injector_Delay.Q;
+
+			(*Lift*)
+			N30.Q.2:=Lift_REQ OR (Ream_Step.1AND NOT Ream_Step.2 AND NOT Ream_Step.3);
+
+			(*Clamp*)
+			N30.Q.3:= Clamp_REQ OR ((Ream_Step.0 OR Ream_Step.1 OR Ream_Step.2) AND NOT Ream_Step.3);
+	END_IF;
+
+
+
+
+(*end*)]]></ST>
+    </Implementation>
+    <LineIds Name="FB_GTAC_Reamer_20230328">
+      <LineId Id="78" Count="55" />
+      <LineId Id="418" Count="0" />
+      <LineId Id="420" Count="4" />
+      <LineId Id="419" Count="0" />
+      <LineId Id="425" Count="0" />
+      <LineId Id="427" Count="4" />
+      <LineId Id="426" Count="0" />
+      <LineId Id="401" Count="0" />
+      <LineId Id="403" Count="0" />
+      <LineId Id="402" Count="0" />
+      <LineId Id="400" Count="0" />
+      <LineId Id="404" Count="1" />
+      <LineId Id="435" Count="3" />
+      <LineId Id="138" Count="92" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

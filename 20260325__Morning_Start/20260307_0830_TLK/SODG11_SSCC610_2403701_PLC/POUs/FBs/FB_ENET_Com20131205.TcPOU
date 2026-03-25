@@ -1,0 +1,111 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FB_ENET_Com20131205" Id="{fe5f2a56-475a-476f-9978-23a573bda4c1}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_ENET_Com20131205
+
+VAR_INPUT
+
+	LocalNetID:						STRING(19);			(*AMS Net ID of PLC*)
+
+	RemotePort:						UDINT;				(*Port on remote device*)
+	RemoteIPAddress:				STRING(15);			(*IP Address of Remote Device*)
+
+	SendData:						STRING;
+
+	Connect:							BOOL;				(*Opens the Connection to the Specified device*)
+	Send:							BOOL;				(*Sends the data to the Specified device*)
+
+
+
+END_VAR
+VAR_OUTPUT
+
+	ConnectionError:					BOOL;
+	ConnectionErrorID:				UDINT;
+	ConnectionState:					E_SocketConnectionState;
+
+	ReceiveData:						STRING;
+
+END_VAR
+VAR
+	Pulse:							FB_Pulse_Generator;
+	Pulse_100ms:						BOOL;
+
+
+	ClientServerConnection: 			FB_ClientServerConnection;
+	SocketSend:						FB_SocketSend;
+	SocketReceive:					FB_SocketReceive;
+
+	SocketHandle: 					T_HSocket;
+
+	Received:						STRING;
+
+	CommandLength:					INT;				(*String Length of Command being sent*)
+	ReceiveLength:					UDINT;			(*String Length of Received Data*)
+	RecLengthINT:					INT;
+
+	pSrc: 							POINTER TO STRING;
+	pDest: 							POINTER TO STRING;
+
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[pSrc := ADR(SendData);								(*Point to address of the data to be sent*)
+pDest := ADR(Received);								(*Point to address of received date*)
+
+CommandLength:= LEN(SendData);
+RecLengthINT:= UDINT_TO_INT(ReceiveLength);
+ReceiveData:= LEFT(Received, RecLengthINT);
+
+Pulse(On_Time:=T#100ms , Off_Time:= T#100ms, Wave=>Pulse_100ms );
+
+
+
+(*---------------------------------------------------------FB Instances------------------------------------------------------*)
+
+
+(*Opens the socket to the device we are connecting to*)
+ClientServerConnection(
+	sSrvNetID:= LocalNetID,
+	nMode:=0 OR CONNECT_MODE_ENABLEDBG,
+	sRemoteHost:=RemoteIPAddress,
+	nRemotePort:=RemotePort,
+	bEnable:=Connect,
+	tReconnect:=T#30s,
+	bBusy=> ,
+	bError=> ConnectionError,
+	nErrId=> ConnectionErrorID,
+	hSocket=>SocketHandle,
+	eState=> ConnectionState);
+
+
+(*Send Data to the open handle specified*)
+SocketSend(
+	sSrvNetId:= LocalNetID,
+	hSocket:= SocketHandle,
+	cbLen:= CommandLength,
+	pSrc:= pSrc,
+	bExecute:= Send,
+	tTimeout:= T#20s,
+	bBusy=> ,
+	bError=> ,
+	nErrId=> );
+
+(*Receive Data from the open handle specified*)
+SocketReceive(
+	sSrvNetId:= LocalNetID,
+	hSocket:= SocketHandle,
+	cbLen:= 50,
+	pDest:= pDest,
+	bExecute:= Pulse_100ms AND Connect,
+	tTimeout:= T#20s,
+	bBusy=> ,
+	bError=> ,
+	nErrId=> ,
+	nRecBytes=>ReceiveLength);]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ENET_Com20131205">
+      <LineId Id="48" Count="52" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

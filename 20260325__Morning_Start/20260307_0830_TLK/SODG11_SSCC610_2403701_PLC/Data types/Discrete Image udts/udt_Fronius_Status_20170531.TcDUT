@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <DUT Name="udt_Fronius_Status_20170531" Id="{f3240645-3c66-4262-afc4-dc92e9bfc8e4}">
+    <Declaration><![CDATA[(*udt (user defined type) for all generic Fronius Type Controllers
+	auth. Brent Lekx-Toniolo of Sodecia GTAC
+
+------------------------------------------------------------------------
+REVISION NOTES:
+
+	Version 20170531:
+		- initial concept, b.lekx-toniolo	
+
+
+------------------------------------------------------------------------
+
+*)
+
+
+
+TYPE udt_Fronius_Status_20170531 :
+STRUCT
+
+	Ready: BOOL;
+	Error_Code: INT;
+	Weld_Voltage: UDINT;
+	Weld_Current: UDINT;
+	Weld_WFS: UDINT;
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

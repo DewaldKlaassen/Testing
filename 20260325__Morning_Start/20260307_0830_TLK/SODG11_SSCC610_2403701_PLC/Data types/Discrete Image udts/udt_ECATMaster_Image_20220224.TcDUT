@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_ECATMaster_Image_20220224" Id="{6423d16f-46a9-4c83-8c69-10831324dd92}">
+    <Declaration><![CDATA[(*udt (user defined type) for full display (By GTAC Standards) of EtherCAT Master:
+	auth. Brent Lekx-Toniolo of Toniolo Research & Development Inc.; 
+	Version 20160407
+		- initial concept, b.lekx-toniolo
+	Version 20220224
+	- Change Config array start element from 1 to 0 for TcUI migration project, b.lekx-toniolo / c.drees
+
+*)
+
+
+
+TYPE udt_ECATMaster_Image_20220224 :
+STRUCT
+	HW: udt_ECATMaster_Status_20141211;
+	AMS_ID: STRING;
+	Config: ARRAY [0..100] OF STRING[5];
+
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

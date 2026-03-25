@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_EP1918" Id="{8b48ee06-297b-4e17-a90a-5ab465db347d}">
+    <Declaration><![CDATA[(*udt (user defined type) of Beckhoff Ep1918 - EtherCAT Bus Coupler (Slave):
+	auth. Brent Lekx-Toniolo of Toniolo Research & Development Inc.; 
+	April 2025; version 1.0 - created, r.jones*)
+
+
+TYPE udt_EP1918 :
+STRUCT
+	I AT %I*: BYTE;
+	STAT AT %I*: udt_EP1918_STAT_20250213;
+	CMD AT %Q*: udt_EP1918_CMD_20250213;
+	InfoData: udt_ECATSlave_Status;
+	NotPresent: BOOL;
+	PortB_MissingLink: BOOL;
+	
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

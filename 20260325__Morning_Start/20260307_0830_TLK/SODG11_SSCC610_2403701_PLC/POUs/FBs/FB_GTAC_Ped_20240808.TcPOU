@@ -1,0 +1,626 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_GTAC_Ped_20240808" Id="{9ad2cd11-febd-4725-bb51-aac36a933828}" SpecialFunc="None">
+    <Declaration><![CDATA[(*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+FB for framework of a generic Ped Station (welding, Sealing, stud welding etc)
+	author: Brent Lekx-Toniolo of Sodecia GTAC
+	Feb, 2015
+--------------------------------------------------------------------------------------------------------------
+REVISION NOTES:
+	Version: 20150224:
+	- Original Concept, b.lekx-toniolo
+	Version: 20150426:
+	- Change Order of Fix ID, b.lekx-toniolo
+	- Added Complete Reset Input
+	Version: 20151104:
+	- added linkable hardware types, b.lekx-toniolo
+	Version: 20160728
+	- added control fro brake option, b.lekx-toniolo
+	- added configuration inputs for Input node and VB counts, b.lekx-toniolo
+	Version: 20160915
+	- added "blank_position_checks" Input, b.lekx-toniolo, r.remillard, j.vandongen
+	- added "Dresser_Enable" Input, b.lekx-toniolo, r.remillard, j.vandongen
+	Version: 20160926
+	- Corrected doubled up valve 1 instance, b.lekx-toniolo
+	Version 20170404
+	- add Part present sensors, j.vandongen
+	Version 20170704
+	- changed valve instances, j.vandongen
+	Version 20170725
+	- added VB_Node_Count to UI and updated discrete_image, j.vandongen
+	- removed dresser wording form variables to make fb more generic, j.vandongen
+	- moved tool_at_positions to outside the fb, j.vandongen
+	Version 20170810
+	- corrected PP fault issue, j.vandongen
+	Version 20220808
+	- Added Prev_EcatNode_Present and Prev_EcatNode_ID, c.drees
+	Version 20230126
+	- Built in SwingArm functionality to combine PEDxx with SwingArmXX, c.drees
+	Version 20240514
+	- Add in Nodelayout configuration data area, b.lexk-toniolo
+	Version 20240808
+	- Add in ability to externally control portions of the N50 output block
+--------------------------------------------------------------------------------------------------------------
+*)
+
+FUNCTION_BLOCK FB_GTAC_Ped_20240808
+	VAR_INPUT
+
+		Enable_Prog: BOOL;
+		Enable_Motion: BOOL;
+		Mode_Select: INT;
+		Go_Home: BOOL;
+		Reset_Production: BOOL;
+		Model_Data: INT;
+		Task_Data: UINT;
+		Manual_Requests: DINT;
+		Dry_Cycle: BOOL;
+		Cell_In_Services: BOOL;
+		PrevProcess_Complete: BOOL;
+		Blank_Position_Checks: BOOL;
+		Start_TipDress_Cycle: BOOL;
+		Start_TipChange_Cycle: BOOL;
+		
+		(*Generic Position Variables*)
+		Tool_At_Home: BOOL;
+		Tool_At_Work0: BOOL;
+		Tool_At_Work1: BOOL;
+
+		Part_Present1_REQ: BOOL;
+		Part_Present2_REQ: BOOL;
+		Part_Present3_REQ: BOOL;
+		Part_Present4_REQ: BOOL;
+
+		Work_Robots_Clear: BOOL;
+		Work_Robots_WorkingOK: BOOL;
+		Work_Robots_Complete: BOOL;
+		Work_Robots_LHPartInEOAT: BOOL;
+		Work_Robots_RHPartInEOAT: BOOL;
+		Work_Robots_CommonPartInEOAT: BOOL;
+		Work_Robots_EOATEmpty: BOOL;
+	(*Node Counts and configuration data*)
+		Input_Node_Count: UDINT;
+		Output_Node_Count: UDINT;
+			Output_Node_UserREQS: UINT;
+		VB_Node_Count: UDINT;
+		Part_Present_Count: UDINT;
+		Option_SwingCylinder: BOOL;		(*Enables a Cylinder used for changing the Ped Item (Weld gun as example) position OR Tip Dress Swing*)
+			Swing_ADV_REQ: BOOL;		
+			Swing_RET_REQ: BOOL;
+		Option_TipDresser: BOOL;	(*Enables Tip Dresser functionality*)
+		Option_TipChanger: BOOL;		(*Enables Tip Changer functionality*)
+		NodeLayout:udt_ECATNodeData_20221507;
+
+	(*Ecat configuration*)
+	
+		Prev_EcatNode_Present:BOOL;
+		Prev_EcatNode_ID:STRING;
+	END_VAR
+
+	VAR
+(*Hardware Related Data Types*)
+			(*Develop "Beckhoff Nodes"*)
+			{attribute 'OPC.UA.DA':='1'}
+			N01 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N02 AT %I*: udt_EP1008_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N50 AT %Q*: udt_EP2028_002_v2;
+			{attribute 'OPC.UA.DA':='1'}
+			N50_STAT AT %I*: udt_EP2028_002_STAT;
+			{attribute 'OPC.UA.DA':='1'}
+			N100 AT %Q*: udt_SMC_EX260_ValveBank;
+			{attribute 'OPC.UA.DA':='1'}
+			N100_STAT AT %I*:udt_SMC_EX260_Stat;
+(* Nodes States*)
+		NodeState: ARRAY[0..63] OF UINT;
+		DiscreteNode_OK: BOOL;
+(*Cable Break States*)
+		ECatSlave_Cable_Breaks: ARRAY[0..1] OF DINT;
+(*Standard Internal Variables*)
+
+		(*Generic Position Variables*)
+		Tool_At_Work: UINT;
+
+		(*General Internals*)
+		In_Auto: BOOL;
+		In_Manual: BOOL;
+
+		Auto_Run: BOOL;
+		Reset_All_Completes:BOOL;
+
+		Start_Work_Robots: BOOL;
+		Work_Robots_Proceed: BOOL;
+
+		Prod_Inc: R_TRIG;
+		Cycle_Time: TON;
+		Cycle_Time_Pulse: R_TRIG;
+		CLFaulted: UDINT;
+		PPFaulted: UDINT;
+		Manual_Ind_HomePrompt: BOOL;
+
+(*Non-Standard Variables*)
+		(*FB Instances*)
+		Swing1FB: FB_Cylinder_Status;
+		Part_Present1FB: FB_PP_Sensor;
+		Part_Present2FB: FB_PP_Sensor;
+		Part_Present3FB: FB_PP_Sensor;
+		Part_Present4FB: FB_PP_Sensor;
+
+		(*Valve FBs*)
+		Valve1FB: FB_GTAC_Valve_20170704;
+		Valve2FB: FB_GTAC_Valve_20170704;
+		(*Tool Positions*)
+		Swing1ADVD: BOOL;
+		Swing1RETD: BOOL;
+		(*Motion Sequence Variables*)
+			Clamp_Step: UINT;
+			Repo1_Step: UINT;
+			Repo2_Step: UINT;
+			Repo3_Step: UINT;
+			Repo4_Step: UINT;
+			Unclamp_Step: UINT;
+
+
+END_VAR
+
+	(*data that needs to be retained in the event of a power cycle*)
+	VAR PERSISTENT
+		Working_Complete: BOOL;
+		Cycle_Complete: BOOL;
+		Production_Count:INT;
+		TipDress_Complete: BOOL;
+		TipChange_Complete: BOOL;
+		Repo_REQS: UINT;
+	END_VAR
+
+	VAR_OUTPUT
+		Prog_Ok: BOOL;
+		Discrete_Image: udt_PEDxx_Image_20240808;
+		In_Auto_Mode: BOOL;
+		In_Manual_Mode: BOOL;
+		Manual_Indicators: DINT;
+		At_Home: BOOL;
+		CLFaults1:UDINT;
+		CLFaults2:UDINT;
+		CLFaults3:UDINT;
+		CLFaults4:UDINT;
+		PPFaults: UDINT;
+		Prod_Count_Out: INT;
+		Cycle_Time_Out: TIME;
+		PrevCycle_Time_Out: TIME;
+		Tool_Call_ForWorkRobots: BOOL;
+		Robots_Clear_ToProceed: BOOL;
+		Task_ID: UINT;
+		Fix_ID: UINT;
+		Model_ID: UINT;
+		Work_Complete_Ack: BOOL;
+		Repo_Ack: UINT;
+
+	(*Part Present Sensors*)
+		(*Main Body Present*)
+		Part_Present1: BOOL;
+		Part_Present2: BOOL;
+		Part_Present3: BOOL;
+		Part_Present4: BOOL;
+
+	END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[	(*Set FB_OK to True*)
+	Prog_OK:= TRUE;
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$Gather Status Of Hardware $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Discrete I/O Nodes*)
+	IF N01.InfoData.State=8 OR (Input_Node_Count<1)
+		AND (N02.InfoData.State=8 OR (Input_Node_Count<2))
+		AND (N50_STAT.InfoData.State=8 OR (Output_Node_Count<1))
+		AND (N100_Stat.InfoData.State=8 OR (VB_Node_Count<1))
+			THEN DiscreteNode_OK:=TRUE;
+	ELSE DiscreteNode_OK:=FALSE;
+	END_IF;
+	
+	(*Cable Break Detection*)
+	ECatSlave_Cable_Breaks[0]:= FUN_GTAC_EcatSlaveConnState
+							(N01.InfoData.State,
+							N02.InfoData.State,
+							N50_STAT.InfoData.State,
+							N100_Stat.InfoData.State,
+							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0); (*Function Returns Flags to warn of possible cable break*)
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Gather Safety Inputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Gather Standard Inputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	IF Option_SwingCylinder
+		THEN
+		(*Swing1 - Ped item OR Tip Dresser Swing (if Option_TipDresser is enabled)*)
+		Swing1FB(
+			Advanced_Sensor:= N01.I.0,
+			Retracted_Sensor:= N01.I.1,
+			Advance_Solenoid:= N100.Q.0,
+			Retract_Solenoid:= N100.Q.1,
+			Adv_Delay:= T#0.5S ,
+			Ret_Delay:= T#0.5s ,
+			Fault_Delay:= T#4s ,
+			In_Advanced_Position=> Swing1ADVD,
+			In_Retracted_Position=> Swing1RETD,
+			Faulted=> CLFaults1.0 );
+	ELSIF NOT  Option_SwingCylinder
+		THEN
+		Swing1ADVD:= FALSE;
+		Swing1RETD:= TRUE;
+		CLFaults1.0:= FALSE;
+
+	END_IF;
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Internal Code $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+(*Auto / Manual Mode Code*)
+In_Auto:= TRUE;(*FORCED IN AUTO*)
+
+	IF Mode_Select.0 AND NOT Mode_Select.1
+		THEN
+			In_Auto:= TRUE;
+			In_Auto_Mode:= TRUE;
+	END_IF;
+	IF NOT Mode_Select.0 AND Mode_Select.1
+		THEN
+			In_Auto:= FALSE;
+			In_Auto_Mode:= FALSE;
+	END_IF;
+	In_Manual:= NOT In_Auto;
+	In_Manual_Mode:= In_Manual;
+
+(*--------------------------------------------------------------------------------Tool Positions---------------------------------------------------------------*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+
+	Tool_At_Work.0:= Tool_At_Work0;
+	Tool_At_Work.1:= Tool_At_Work1;
+
+(*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Auto Run Cycle >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+	(*Control of Auto_Run*)
+	Auto_Run:= Enable_Motion AND In_Auto AND Model_Data<>0 AND NOT Cycle_Complete;
+
+	(*Auto Run Enables All Other Auto Cycle Code*)
+	IF Auto_Run
+		THEN
+			IF NOT Working_Complete  AND PrevProcess_Complete
+				THEN
+					(*Start Work Robots*)
+					Start_Work_Robots:= (Work_Robots_CommonPartInEOAT OR Work_Robots_LHPartInEOAT OR Work_Robots_RHPartInEOAT)
+										AND (((Tool_At_Work.0 AND NOT Repo_Reqs.0) OR (Tool_At_Work.1 AND Repo_Reqs.0)) OR Blank_Position_Checks)
+										AND (Model_Data <> 0);
+;					(*Allow Work Robots To Proceed*)
+					Work_Robots_Proceed:= (Work_Robots_CommonPartInEOAT OR Work_Robots_LHPartInEOAT OR Work_Robots_RHPartInEOAT)
+										AND Tool_At_Work.0 AND NOT Repo_Reqs.0 AND PrevProcess_Complete;
+			ELSE
+					Start_Work_Robots:= FALSE;
+					Work_Robots_Proceed:= FALSE;
+			END_IF;
+
+	ELSE
+		Start_Work_Robots:= FALSE;
+	END_IF;
+
+(*---------------------------------------------------------------Completes----------------------------------------------------*)
+	(*Wrok at Ped Complete*)
+	IF Work_Robots_Complete
+		THEN
+		Working_Complete:= TRUE;
+	END_IF;
+
+(*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Cycle Complete !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*)
+	(*Set Cycle Complete*)
+	IF Auto_Run AND Working_Complete
+		THEN Cycle_Complete:= TRUE;
+	END_IF;
+	(*Reset All Completes*)
+	IF Work_Robots_Clear
+		THEN
+			IF Work_Robots_EOATEmpty
+				THEN
+					Reset_All_Completes:= TRUE;
+			ELSE
+					Reset_All_Completes:= FALSE;
+			END_IF;
+	END_IF;
+	(*Perform Actual Reset*)
+		IF Reset_All_Completes
+			THEN
+				Cycle_Complete:= FALSE;
+				Working_Complete:= FALSE;
+				Reset_All_Completes:= FALSE;
+		END_IF;
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Production Counter $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Increment Production Counter*)
+	Prod_Inc.CLK:= Cycle_Complete;
+	Prod_Inc();
+	IF Prod_Inc.Q
+		THEN
+		Production_Count:= Production_Count+1;
+	END_IF;
+	IF Reset_Production
+		THEN
+		Production_Count:= 0;
+	END_IF;
+	Prod_Count_Out:= Production_Count;
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Cycle Time Counters ~~~~~~~~~~~~~~~~~~~~~~~~~*)
+	(*Move Previous To Register*)
+	Cycle_Time_Pulse.CLK:= Cycle_Complete;
+	Cycle_Time_Pulse();
+	IF Cycle_Time_Pulse.Q
+		THEN
+		PrevCycle_Time_Out:= Cycle_Time_Out;
+	END_IF;
+	(*Monitor Current Cycle Time*)
+		Cycle_Time.PT:= T#9999S;
+		Cycle_Time.IN:= NOT Cycle_Time_Pulse.Q ;
+		Cycle_Time();
+		Cycle_Time_Out:= Cycle_Time.ET;
+
+
+(*%%%%%%%%%%%%%% Call Robots to Tool and Give Them, Task ID, Fixture ID and Model ID %%%%%%%%%%%%%%%%%*)
+
+	(* Perform Call To Tool*)
+	Tool_Call_ForWorkRobots:= Enable_Motion AND (NOT Cell_In_Services OR NOT Work_Robots_Clear)
+	 							AND Start_Work_Robots;
+
+	(*Allow Robots to Proceed Into Tool*)
+	(*!!!!!This is the final OK to allow Robots Into the Tool Area, So it Better Be Ready!!!!!!!*)
+	IF Enable_Motion
+		THEN
+			IF Work_Robots_Proceed AND Work_Robots_WorkingOK
+				THEN Robots_Clear_ToProceed:=TRUE;
+			END_IF;
+		ELSE Robots_Clear_ToProceed:= FALSE;
+	END_IF;
+
+	(*Develop Task IDs - See Global Variable, "TaskID_Record"*)
+
+	IF Start_Work_Robots AND Enable_Motion
+		THEN Task_ID:= Task_Data;
+	ELSE Task_ID:= 0;
+	END_IF;
+
+	(*Develop Fixture ID*)
+	IF Work_Robots_CommonPartInEOAT AND NOT Work_Robots_LHPartInEOAT AND NOT Work_Robots_RHPartInEOAT
+		THEN
+			Fix_ID:= 1;
+	ELSIF Work_Robots_LHPartInEOAT AND NOT Work_Robots_RHPartInEOAT AND NOT Work_Robots_CommonPartInEOAT
+		THEN
+			Fix_ID:= 2;
+	ELSIF NOT Work_Robots_LHPartInEOAT AND Work_Robots_RHPartInEOAT AND NOT Work_Robots_CommonPartInEOAT
+		THEN
+			Fix_ID:= 3;
+	ELSE
+			Fix_ID:= 0;
+	END_IF;
+	(*Develop Model ID*)
+	Model_ID:=Model_Data;
+
+(*+++++++++++++++++++++++++++++++++++++++++++++++ Task Complete Acks ++++++++++++++++++++++++++*)
+
+	(*Weld Complete Ack*)
+	Work_Complete_Ack:= Work_Robots_Complete AND Working_Complete;
+
+
+
+(*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Tool Repositions !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+
+	(*Reposition Request#1*)
+	IF FALSE
+		THEN
+			Repo_Reqs.0:= TRUE;
+	END_IF;
+	(*Reposition Request#2*)
+	IF FALSE
+		THEN
+			Repo_Reqs.1:= TRUE;
+	END_IF;
+	(*Reposition Request#3*)
+	IF FALSE
+		THEN
+			Repo_Reqs.2:= TRUE;
+	END_IF;
+	(*Reposition Request#4*)
+	IF FALSE
+		THEN
+			Repo_Reqs.3:= TRUE;
+	END_IF;
+	(*Reset All Reposition Acks At the End Of Cycle*)
+	IF Cycle_Complete
+		THEN
+			Repo_Reqs:= 0;
+	END_IF;
+(*------------------------- Reposition Acks ---------------------*)
+	Repo_Ack.0:= Repo_Reqs.0 AND FALSE;
+	Repo_Ack.1:= Repo_Reqs.0 AND FALSE;
+	Repo_Ack.2:= Repo_Reqs.0 AND FALSE;
+	Repo_Ack.3:= Repo_Reqs.0 AND FALSE;
+
+
+
+(*?????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????*)
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Faults $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Clamp/Cylider Faults Group 1*)
+		IF CLFaults1>0
+			THEN CLFaulted.1:=TRUE;
+		ELSE
+			CLFaulted.1:=FALSE;
+		END_IF;
+	(*Clamp/Cylider Faults Group 2*)
+		IF CLFaults2>0
+			THEN CLFaulted.2:=TRUE;
+		ELSE
+			CLFaulted.2:=FALSE;
+		END_IF;
+	(*Clamp/Cylider Faults Group 3*)
+		IF CLFaults3>0
+			THEN CLFaulted.3:=TRUE;
+		ELSE
+			CLFaulted.3:=FALSE;
+		END_IF;
+	(*Clamp/Cylinder Faults Group 4 - Reserved Flag for QA Check Motion Faults*)
+		IF CLFaults4>0
+			THEN CLFaulted.4:=TRUE;
+		ELSE
+			CLFaulted.4:=FALSE;
+		END_IF;
+	(*Bit 0 is designated as ANY Clamp Group Faulted*)
+	IF CLFaulted.1 OR CLFaulted.2 OR CLFaulted.3
+		THEN CLFaulted.0:= TRUE;
+	ELSE CLFaulted.0 := FALSE;
+	END_IF;
+
+	(*Part Present Sensor Faults*)
+		IF PPFaults>0
+			THEN PPFaulted.0:=TRUE;
+		ELSE
+			PPFaulted.0:=FALSE;
+		END_IF;
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Transfer Standard Outputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+	(*Transfer General Status and I/O Images for Display On UI*)
+	Discrete_Image.Input_Node_Count:= Input_Node_Count;
+	Discrete_Image.Output_Node_Count:= Output_Node_Count;
+	Discrete_Image.VB_Node_Count:= VB_Node_Count;
+	Discrete_Image.Option_SwingCylinder:= Option_SwingCylinder;
+	Discrete_Image.Option_TipDresser:= Option_TipDresser;
+	Discrete_Image.Option_TipChanger:= Option_TipChanger;
+	
+	Discrete_Image.CLFaults1:= CLFaults1;
+	Discrete_Image.CLFaults2:= CLFaults2;
+	Discrete_Image.CLFaults3:= CLFaults3;
+	Discrete_Image.CLFaults4:= CLFaults4;
+	Discrete_Image.CLFaulted:= CLFaulted;
+	
+	Discrete_Image.PPFaults:= PPFaults;
+	Discrete_Image.PPFaulted:= PPFaulted;
+	
+	
+	Discrete_Image.N01:= N01;
+	Discrete_Image.N02:= N02;
+	Discrete_Image.N50_STAT:= N50_STAT;
+	Discrete_Image.N50:= N50;
+	Discrete_Image.N100_STAT:= N100_STAT;
+	Discrete_Image.N100:= N100;
+
+	Discrete_Image.NodeLayout:= NodeLayout;
+	
+	
+(*-----------------------------------------------------------------------------------------Transfer Discrete Outputs --------------------------------------------------------------------------------*)
+
+	(*N50 Output Block*)
+	IF Enable_Motion AND (Output_Node_Count >0) THEN
+		IF Option_TipDresser THEN
+			N50.Q.0:= FALSE;		(*Dedicated for Dresser Cutter CW*)
+			N50.Q.1:= FALSE;		(*Dedicated for Dresser Cutter CCW*)
+			N50.Q.2:= Output_Node_UserREQS.2;
+			N50.Q.3:= Output_Node_UserREQS.3;
+			N50.Q.4:= Output_Node_UserREQS.4;
+			N50.Q.5:= Output_Node_UserREQS.5;
+			N50.Q.6:= Output_Node_UserREQS.6;
+			N50.Q.7:= Output_Node_UserREQS.7;
+		ELSE
+			N50.Q.0:= Output_Node_UserREQS.0;
+			N50.Q.1:= Output_Node_UserREQS.1;
+			N50.Q.2:= Output_Node_UserREQS.2;
+			N50.Q.3:= Output_Node_UserREQS.3;
+			N50.Q.4:= Output_Node_UserREQS.4;
+			N50.Q.5:= Output_Node_UserREQS.5;
+			N50.Q.6:= Output_Node_UserREQS.6;
+			N50.Q.7:= Output_Node_UserREQS.7;
+		END_IF;
+	ELSE
+		N50.Q:= 0;	
+	END_IF;
+	
+	
+(*-----------------------------------------------------------------------------------------Transfer Valve Outputs --------------------------------------------------------------------------------*)
+
+	(*Valve 1, A+B*)
+	(*Swing Cylinder 1*)
+		Valve1FB
+			(
+			Enable_Motion:= Enable_Motion AND Option_SwingCylinder,
+			Enable_Latch:= TRUE,					(*Enabling Runs Valve as detent type (maintained solenoids*)
+			Enable_SideA_PreCharge:= FALSE,		(*Enabling Turns Side A PreCharge Active, reset when Side B is energized in Auto*)
+			Enable_SideB_PreCharge:= FALSE,		(*Enabling Turns Side B PreCharge Active, reset when Side A is energized in Auto*)
+			PreCharge_Time:= T#0.1S,
+			Enable_Auto_Commands:= In_Auto,
+			In_Auto_SideA_Command:= Swing_ADV_REQ,
+			In_Auto_SideB_Command:= Swing_RET_REQ ,
+			Enable_Manual_Commands:= In_Manual,
+			In_Manual_SideA_Command:= FALSE,
+			In_Manual_SideB_Command:= FALSE,
+			SideA_Indicator:= Tool_At_Work.0,
+			SideB_Indicator:= Tool_At_Work.1,
+			TurnOn_SideA_SOL=> N100.Q.0,
+			TurnOn_SideB_SOL=> N100.Q.1,
+			TurnOn_SideA_Indicator=> Manual_Indicators.0,
+			TurnOn_SideB_Indicator=> Manual_Indicators.1
+			 );
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Transfer Safety Outputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)]]></ST>
+    </Implementation>
+    <LineIds Name="FB_GTAC_Ped_20240808">
+      <LineId Id="181" Count="2" />
+      <LineId Id="1423" Count="2" />
+      <LineId Id="1436" Count="0" />
+      <LineId Id="1426" Count="3" />
+      <LineId Id="1818" Count="0" />
+      <LineId Id="1430" Count="3" />
+      <LineId Id="1438" Count="0" />
+      <LineId Id="1434" Count="1" />
+      <LineId Id="197" Count="1" />
+      <LineId Id="200" Count="1" />
+      <LineId Id="2298" Count="20" />
+      <LineId Id="280" Count="0" />
+      <LineId Id="854" Count="1" />
+      <LineId Id="283" Count="230" />
+      <LineId Id="1041" Count="2" />
+      <LineId Id="1627" Count="2" />
+      <LineId Id="1044" Count="0" />
+      <LineId Id="2327" Count="0" />
+      <LineId Id="2329" Count="0" />
+      <LineId Id="2328" Count="0" />
+      <LineId Id="2326" Count="0" />
+      <LineId Id="1045" Count="3" />
+      <LineId Id="2330" Count="0" />
+      <LineId Id="1049" Count="1" />
+      <LineId Id="1439" Count="0" />
+      <LineId Id="2537" Count="2" />
+      <LineId Id="2541" Count="0" />
+      <LineId Id="2543" Count="2" />
+      <LineId Id="2547" Count="0" />
+      <LineId Id="2546" Count="0" />
+      <LineId Id="2542" Count="0" />
+      <LineId Id="2325" Count="0" />
+      <LineId Id="2332" Count="0" />
+      <LineId Id="1060" Count="0" />
+      <LineId Id="2212" Count="0" />
+      <LineId Id="2222" Count="0" />
+      <LineId Id="2236" Count="0" />
+      <LineId Id="2240" Count="1" />
+      <LineId Id="2258" Count="5" />
+      <LineId Id="2238" Count="0" />
+      <LineId Id="2249" Count="7" />
+      <LineId Id="2239" Count="0" />
+      <LineId Id="2225" Count="1" />
+      <LineId Id="2224" Count="0" />
+      <LineId Id="2221" Count="0" />
+      <LineId Id="2211" Count="0" />
+      <LineId Id="1061" Count="1" />
+      <LineId Id="2264" Count="21" />
+      <LineId Id="580" Count="2" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

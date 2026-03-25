@@ -1,0 +1,159 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="Ped_Stations" Id="{1ac3d140-6ed4-4552-8537-89d5ef0daca7}" SpecialFunc="None">
+    <Declaration><![CDATA[(*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Program Used to group all Ped Type Station Instances
+	author: Brent Lekx-Toniolo of Sodecia GTAC
+	Feb, 2015
+--------------------------------------------------------------------------------------------------------------
+REVISION NOTES:
+	Date: Feb 2015
+	- Original Concept, b.lekx-toniolo
+
+--------------------------------------------------------------------------------------------------------------
+*)
+PROGRAM Ped_Stations
+	VAR_INPUT
+		Enable_Prog: BOOL;
+	END_VAR
+
+	VAR
+	END_VAR
+
+	(*data that needs to be retained in the event of a power cycle*)
+	VAR PERSISTENT
+	END_VAR
+
+	VAR_OUTPUT
+		Prog_Ok: BOOL;
+	END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+(*Set Prog_OK to True*)
+Prog_OK:= TRUE;
+
+(*Sic Marking*)
+(*PED01*)
+MAIN.Ped[1]
+	(
+	(*FB Inputs*)
+	Enable_Motion:= MAIN.Control_Power_ON,
+	NodeLayout:= Main.ECAT_Master.PedNodeLayout[1],	(*Pass in Assembled Node layout for UI*)
+	Input_Node_Count:= 0,							(*Amount of EP1008 blocks on ped*)
+	Output_Node_Count:= 0,							(*Amount of EP2028 or 2624 blocks on ped*)
+	VB_Node_Count:= 0,								(*Amount of Valve Banks on ped*)
+	Option_SwingCylinder:= FALSE, 					(*Enable Swing Cylinder, can be for Ped Item Swing or Tip Dressers (Must be set to TRUE for Tip Dresser)*)
+	Option_TipDresser:= FALSE, 						(*Enable TipDresser functionality*)
+	Option_TipChanger:= FALSE, 						(*Enable TipChanger functionality*)
+	Part_Present_Count:= 0,							(*Enable use of Part Presents. 0-4 max*)
+	Prev_EcatNode_Present:= TRUE,					(*Ensure Previous Node Exists to determine Ecat Cable Break of this Devices Input Cable*)
+	Mode_Select:= 1, (*2=Manual, 1=Auto*)
+	Model_Data:= EOAT04_2_ProductData_Pers.Product_Model_ID,
+	Task_Data:= Work_Ped01,
+	Dry_Cycle:= GTAC_CONFIG.Dry_Cycle_Enabled,
+	Cell_In_Services:= Cell_Services_Prog.Service_Call_ForAllRobots OR In_From_ICxx.Cycle_Hold,
+	PrevProcess_Complete:= EOAT04.Part2_In_EOAT AND ((EOAT04_2_ProductData_Pers.Generic_PassFail_Notes[12] = 'Pass') OR (EOAT04_1_ProductData_Pers.Generic_PassFail_Notes[5] = 'Comp')), 		(*Add Interlock here for a previous process that must be completed before starting this Ped process*)
+	Blank_Position_Checks:= FALSE,		(*Use this input with caution, used to blank position checking during welding for example*)
+	Start_TipDress_Cycle:= FALSE,		(*When TipDress functionality is enable, holding this input high will start the tip dress cycle*)
+	Start_TipChange_Cycle:= FALSE,		(*When TipChange functionality is enable, holding this input high will start the tip change cycle*)
+	Swing_Adv_REQ:= FALSE,
+	Swing_Ret_REQ:= FALSE,
+	Tool_at_Home:= TRUE,			(*Conditions for Ped HOME position*)
+	Tool_At_Work0:= TRUE,			(*Conditions for Ped WORK position with cylinder*)
+	Tool_At_Work1:= FALSE,			(*Conditions for Ped WORK position with cylinder*)
+	Work_Robots_Clear:=  (MAIN.R4.Clear_Of_EquipInterf9 AND NOT (MAIN.R4.Task_ID_Ack=Work_Ped01)) OR MAIN.R4.At_Home,
+	Work_Robots_WorkingOK:= (MAIN.R4.Task_ID_Ack=Work_Ped01) AND MAIN.R4.Operating,
+	Work_Robots_Complete:= MAIN.R4.At_EquipInterf9 AND (MAIN.R4.Task_ID_Ack=Work_Ped01) AND MAIN.R4.Task_Completed,
+	Work_Robots_CommonPartInEOAT:= EOAT04.Part2_In_EOAT, 					(*Will set Fix_ID=1*)
+	Work_Robots_LHPartInEOAT:= FALSE, 		(*Will set Fix_ID=2*)
+	Work_Robots_RHPartInEOAT:= FALSE, 		(*Will set Fix_ID=3*)
+	Work_Robots_EOATEmpty:= EOAT04.EOAT_Part2_Empty,
+	Part_Present1_REQ:= FALSE,
+	Part_Present2_REQ:= FALSE,
+	Part_Present3_REQ:= FALSE,
+	Part_Present4_REQ:= FALSE,
+	Output_Node_UserREQS:= 0, 	(*Allow control of Output Node N50.Q.0 thru.7 (.0 and .1 reserved if TipDress Option is Enabled*)
+	(*FB Outputs*)
+	Cycle_Time_Out=> ,
+	PrevCycle_Time_Out=> ,
+	Tool_Call_ForWorkRobots=> , (*Mapped in Robot_Interlock_Map*)
+	Robots_Clear_ToProceed=> R1_Data.Proceed_From_Pounce[17],
+	Task_ID=> R4_Data.Task_ID[17],
+	Fix_ID=> R4_Data.Fix_ID[17],
+	Model_ID=> R4_Data.Model_ID[17],
+	Work_Complete_Ack=> R4_Data.Complete_Ack[17],
+	Repo_Ack=> R4_Data.PeripheralReq_Ack[17]
+	);
+	(*Map Outputs from Ped01*)
+	R4_Data.AuxReq_Ack[17].0:= ((MAIN.R4.Task_ID_Ack=Work_Ped01) AND MAIN.R4.Peripheral_Req.0) AND Out_To_ICxx.SIC01_Complete;
+
+
+(*Add more peds as required, up to 30 peds*)
+	
+	(*Move all PedXX data to the Out_To_ICxx Image*)
+	Out_to_ICxx.PED[1] :=Main.Ped[1].Discrete_Image;
+	Out_to_ICxx.PED[2] :=Main.Ped[2].Discrete_Image;
+	Out_to_ICxx.PED[3] :=Main.Ped[3].Discrete_Image;
+	Out_to_ICxx.PED[4] :=Main.Ped[4].Discrete_Image;
+	Out_to_ICxx.PED[5] :=Main.Ped[5].Discrete_Image;
+	Out_to_ICxx.PED[6] :=Main.Ped[6].Discrete_Image;
+	Out_to_ICxx.PED[7] :=Main.Ped[7].Discrete_Image;
+	Out_to_ICxx.PED[8] :=Main.Ped[8].Discrete_Image;
+	Out_to_ICxx.PED[9] :=Main.Ped[9].Discrete_Image;
+	Out_to_ICxx.PED[10] :=Main.Ped[10].Discrete_Image;
+	Out_to_ICxx.PED[11] :=Main.Ped[11].Discrete_Image;
+	Out_to_ICxx.PED[12] :=Main.Ped[12].Discrete_Image;
+	Out_to_ICxx.PED[13] :=Main.Ped[13].Discrete_Image;
+	Out_to_ICxx.PED[14] :=Main.Ped[14].Discrete_Image;
+	Out_to_ICxx.PED[15] :=Main.Ped[15].Discrete_Image;
+	Out_to_ICxx.PED[16] :=Main.Ped[16].Discrete_Image;
+	Out_to_ICxx.PED[17] :=Main.Ped[17].Discrete_Image;
+	Out_to_ICxx.PED[18] :=Main.Ped[18].Discrete_Image;
+	Out_to_ICxx.PED[19] :=Main.Ped[19].Discrete_Image;
+	Out_to_ICxx.PED[20] :=Main.Ped[20].Discrete_Image;
+	Out_to_ICxx.PED[21] :=Main.Ped[21].Discrete_Image;
+	Out_to_ICxx.PED[22] :=Main.Ped[22].Discrete_Image;
+	Out_to_ICxx.PED[23] :=Main.Ped[23].Discrete_Image;
+	Out_to_ICxx.PED[24] :=Main.Ped[24].Discrete_Image;
+	Out_to_ICxx.PED[25] :=Main.Ped[25].Discrete_Image;
+	Out_to_ICxx.PED[26] :=Main.Ped[26].Discrete_Image;
+	Out_to_ICxx.PED[27] :=Main.Ped[27].Discrete_Image;
+	Out_to_ICxx.PED[28] :=Main.Ped[28].Discrete_Image;
+	Out_to_ICxx.PED[29] :=Main.Ped[29].Discrete_Image;
+	Out_to_ICxx.PED[30] :=Main.Ped[30].Discrete_Image;
+
+
+
+
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="Ped_Stations">
+      <LineId Id="26" Count="9" />
+      <LineId Id="465" Count="0" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="255" Count="0" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="399" Count="1" />
+      <LineId Id="428" Count="0" />
+      <LineId Id="413" Count="0" />
+      <LineId Id="226" Count="0" />
+      <LineId Id="39" Count="5" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="415" Count="0" />
+      <LineId Id="435" Count="0" />
+      <LineId Id="47" Count="15" />
+      <LineId Id="436" Count="0" />
+      <LineId Id="63" Count="12" />
+      <LineId Id="118" Count="3" />
+      <LineId Id="158" Count="9" />
+      <LineId Id="182" Count="8" />
+      <LineId Id="179" Count="0" />
+      <LineId Id="192" Count="8" />
+      <LineId Id="191" Count="0" />
+      <LineId Id="156" Count="0" />
+      <LineId Id="122" Count="0" />
+      <LineId Id="126" Count="4" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,2199 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_GTAC_Kuka_CUSTOM" Id="{5d8e71c6-1a66-4e71-8c6b-7b83bf2e77b5}" SpecialFunc="None">
+    <Declaration><![CDATA[///FB for use with KUKA, KRC4 Series Robot Controller Using Ethercat I/O Interface and SafeOperation:
+///	Original Author(s): Brent Lekx-Toniolo of Sodecia GTAC; 
+///------------------------------------------------------------------------------------------
+///REVISION NOTES:
+///	Date: July 2013
+///	- Fix Service Job Status Banner to Include >250 TaskIDAcks: b.lekx-toniolo
+///	Date: July 2014:
+///	- Add Kuka Mig Type Robot: Rob Remillard
+///	Version 20141016:
+///	- Small updates for Weld Contoller Fault Abstraction and map Robot S-Axis Position: b.lekx-toniolo, JVD
+///	Version 20141202:
+///	- added turn table type robots for Weld controller Mapping: JVD
+/// 	- added turn table type robot to the Kuka type declation: JVD
+///	Version 20141209:
+///	- added turntable position index code, b.lekx-toniolo
+///	- corrected Robot to Robot Inerfs based on bug found by JVD, b.lekx-toniolo
+///	Version 20141216:
+///	- added HOME and HOME5: JVD
+///	- changed mapping for in Auto/T1/T2 and Homes: JVD
+///	- Increased Task ID Area from 8 bits to 16 bits, b.lekx-toniolo JVD
+///	Version 20150103:
+///	- changed servos on for krc4_safeop_turntable type robots. RR/JVD
+///	-changed instance of udt call. RR/JVD
+///	Version 20150109:
+///	- changed Turntable indexed positions, removed Home4, Home5 RR/JVD
+///	 -Error in code for task_id for WCU#1 and WCU#2  for tip change. was 255, changed to 355 and added task_id_ack = 354 JVD
+///	Version 20150120:
+///	- Added "previous ecat node ok" input for more accurate display of cable breaks, b.lekx-toniolo
+///	Version 20150128:
+///	- Added code for "teach Interlock" status message, b.lekx-toniolo
+///	Version 20150203:
+///	- Added ATI FB
+///	- Added user, direct access inputs
+///	- Added Peri Req requests off to Proceed, r.remillard
+///	Version 20150227:
+///	- Added Steppers Approaching max to WCU inputs, JVD
+///	- Changed Out_To_ECAT.Robot_IN[16] to use NOT FB_In.Under_Construction, JVD
+///	Version 20150318:
+///	- Added FB_Inputs to allow force brake and master test reqs, blt
+///	Version 20150512:
+///	- changed Out_To_ECAT.Robot_IN[88] to FB_In.Under_Construction, JVD
+///	Version 20150616
+///	-added cycle time counter, JVD
+///	Version 20150622
+///	-wrapped up CTs into a udt for easier data handling, blt
+///	Version 20150928:
+///	- Added CoE reads to gather EL6900 temperatue data, b.lekx-toniolo
+///	Version 20151029:
+///	- Changes for Kuka KRC4 FSoE safety interface, this FB will be for FSoE only, b.lekx-toniolo
+///	Version 20151215:
+///	- Re did "Servos Not on" messages and added "waiting for Task Complete Ack" message, b.lekx-toniolo
+///	Version 20160127
+///	- Internalized Water Stand FB and code to commonize functionality with EOAT and ATI concepts, b.lekx-toniolo
+///	- Added Configuration Variables for optional addins, b.lekx-toniolo
+///	- Changed code for TQM vs Collision Detect, b.lekx-toniolo
+///	Version 20160601
+///	-Added KUKA_KRC4c_SafeOP_Agilus Type, b.lekx-toniolo
+///	Version20160808
+///	- Finalized TQM code, b.lekx-toniolo, r.remillard, j. vandongen
+///	Version20160921
+///	- Added In_Welding, b.lekx-toniolo, r.remillard, j. vandongen
+///	Version20161027
+///	- Added not At_Home interlock to Pounce Proceed, b.lekx-toniolo
+///	Version20161122
+///	- Changed the Proceed from Pounce for the cell services, j.bysma
+///	Version 20161202
+///	-added IN[161-168] and OUT[161-168] as additional Aux Request bits, j.vandongen 
+///	-changed Under_Contrustion to Weld_Inhibit to bypass water faults. j.vandongen
+///	Version 20170306
+///	- added WCU#3 and WCU#4 mapping, moved Fronius mapping. r.remillard
+///	- added cycle time totals for robot, j.vandongen
+///	Version 20170412
+///	- fixed problem with servos on request due to new safe space setup. r.remillard
+///	Version 20170525
+///	- corrected issue with general Weld FLT bit being masked by fronius welder error status, b.lekx-toniolo
+///	Version 20170531
+///	- added mig count to options, b.lekx-toniolo
+///	- changed fronius status to udt type def, b.lekx-toniolo
+///	- Changes for switch from Fronius CMT to TPSi, b.lekx-toniolo 
+///	Version 20170620
+///	- added User outs, j.vandongen
+///	- changed EOAT req to 16 bits, j.vandongen
+///	Version 20170704
+///	- changed EOAT calls, j.vandongen
+///	Version 20170801
+///	- changed WS declaration to use new water stand FB, j.vandongen
+///	- added option to dissable water faults instead of under_construction, j.vandongen
+///	Version 20171025
+///	- changed mapping of TQM, j,vandongen
+///	- added mapping for Program Number selection from robot, j.vandongen         
+///	Version 20171113
+///	 - changed cooling out to WTC to prevent robot running without water, j.vandongen
+///	Version 20180405
+///	- changed mapping of reamer FB, j.vandongen
+///	Version 20180417
+///	- moved under_construction mapping from IN[88[ to IN[14], j.vandongen
+///	- removed IN[98] and IN[99], part in EOAT bits, handled external from robot, j.vandongen
+///	Version 20181004
+///	- WCU#2 missing contact saver input. , j.vandongen
+///	Version 20910903
+///	- changed water stand instance, j.vandongen
+///	- added clear to unclamp to In[97], j.vandongen
+///	- added Inputs and Outputs actions, j.vandongen
+///	Version 20190923
+///	- added EOAT_FLT status, j.vandongen
+///	Version 20200109
+///	- changed WTC NO_Fault bit due to issue inside WoV signal mapping, j.vandongen
+///	Version 20200512
+///	- added Clear_To_Unclamp to status 36, j.vandongen
+///	Version 20200710
+///	- changed WS to new type, j.vandongen
+///	Version 20210510
+///	-Readded Mig Welding code that had been missed in previous revisions. - C.drees
+///		-Added Fronius Status Bits and mapping to Robot Outputs
+///		-Corrected code for Weld Controller Faults
+/// Version 20210517
+///		-Consdensed WCU Tip Change Requests
+///		-Condensed WCU Stepper Reset
+/// Version 20220623
+///		- Updated WS instances, b.lekx-toniolo
+/// Version 20240208 (R&D project 90034, Sim Integration)
+///		- Added OPC attributes as required for OPC server interface development, b.lekx-toniolo
+///		- Updated FB_In to pass In_Sim_Mode and SIM_StartWorkAround for use in this FB, b.lekx-toniolo
+///		- Correct some minor typos etc to do with Disable water fault (FB Input), b.lekx-toniolo
+/// Version 20240620 (TraccTCP Addition)
+///		- Added TraccTCP developed and tested by Wes Griffiths on project 2302901, b.lekx-toniolo
+///		- Blank EOAT ID fault when 0 EOATs selected (nuisance fault in SIM), w.griffiths
+///------------------------------------------------------------------------------------------
+{attribute 'contains_implicit_enum'}
+FUNCTION_BLOCK FB_GTAC_Kuka_CUSTOM
+VAR_INPUT
+	Enable_FB: BOOL;
+	///Inputs to FB
+	FB_In: udt_Generic_Robot_FBIN_CUSTOM;
+END_VAR
+VAR
+	
+	///Ecat Bus Coupler
+	T01 AT %I*: udt_EK1100;
+	///EL Safety CPU
+	T02_STAT AT %I*: udt_EL6900_STAT_20160426;
+	T02_CMD AT %Q*: udt_EL6900_CMD_20121204;
+	///EL Safety Inputs
+	T03 AT %I*: udt_EL1904_v2;
+	///EK Junction Terminal
+	T04 AT %I*: udt_EK1122;
+	///reserved spot for second EK1100 in Robot controller
+	RT01: udt_EK1100;
+	///Ecat Bridge, specific to Kuka KRC4 FSoE
+	RT02 AT %I*: udt_EL6695_20151028;
+	///Develop EtherCAT Interface
+	In_From_HW AT %I*: udt_GenericRobot_AnyFieldbus_InputBytes_20220421;
+	{attribute 'OPC.UA.DA':='1'}
+	In_From_ECAT: udt_EtherCAT_Kuka_InputBits_20121204;
+	Out_To_HW AT %Q*: udt_GenericRobot_AnyFieldbus_OutputBytes_20220421;
+	{attribute 'OPC.UA.DA':='1'}
+	Out_To_ECAT: udt_EtherCAT_Kuka_OutputBits_20121204;
+
+	/// Nodes/Interface States
+	DiscreteNode_OK: BOOL;
+	EtherCATNode_OK: BOOL;
+	EtherCATConn_OK: BOOL;
+	///Cable Break Warning Flags
+	ECatSlave_Cable_Breaks: UDINT;
+	///Coupler is Not Present on Bus when expected
+	EK1100_NotPresent: BOOL;
+	///Port C of EK1100 is OUT
+	EK1100_PortC_MissingLink: BOOL;
+	///Port D of EK1122 is X1
+	EK1122_PortD_MissingLink: BOOL;
+	///Port B of EK1122 is X2
+	EK1122_PortB_MissingLink: BOOL;
+	///Bridge Terminal is not on Bus when expected
+	EL6695_NotPresent: BOOL;
+	///Port C of EL6695 is OUT
+	EL6695_PortC_MissingLink: BOOL;
+	///FB to retrieve Data from terminals via CoE
+	CoE_ReadFB_1: FB_EcCoESdoReadEx;
+	///Variable, 8 bytes, for receiving data
+	CoE_ReadBuffer_1: ARRAY[0..7] OF BYTE;
+	///CoE Read Error Flag
+	CoE_ReadErr_1: BOOL;
+	///CoE Read Error Identification
+	CoE_ReadErrID_1: UDINT;
+	///Flag for result of CoE Read
+	EL6900_Overtemperature: BOOL;
+	///FB for control of MIG Tip Reamer
+	Reamer: ARRAY[1..2] OF (*FB_GTAC_Reamer_20180405*) FB_GTAC_Reamer_20230328;
+	///FB for Control of ATI Tool Changer attached to the robot
+	ATI: ARRAY[1..2] OF FB_ATI_Changer_20151105;
+	///FB for Robot Water Temperature and Flow
+	WS: ARRAY[1..2] OF FB_GTAC_WaterStand_20220622;
+	///Robot Teach Pendant Estop Button OK, See Rxx Print Package, Page P03
+	PendEstop_Ok: BOOL;
+	///Robot Controller Estop Estop Button OK, See Rxx Print Package, Page P03
+	ContEstop_Ok: BOOL;
+	///Robot Peripherals are Read
+	Safety_PeriReady: BOOL;
+	///SafeOperation Configuration is Active
+	SafeOP_Active: BOOL;
+	///Robot Estop Relays Are On, See Rxx Print Package, Page P05 and P08 
+	Estop_Relays_On: BOOL;
+	///Robot Estop Relays Are Off
+	Estop_Relays_Off: BOOL;
+	///Robot Safety Gate Relays Are On, See Rxx Print Package, Page P05 and P08
+	SafetyGate_Relays_On: BOOL;
+	///Robot Safety Gate Relays Are Off
+	SafetyGate_Relays_Off: BOOL;
+	///Robot EOAT Relays Are On, See Rxx Print Package, Page P05 and P09
+	EOAT_Relays_On: BOOL;
+	///Robot EOAT Relays Are Off
+	EOAT_Relays_Off: BOOL;
+	///Hardware Detects that Robot is Clear of Human Interf#1
+	Zone1_Detected_Clear: BOOL;
+	///Hardware Detects that Robot is In Human Interf#1
+	Zone1_Detected_NotClear: BOOL;
+	///Hardware Detects that Robot is Clear of Human Interf#2
+	Zone2_Detected_Clear: BOOL;
+	///Hardware Detects that Robot is In Human Interf#2
+	Zone2_Detected_NotClear: BOOL;
+	///Hardware Detects that Robot is Clear of Human Interf#3
+	Zone3_Detected_Clear: BOOL;
+	///Hardware Detects that Robot is In Human Interf#3
+	Zone3_Detected_NotClear: BOOL;
+	///Hardware Detects that Robot is Clear of Human Interf#4
+	Zone4_Detected_Clear: BOOL;
+	///Hardware Detects that Robot is In Human Interf#4
+	Zone4_Detected_NotClear: BOOL;
+	///Hardware Detects that Robot is Clear of Human Interf#5
+	Zone5_Detected_Clear: BOOL;
+	///Hardware Detects that Robot is In Human Interf#5
+	Zone5_Detected_NotClear: BOOL;
+	///Hardware Detects that Robot is Clear of Human Interf#6
+	Zone6_Detected_Clear: BOOL;
+	///Hardware Detects that Robot is In Human Interf#6
+	Zone6_Detected_NotClear: BOOL;
+	///Hardware Detects that Robot is Clear of Human Interf#7
+	Zone7_Detected_Clear: BOOL;
+	///Hardware Detects that Robot is In Human Interf#7
+	Zone7_Detected_NotClear: BOOL;
+	///Hardware Detects that Robot is Clear of Human Interf#8
+	Zone8_Detected_Clear: BOOL;
+	///Hardware Detects that Robot is In Human Interf#8
+	Zone8_Detected_NotClear: BOOL;
+	///Standard Internals
+	///System Inputs From Robot System Outputs
+	Operating: BOOL;
+	Servos_Are_On: BOOL;
+	Faulted: BOOL;
+	Battery_Alarm: BOOL;
+	In_AutoExt: BOOL;
+	In_Auto: BOOL;
+	In_T1: BOOL;
+	In_T2: BOOL;
+	In_Teach: BOOL;
+	In_Home: BOOL;
+	In_Home1: BOOL;
+	In_Home2: BOOL;
+	In_Home3: BOOL;
+	In_Home4: BOOL;
+	In_Home5: BOOL;
+	Collision_Detect_Valid: BOOL;
+	TQM_Valid: BOOL;
+	Holding: BOOL;
+	Ream_Reqd: BOOL;
+	TraccTCP_Reqd: BOOL;
+	Master_Test_Reqd: BOOL;
+	Brake_Test_Reqd: BOOL;
+	Brake_Test_Reqd_Internal_Robot: BOOL;
+	///Tip Dresser Variables
+	Tip_DressOn_Req: BOOL;
+	Tip_DressReq_ToSafety AT %Q*: BOOL;
+	Tip_DressOn_Ack: BOOL;
+	Tip_Dress_Reqd: BOOL;
+	///Standard Inputs From Robot Standard Outputs
+	Clear_Of_EquipInterf1: BOOL;
+	Clear_Of_EquipInterf2: BOOL;
+	Clear_Of_EquipInterf3: BOOL;
+	Clear_Of_EquipInterf4: BOOL;
+	Clear_Of_EquipInterf5: BOOL;
+	Clear_Of_EquipInterf6: BOOL;
+	Clear_Of_EquipInterf7: BOOL;
+	Clear_Of_EquipInterf8: BOOL;
+	Clear_Of_EquipInterf9: BOOL;
+	Clear_Of_HumanInterf1: BOOL;
+	Clear_Of_HumanInterf2: BOOL;
+	Clear_Of_HumanInterf3: BOOL;
+	Clear_Of_HumanInterf4: BOOL;
+	Clear_Of_HumanInterf5: BOOL;
+	Clear_Of_HumanInterf6: BOOL;
+	Clear_Of_HumanInterf7: BOOL;
+	Clear_Of_HumanInterf8: BOOL;
+	S_Axis_Pos_Raw: INT;
+	S_Axis_Pos_Indexed: UINT;
+	External_Axis_Pos_Raw: INT;
+	
+	///Turntable Position Index
+	TT_Axis_Location_Index: UINT;
+	TT_SideA_AtRobot: BOOL;
+	TT_SideB_AtRobot: BOOL;
+	EOAT_ID_Ack: UINT;
+	Fix_ID_Ack: UINT;
+	Model_ID_Ack: UINT;
+	User_Outputs: UINT;
+	Task_ID_Ack: UINT;
+	Peripheral_Req: UINT;
+	Aux_Req: UINT;
+	Program_No_Req: UINT;
+	At_Pounce: BOOL;
+	///LHPart_In_EOAT: BOOL; de bug
+	///		RHPart_In_EOAT: BOOL;
+	///		Part_In_EOAT: BOOL;
+	Clear_To_Unclamp: BOOL;
+	Task_Completed: BOOL;
+	Clear_Of_RobotInterfs: UINT;
+	EOAT_Req: UINT;
+	///WCU#1 Inputs
+	WCU1_NoFaults: BOOL;
+	WCU1_SteppersAreReset: BOOL;
+	WCU1_SteppersApprMax: BOOL;
+	WCU1_TipChgReqd_1: BOOL;
+	WCU1_StepperAtMax_1: BOOL;
+	WCU1_TipChgReqd_2: BOOL;
+	WCU1_StepperAtMax_2: BOOL;
+	WCU1_DressReqd_1: BOOL;
+	WCU1_DressReqd_2: BOOL;
+	WCU1_Weld_Init: BOOL;
+	WCU1_Weld_InProgress: BOOL;
+	WCU1_Weld_Complete: BOOL;
+	WCU1_AnyTipChangeRqst:BOOL;
+	///WCU#2 Inputs
+	WCU2_NoFaults: BOOL;
+	WCU2_SteppersAreReset: BOOL;
+	WCU2_SteppersApprMax: BOOL;
+	WCU2_TipChgReqd_1: BOOL;
+	WCU2_StepperAtMax_1: BOOL;
+	WCU2_TipChgReqd_2: BOOL;
+	WCU2_StepperAtMax_2: BOOL;
+	WCU2_DressReqd_1: BOOL;
+	WCU2_DressReqd_2: BOOL;
+	WCU2_Weld_Init: BOOL;
+	WCU2_Weld_InProgress: BOOL;
+	WCU2_Weld_Complete: BOOL;
+	WCU2_AnyTipChangeRqst:BOOL;
+	///WCU#3 Inputs
+	WCU3_NoFaults: BOOL;
+	WCU3_SteppersAreReset: BOOL;
+	WCU3_SteppersApprMax: BOOL;
+	WCU3_TipChgReqd_1: BOOL;
+	WCU3_StepperAtMax_1: BOOL;
+	WCU3_TipChgReqd_2: BOOL;
+	WCU3_StepperAtMax_2: BOOL;
+	WCU3_DressReqd_1: BOOL;
+	WCU3_DressReqd_2: BOOL;
+	WCU3_Weld_Init: BOOL;
+	WCU3_Weld_InProgress: BOOL;
+	WCU3_Weld_Complete: BOOL;
+	WCU3_AnyTipChangeRqst:BOOL;
+	///WCU#4 Inputs
+	WCU4_NoFaults: BOOL;
+	WCU4_SteppersAreReset: BOOL;
+	WCU4_SteppersApprMax: BOOL;
+	WCU4_TipChgReqd_1: BOOL;
+	WCU4_StepperAtMax_1: BOOL;
+	WCU4_TipChgReqd_2: BOOL;
+	WCU4_StepperAtMax_2: BOOL;
+	WCU4_DressReqd_1: BOOL;
+	WCU4_DressReqd_2: BOOL;
+	WCU4_Weld_Init: BOOL;
+	WCU4_Weld_InProgress: BOOL;
+	WCU4_Weld_Complete: BOOL;
+	WCU4_AnyTipChangeRqst:BOOL;
+	All_WCUSteppers_Reset :BOOL;
+	Any_WCU_TipChng_Rqst:BOOL;
+	///Fronius Mig Weld Controller
+	Fronius_ErrorImage: UINT;
+	Fronius_ProcessActive: BOOL;
+	Fronius_Mig_HotKey: BOOL;
+	Fronius_TorchCollision: BOOL;
+	Fronius_PowerSourceReady: BOOL;
+	Fronius_IgnitionError: BOOL;
+	///Weld Controller Common
+	In_Welding: BOOL;
+	///The So Called Location Index is used to index Information To and From the Robot Based on its Working Location
+	Location_Index: UINT;
+	///Robot is At one of it's designated home position
+	At_Home: BOOL;
+	At_EquipInterf1: BOOL;
+	At_EquipInterf2: BOOL;
+	At_EquipInterf3: BOOL;
+	At_EquipInterf4: BOOL;
+	At_EquipInterf5: BOOL;
+	At_EquipInterf6: BOOL;
+	At_EquipInterf7: BOOL;
+	At_EquipInterf8: BOOL;
+	At_EquipInterf9: BOOL;
+	At_HumanInterf1: BOOL;
+	At_HumanInterf2: BOOL;
+	At_HumanInterf3: BOOL;
+	At_HumanInterf4: BOOL;
+	At_HumanInterf5: BOOL;
+	At_HumanInterf6: BOOL;
+	At_HumanInterf7: BOOL;
+	At_HumanInterf8: BOOL;
+	///InterfsOK
+	OK_At_EquipInterf1: BOOL;
+	OK_At_EquipInterf2: BOOL;
+	OK_At_EquipInterf3: BOOL;
+	OK_At_EquipInterf4: BOOL;
+	OK_At_EquipInterf5: BOOL;
+	OK_At_EquipInterf6: BOOL;
+	OK_At_EquipInterf7: BOOL;
+	OK_At_EquipInterf8: BOOL;
+	OK_At_EquipInterf9: BOOL;
+	OK_At_EquipInterfALL: BOOL;
+	OK_At_HumanInterf1: BOOL;
+	OK_At_HumanInterf2: BOOL;
+	OK_At_HumanInterf3: BOOL;
+	OK_At_HumanInterf4: BOOL;
+	OK_At_HumanInterf5: BOOL;
+	OK_At_HumanInterf6: BOOL;
+	OK_At_HumanInterf7: BOOL;
+	OK_At_HumanInterf8: BOOL;
+	OK_At_HumanInterfALL: BOOL;
+	OK_At_RobotInterfs: UINT;
+	OK_At_RobotInterfsALL: BOOL;
+	/// Robot is Ready
+	Ready: BOOL;
+	///Robot has Ack'd proper Fix, EOAT, Model and Task ID
+	ID_Acks_OK: BOOL;
+	///All Interferences with Human and Equipment Zones OK
+	All_Interfs_Ok: BOOL;
+	///Request to Turn On Servos
+	Servos_Req: BOOL;
+	///Delay Servos On Request
+	Servos_Req_Delay: TON;
+	///Request to Turn Servos OFF
+	Servos_Off_Req: BOOL;
+	///Start Robot
+	Start_Robot_Scan: BOOL;
+	///Hold Robot
+	Hold_Robot: BOOL;
+	EOAT_ID: UINT;
+	///Fault Flags
+	Fix_ID_FLT: BOOL;
+	Eoat_ID_FLT: BOOL;
+	Model_ID_FLT: BOOL;
+	Task_ID_FLT: BOOL;
+	Ack_ID_FLT: BOOL;
+	Ack_ID_TMR: TON;
+	Comp_Ack_TMR: TON;
+	TQM_NotValid_FLT: BOOL;
+	Estop_RelayFLT: BOOL;
+	SafetyGate_RelayFLT: BOOL;
+	EOAT_RelayFLT: BOOL;
+	WaterStand_FLT: BOOL;
+	Weld_Controller_FLT: BOOL;
+	EOAT_FLT: BOOL;
+	ToolChanger_FLT: BOOL;
+	///Local Always Off
+	Stay_Off: BOOL := FALSE;
+	{attribute 'implicit_enum_type' := ''}
+		Kuka_Types:					(*Enumeration of Robot Types*)
+		(
+			KUKA_KRC2:= 51,
+			KUKA_KRC4:=60,
+			KUKA_KRC4_SafeOP:=61,
+			KUKA_KRC4_SafeOP_Small:=62,
+			KUKA_KRC4_SafeOP_ATI:=63,
+			KUKA_KRC4c_SafeOP_Agilus:=64,
+			KUKA_KRC4_SafeOP_TurnTable:=69
+		);
+	///Robot Is Auto Restart Type, for Internal Robots etc
+	Robot_Is_AutoRestart: BOOL;
+	///Generic Pulse Generator
+	Pulse_2s_FB: FB_Pulse_Generator;
+	Pulse_2s: BOOL;
+	///Used for Robot Cycle time
+	Cycle_TimeEquip1: TON;
+	Cycle_Time_PulseEquip1: R_TRIG;
+	Cycle_TimeEquip2: TON;
+	Cycle_Time_PulseEquip2: R_TRIG;
+	Cycle_TimeEquip3: TON;
+	Cycle_Time_PulseEquip3: R_TRIG;
+	Cycle_TimeEquip4: TON;
+	Cycle_Time_PulseEquip4: R_TRIG;
+	Cycle_TimeEquip5: TON;
+	Cycle_Time_PulseEquip5: R_TRIG;
+	Cycle_TimeEquip6: TON;
+	Cycle_Time_PulseEquip6: R_TRIG;
+	Cycle_TimeEquip7: TON;
+	Cycle_Time_PulseEquip7: R_TRIG;
+	Cycle_TimeEquip8: TON;
+	Cycle_Time_PulseEquip8: R_TRIG;
+	Cycle_TimeHuman1: TON;
+	Cycle_Time_PulseHuman1: R_TRIG;
+	Cycle_TimeHuman2: TON;
+	Cycle_Time_PulseHuman2: R_TRIG;
+	Cycle_TimeHuman3: TON;
+	Cycle_Time_PulseHuman3: R_TRIG;
+	Cycle_TimeHuman4: TON;
+	Cycle_Time_PulseHuman4: R_TRIG;
+	Cycle_TimeHuman5: TON;
+	Cycle_Time_PulseHuman5: R_TRIG;
+	Cycle_TimeHuman6: TON;
+	Cycle_Time_PulseHuman6: R_TRIG;
+	Cycle_TimeHuman7: TON;
+	Cycle_Time_PulseHuman7: R_TRIG;
+	Cycle_TimeHuman8: TON;
+	Cycle_Time_PulseHuman8: R_TRIG;
+
+	(*IN_PLC : Smart Ray <-> Robot*)
+	In_Rxx_From_SmartRay : udt_SmartRay_Out_To_Robot_IN_20260119;
+	Out_Rxx_To_SmartRay: udt_Robot_Out_To_SmartRay_IN_20260119;	
+	
+	Temp1: BOOL;
+	Temp2: BOOL;
+	Temp3: BOOL;
+	Temp4: BOOL;
+	Temp5: BOOL;
+	Temp6: BOOL;
+	Temp7: BOOL;
+	Temp8: BOOL;
+	clear_To: BOOL;
+END_VAR
+VAR_OUTPUT
+	FB_Ok: BOOL;
+	Status: INT;
+	Fronius_Status: udt_Fronius_Status_20170531;
+	Fronius_Ready: BOOL;
+	Input_Image: udt_GenericRobot_AnyFieldbus_InputBytes_20220421;
+	Output_Image: udt_GenericRobot_AnyFieldbus_OutputBytes_20220421;
+	Discrete_Image: udt_RobotDiscreteNode_ImageSSCCv46wSAFEOP_20131903;
+	Discrete_Image_FSoE: udt_RobotDiscreteNode_ImageFSoE_20151028;
+	CT: udt_GenericRobot_CycleTimes_20170304;
+	TT_at_PickUp_Pos: BOOL;
+	TT_at_DropOff_Pos: BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Generic 2s Pulse generator*)
+Pulse_2s_FB(On_Time:= T#2s, Off_Time:= T#2s, Wave=> Pulse_2s );
+
+
+
+	(*Check Robot Type and Weld Controller count and set FB_OK to True if range is ok*)
+	IF FB_In.Robot_Type>50 AND FB_In.Robot_Type<100 AND
+		FB_In.Options.WeldCont_Amount >=0 AND FB_In.Options.WeldCont_Amount <=4 AND
+		FB_In.Options.MIGCont_Amount >=0 AND FB_In.Options.MIGCont_Amount <=1 AND
+		FB_In.Options.Reamer_Amount>=0 AND FB_In.Options.Reamer_Amount<=1 AND
+		FB_In.Options.WaterStand_Amount>=0 AND FB_In.Options.WaterStand_Amount<=2 AND
+		FB_In.Options.EOAT_Amount>=0 AND FB_In.Options.EOAT_Amount<=4
+		THEN
+		FB_OK:= TRUE;
+	ELSE
+		FB_OK:= FALSE;
+	END_IF;
+
+(*----------------- First Gather an Input Image in Generic Byte Type and convert TO Kuka Specific Type*)
+
+IF FB_In.In_Sim_Mode (*Added during project 90034*)
+	THEN
+	(*If in Sim Mode, Robot INs[x] (In_From_ECAT) will be provided by Sim environment, therefore reflect back to In_From_HW for proper display on UI*)
+	In_From_HW:= FUN_GTAC_GenericRobotInputImage_From_KUKAKRC4(In_From_ECAT);
+ELSE
+	(*Otherwise keep stock signal flow (In_From_HW -> In_From_ECAT) *)
+	In_From_ECAT:= FUN_GTAC_GenericRobotInputImage_TO_KUKAKRC4(In_From_HW);
+
+END_IF;
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$Gather Status Of Hardware $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+(*General Robot Node Status*)
+(*FSoE Type*)
+		(*Discrete I/O Node, FSoE Type*)
+		IF T01.InfoData.State=8 AND T02_Stat.InfoData.State=8 AND T03.InfoData.State=8 AND T04.InfoData.State=8
+			(*AND RT01.InfoData.State=8*) AND RT02.InfoData.State=8 (*Check of RT01 will depend on if we can pass state from Robot controller via EtherCAT*)
+			THEN DiscreteNode_OK:=TRUE;
+		ELSE DiscreteNode_OK:=FALSE;
+		END_IF;
+
+(*Develop Port Connection Warning Flags*)
+	IF T01.InfoData.State=257 (*State Machine for Slave Not Present*)
+		THEN EK1100_NotPresent:= TRUE;
+	ELSE EK1100_NotPresent := FALSE;
+	END_IF;
+
+	IF T01.InfoData.State=17416 (*State Machine for Link Missing at Port C*)
+		THEN EK1100_PortC_MissingLink:= TRUE; (*PortC is OUT Port*)
+	ELSE EK1100_PortC_MissingLink := FALSE;
+	END_IF;
+
+	IF (T04.InfoData.State=-31736) (*State Machine for Link Missing at Port D (0xA8408)*)
+		OR (T04.InfoData.State=-23544) (*State Machine for Link Missing at Port D and Port B (0xA408)*)
+		THEN EK1122_PortD_MissingLink:= TRUE; (*Port D is X1 Port*)
+	ELSE EK1122_PortD_MissingLink := FALSE;
+	END_IF;
+
+	IF (T04.InfoData.State= 9224) (*State Machine for Link Missing at Port B (0x2408)*)
+		OR (T04.InfoData.State=-23544) (*State Machine for Link Missing at Port D and Port B (0xA408)*)
+		THEN EK1122_PortB_MissingLink:= TRUE; (*Port B is X2 Port*)
+	ELSE EK1122_PortB_MissingLink := FALSE;
+	END_IF;
+
+	IF RT02.InfoData.State= 257 (*State Machine for Slave Not Present*)
+		THEN EL6695_NotPresent:= TRUE;
+	ELSE EL6695_NotPresent := FALSE;
+	END_IF;
+
+	IF RT02.InfoData.State= 9224 (*State Machine for Link Missing at Port C*)
+		THEN EL6695_PortC_MissingLink:= TRUE; (*PortC is OUT Port*)
+	ELSE EL6695_PortC_MissingLink := FALSE;
+	END_IF;
+
+(*EtherCAT Bridge Terminal*)
+		IF RT01.InfoData.State= 8 AND RT02.InfoData.State= 8					(*Slave in OP and External Device (Primary Master, KRC4) is Connected*)
+			THEN EtherCATNode_OK:=TRUE;
+		ELSE EtherCATNode_OK:=FALSE;
+		END_IF;
+
+		(*EtherCAT Connection From EK1100 to SYS- X-44*)
+		IF RT01.InfoData.State= 8											(*External Device (Primary Master, KRC4) is Connected*)
+			THEN EtherCATConn_OK:=TRUE;
+		ELSE EtherCATConn_OK:=FALSE;
+		END_IF;
+
+	(*Wrap up break Flags to Variable for shipment to UI*)
+	ECatSlave_Cable_Breaks.0:= EK1100_NotPresent AND FB_In.Prev_EcatNode_Present;
+	ECatSlave_Cable_Breaks.1:= EK1100_PortC_MissingLink;
+	ECatSlave_Cable_Breaks.16:=EK1122_PortD_MissingLink;
+	ECatSlave_Cable_Breaks.17:=EK1122_PortB_MissingLink;
+	ECatSlave_Cable_Breaks.18:= EL6695_NotPresent AND NOT EK1100_NotPresent;
+	ECatSlave_Cable_Breaks.19:= EL6695_PortC_MissingLink;
+	ECatSlave_Cable_Breaks.20:= NOT EtherCATConn_OK;
+
+	(*------------ CoE Reads ------------*)
+
+	(*Read EL6900 Primaray Temperature Data*)
+
+	(*FB Inputs*)
+	CoE_ReadFB_1.bExecute:= FB_In.CoE_Read_Trigger
+							AND (T02_Stat.InfoData.State=8);						(*Execute Upon Trigger*)
+	CoE_ReadFB_1.sNetId:= FB_In.Ecat_Master_AmsNetID;
+	CoE_ReadFB_1.nSlaveAddr:= T02_STAT.InfoData.AdsAddr.port;						(*Address of Ecat Slave being Read*)
+	CoE_ReadFB_1.nIndex:= 16#FA80;												(*CANopen SDO Index of Object (FA80 = Hardware Diag Object)*)
+	CoE_ReadFB_1.nSubIndex:= 16#01;												(*CANopen SDO SubIndex (Location from Index) of Object (1 = Primary Temperature)*)
+	CoE_ReadFB_1.cbBufLen:= 8;													(*Limit on Receive Length (bytes)*)
+	CoE_ReadFB_1.pDstBuf:= ADR(CoE_ReadBuffer_1);								(*Pointer to Receive Buffer*)
+	CoE_ReadFB_1.tTimeout:= T#2s;												(*TImeout for Read*)
+	CoE_ReadFB_1.bCompleteAccess:= TRUE;										(*Allow Complete Access to Full SDO Object*)
+
+	(*Execute FB*)
+	CoE_ReadFB_1();
+
+	(*FB Outputs*)
+	CoE_ReadErr_1:= CoE_ReadFB_1.bError;										(*Error Flag of Read*)
+	CoE_ReadErrID_1:= CoE_ReadFB_1.nErrId;										(*Error ID of Read (See ADS Return Codes)*)
+
+	(*Tranfer Data to Image*)
+	IF (T02_Stat.InfoData.State=8) AND NOT CoE_ReadErr_1
+		THEN
+		T02_STAT.CoE_Temperature_1:= FUN_GTAC_BYTEStoINT(CoE_ReadBuffer_1[0],CoE_ReadBuffer_1[1]);	(*Grab bytes 0 and 1 of read buffer, this is Primary Temperature*)
+		T02_STAT.CoE_Temperature_2:= FUN_GTAC_BYTEStoINT(CoE_ReadBuffer_1[2],CoE_ReadBuffer_1[3]);	(*Grab bytes 2 and 3 of read buffer, this is Secondary Temperature*)
+	ELSE
+		(*If Read Error, then blank data*)
+		T02_STAT.CoE_Temperature_1:=0;
+		T02_STAT.CoE_Temperature_2:=0;
+	END_IF;
+
+	(*Finally Evaluate Temperature Vs Upper Limit Restrictions*)
+	IF (T02_STAT.CoE_Temperature_1>=90) OR (T02_STAT.CoE_Temperature_2>=90)
+		THEN
+		EL6900_Overtemperature:= TRUE;
+	ELSE
+		EL6900_Overtemperature:= FALSE;
+	END_IF;
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Gather All Safety I/O $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+		(*Get Status of Estops*)
+		PendEstop_OK:= RT02.FSOE_Inputs_Data_0.0;
+		ContEstop_OK:= TRUE;
+
+		(*Get Status of Safety Peripheral Ready Signal*)
+		Safety_PeriReady:= RT02.FSOE_Inputs_Data_0.4;
+		(*Get Status of SafeOP Active*)
+		SafeOP_Active:= RT02.FSOE_Inputs_Data_1.0;
+
+		Estop_Relays_On:= RT02.FSOE_Outputs_Data_0.1 AND RT02.FSOE_Outputs_Data_0.1;
+		Estop_Relays_Off:= NOT Estop_Relays_On;
+		SafetyGate_Relays_On:= RT02.FSOE_Outputs_Data_0.2;
+		SafetyGate_Relays_Off:= NOT SafetyGate_Relays_On;
+		EOAT_Relays_On:= FALSE;
+		EOAT_Relays_Off:= FALSE;
+		Tip_DressOn_Ack:= T03.I.3;
+
+			(*Safety Zone Detected Clear Signals, Either done with Base Limit Switchs or SafeOP Alarm Space Notification*)
+			Zone1_Detected_Clear:= RT02.FSOE_Inputs_Data_2.0;
+			Zone1_Detected_NotClear:= NOT Zone1_Detected_Clear;
+			Zone2_Detected_Clear:= RT02.FSOE_Inputs_Data_2.1;
+			Zone2_Detected_NotClear:= NOT Zone2_Detected_Clear;
+			Zone3_Detected_Clear:= RT02.FSOE_Inputs_Data_2.2;
+			Zone3_Detected_NotClear:= NOT Zone3_Detected_Clear;
+			Zone4_Detected_Clear:= RT02.FSOE_Inputs_Data_2.3;
+			Zone4_Detected_NotClear:= NOT Zone4_Detected_Clear;
+			Zone5_Detected_Clear:= RT02.FSOE_Inputs_Data_2.4;
+			Zone5_Detected_NotClear:= NOT Zone5_Detected_Clear;
+			Zone6_Detected_Clear:= RT02.FSOE_Inputs_Data_2.5;
+			Zone6_Detected_NotClear:= NOT Zone6_Detected_Clear;
+			Zone7_Detected_Clear:= RT02.FSOE_Inputs_Data_2.6;
+			Zone7_Detected_NotClear:= NOT Zone7_Detected_Clear;
+			Zone8_Detected_Clear:= RT02.FSOE_Inputs_Data_2.7;
+			Zone8_Detected_NotClear:= NOT Zone8_Detected_Clear;
+
+			IF (FB_In.Robot_Type = KUKA_KRC4_SafeOP_TurnTable)
+				THEN
+				(*TurnTable Indexed Postion (Turntable may or may not be used)*)
+				TT_SideA_AtRobot:= T03.I.0 AND T03.I.1 AND NOT T03.I.2 AND NOT T03.I.3;
+				TT_SideB_AtRobot:= NOT T03.I.0 AND NOT T03.I.1 AND T03.I.2 AND T03.I.3;
+				TT_Axis_Location_Index.0:= TT_SideA_AtRobot AND NOT TT_SideB_AtRobot; (*Pos1*)		
+				TT_Axis_Location_Index.1:=NOT TT_SideA_AtRobot AND TT_SideB_AtRobot; (*Pos2*)
+			ELSE
+				(*No turntable type, blank positional data*)
+				TT_SideA_AtRobot:= FALSE;
+				TT_SideB_AtRobot:= FALSE;
+				TT_Axis_Location_Index.0:= TT_SideA_AtRobot AND NOT TT_SideB_AtRobot; (*Pos1*)		
+				TT_Axis_Location_Index.1:=NOT TT_SideA_AtRobot AND TT_SideB_AtRobot; (*Pos2*)
+			END_IF;
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$Gather All Standard and System Inputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	Inputs();
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Internal Code $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+	(*Ensuring WCU Steppers are reset*)
+	CASE Fb_in.Options.WeldCont_Amount OF
+		0:	All_WCUSteppers_Reset:=TRUE;
+		1:	All_WCUSteppers_Reset:=WCU1_SteppersAreReset;
+		2:	All_WCUSteppers_Reset:=WCU1_SteppersAreReset AND WCU2_SteppersAreReset;
+		3:	All_WCUSteppers_Reset:=WCU1_SteppersAreReset AND WCU2_SteppersAreReset AND WCU3_SteppersAreReset;
+		4:	All_WCUSteppers_Reset:=WCU1_SteppersAreReset AND WCU2_SteppersAreReset AND WCU3_SteppersAreReset AND WCU4_SteppersAreReset;
+	END_CASE
+
+	(*Tip Change Logic*)
+		WCU1_AnyTipChangeRqst := WCU1_SteppersApprMax OR WCU1_TipChgReqd_1 OR WCU1_TipChgReqd_2 OR WCU1_StepperAtMax_1  OR WCU1_StepperAtMax_2;
+		WCU2_AnyTipChangeRqst := WCU2_SteppersApprMax OR WCU2_TipChgReqd_1 OR WCU2_TipChgReqd_2 OR WCU2_StepperAtMax_1  OR WCU2_StepperAtMax_2;
+		WCU3_AnyTipChangeRqst := WCU3_SteppersApprMax OR WCU3_TipChgReqd_1 OR WCU3_TipChgReqd_2 OR WCU3_StepperAtMax_1  OR WCU3_StepperAtMax_2;
+		WCU4_AnyTipChangeRqst := WCU4_SteppersApprMax OR WCU4_TipChgReqd_1 OR WCU4_TipChgReqd_2 OR WCU4_StepperAtMax_1  OR WCU4_StepperAtMax_2;
+
+	CASE Fb_in.Options.WeldCont_Amount OF
+		1:	Any_WCU_TipChng_Rqst:=WCU1_AnyTipChangeRqst;
+		2:	Any_WCU_TipChng_Rqst:=WCU1_AnyTipChangeRqst OR WCU2_AnyTipChangeRqst;
+		3:	Any_WCU_TipChng_Rqst:=WCU1_AnyTipChangeRqst OR WCU2_AnyTipChangeRqst OR WCU3_AnyTipChangeRqst;
+		4:	Any_WCU_TipChng_Rqst:=WCU1_AnyTipChangeRqst OR WCU2_AnyTipChangeRqst OR WCU3_AnyTipChangeRqst OR WCU4_AnyTipChangeRqst;
+	END_CASE
+	
+		
+
+	(*Develop Location Index Number Based On Which Interference Location to Robot Is Working In*)
+	IF FALSE
+		THEN Location_Index:=0;
+	ELSIF At_HumanInterf1
+		THEN Location_Index:=1;
+	ELSIF At_HumanInterf2
+		THEN Location_Index:=2;
+	ELSIF At_HumanInterf3
+		THEN Location_Index:=3;
+	ELSIF At_HumanInterf4
+		THEN Location_Index:=4;
+	ELSIF At_HumanInterf5
+		THEN Location_Index:=5;
+	ELSIF At_HumanInterf6
+		THEN Location_Index:=6;
+	ELSIF At_HumanInterf7
+		THEN Location_Index:=7;
+	ELSIF At_HumanInterf8
+		THEN Location_Index:=8;
+	ELSIF At_EquipInterf1
+		THEN Location_Index:=9;
+	ELSIF At_EquipInterf2
+		THEN Location_Index:=10;
+	ELSIF At_EquipInterf3
+		THEN Location_Index:=11;
+	ELSIF At_EquipInterf4
+		THEN Location_Index:=12;
+	ELSIF At_EquipInterf5
+		THEN Location_Index:=13;
+	ELSIF At_EquipInterf6
+		THEN Location_Index:=14;
+	ELSIF At_EquipInterf7
+		THEN Location_Index:=15;
+	ELSIF At_EquipInterf8
+		THEN Location_Index:=16;
+	ELSIF At_EquipInterf9
+		THEN Location_Index:=17;
+	ELSE
+		Location_Index:=0;
+	END_IF;
+
+	(*Place Limits on Location Index as it will be used to access Arrays (Prevent Out of Bounds)*)
+	IF Location_Index>16
+		THEN Location_Index:=16;
+	ELSIF Location_Index<0
+		THEN Location_Index:=0;
+	END_IF;
+
+
+(*Robot At Home (Work Home or Intermediate Home)*)
+	 At_Home := In_Home OR In_Home1 OR In_Home2 OR In_Home3 OR In_Home4 OR In_Home5;
+
+
+	(*At Equipment Interference Zones*)
+	At_EquipInterf1:= NOT Clear_Of_EquipInterf1 AND Clear_Of_EquipInterf2 AND Clear_Of_EquipInterf3 AND Clear_Of_EquipInterf4
+					AND Clear_Of_EquipInterf5 AND Clear_Of_EquipInterf6 AND Clear_Of_EquipInterf7 AND Clear_Of_EquipInterf8
+					AND Clear_Of_EquipInterf9;
+	At_EquipInterf2:= Clear_Of_EquipInterf1 AND NOT Clear_Of_EquipInterf2 AND Clear_Of_EquipInterf3 AND Clear_Of_EquipInterf4
+					AND Clear_Of_EquipInterf5 AND Clear_Of_EquipInterf6 AND Clear_Of_EquipInterf7 AND Clear_Of_EquipInterf8
+					AND Clear_Of_EquipInterf9;
+	At_EquipInterf3:= Clear_Of_EquipInterf1 AND Clear_Of_EquipInterf2 AND NOT Clear_Of_EquipInterf3 AND Clear_Of_EquipInterf4
+					AND Clear_Of_EquipInterf5 AND Clear_Of_EquipInterf6 AND Clear_Of_EquipInterf7 AND Clear_Of_EquipInterf8
+					AND Clear_Of_EquipInterf9;
+	At_EquipInterf4:= Clear_Of_EquipInterf1 AND Clear_Of_EquipInterf2 AND Clear_Of_EquipInterf3 AND NOT Clear_Of_EquipInterf4
+					AND Clear_Of_EquipInterf5 AND Clear_Of_EquipInterf6 AND Clear_Of_EquipInterf7 AND Clear_Of_EquipInterf8
+					AND Clear_Of_EquipInterf9;
+	At_EquipInterf5:= Clear_Of_EquipInterf1 AND Clear_Of_EquipInterf2 AND Clear_Of_EquipInterf3 AND Clear_Of_EquipInterf4
+					AND NOT Clear_Of_EquipInterf5 AND Clear_Of_EquipInterf6 AND Clear_Of_EquipInterf7 AND Clear_Of_EquipInterf8
+					AND Clear_Of_EquipInterf9;
+	At_EquipInterf6:= Clear_Of_EquipInterf1 AND Clear_Of_EquipInterf2 AND Clear_Of_EquipInterf3 AND Clear_Of_EquipInterf4
+					AND Clear_Of_EquipInterf5 AND NOT Clear_Of_EquipInterf6 AND Clear_Of_EquipInterf7 AND Clear_Of_EquipInterf8
+					AND Clear_Of_EquipInterf9;
+	At_EquipInterf7:= Clear_Of_EquipInterf1 AND Clear_Of_EquipInterf2 AND Clear_Of_EquipInterf3 AND Clear_Of_EquipInterf4
+					AND Clear_Of_EquipInterf5 AND Clear_Of_EquipInterf6 AND NOT Clear_Of_EquipInterf7 AND Clear_Of_EquipInterf8
+					AND Clear_Of_EquipInterf9;
+	At_EquipInterf8:= Clear_Of_EquipInterf1 AND Clear_Of_EquipInterf2 AND Clear_Of_EquipInterf3 AND Clear_Of_EquipInterf4
+					AND Clear_Of_EquipInterf5 AND Clear_Of_EquipInterf6 AND Clear_Of_EquipInterf7 AND NOT Clear_Of_EquipInterf8
+					AND Clear_Of_EquipInterf9;
+	At_EquipInterf9:= Clear_Of_EquipInterf1 AND Clear_Of_EquipInterf2 AND Clear_Of_EquipInterf3 AND Clear_Of_EquipInterf4
+					AND Clear_Of_EquipInterf5 AND Clear_Of_EquipInterf6 AND Clear_Of_EquipInterf7 AND NOT Clear_Of_EquipInterf8
+					AND NOT Clear_Of_EquipInterf9;
+
+	(*At Human Interference Zones*)
+	At_HumanInterf1:= NOT Clear_Of_HumanInterf1 AND Clear_Of_HumanInterf2 AND Clear_Of_HumanInterf3 AND Clear_Of_HumanInterf4
+					AND Clear_Of_HumanInterf5 AND Clear_Of_HumanInterf6 AND Clear_Of_HumanInterf7 AND Clear_Of_HumanInterf8;
+	At_HumanInterf2:= Clear_Of_HumanInterf1 AND NOT Clear_Of_HumanInterf2 AND Clear_Of_HumanInterf3 AND Clear_Of_HumanInterf4
+					AND Clear_Of_HumanInterf5 AND Clear_Of_HumanInterf6 AND Clear_Of_HumanInterf7 AND Clear_Of_HumanInterf8;
+	At_HumanInterf3:= Clear_Of_HumanInterf1 AND Clear_Of_HumanInterf2 AND NOT  Clear_Of_HumanInterf3 AND Clear_Of_HumanInterf4
+					AND Clear_Of_HumanInterf5 AND Clear_Of_HumanInterf6 AND Clear_Of_HumanInterf7 AND Clear_Of_HumanInterf8;
+	At_HumanInterf4:= Clear_Of_HumanInterf1 AND Clear_Of_HumanInterf2 AND Clear_Of_HumanInterf3 AND NOT Clear_Of_HumanInterf4
+					AND Clear_Of_HumanInterf5 AND Clear_Of_HumanInterf6 AND Clear_Of_HumanInterf7 AND Clear_Of_HumanInterf8;
+	At_HumanInterf5:= Clear_Of_HumanInterf1 AND Clear_Of_HumanInterf2 AND Clear_Of_HumanInterf3 AND Clear_Of_HumanInterf4
+					AND NOT Clear_Of_HumanInterf5 AND Clear_Of_HumanInterf6 AND Clear_Of_HumanInterf7 AND Clear_Of_HumanInterf8;
+	At_HumanInterf6:= Clear_Of_HumanInterf1 AND Clear_Of_HumanInterf2 AND Clear_Of_HumanInterf3 AND Clear_Of_HumanInterf4
+					AND Clear_Of_HumanInterf5 AND NOT Clear_Of_HumanInterf6 AND Clear_Of_HumanInterf7 AND Clear_Of_HumanInterf8;
+	At_HumanInterf7:= Clear_Of_HumanInterf1 AND Clear_Of_HumanInterf2 AND Clear_Of_HumanInterf3 AND Clear_Of_HumanInterf4
+					AND Clear_Of_HumanInterf5 AND Clear_Of_HumanInterf6 AND NOT Clear_Of_HumanInterf7 AND Clear_Of_HumanInterf8;
+	At_HumanInterf8:= Clear_Of_HumanInterf1 AND Clear_Of_HumanInterf2 AND Clear_Of_HumanInterf3 AND Clear_Of_HumanInterf4
+					AND Clear_Of_HumanInterf5 AND Clear_Of_HumanInterf6 AND Clear_Of_HumanInterf7 AND NOT Clear_Of_HumanInterf8;
+
+	(*Check Interference Zones*)
+	OK_At_EquipInterf1:= FB_In.OK_ToEnter_EquipInterf1 OR Clear_Of_EquipInterf1;
+	OK_At_EquipInterf2:= FB_In.OK_ToEnter_EquipInterf2 OR Clear_Of_EquipInterf2;
+	OK_At_EquipInterf3:= FB_In.OK_ToEnter_EquipInterf3 OR Clear_Of_EquipInterf3;
+	OK_At_EquipInterf4:= FB_In.OK_ToEnter_EquipInterf4 OR Clear_Of_EquipInterf4;
+	OK_At_EquipInterf5:= FB_In.OK_ToEnter_EquipInterf5 OR Clear_Of_EquipInterf5;
+	OK_At_EquipInterf6:= FB_In.OK_ToEnter_EquipInterf6 OR Clear_Of_EquipInterf6;
+	OK_At_EquipInterf7:= FB_In.OK_ToEnter_EquipInterf7 OR Clear_Of_EquipInterf7;
+	OK_At_EquipInterf8:= FB_In.OK_ToEnter_EquipInterf8 OR Clear_Of_EquipInterf8;
+	OK_At_EquipInterf9:= FB_In.OK_ToEnter_EquipInterf9 OR Clear_Of_EquipInterf9; //NEW
+	OK_At_EquipInterfALL:= OK_At_EquipInterf1 AND OK_At_EquipInterf2 AND OK_At_EquipInterf3 AND OK_At_EquipInterf4
+						 AND OK_At_EquipInterf5 AND OK_At_EquipInterf6 AND OK_At_EquipInterf7 AND OK_At_EquipInterf8 AND OK_At_EquipInterf9;
+
+	OK_At_HumanInterf1:= FB_In.OK_ToEnter_HumanInterf1 OR Clear_Of_HumanInterf1;
+	OK_At_HumanInterf2:= FB_In.OK_ToEnter_HumanInterf2 OR Clear_Of_HumanInterf2;
+	OK_At_HumanInterf3:= FB_In.OK_ToEnter_HumanInterf3 OR Clear_Of_HumanInterf3;
+	OK_At_HumanInterf4:= FB_In.OK_ToEnter_HumanInterf4 OR Clear_Of_HumanInterf4;
+	OK_At_HumanInterf5:= FB_In.OK_ToEnter_HumanInterf5 OR Clear_Of_HumanInterf5;
+	OK_At_HumanInterf6:= FB_In.OK_ToEnter_HumanInterf6 OR Clear_Of_HumanInterf6;
+	OK_At_HumanInterf7:= FB_In.OK_ToEnter_HumanInterf7 OR Clear_Of_HumanInterf7;
+	OK_At_HumanInterf8:= FB_In.OK_ToEnter_HumanInterf8 OR Clear_Of_HumanInterf8;
+	OK_At_HumanInterfALL:= OK_At_HumanInterf1 AND OK_At_HumanInterf2 AND OK_At_HumanInterf3 AND OK_At_HumanInterf4
+							AND OK_At_HumanInterf5 AND OK_At_HumanInterf6 AND OK_At_HumanInterf7 AND OK_At_HumanInterf8;
+
+	OK_At_RobotInterfs.0:= FB_In.OK_ToEnter_RobotInterfs.0 OR Clear_Of_RobotInterfs.0;
+	OK_At_RobotInterfs.1:= FB_In.OK_ToEnter_RobotInterfs.1 OR Clear_Of_RobotInterfs.1;
+	OK_At_RobotInterfs.2:= FB_In.OK_ToEnter_RobotInterfs.2 OR Clear_Of_RobotInterfs.2;
+	OK_At_RobotInterfs.3:= FB_In.OK_ToEnter_RobotInterfs.3 OR Clear_Of_RobotInterfs.3;
+	OK_At_RobotInterfs.4:= FB_In.OK_ToEnter_RobotInterfs.4 OR Clear_Of_RobotInterfs.4;
+	OK_At_RobotInterfs.5:= FB_In.OK_ToEnter_RobotInterfs.5 OR Clear_Of_RobotInterfs.5;
+	OK_At_RobotInterfs.6:= FB_In.OK_ToEnter_RobotInterfs.6 OR Clear_Of_RobotInterfs.6;
+	OK_At_RobotInterfs.7:= FB_In.OK_ToEnter_RobotInterfs.7 OR Clear_Of_RobotInterfs.7;
+	OK_At_RobotInterfsALL:= (Ok_At_RobotInterfs = 255);
+
+	(*All Interference Zones OK*)
+	All_Interfs_OK:= At_Home OR (OK_At_EquipInterfALL AND OK_At_HumanInterfALL AND OK_At_RobotInterfsAll);
+
+
+	(*Robot Acks Proper, FIX, EOAT, Model, and Task IDs *)
+	Ack_ID_TMR.PT:=T#1.5S;
+	Ack_ID_TMR();
+
+	Fix_ID_Flt:= NOT At_Home AND Fix_ID_Ack<>FB_In.Fix_ID;
+	EOAT_ID_Flt:= NOT At_Home AND FB_In.Options.EOAT_Amount <>0 AND (((FB_In.Robot_Type=Kuka_KRC4_SafeOP_ATI) AND EOAT_ID_Ack<>ATI[1].Tool_ID)
+								OR ((FB_In.Robot_Type<>Kuka_KRC4_SafeOP_ATI)AND EOAT_ID_Ack<>1));
+	Model_ID_FLT:= NOT At_Home AND Model_ID_Ack <> FB_In.Model_ID;
+	Task_ID_Flt:= NOT At_Home AND Task_ID_Ack<350 AND (Task_ID_Ack<>FB_In.Task_ID OR Task_ID_Ack=0);
+
+	(*If Fault Timer hasn't been triggered, ID Acks Are OK*)
+	Ack_ID_TMR.IN:= Fix_ID_FLT OR EOAT_ID_FLT OR Model_ID_FLT OR Task_ID_FLT ;
+	ID_Acks_OK:= NOT Ack_ID_TMR.Q;
+
+	(*Robot Ready*)
+	Ready:=Servos_Are_On AND In_AutoExt;
+
+	(*Turn On Servo Motors*)
+	Servos_Req_Delay.PT:=T#1.0s;
+	Servos_Req_Delay();
+	Servos_Req_Delay.IN:= Estop_Relays_On AND SafetyGate_Relays_On AND In_AutoExt AND NOT Servos_Are_On;
+	Servos_Req:= Servos_Req_Delay.Q AND Pulse_2s;
+
+	(*Turn Servo Motors Off*)
+	IF NOT Estop_Relays_On
+		THEN Servos_Off_Req:= TRUE;
+	ELSE Servos_Off_Req:= FALSE;
+	END_IF;
+
+	(*Start Robot Scan*)
+	IF (FB_In.Start_Scan OR Robot_Is_AutoRestart)
+		AND NOT FB_In.Stop_Scan2
+		AND (Estop_Relays_On AND SafetyGate_Relays_On AND All_Interfs_OK)
+		AND (At_Home OR ID_Acks_OK AND Ready )
+		THEN
+			Start_Robot_Scan:=FB_In.Start_Scan;
+	ELSE
+			Start_Robot_Scan:=FALSE;
+	END_IF;
+
+	(*Hold Robot*)
+	IF (Estop_Relays_On AND FB_IN.Enable_Motion AND FB_In.Teach_Interlock AND NOT FB_In.Stop_Scan AND NOT FB_In.Stop_Scan2)
+		AND (In_Teach OR ((At_Home OR (Task_ID_Ack<>0 AND (Fix_ID_Ack<>0 OR Task_ID_Ack>350) AND ID_Acks_OK AND All_Interfs_OK))
+		AND SafetyGate_Relays_On
+		AND NOT WaterStand_FLT
+		AND NOT FB_In.Major_Faults))
+		THEN
+			Hold_Robot:= FALSE;
+	ELSE
+			Hold_Robot:= TRUE;
+	END_IF;
+
+	(*Troubleshooting Code*)
+	IF NOT Estop_Relays_On
+		THEN Temp1:= TRUE;
+	END_IF;
+	IF NOT FB_In.Enable_Motion
+		THEN Temp2:= TRUE;
+	END_IF;
+	IF FB_In.Stop_Scan
+		THEN Temp3:= TRUE;
+	END_IF;
+	IF NOT At_Home
+		THEN Temp4:= TRUE;
+	END_IF;
+	IF NOT ID_Acks_OK
+		THEN Temp5:= TRUE;
+	END_IF;
+	IF NOT All_Interfs_OK
+		THEN Temp6:= TRUE;
+	END_IF;
+	IF NOT SafetyGate_Relays_On
+		THEN Temp7:= TRUE;
+	END_IF;
+
+	IF FB_In.Safety_RST
+		THEN
+			Temp1:= FALSE;
+			Temp2:= FALSE;
+			Temp3:= FALSE;
+			Temp4:= FALSE;
+			Temp5:= FALSE;
+			Temp6:= FALSE;
+			Temp7:= FALSE;
+			Temp8:= FALSE;
+	END_IF;
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Status Banner $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Mesages 1 through 9 are reserved for legacy code*)
+	(*Spare*)
+	IF FALSE
+		THEN Status:= 1;
+	(*Spare*)
+	ELSIF FALSE
+		THEN Status:= 2;
+	(*Spare*)
+	ELSIF FALSE
+		THEN Status:= 3;
+	(*Spare*)
+	ELSIF FALSE
+		THEN Status:= 4;
+	(*Robot Home and Ready*)
+	ELSIF At_Home AND Operating AND NOT Faulted AND NOT Ack_ID_Flt AND Task_ID_Ack=0
+		THEN Status:= 10;
+	(*Robot Waiting For Start*)
+	ELSIF  Ready AND NOT Operating AND NOT Faulted AND ID_Acks_OK
+		THEN Status:= 11;
+	(*Robot Servos Not On*)
+	ELSIF NOT Ready AND NOT Servos_Are_On AND In_AutoExt
+		THEN Status:= 14;
+	(*Robot Not In Auto External*)
+	ELSIF NOT Ready AND In_AutoExt AND NOT In_Auto AND ID_Acks_OK
+		THEN Status:= 15;
+	(*Robot In Auto*)
+	ELSIF  NOT Ready AND In_Auto AND ID_Acks_OK
+		THEN Status:= 16;
+	(*Robot In T1*)
+	ELSIF  NOT Ready AND In_T1  AND ID_Acks_OK
+		THEN Status:= 17;
+	(*Robot In T2*)
+	ELSIF  NOT Ready AND In_T2  AND ID_Acks_OK
+		THEN Status:= 18;
+	(*Robot Held by Teach Interlock*)
+	ELSIF NOT FB_In.Teach_Interlock
+		THEN Status:= 30;
+	(*Robot Faulted*)
+	ELSIF Faulted
+		THEN Status:= 31;
+	(*Robot Fix ID Ack Fault*)
+	ELSIF NOT ID_Acks_OK AND Fix_ID_Flt AND Servos_Are_On
+		THEN Status:= 32;
+	(*Robot EOAT ID Ack Fault*)
+	ELSIF NOT ID_Acks_OK AND EOAT_ID_Flt AND Servos_Are_On
+		THEN Status:= 33;
+	(*Robot Task ID Ack Fault*)
+	ELSIF NOT ID_Acks_OK AND Task_ID_Flt AND Servos_Are_On
+		THEN Status:= 34;
+	(*Robot Model ID Ack Fault*)
+	ELSIF NOT ID_Acks_OK AND Model_ID_Flt AND Servos_Are_On
+		THEN Status:= 35;
+	(*Robot Peri Req Fault*)
+	ELSIF At_Pounce AND ((Peripheral_Req<>0) OR (Aux_Req<>0) OR Clear_To_Unclamp)
+		THEN Status:= 36;
+	(*Robot Held by Water Fault*)
+	ELSIF WaterStand_FLT
+		THEN Status:= 37;
+	(*External EOAT Fault*)
+	ELSIF FB_In.EOAT_FLT
+		THEN Status:= 38;
+		
+	(*Waiting on Task Complete Ack*)
+	ELSIF At_Home AND Task_Completed AND FB_In.Complete_Ack
+		THEN Status:= 40;
+
+	(*Robot Custom Messages (See Global Variables, Task ID Record) *)
+	ELSIF (NOT At_Home OR Task_ID_Ack>350) AND Task_Id_Ack<>0 AND Ready AND Operating AND NOT Faulted AND ID_Acks_OK
+		THEN Status:= Task_ID_Ack+100;
+
+	(*FB Configuration Issue*)
+	ELSIF NOT FB_Ok
+		THEN Status:= 499;
+
+	(*Produce "Invalid Data" If None of The Above Hold True To Blank Status Banner, but only if not at Home*)
+	ELSE
+		IF NOT At_Home
+		 THEN
+			Status:=0;
+		END_IF;
+	END_IF;
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Faults $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+(*FSoE Type, blank old Relay fault flags*)
+		Estop_RelayFLT:= FALSE;
+		SafetyGate_RelayFLT:= FALSE;
+		EOAT_RelayFLT:=  FALSE;
+
+(*Water Stand Faults*)
+		WaterStand_FLT:= NOT FB_In.Option_Disable_WaterFLT AND NOT FB_In.Weld_Inhibit AND
+							(((FB_In.Options.WaterStand_Amount>0) AND NOT WS[1].WaterTempFlow_OK)
+							OR ((FB_In.Options.WaterStand_Amount>1) AND NOT WS[2].WaterTempFlow_OK));
+(*ToolChanger Faults*)
+		ToolChanger_FLT:= (FB_In.Robot_Type=Kuka_KRC4_SafeOP_ATI) AND
+							ATI[1].Unsafe_Unlock OR ATI[1].Sensor_Fault OR ATI[1].COMM_Error;
+
+(*TQM Not Valid When Required Fault*)
+		TQM_NotValid_FLT:=  NOT FB_In.Under_Construction
+							AND At_Pounce AND NOT TQM_Valid
+							AND (Task_ID_Ack<>352);
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Execute Optional Item FBs attached to Robot System $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+(*Water Stand#1*)
+			WS[1].Valve1:= Safety_PeriReady; 										(*Interlock to Turn on Water*)
+(*Water Stand#2*)
+			WS[2].Valve1:= Safety_PeriReady; 										(*Interlock to Turn on Water*)
+
+(*ATI Tool Changer01*)
+	IF FB_In.Robot_Type=Kuka_KRC4_SafeOP_ATI
+		THEN
+			ATI[1](
+				ATI_Lock_Requested:= In_From_ECat.Robot_OUT[441],
+				ATI_Unlock_Requested:= In_From_ECat.Robot_OUT[442],
+				Fault_Reset:=  FB_In.Safety_RST,
+				ATI_Locked=> Out_To_ECat.Robot_IN[441],
+				ATI_Unlocked=> Out_To_ECat.Robot_IN[442],
+				ATI_Unlock_Enabled=> Out_To_ECat.Robot_IN[443],
+				ATI_Sensors_On=> Out_To_ECat.Robot_IN[444],
+				Unsafe_Unlock=> Out_To_ECat.Robot_IN[445],
+				Sensor_Fault=> Out_To_ECat.Robot_IN[446],
+				COMM_Error=> Out_To_ECat.Robot_IN[447],
+				Tool_ID_Out0=> Out_To_ECat.Robot_IN[449],
+				Tool_ID_Out1=> Out_To_ECat.Robot_IN[450],
+				Tool_ID_Out2=> Out_To_ECat.Robot_IN[451],
+				Tool_ID_Out3=> Out_To_ECat.Robot_IN[452],
+				Tool_ID_Out4=> Out_To_ECat.Robot_IN[453],
+				Tool_ID_Out5=> Out_To_ECat.Robot_IN[454],
+				Tool_ID_Out6=> Out_To_ECat.Robot_IN[455],
+				Tool_ID_Out7=> Out_To_ECat.Robot_IN[456]
+				 );
+	END_IF;
+		(*If Robot is Tool Change Type then Tool_ID comes fromTool Changer, otherwise Lock EOAT_ID to 1*)
+	IF FB_In.Robot_Type=Kuka_KRC4_SafeOP_ATI
+		THEN
+			EOAT_ID.0:= ATI[1].Tool_ID.0;							(*EOAT ID 1*)
+			EOAT_ID.1:= ATI[1].Tool_ID.1;							(*EOAT ID 2*)
+			EOAT_ID.2:= ATI[1].Tool_ID.2;							(*EOAT ID 4*)
+			EOAT_ID.3:= ATI[1].Tool_ID.3;							(*EOAT ID 8*)
+			EOAT_ID.4:= ATI[1].Tool_ID.4;							(*EOAT ID 16*)
+			EOAT_ID.5:= ATI[1].Tool_ID.5;							(*EOAT ID 32*)
+			EOAT_ID.6:= ATI[1].Tool_ID.6;							(*EOAT ID 64*)
+			EOAT_ID.7:= ATI[1].Tool_ID.7;							(*EOAT ID 128*)
+		ELSE
+			EOAT_ID.0:= TRUE;									(*EOAT ID 1*)
+			EOAT_ID.1:= FALSE;									(*EOAT ID 2*)
+			EOAT_ID.2:= FALSE;									(*EOAT ID 4*)
+			EOAT_ID.3:= FALSE;									(*EOAT ID 8*)
+			EOAT_ID.4:= FALSE;									(*EOAT ID 16*)
+			EOAT_ID.5:= FALSE;									(*EOAT ID 32*)
+			EOAT_ID.6:= FALSE;									(*EOAT ID 64*)
+			EOAT_ID.7:= FALSE;									(*EOAT ID 128*)
+	END_IF;
+
+(*Cycle Time*)
+	CycleTime();
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Transfer Standard Outputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Transfer I/O Images for Display On UI (User Interface)*)
+	Input_Image:=In_From_HW;
+	Output_Image:=Out_To_HW;
+
+	(*Non FSoE Type*)
+	Discrete_Image.T01:=T01;
+	Discrete_Image.T02_STAT:=T02_STAT;
+	Discrete_Image.T03:=T03;
+
+	(*FSoE Type*)
+	Discrete_Image_FSoE.T01:= T01;
+	Discrete_Image_FSoE.T02_STAT:= T02_STAT;
+	Discrete_Image_FSoE.T03:= T03;
+	Discrete_Image_FSOE.T04:=T04;
+	Discrete_Image_FSoE.RT01:=RT01;
+	Discrete_Image_FSoE.RT02:=RT02;
+
+
+	(*Outputs*)
+	Outputs();
+
+(*----------------- Gather KUKA Type Data and convert to Generic Robot Type for Transfer to Output Image*)
+
+Out_To_HW:= FUN_GTAC_KUKAKRC4_To_GenericRobotOutputImage(Out_To_ECAT);
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Transfer Safety Outputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Set All Safety Groups to Run*)
+		T02_CMD.SGs_RUNSTOP:= TRUE;
+	(*Reset Of Safety Group Errors*)
+		T02_CMD.SGs_ERRAck:= FB_In.Safety_RST;
+	(*Reset Only Used FBs With In Safety Group*)
+		(*Reset of Estop, Safety Gate and Misc FBs*)
+		T02_CMD.FBs_ControlPowerPB:= FB_In.Safety_RST;
+	(*Request to turn on Tip Dresser Contactor*)
+		Tip_DressReq_ToSafety:= Tip_DressOn_Req;
+
+
+
+
+
+
+
+
+
+
+
+
+
+(*end*)]]></ST>
+    </Implementation>
+    <Action Name="CycleTime" Id="{92b511ab-6b5e-4515-a569-2720588a54b7}">
+      <Implementation>
+        <ST><![CDATA[(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Cycle Time Counters ~~~~~~~~~~~~~~~~~~~~~~~~~*)
+
+
+(*///////////////////////////////// Equipment Interferences ////////////////////////////////////*)
+
+	(*Move Previous To Register*)
+	Cycle_Time_PulseEquip1.CLK:= NOT AT_EquipInterf1;
+	Cycle_Time_PulseEquip1();
+	IF Cycle_Time_PulseEquip1.Q
+		THEN
+		CT.PrevCycle_Time_OutEquip1:= CT.Cycle_Time_OutEquip1;
+	END_IF;
+	(*Monitor Current Cycle Time*)
+		Cycle_TimeEquip1.PT:= T#9999S;
+		Cycle_TimeEquip1.IN:= AT_EquipInterf1;
+		Cycle_TimeEquip1();
+		CT.Cycle_Time_OutEquip1:= Cycle_TimeEquip1.ET;
+
+	(*Move Previous To Register*)
+	Cycle_Time_PulseEquip2.CLK:= NOT At_EquipInterf2;
+	Cycle_Time_PulseEquip2();
+	IF Cycle_Time_PulseEquip2.Q
+		THEN
+		CT.PrevCycle_Time_OutEquip2:= CT.Cycle_Time_OutEquip2;
+	END_IF;
+	(*Monitor Current Cycle Time*)
+		Cycle_TimeEquip2.PT:= T#9999S;
+		Cycle_TimeEquip2.IN:= AT_EquipInterf2;
+		Cycle_TimeEquip2();
+		CT.Cycle_Time_OutEquip2:= Cycle_TimeEquip2.ET;
+
+	(*Move Previous To Register*)
+	Cycle_Time_PulseEquip3.CLK:= NOT At_EquipInterf3;
+	Cycle_Time_PulseEquip3();
+	IF Cycle_Time_PulseEquip3.Q
+		THEN
+		CT.PrevCycle_Time_OutEquip3:= CT.Cycle_Time_OutEquip3;
+	END_IF;
+	(*Monitor Current Cycle Time*)
+		Cycle_TimeEquip3.PT:= T#9999S;
+		Cycle_TimeEquip3.IN:= AT_EquipInterf3;
+		Cycle_TimeEquip3();
+		CT.Cycle_Time_OutEquip3:= Cycle_TimeEquip3.ET;
+
+	(*Move Previous To Register*)
+	Cycle_Time_PulseEquip4.CLK:= NOT At_EquipInterf4;
+	Cycle_Time_PulseEquip4();
+	IF Cycle_Time_PulseEquip4.Q
+		THEN
+		CT.PrevCycle_Time_OutEquip4:= CT.Cycle_Time_OutEquip4;
+	END_IF;
+	(*Monitor Current Cycle Time*)
+		Cycle_TimeEquip4.PT:= T#9999S;
+		Cycle_TimeEquip4.IN:= AT_EquipInterf4;
+		Cycle_TimeEquip4();
+		CT.Cycle_Time_OutEquip4:= Cycle_TimeEquip4.ET;
+
+	(*Move Previous To Register*)
+	Cycle_Time_PulseEquip5.CLK:= NOT At_EquipInterf5;
+	Cycle_Time_PulseEquip5();
+	IF Cycle_Time_PulseEquip5.Q
+		THEN
+		CT.PrevCycle_Time_OutEquip5:= CT.Cycle_Time_OutEquip5;
+	END_IF;
+	(*Monitor Current Cycle Time*)
+		Cycle_TimeEquip5.PT:= T#9999S;
+		Cycle_TimeEquip5.IN:= AT_EquipInterf5;
+		Cycle_TimeEquip5();
+		CT.Cycle_Time_OutEquip5:= Cycle_TimeEquip5.ET;
+
+	(*Move Previous To Register*)
+	Cycle_Time_PulseEquip6.CLK:= NOT At_EquipInterf6;
+	Cycle_Time_PulseEquip6();
+	IF Cycle_Time_PulseEquip6.Q
+		THEN
+		CT.PrevCycle_Time_OutEquip6:= CT.Cycle_Time_OutEquip6;
+	END_IF;
+	(*Monitor Current Cycle Time*)
+		Cycle_TimeEquip6.PT:= T#9999S;
+		Cycle_TimeEquip6.IN:= AT_EquipInterf6;
+		Cycle_TimeEquip6();
+		CT.Cycle_Time_OutEquip6:= Cycle_TimeEquip6.ET;
+
+	(*Move Previous To Register*)
+	Cycle_Time_PulseEquip7.CLK:= NOT At_EquipInterf7;
+	Cycle_Time_PulseEquip7();
+	IF Cycle_Time_PulseEquip7.Q
+		THEN
+		CT.PrevCycle_Time_OutEquip7:= CT.Cycle_Time_OutEquip7;
+	END_IF;
+	(*Monitor Current Cycle Time*)
+		Cycle_TimeEquip7.PT:= T#9999S;
+		Cycle_TimeEquip7.IN:= AT_EquipInterf7;
+		Cycle_TimeEquip7();
+		CT.Cycle_Time_OutEquip7:= Cycle_TimeEquip7.ET;
+
+	(*Move Previous To Register*)
+	Cycle_Time_PulseEquip8.CLK:= NOT At_EquipInterf8;
+	Cycle_Time_PulseEquip8();
+	IF Cycle_Time_PulseEquip8.Q
+		THEN
+		CT.PrevCycle_Time_OutEquip8:= CT.Cycle_Time_OutEquip8;
+	END_IF;
+	(*Monitor Current Cycle Time*)
+		Cycle_TimeEquip8.PT:= T#9999S;
+		Cycle_TimeEquip8.IN:= AT_EquipInterf8;
+		Cycle_TimeEquip8();
+		CT.Cycle_Time_OutEquip8:= Cycle_TimeEquip8.ET;
+
+(*///////////////////////////////// Human Interferences ////////////////////////////////////*)
+
+	(*Move Previous To Register*)
+	Cycle_Time_PulseHuman1.CLK:= NOT At_HumanInterf1;
+	Cycle_Time_PulseHuman1();
+	IF Cycle_Time_PulseHuman1.Q
+		THEN
+		CT.PrevCycle_Time_OutHuman1:= CT.Cycle_Time_OutHuman1;
+	END_IF;
+	(*Monitor Current Cycle Time*)
+		Cycle_TimeHuman1.PT:= T#9999S;
+		Cycle_TimeHuman1.IN:= AT_HumanInterf1;
+		Cycle_TimeHuman1();
+		CT.Cycle_Time_OutHuman1:= Cycle_TimeHuman1.ET;
+
+	(*Move Previous To Register*)
+	Cycle_Time_PulseHuman2.CLK:= NOT AT_HumanInterf2;
+	Cycle_Time_PulseHuman2();
+	IF Cycle_Time_PulseHuman2.Q
+		THEN
+		CT.PrevCycle_Time_OutHuman2:= CT.Cycle_Time_OutHuman2;
+	END_IF;
+	(*Monitor Current Cycle Time*)
+		Cycle_TimeHuman2.PT:= T#9999S;
+		Cycle_TimeHuman2.IN:= AT_HumanInterf2;
+		Cycle_TimeHuman2();
+		CT.Cycle_Time_OutHuman2:= Cycle_TimeHuman2.ET;
+
+	(*Move Previous To Register*)
+	Cycle_Time_PulseHuman3.CLK:= NOT At_HumanInterf3;
+	Cycle_Time_PulseHuman3();
+	IF Cycle_Time_PulseHuman3.Q
+		THEN
+		CT.PrevCycle_Time_OutHuman3:= CT.Cycle_Time_OutHuman3;
+	END_IF;
+	(*Monitor Current Cycle Time*)
+		Cycle_TimeHuman3.PT:= T#9999S;
+		Cycle_TimeHuman3.IN:= AT_HumanInterf3;
+		Cycle_TimeHuman3();
+		CT.Cycle_Time_OutHuman3:= Cycle_TimeHuman3.ET;
+
+	(*Move Previous To Register*)
+	Cycle_Time_PulseHuman4.CLK:= NOT At_HumanInterf4;
+	Cycle_Time_PulseHuman4();
+	IF Cycle_Time_PulseHuman4.Q
+		THEN
+		CT.PrevCycle_Time_OutHuman4:= CT.Cycle_Time_OutHuman4;
+	END_IF;
+	(*Monitor Current Cycle Time*)
+		Cycle_TimeHuman4.PT:= T#9999S;
+		Cycle_TimeHuman4.IN:= AT_HumanInterf4;
+		Cycle_TimeHuman4();
+		CT.Cycle_Time_OutHuman4:= Cycle_TimeHuman4.ET;
+
+	(*Move Previous To Register*)
+	Cycle_Time_PulseHuman5.CLK:= NOT At_HumanInterf5;
+	Cycle_Time_PulseHuman5();
+	IF Cycle_Time_PulseHuman5.Q
+		THEN
+		CT.PrevCycle_Time_OutHuman5:= CT.Cycle_Time_OutHuman5;
+	END_IF;
+	(*Monitor Current Cycle Time*)
+		Cycle_TimeHuman5.PT:= T#9999S;
+		Cycle_TimeHuman5.IN:= AT_HumanInterf5;
+		Cycle_TimeHuman5();
+		CT.Cycle_Time_OutHuman5:= Cycle_TimeHuman5.ET;
+
+	(*Move Previous To Register*)
+	Cycle_Time_PulseHuman6.CLK:= NOT At_HumanInterf6;
+	Cycle_Time_PulseHuman6();
+	IF Cycle_Time_PulseHuman6.Q
+		THEN
+		CT.PrevCycle_Time_OutHuman6:= CT.Cycle_Time_OutHuman6;
+	END_IF;
+	(*Monitor Current Cycle Time*)
+		Cycle_TimeHuman6.PT:= T#9999S;
+		Cycle_TimeHuman6.IN:= AT_HumanInterf6;
+		Cycle_TimeHuman6();
+		CT.Cycle_Time_OutHuman6:= Cycle_TimeHuman6.ET;
+
+	(*Move Previous To Register*)
+	Cycle_Time_PulseHuman7.CLK:= NOT At_HumanInterf7;
+	Cycle_Time_PulseHuman7();
+	IF Cycle_Time_PulseHuman7.Q
+		THEN
+		CT.PrevCycle_Time_OutHuman7:= CT.Cycle_Time_OutHuman7;
+	END_IF;
+	(*Monitor Current Cycle Time*)
+		Cycle_TimeHuman7.PT:= T#9999S;
+		Cycle_TimeHuman7.IN:= AT_HumanInterf7;
+		Cycle_TimeHuman7();
+		CT.Cycle_Time_OutHuman7:= Cycle_TimeHuman7.ET;
+
+	(*Move Previous To Register*)
+	Cycle_Time_PulseHuman8.CLK:= NOT At_HumanInterf8;
+	Cycle_Time_PulseHuman8();
+	IF Cycle_Time_PulseHuman8.Q
+		THEN
+		CT.PrevCycle_Time_OutHuman8:= CT.Cycle_Time_OutHuman8;
+	END_IF;
+	(*Monitor Current Cycle Time*)
+		Cycle_TimeHuman8.PT:= T#9999S;
+		Cycle_TimeHuman8.IN:= AT_HumanInterf8;
+		Cycle_TimeHuman8();
+		CT.Cycle_Time_OutHuman8:= Cycle_TimeHuman8.ET;
+
+
+
+	(*Add up total cycle time for robot*)
+		CT.Cycle_Time_EquipTotal:= (CT.PrevCycle_Time_OutEquip1 + CT.PrevCycle_Time_OutEquip2 + CT.PrevCycle_Time_OutEquip3 + CT.PrevCycle_Time_OutEquip4
+					+ CT.PrevCycle_Time_OutEquip5 + CT.PrevCycle_Time_OutEquip6 + CT.PrevCycle_Time_OutEquip7);
+		CT.Cycle_Time_HumanTotal:= (CT.PrevCycle_Time_OutHuman1 + CT.PrevCycle_Time_OutHuman2 + CT.PrevCycle_Time_OutHuman3 + CT.PrevCycle_Time_OutHuman4
+					+ CT.PrevCycle_Time_OutHuman5 + CT.PrevCycle_Time_OutHuman6 + CT.PrevCycle_Time_OutHuman7 + CT.PrevCycle_Time_OutHuman8);
+		CT.Cycle_Time_Total:= CT.Cycle_Time_EquipTotal + CT.Cycle_Time_HumanTotal;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(*end*)]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Inputs" Id="{106f5714-1d5a-4424-a965-07fa8bf05de9}">
+      <Implementation>
+        <ST><![CDATA[(* ------------------------- System Inputs Section ----------------------*)
+	Operating:= In_From_ECAT.Robot_OUT[1] OR (FB_In.In_SIM_Mode AND FB_In.SIM_StartWorkAround); (*NOTE: SIM items to be removed once we finalize Process Sim + Office Lite, b.lekx-toniolo*)
+	Servos_Are_On:= In_From_ECAT.Robot_OUT[2] OR FB_In.In_SIM_Mode;								(*NOTE: SIM items to be removed once we finalize Process Sim + Office Lite, b.lekx-toniolo*)
+	Faulted:= In_From_ECAT.Robot_OUT[4];
+	In_AutoExt:= (In_From_ECAT.Robot_OUT[5] AND NOT In_Auto) OR FB_In.In_SIM_Mode;				(*NOTE: Sim items to be removed once we finalize Process Sim + Office Lite, b.lekx-toniolo*)
+	In_Auto:= In_From_ECAT.Robot_OUT[6];
+	In_T1:= In_From_ECAT.Robot_OUT[7];
+	In_T2:= In_From_ECAT.Robot_OUT[8];
+	In_Teach:= In_T1 OR In_T2;
+	In_Home := In_From_ECAT.Robot_OUT[9];
+	In_Home1:= In_From_ECAT.Robot_OUT[10];
+	In_Home2:= In_From_ECAT.Robot_OUT[11];
+	In_Home3:= In_From_ECAT.Robot_OUT[12];
+	In_Home4:= In_From_ECAT.Robot_OUT[13];
+	In_Home5:= In_From_ECAT.Robot_OUT[14];
+	TQM_Valid:= In_From_ECAT.Robot_OUT[15];
+	Holding:= In_From_ECAT.Robot_OUT[16];
+	IF (FB_In.Options.Reamer_Amount > 0)
+		THEN
+		Ream_Reqd:= In_From_ECAT.Robot_OUT[17];		(*Map Ream Req Only if Robot Ream count > 0*)
+	END_IF;
+
+	Program_No_Req.0 := In_From_ECAT.Robot_OUT[25];
+	Program_No_Req.1 := In_From_ECAT.Robot_OUT[26];
+	Program_No_Req.2 := In_From_ECAT.Robot_OUT[27];
+	Program_No_Req.3 := In_From_ECAT.Robot_OUT[28];
+	Program_No_Req.4 := In_From_ECAT.Robot_OUT[29];
+	Program_No_Req.5 := In_From_ECAT.Robot_OUT[30];
+	Program_No_Req.6 := In_From_ECAT.Robot_OUT[31];
+	Program_No_Req.7 := In_From_ECAT.Robot_OUT[32];
+	Master_Test_Reqd:= In_From_ECAT.Robot_OUT[33] ;
+	Brake_Test_Reqd:= In_From_ECAT.Robot_OUT[34];
+	Brake_Test_Reqd_Internal_Robot:= In_From_ECAT.Robot_OUT[35];
+	(*Tip Dress Request - From Medar passed through Robot - Tip Dress Request G1 - Tip Dress Request G2*)
+	Tip_Dress_Reqd:=  In_From_ECAT.Robot_OUT[36] OR In_From_ECAT.Robot_OUT[191] OR In_From_ECAT.Robot_OUT[192];
+	Tip_DressOn_Req:= In_From_ECAT.Robot_OUT[37];
+
+
+
+
+(*----------------- Standard Input Section------------------------*)
+
+(*Equipment Interf Mapping*)
+	Clear_Of_EquipInterf1:= In_From_ECAT.Robot_OUT[41] ;
+	Clear_Of_EquipInterf2:= In_From_ECAT.Robot_OUT[42];
+	Clear_Of_EquipInterf3:= In_From_ECAT.Robot_OUT[43];
+	Clear_Of_EquipInterf4:= In_From_ECAT.Robot_OUT[44];
+	Clear_Of_EquipInterf5:= In_From_ECAT.Robot_OUT[45];
+	Clear_Of_EquipInterf6:= In_From_ECAT.Robot_OUT[46];
+	Clear_Of_EquipInterf7:= In_From_ECAT.Robot_OUT[47];
+	Clear_Of_EquipInterf8:= In_From_ECAT.Robot_OUT[48];
+	Clear_Of_EquipInterf9:= In_From_ECAT.Robot_OUT[98];//**NEW
+	(*Human Interf Mapping*)
+	Clear_Of_HumanInterf1:= In_From_ECAT.Robot_OUT[49];
+	Clear_Of_HumanInterf2:= In_From_ECAT.Robot_OUT[50];
+	Clear_Of_HumanInterf3:= In_From_ECAT.Robot_OUT[51];
+	Clear_Of_HumanInterf4:= In_From_ECAT.Robot_OUT[52];
+	Clear_Of_HumanInterf5:= In_From_ECAT.Robot_OUT[53];
+	Clear_Of_HumanInterf6:= In_From_ECAT.Robot_OUT[54];
+	Clear_Of_HumanInterf7:= In_From_ECAT.Robot_OUT[55];
+	Clear_Of_HumanInterf8:= In_From_ECAT.Robot_OUT[56];
+	(*EOAT ID Ack Mapping*)
+	EOAT_ID_Ack.0:=In_From_ECAT.Robot_OUT[57];
+	EOAT_ID_Ack.1:=In_From_ECAT.Robot_OUT[58];
+	EOAT_ID_Ack.2:=In_From_ECAT.Robot_OUT[59];
+	EOAT_ID_Ack.3:=In_From_ECAT.Robot_OUT[60];
+	EOAT_ID_Ack.4:=In_From_ECAT.Robot_OUT[61];
+	EOAT_ID_Ack.5:=In_From_ECAT.Robot_OUT[62];
+	EOAT_ID_Ack.6:=In_From_ECAT.Robot_OUT[63];
+	EOAT_ID_Ack.7:=In_From_ECAT.Robot_OUT[64];
+	(*Fix ID Ack Mapping*)
+	Fix_ID_Ack.0:=In_From_ECAT.Robot_OUT[65];
+	Fix_ID_Ack.1:=In_From_ECAT.Robot_OUT[66];
+	Fix_ID_Ack.2:=In_From_ECAT.Robot_OUT[67];
+	Fix_ID_Ack.3:=In_From_ECAT.Robot_OUT[68];
+	Fix_ID_Ack.4:=In_From_ECAT.Robot_OUT[69];
+	Fix_ID_Ack.5:=In_From_ECAT.Robot_OUT[70];
+	Fix_ID_Ack.6:=In_From_ECAT.Robot_OUT[71];
+	Fix_ID_Ack.7:=In_From_ECAT.Robot_OUT[72];
+	(*Model ID Ack Mapping*)
+	Model_ID_Ack.0:= In_From_ECAT.Robot_OUT[73];
+	Model_ID_Ack.1:= In_From_ECAT.Robot_OUT[74];
+	Model_ID_Ack.2:= In_From_ECAT.Robot_OUT[75];
+	Model_ID_Ack.3:= In_From_ECAT.Robot_OUT[76];
+	Model_ID_Ack.4:= In_From_ECAT.Robot_OUT[77];
+	Model_ID_Ack.5:= In_From_ECAT.Robot_OUT[78];
+	Model_ID_Ack.6:= In_From_ECAT.Robot_OUT[79];
+	Model_ID_Ack.7:= In_From_ECAT.Robot_OUT[80];
+	(*User Outputs from Robot*)
+	User_Outputs.0:=In_From_ECAT.Robot_OUT[81];
+	User_Outputs.1:=In_From_ECAT.Robot_OUT[82];
+	User_Outputs.2:=In_From_ECAT.Robot_OUT[83];
+	User_Outputs.3:=In_From_ECAT.Robot_OUT[84];
+	User_Outputs.4:=In_From_ECAT.Robot_OUT[85];
+	User_Outputs.5:=In_From_ECAT.Robot_OUT[86];
+	User_Outputs.6:=In_From_ECAT.Robot_OUT[87];
+	User_Outputs.7:=In_From_ECAT.Robot_OUT[88];
+	(*Peripheral Requests Mapping*)
+	Peripheral_Req.0:= In_From_ECAT.Robot_OUT[89];
+	Peripheral_Req.1:= In_From_ECAT.Robot_OUT[90];
+	Peripheral_Req.2:= In_From_ECAT.Robot_OUT[91];
+	Peripheral_Req.3:= In_From_ECAT.Robot_OUT[92];
+	Peripheral_Req.4:= In_From_ECAT.Robot_OUT[93];
+	Peripheral_Req.5:= In_From_ECAT.Robot_OUT[94];
+	Peripheral_Req.6:= In_From_ECAT.Robot_OUT[95];
+	Peripheral_Req.7:= In_From_ECAT.Robot_OUT[96];
+	(*Various Signal Section Mapping*)
+	At_Pounce:= In_From_ECAT.Robot_OUT[97];
+
+	Clear_To_Unclamp:= In_From_ECAT.Robot_OUT[100];
+	(*Robot Complete Not Recognized unless At Home*)
+	Task_Completed:= In_From_ECAT.Robot_OUT[104] AND At_Home;
+
+	(*Clear of Robot Interference Zones*)
+	Clear_Of_RobotInterfs.0:= In_From_ECAT.Robot_OUT[105];	(*Clear of Robot Interf Zone#1*)
+	Clear_Of_RobotInterfs.1:= In_From_ECAT.Robot_OUT[106];	(*Clear of Robot Interf Zone#2*)
+	Clear_Of_RobotInterfs.2:= In_From_ECAT.Robot_OUT[107];	(*Clear of Robot Interf Zone#3*)
+	Clear_Of_RobotInterfs.3:= In_From_ECAT.Robot_OUT[108];	(*Clear of Robot Interf Zone#4*)
+	Clear_Of_RobotInterfs.4:= In_From_ECAT.Robot_OUT[109];	(*Clear of Robot Interf Zone#5*)
+	Clear_Of_RobotInterfs.5:= In_From_ECAT.Robot_OUT[110];	(*Clear of Robot Interf Zone#6*)
+	Clear_Of_RobotInterfs.6:= In_From_ECAT.Robot_OUT[111];	(*Clear of Robot Interf Zone#7*)
+	Clear_Of_RobotInterfs.7:= In_From_ECAT.Robot_OUT[112];	(*Clear of Robot Interf Zone#8*)
+
+(* ---------- S-Axis Positional Data (Degrees from Home) Mapping -------------------------*)
+S_Axis_Pos_Raw:= FUN_GTAC_BYTEStoINT(In_From_HW.BYTE_[15], In_From_HW.BYTE_[16]);  (*Map bytes associated with OUT[113]  TO OUT[128]*)
+
+(*Pass Robot's Install Zero Position Orientation and Create Indexes in 10 Degree Increments to Trigger UI Animation Images*)
+S_Axis_Pos_Indexed:= FUN_GTAC_DEGtoINDEX (S_Axis_Pos_Raw, FB_In.Install_Zero_Orientation);
+
+External_Axis_Pos_Raw:= FUN_GTAC_BYTEStoINT(In_From_HW.BYTE_[58], In_From_HW.BYTE_[59]); (*Map Bytes associated with OUT[457] TO OUT[471]*)
+(*-----------------------------------------------------------------------------------------------------------------------*)
+	(*EOAT Requests Mapping*)
+	EOAT_Req.0:= In_From_ECAT.Robot_OUT[129];
+	EOAT_Req.1:= In_From_ECAT.Robot_OUT[130];
+	EOAT_Req.2:= In_From_ECAT.Robot_OUT[131];
+	EOAT_Req.3:= In_From_ECAT.Robot_OUT[132];
+	EOAT_Req.4:= In_From_ECAT.Robot_OUT[133];
+	EOAT_Req.5:= In_From_ECAT.Robot_OUT[134];
+	EOAT_Req.6:= In_From_ECAT.Robot_OUT[135];
+	EOAT_Req.7:= In_From_ECAT.Robot_OUT[136];
+	EOAT_Req.8:= In_From_ECAT.Robot_OUT[137];
+	EOAT_Req.9:= In_From_ECAT.Robot_OUT[138];
+	EOAT_Req.10:= In_From_ECAT.Robot_OUT[139];
+	EOAT_Req.11:= In_From_ECAT.Robot_OUT[140];
+	EOAT_Req.12:= In_From_ECAT.Robot_OUT[141];
+	EOAT_Req.13:= In_From_ECAT.Robot_OUT[142];
+	EOAT_Req.14:= In_From_ECAT.Robot_OUT[143];
+	EOAT_Req.15:= In_From_ECAT.Robot_OUT[144];
+
+	(*Task ID Ack Mapping*)
+	Task_ID_Ack.0:= In_From_ECAT.Robot_OUT[145];
+	Task_ID_Ack.1:= In_From_ECAT.Robot_OUT[146];
+	Task_ID_Ack.2:= In_From_ECAT.Robot_OUT[147];
+	Task_ID_Ack.3:= In_From_ECAT.Robot_OUT[148];
+	Task_ID_Ack.4:= In_From_ECAT.Robot_OUT[149];
+	Task_ID_Ack.5:= In_From_ECAT.Robot_OUT[150];
+	Task_ID_Ack.6:= In_From_ECAT.Robot_OUT[151];
+	Task_ID_Ack.7:= In_From_ECAT.Robot_OUT[152];
+	Task_ID_Ack.8:= In_From_ECAT.Robot_OUT[153];
+	Task_ID_Ack.9:= In_From_ECAT.Robot_OUT[154];
+	Task_ID_Ack.10:= In_From_ECAT.Robot_OUT[155];
+	Task_ID_Ack.11:= In_From_ECAT.Robot_OUT[156];
+	Task_ID_Ack.12:= In_From_ECAT.Robot_OUT[157];
+	Task_ID_Ack.13:= In_From_ECAT.Robot_OUT[158];
+	Task_ID_Ack.14:= In_From_ECAT.Robot_OUT[159];
+	Task_ID_Ack.15:= In_From_ECAT.Robot_OUT[160];
+
+	(*Auxliary Requests Mapping*)
+	Aux_Req.0:= In_From_ECAT.Robot_OUT[161];
+	Aux_Req.1:= In_From_ECAT.Robot_OUT[162];
+	Aux_Req.2:= In_From_ECAT.Robot_OUT[163];
+	Aux_Req.3:= In_From_ECAT.Robot_OUT[164];
+	Aux_Req.4:= In_From_ECAT.Robot_OUT[165];
+	Aux_Req.5:= In_From_ECAT.Robot_OUT[166];
+	Aux_Req.6:= In_From_ECAT.Robot_OUT[167];
+	Aux_Req.7:= In_From_ECAT.Robot_OUT[168];
+
+
+
+(* ---------- Weld Controller Mapping -------------------------*)
+	(*Mapping for WTC Resistance Welding Type Controller*)
+
+		(*WCU#1 Inputs*)
+		WCU1_NoFaults:= In_From_ECAT.Robot_OUT[170];
+		WCU1_Weld_Complete:= In_From_ECAT.Robot_OUT[173];
+		WCU1_Weld_InProgress:= In_From_ECAT.Robot_OUT[174];
+		WCU1_SteppersAreReset:= In_From_ECAT.Robot_OUT[175];
+		WCU1_SteppersApprMax := In_From_ECAT.Robot_OUT[176];
+		WCU1_Weld_Init:= In_From_ECAT.Robot_OUT[179];
+		WCU1_TipChgReqd_1:= In_From_ECAT.Robot_OUT[185];
+		WCU1_StepperAtMax_1:= In_From_ECAT.Robot_OUT[189];
+		WCU1_DressReqd_1:= In_From_ECAT.Robot_OUT[191];
+		WCU1_TipChgReqd_2:= In_From_ECAT.Robot_OUT[186];
+		WCU1_StepperAtMax_2:= In_From_ECAT.Robot_OUT[190];
+		WCU1_DressReqd_2:= In_From_ECAT.Robot_OUT[192];
+
+		(*WCU#2 Inputs*)
+		WCU2_NoFaults:= In_From_ECAT.Robot_OUT[202];
+		WCU2_Weld_Complete:= In_From_ECAT.Robot_OUT[205];
+		WCU2_Weld_InProgress:= In_From_ECAT.Robot_OUT[206];
+		WCU2_SteppersAreReset:= In_From_ECAT.Robot_OUT[207];
+		WCU2_SteppersApprMax := In_From_ECAT.Robot_OUT[208];
+		WCU2_Weld_Init:= In_From_ECAT.Robot_OUT[211];
+		WCU2_TipChgReqd_1:= In_From_ECAT.Robot_OUT[217];
+		WCU2_StepperAtMax_1:= In_From_ECAT.Robot_OUT[221];
+		WCU2_DressReqd_1:= In_From_ECAT.Robot_OUT[223];
+		WCU2_TipChgReqd_2:= In_From_ECAT.Robot_OUT[218];
+		WCU2_StepperAtMax_2:= In_From_ECAT.Robot_OUT[222];
+		WCU2_DressReqd_2:= In_From_ECAT.Robot_OUT[224];
+
+		(*WCU#3 Inputs*)
+		WCU3_NoFaults:= In_From_ECAT.Robot_OUT[234];
+		WCU3_Weld_Complete:= In_From_ECAT.Robot_OUT[237];
+		WCU3_Weld_InProgress:= In_From_ECAT.Robot_OUT[238];
+		WCU3_SteppersAreReset:= In_From_ECAT.Robot_OUT[239];
+		WCU3_SteppersApprMax := In_From_ECAT.Robot_OUT[240];
+		WCU3_Weld_Init:= In_From_ECAT.Robot_OUT[243];
+		WCU3_TipChgReqd_1:= In_From_ECAT.Robot_OUT[249];
+		WCU3_StepperAtMax_1:= In_From_ECAT.Robot_OUT[253];
+		WCU3_DressReqd_1:= In_From_ECAT.Robot_OUT[255];
+		WCU3_TipChgReqd_2:= In_From_ECAT.Robot_OUT[250];
+		WCU3_StepperAtMax_2:= In_From_ECAT.Robot_OUT[254];
+		WCU3_DressReqd_2:= In_From_ECAT.Robot_OUT[256];
+
+		(*WCU#4 Inputs*)
+		WCU4_NoFaults:= In_From_ECAT.Robot_OUT[266];
+		WCU4_Weld_Complete:= In_From_ECAT.Robot_OUT[269];
+		WCU4_Weld_InProgress:= In_From_ECAT.Robot_OUT[270];
+		WCU4_SteppersAreReset:= In_From_ECAT.Robot_OUT[271];
+		WCU4_SteppersApprMax := In_From_ECAT.Robot_OUT[272];
+		WCU4_Weld_Init:= In_From_ECAT.Robot_OUT[275];
+		WCU4_TipChgReqd_1:= In_From_ECAT.Robot_OUT[281];
+		WCU4_StepperAtMax_1:= In_From_ECAT.Robot_OUT[285];
+		WCU4_DressReqd_1:= In_From_ECAT.Robot_OUT[289];
+		WCU4_TipChgReqd_2:= In_From_ECAT.Robot_OUT[282];
+		WCU4_StepperAtMax_2:= In_From_ECAT.Robot_OUT[286];
+		WCU4_DressReqd_2:= In_From_ECAT.Robot_OUT[288];
+
+		(*Gather WCU Information, take into account number of WCUs robot is interfaced to*)
+
+		IF FB_In.Options.WeldCont_Amount = 1
+			THEN Weld_Controller_FLT:= WCU1_NoFaults;
+		ELSIF FB_In.Options.WeldCont_Amount = 2
+			THEN Weld_Controller_FLT:= WCU1_NoFaults OR WCU2_NoFaults;
+		ELSIF FB_In.Options.WeldCont_Amount = 3
+			THEN Weld_Controller_FLT:= WCU1_NoFaults OR WCU2_NoFaults
+					OR WCU3_NoFaults;
+		ELSIF FB_In.Options.WeldCont_Amount = 4
+			THEN Weld_Controller_FLT:= WCU1_NoFaults OR WCU2_NoFaults
+					OR WCU3_NoFaults OR WCU4_NoFaults;
+		ELSE Weld_Controller_FLT:= FALSE;
+		END_IF;
+		In_Welding:= WCU1_Weld_Init OR WCU1_Weld_InProgress OR WCU1_Weld_Complete
+					OR WCU2_Weld_Init OR WCU2_Weld_InProgress OR WCU2_Weld_Complete
+					OR WCU3_Weld_Init OR WCU3_Weld_InProgress OR WCU3_Weld_Complete
+					OR WCU4_Weld_Init OR WCU4_Weld_InProgress OR WCU4_Weld_Complete;
+
+	(*Mapping for Fronius TPSi MIG Welding Type Controller*)
+
+		Fronius_PowerSourceReady:= In_From_ECAT.Robot_OUT[298];
+		Fronius_Mig_HotKey:= In_From_ECAT.Robot_OUT[299];
+		Fronius_ProcessActive:= In_From_ECAT.Robot_OUT[300];
+		Fronius_TorchCollision:= In_From_ECAT.Robot_OUT[305];
+		Fronius_IgnitionError:= In_From_ECAT.Robot_OUT[315];
+
+	Fronius_Status.Weld_Current:= (FUN_GTAC_BOOLStoINT(In_From_ECAT.Robot_OUT[377],
+											In_From_ECAT.Robot_OUT[378],
+											In_From_ECAT.Robot_OUT[379],
+											In_From_ECAT.Robot_OUT[380],
+											In_From_ECAT.Robot_OUT[381],
+											In_From_ECAT.Robot_OUT[382],
+											In_From_ECAT.Robot_OUT[383],
+											In_From_ECAT.Robot_OUT[384],
+											In_From_ECAT.Robot_OUT[385],
+											In_From_ECAT.Robot_OUT[386],
+											In_From_ECAT.Robot_OUT[387],
+											In_From_ECAT.Robot_OUT[388],
+											In_From_ECAT.Robot_OUT[389],
+											In_From_ECAT.Robot_OUT[340],
+											In_From_ECAT.Robot_OUT[341],
+											In_From_ECAT.Robot_OUT[342],
+											))/10;
+		Fronius_Status.Weld_Voltage:= (FUN_GTAC_BOOLStoINT(In_From_ECAT.Robot_OUT[361],
+											In_From_ECAT.Robot_OUT[362],
+											In_From_ECAT.Robot_OUT[363],
+											In_From_ECAT.Robot_OUT[364],
+											In_From_ECAT.Robot_OUT[365],
+											In_From_ECAT.Robot_OUT[366],
+											In_From_ECAT.Robot_OUT[367],
+											In_From_ECAT.Robot_OUT[368],
+											In_From_ECAT.Robot_OUT[369],
+											In_From_ECAT.Robot_OUT[370],
+											In_From_ECAT.Robot_OUT[371],
+											In_From_ECAT.Robot_OUT[372],
+											In_From_ECAT.Robot_OUT[373],
+											In_From_ECAT.Robot_OUT[374],
+											In_From_ECAT.Robot_OUT[375],
+											In_From_ECAT.Robot_OUT[376]
+											))/100;
+		Fronius_Status.Weld_WFS:= (FUN_GTAC_BOOLStoINT(In_From_ECAT.Robot_OUT[393],
+											In_From_ECAT.Robot_OUT[394],
+											In_From_ECAT.Robot_OUT[395],
+											In_From_ECAT.Robot_OUT[396],
+											In_From_ECAT.Robot_OUT[397],
+											In_From_ECAT.Robot_OUT[398],
+											In_From_ECAT.Robot_OUT[399],
+											In_From_ECAT.Robot_OUT[400],
+											In_From_ECAT.Robot_OUT[401],
+											In_From_ECAT.Robot_OUT[402],
+											In_From_ECAT.Robot_OUT[403],
+											In_From_ECAT.Robot_OUT[404],
+											In_From_ECAT.Robot_OUT[405],
+											In_From_ECAT.Robot_OUT[406],
+											In_From_ECAT.Robot_OUT[407],
+											In_From_ECAT.Robot_OUT[408]
+											))/100;
+
+		Fronius_Status.Error_Code:= FUN_GTAC_BOOLStoINT(In_From_ECAT.Robot_OUT[425],
+											In_From_ECAT.Robot_OUT[426],
+											In_From_ECAT.Robot_OUT[427],
+											In_From_ECAT.Robot_OUT[428],
+											In_From_ECAT.Robot_OUT[429],
+											In_From_ECAT.Robot_OUT[430],
+											In_From_ECAT.Robot_OUT[431],
+											In_From_ECAT.Robot_OUT[432],
+											In_From_ECAT.Robot_OUT[433],
+											In_From_ECAT.Robot_OUT[434],
+											In_From_ECAT.Robot_OUT[435],
+											In_From_ECAT.Robot_OUT[436],
+											In_From_ECAT.Robot_OUT[437],
+											In_From_ECAT.Robot_OUT[438],
+											In_From_ECAT.Robot_OUT[439],
+											In_From_ECAT.Robot_OUT[440]
+											);
+
+
+		IF FB_In.Options.MIGCont_Amount>0
+			THEN
+			Weld_Controller_FLT:= Weld_Controller_FLT OR Fronius_Status.Error_Code <> 0 OR NOT Fronius_PowerSourceReady;	(*20170525 - Check RLO of above code in case a WTC has flagged a fault*)
+		END_IF;
+		In_Welding:= In_Welding OR Fronius_ProcessActive;											(*20170525 - Check RLO of above code in case a WTC has flagged "In_Welding"*)
+
+
+(*Custom for Volvo Bumpers*)
+	TT_at_PickUp_Pos:= In_From_ECAT.Robot_OUT[457];
+	TT_at_DropOff_Pos:= In_From_ECAT.Robot_OUT[458];
+	
+(*Custom for Volvo Bumper -Smart Ray *)
+  In_Rxx_From_SmartRay.Alive_Out := In_From_ECAT.Robot_OUT[470];  (*Smart Ray > Robot : Input for our plc*)
+  In_Rxx_From_SmartRay.FailureGlobal_Out := In_From_ECAT.Robot_OUT[471];  (*Smart Ray > Robot : Input for our plc*)
+
+  Out_Rxx_To_SmartRay.InspectionCompleted_In := In_From_ECAT.Robot_OUT[472]; (*Robot > Smart Ray : Input for our plc *)	
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(*end*)]]></ST>
+      </Implementation>
+    </Action>
+    <Action Name="Outputs" Id="{3f4f0a51-0e46-4455-8625-3614f63afbf4}">
+      <Implementation>
+        <ST><![CDATA[	(*Transfer Commands to EtherCAT Outputs*)
+
+	(*--------------- System Outputs to Robot System Inputs -------------------------*)
+	Out_To_ECAT.Robot_IN[1]:= Start_Robot_Scan;				(*Start Robot Scan*)
+	Out_To_ECAT.Robot_IN[2]:= Servos_Req;					(*Turn on Servos*)
+	Out_To_ECAT.Robot_IN[3]:= FB_In.Enable_Motion;				(*Motion Enable*)
+	Out_To_ECAT.Robot_IN[4]:= FB_In.Alarm_RST;				(*Alarm Reset*)
+	Out_To_ECAT.Robot_IN[5]:= NOT Servos_Off_Req;			(*Turn Servo Drives Off, High to Allow Servos*)
+	Out_To_ECAT.Robot_IN[6]:= FALSE;							(*Spare*)
+	Out_To_ECAT.Robot_IN[7]:= FALSE;							(*Spare*)
+	Out_To_ECAT.Robot_IN[8]:= Hold_Robot;						(*Hold Robot, (N.O. IE; High to Hold)*)
+
+	Out_To_ECAT.Robot_IN[9]:= In_From_ICxx.ControlPower1;		(*Weld Point Repeat From Control Power*)
+	Out_To_ECAT.Robot_IN[10]:= FB_In.In_DryCycle;				(*Dry Cycle, for Simulating EOAT PP Sensors*)
+	Out_To_ECAT.Robot_IN[11]:= FALSE;						(*Spare*)
+	Out_To_ECAT.Robot_IN[12]:= FALSE;						(*Spare*)
+	Out_To_ECAT.Robot_IN[13]:= FALSE;						(*Spare*)
+	Out_To_ECAT.Robot_IN[14]:= FB_In.Under_Construction;		(*Under Construction *)
+	Out_To_ECAT.Robot_IN[15]:= FB_In.Low_Speed;				(*Safety Speed Select*)
+	Out_To_ECAT.Robot_IN[16]:= FALSE;						(*Spare*)
+
+	Out_To_ECAT.Robot_IN[17]:= FB_In.Speed_Request.0;			(*Speed Request Data Bit 1*)
+	Out_To_ECAT.Robot_IN[18]:= FB_In.Speed_Request.1;	   		(*Speed Request Data Bit 2*)
+	Out_To_ECAT.Robot_IN[19]:= FB_In.Speed_Request.2;			(*Speed Request Data Bit 4*)
+	Out_To_ECAT.Robot_IN[20]:= FB_In.Speed_Request.3;			(*Speed Request Data Bit 8*)
+	Out_To_ECAT.Robot_IN[21]:= FB_In.Speed_Request.4;			(*Speed Request Data Bit 16*)
+	Out_To_ECAT.Robot_IN[22]:= FB_In.Speed_Request.5;			(*Speed Request Data Bit 32*)
+	Out_To_ECAT.Robot_IN[23]:= FB_In.Speed_Request.6;			(*Speed Request Data Bit 64*)
+	Out_To_ECAT.Robot_IN[24]:= FB_In.Speed_Request.7;			(*Speed Request Data Bit 128*)
+
+	Out_To_ECAT.Robot_IN[25]:= FALSE;						(*Spare*)
+	Out_To_ECAT.Robot_IN[26]:= FALSE;						(*Spare*)
+	Out_To_ECAT.Robot_IN[27]:= FALSE;						(*Spare*)
+	Out_To_ECAT.Robot_IN[28]:= FALSE;						(*Spare*)
+	Out_To_ECAT.Robot_IN[29]:= FALSE;						(*Spare*)
+	Out_To_ECAT.Robot_IN[30]:= FALSE;						(*Spare*)
+	Out_To_ECAT.Robot_IN[31]:= FALSE;						(*Spare*)
+	Out_To_ECAT.Robot_IN[32]:= FALSE;						(*Spare*)
+
+	Out_To_ECAT.Robot_IN[33]:= FB_In.Force_MasterTest_Req;				(*Force Master Test Requirement*)
+	Out_To_ECAT.Robot_IN[34]:= FB_In.Force_BrakeTest_Req;					(*Force Brake Test Requirement*)
+	Out_To_ECAT.Robot_IN[35]:= FALSE;									(*Spare*)
+	Out_To_ECAT.Robot_IN[36]:= FALSE;									(*Spare*)
+	Out_To_ECAT.Robot_IN[37]:= Tip_DressOn_Ack AND Tip_DressOn_Req;		(*Tip Dresser Is On*)
+	Out_To_ECAT.Robot_IN[38]:= FALSE;									(*Spare*)
+	Out_To_ECAT.Robot_IN[39]:= FALSE;									(*Spare*)
+	Out_To_ECAT.Robot_IN[40]:= FALSE;									(*Spare*)
+
+	(*------------------------- Standard Outputs to Robot Standard Inputs ----------------------*)
+
+	Out_To_ECAT.Robot_IN[41]:= FB_In.OK_ToEnter_EquipInterf1;			(*OK to Enter Equip Interf Zone#1*)
+	Out_To_ECAT.Robot_IN[42]:= FB_In.OK_ToEnter_EquipInterf2;			(*OK to Enter Equip Interf Zone#2*)
+	Out_To_ECAT.Robot_IN[43]:= FB_In.OK_ToEnter_EquipInterf3;			(*OK to Enter Equip Interf Zone#3*)
+	Out_To_ECAT.Robot_IN[44]:= FB_In.OK_ToEnter_EquipInterf4;			(*OK to Enter Equip Interf Zone#4*)
+	Out_To_ECAT.Robot_IN[45]:= FB_In.OK_ToEnter_EquipInterf5;			(*OK to Enter Equip Interf Zone#5*)
+	Out_To_ECAT.Robot_IN[46]:= FB_In.OK_ToEnter_EquipInterf6;			(*OK to Enter Equip Interf Zone#6*)
+	Out_To_ECAT.Robot_IN[47]:= FB_In.OK_ToEnter_EquipInterf7;			(*OK to Enter Equip Interf Zone#7*)
+	Out_To_ECAT.Robot_IN[48]:= FB_In.OK_ToEnter_EquipInterf8;			(*OK to Enter Equip Interf Zone#8*)
+	Out_To_ECAT.Robot_IN[98]:= FB_In.OK_ToEnter_EquipInterf9;			(*OK to Enter Equip Interf Zone#9***NEW*)
+
+	Out_To_ECAT.Robot_IN[49]:= FB_In.OK_ToEnter_HumanInterf1;			(*OK to Enter Human Interf Zone#1*)
+	Out_To_ECAT.Robot_IN[50]:= FB_In.OK_ToEnter_HumanInterf2;			(*OK to Enter Human Interf Zone#2*)
+	Out_To_ECAT.Robot_IN[51]:= FB_In.OK_ToEnter_HumanInterf3;			(*OK to Enter Human Interf Zone#3*)
+	Out_To_ECAT.Robot_IN[52]:= FB_In.OK_ToEnter_HumanInterf4;			(*OK to Enter Human Interf Zone#4*)
+	Out_To_ECAT.Robot_IN[53]:= FB_In.OK_ToEnter_HumanInterf5;			(*OK to Enter Human Interf Zone#5*)
+	Out_To_ECAT.Robot_IN[54]:= FB_In.OK_ToEnter_HumanInterf6;			(*OK to Enter Human Interf Zone#6*)
+	Out_To_ECAT.Robot_IN[55]:= FB_In.OK_ToEnter_HumanInterf7;			(*OK to Enter Human Interf Zone#7*)
+	Out_To_ECAT.Robot_IN[56]:= FB_In.OK_ToEnter_HumanInterf8;			(*OK to Enter Human Interf Zone#8*)
+
+	Out_To_ECAT.Robot_IN[57]:= EOAT_ID.0;								(*EOAT ID ACK 1*)
+	Out_To_ECAT.Robot_IN[58]:= EOAT_ID.1;								(*EOAT ID ACK 2*)
+	Out_To_ECAT.Robot_IN[59]:= EOAT_ID.2;								(*EOAT ID ACK 4*)
+	Out_To_ECAT.Robot_IN[60]:= EOAT_ID.3;								(*EOAT ID ACK 8*)
+	Out_To_ECAT.Robot_IN[61]:= EOAT_ID.4;								(*EOAT ID ACK 16*)
+	Out_To_ECAT.Robot_IN[62]:= EOAT_ID.5;								(*EOAT ID ACK 32*)
+	Out_To_ECAT.Robot_IN[63]:= EOAT_ID.6;								(*EOAT ID ACK 64*)
+	Out_To_ECAT.Robot_IN[64]:= EOAT_ID.7;								(*EOAT ID ACK 128*)
+
+	Out_To_ECAT.Robot_IN[65]:= FB_In.Fix_ID.0;								(*Fixture ID ACK 1*)
+	Out_To_ECAT.Robot_IN[66]:= FB_In.Fix_ID.1;								(*Fixture ID ACK 2*)
+	Out_To_ECAT.Robot_IN[67]:= FB_In.Fix_ID.2;								(*Fixture ID ACK 4*)
+	Out_To_ECAT.Robot_IN[68]:= FB_In.Fix_ID.3;								(*Fixture ID ACK 8*)
+	Out_To_ECAT.Robot_IN[69]:= FB_In.Fix_ID.4;								(*Fixture ID ACK 16*)
+	Out_To_ECAT.Robot_IN[70]:= FB_In.Fix_ID.5;								(*Fixture ID ACK 32*)
+	Out_To_ECAT.Robot_IN[71]:= FB_In.Fix_ID.6;								(*Fixture ID ACK 64*)
+	Out_To_ECAT.Robot_IN[72]:= FB_In.Fix_ID.7;								(*Fixture ID ACK 128*)
+
+	Out_To_ECAT.Robot_IN[73]:= FB_In.Model_ID.0;							(*Model ID ACK 1*)
+	Out_To_ECAT.Robot_IN[74]:= FB_In.Model_ID.1;							(*Model ID ACK 2*)
+	Out_To_ECAT.Robot_IN[75]:= FB_In.Model_ID.2;							(*Model ID ACK 4*)
+	Out_To_ECAT.Robot_IN[76]:= FB_In.Model_ID.3;							(*Model ID ACK 8*)
+	Out_To_ECAT.Robot_IN[77]:= FB_In.Model_ID.4;							(*Model ID ACK 16*)
+	Out_To_ECAT.Robot_IN[78]:= FB_In.Model_ID.5;							(*Model ID ACK 32*)
+	Out_To_ECAT.Robot_IN[79]:= FB_In.Model_ID.6;							(*Model ID ACK 64*)
+	Out_To_ECAT.Robot_IN[80]:= FB_In.Model_ID.7;							(*Model ID ACK 128*)
+
+	Out_To_ECAT.Robot_IN[81]:= FB_In.User_Inputs.0;							(*User Input *)
+	Out_To_ECAT.Robot_IN[82]:= FB_In.User_Inputs.1;							(*User Input *)
+	Out_To_ECAT.Robot_IN[83]:= FB_In.User_Inputs.2;							(*User Input *)
+	Out_To_ECAT.Robot_IN[84]:= FB_In.User_Inputs.3;							(*User Input *)
+	Out_To_ECAT.Robot_IN[85]:= FB_In.User_Inputs.4;							(*User Input *)
+	Out_To_ECAT.Robot_IN[86]:= FB_In.User_Inputs.5;							(*User Input *)
+	Out_To_ECAT.Robot_IN[87]:= FB_In.User_Inputs.6;							(*User Input *)
+	Out_To_ECAT.Robot_IN[88]:= FB_In.User_Inputs.7;							(*User Input *)
+
+
+	Out_To_ECAT.Robot_IN[89]:= Peripheral_Req.0 AND FB_In.PeripheralReq_Ack.0;			(*Peripheral Equipment Request 1 (Reposition request etc.)*)
+	Out_To_ECAT.Robot_IN[90]:= Peripheral_Req.1 AND FB_In.PeripheralReq_Ack.1;			(*Peripheral Equipment Request 2 (Reposition request etc.)*)
+	Out_To_ECAT.Robot_IN[91]:= Peripheral_Req.2 AND FB_In.PeripheralReq_Ack.2;			(*Peripheral Equipment Request 4 (Reposition request etc.)*)
+	Out_To_ECAT.Robot_IN[92]:= Peripheral_Req.3 AND FB_In.PeripheralReq_Ack.3;			(*Peripheral Equipment Request 8 (Reposition request etc.)*)
+	Out_To_ECAT.Robot_IN[93]:= Peripheral_Req.4 AND FB_In.PeripheralReq_Ack.4;			(*Peripheral Equipment Request 16 (Reposition request etc.)*)
+	Out_To_ECAT.Robot_IN[94]:= Peripheral_Req.5 AND FB_In.PeripheralReq_Ack.5;			(*Peripheral Equipment Request 32 (Reposition request etc.)*)
+	Out_To_ECAT.Robot_IN[95]:= Peripheral_Req.6 AND FB_In.PeripheralReq_Ack.6;			(*Peripheral Equipment Request 64 (Reposition request etc.)*)
+	Out_To_ECAT.Robot_IN[96]:= Peripheral_Req.7 AND FB_In.PeripheralReq_Ack.7;			(*Peripheral Equipment Request 128 (Reposition request etc.)*)
+
+	IF At_Pounce
+		AND Fix_ID_Ack<>0 AND Fix_ID_Ack=FB_In.Fix_ID
+		AND EOAT_ID_Ack<>0 AND (((FB_In.Robot_Type=Kuka_KRC4_SafeOP_ATI) AND EOAT_ID_Ack=ATI[1].Tool_ID)
+								OR ((FB_In.Robot_Type<>Kuka_KRC4_SafeOP_ATI) AND  EOAT_ID_Ack=1))
+		AND Model_ID_Ack<>0 AND Model_ID_Ack=FB_In.Model_ID
+		AND Task_ID_Ack<>0 AND Task_ID_Ack=FB_In.Task_ID
+		AND ((TQM_Valid OR Task_ID_Ack=352) OR FB_In.Under_Construction)
+		AND (Peripheral_Req=0) AND (Aux_Req=0) AND NOT Clear_To_Unclamp
+		AND (NOT At_Home OR ((Task_ID_Ack>350) AND (Task_ID_Ack<360)))
+			THEN
+				Out_To_ECAT.Robot_IN[97]:= FB_In.Proceed_From_Pounce;			(*Proceed From Pounce*)
+		ELSE
+				Out_To_ECAT.Robot_IN[97]:= FALSE;								(*Proceed From Pounce*)
+	END_IF;
+
+	Out_To_ECAT.Robot_IN[100]:= Clear_To_Unclamp;							(*Robot is Clear for Tool to Unclamp Early Ack*)
+	Out_To_ECAT.Robot_IN[101]:= FALSE;										(*spare*)
+	Out_To_ECAT.Robot_IN[102]:= FALSE;										(*spare*)
+	Out_To_ECAT.Robot_IN[103]:= FALSE;										(*spare*)
+	Out_To_ECAT.Robot_IN[104]:= Task_Completed AND FB_In.Complete_Ack;		(*Task Completed Ack*)
+
+	Out_To_ECAT.Robot_IN[105]:= FB_In.OK_ToEnter_RobotInterfs.0;		(*OK to Enter Robot Interf Zone#1*)
+	Out_To_ECAT.Robot_IN[106]:= FB_In.OK_ToEnter_RobotInterfs.1;		(*OK to Enter Robot Interf Zone#2*)
+	Out_To_ECAT.Robot_IN[107]:= FB_In.OK_ToEnter_RobotInterfs.2;		(*OK to Enter Robot Interf Zone#3*)
+	Out_To_ECAT.Robot_IN[108]:= FB_In.OK_ToEnter_RobotInterfs.3;		(*OK to Enter Robot Interf Zone#4*)
+	Out_To_ECAT.Robot_IN[109]:= FB_In.OK_ToEnter_RobotInterfs.4;		(*OK to Enter Robot Interf Zone#5*)
+	Out_To_ECAT.Robot_IN[110]:= FB_In.OK_ToEnter_RobotInterfs.5;		(*OK to Enter Robot Interf Zone#6*)
+	Out_To_ECAT.Robot_IN[111]:= FB_In.OK_ToEnter_RobotInterfs.6;		(*OK to Enter Robot Interf Zone#7*)
+	Out_To_ECAT.Robot_IN[112]:= FB_In.OK_ToEnter_RobotInterfs.7;		(*OK to Enter Robot Interf Zone#8*)
+
+
+	Out_To_ECAT.Robot_IN[129]:= EOAT_Req.0 AND FB_In.EOATReq_Ack.0;			(*EOAT ACK 1*)
+	Out_To_ECAT.Robot_IN[130]:= EOAT_Req.1 AND FB_In.EOATReq_Ack.1;			(*EOAT ACK 2*)
+	Out_To_ECAT.Robot_IN[131]:= EOAT_Req.2 AND FB_In.EOATReq_Ack.2;			(*EOAT ACK  4*)
+	Out_To_ECAT.Robot_IN[132]:= EOAT_Req.3 AND FB_In.EOATReq_Ack.3;			(*EOAT ACK  8*)
+	Out_To_ECAT.Robot_IN[133]:= EOAT_Req.4 AND FB_In.EOATReq_Ack.4;			(*EOAT ACK  16*)
+	Out_To_ECAT.Robot_IN[134]:= EOAT_Req.5 AND FB_In.EOATReq_Ack.5;			(*EOAT ACK  32*)
+	Out_To_ECAT.Robot_IN[135]:= EOAT_Req.6 AND FB_In.EOATReq_Ack.6;			(*EOAT ACK  64*)
+	Out_To_ECAT.Robot_IN[136]:= EOAT_Req.7 AND FB_In.EOATReq_Ack.7;			(*EOAT ACK  128*)
+	Out_To_ECAT.Robot_IN[137]:= EOAT_Req.8 AND FB_In.EOATReq_Ack.8;			(*EOAT ACK 256*)
+	Out_To_ECAT.Robot_IN[138]:= EOAT_Req.9 AND FB_In.EOATReq_Ack.9;			(*EOAT ACK 512*)
+	Out_To_ECAT.Robot_IN[139]:= EOAT_Req.10 AND FB_In.EOATReq_Ack.10;		(*EOAT ACK  1024*)
+	Out_To_ECAT.Robot_IN[140]:= EOAT_Req.11 AND FB_In.EOATReq_Ack.11;		(*EOAT ACK  2048*)
+	Out_To_ECAT.Robot_IN[141]:= EOAT_Req.12 AND FB_In.EOATReq_Ack.12;		(*EOAT ACK  4096*)
+	Out_To_ECAT.Robot_IN[142]:= EOAT_Req.13 AND FB_In.EOATReq_Ack.13;		(*EOAT ACK  8192*)
+	Out_To_ECAT.Robot_IN[143]:= EOAT_Req.14 AND FB_In.EOATReq_Ack.14;		(*EOAT ACK  16384*)
+	Out_To_ECAT.Robot_IN[144]:= EOAT_Req.15 AND FB_In.EOATReq_Ack.15;		(*EOAT ACK  31768*)
+
+
+	Out_To_ECAT.Robot_IN[145]:= FB_In.Task_ID.0;							(*Task ID ACK 1*)
+	Out_To_ECAT.Robot_IN[146]:= FB_In.Task_ID.1;							(*Task ID ACK 2*)
+	Out_To_ECAT.Robot_IN[147]:= FB_In.Task_ID.2;							(*Task ID ACK 4*)
+	Out_To_ECAT.Robot_IN[148]:= FB_In.Task_ID.3;							(*Task ID ACK 8*)
+	Out_To_ECAT.Robot_IN[149]:= FB_In.Task_ID.4;							(*Task ID ACK 16*)
+	Out_To_ECAT.Robot_IN[150]:= FB_In.Task_ID.5;							(*Task ID ACK 32*)
+	Out_To_ECAT.Robot_IN[151]:= FB_In.Task_ID.6;							(*Task ID ACK 64*)
+	Out_To_ECAT.Robot_IN[152]:= FB_In.Task_ID.7;							(*Task ID ACK 128*)
+	Out_To_ECAT.Robot_IN[153]:= FB_In.Task_ID.8;							(*Task ID ACK 256*)
+	Out_To_ECAT.Robot_IN[154]:= FB_In.Task_ID.9;							(*Task ID ACK 512*)
+	Out_To_ECAT.Robot_IN[155]:= FB_In.Task_ID.10;							(*Task ID ACK 1024*)
+	Out_To_ECAT.Robot_IN[156]:= FB_In.Task_ID.11;							(*Task ID ACK 2048*)
+	Out_To_ECAT.Robot_IN[157]:= FB_In.Task_ID.12;							(*Task ID ACK 4096*)
+	Out_To_ECAT.Robot_IN[158]:= FB_In.Task_ID.13;							(*Task ID ACK 8192*)
+	Out_To_ECAT.Robot_IN[159]:= FB_In.Task_ID.14;							(*Task ID ACK 16384*)
+	Out_To_ECAT.Robot_IN[160]:= FB_In.Task_ID.15;							(*Task ID ACK 32768*)
+
+
+	Out_To_ECAT.Robot_IN[161]:= Aux_Req.0 AND FB_In.AuxReq_Ack.0;			(*Auxilary Equipment Request 1 (Reposition request etc.)*)
+	Out_To_ECAT.Robot_IN[162]:= Aux_Req.1 AND FB_In.AuxReq_Ack.1;			(*Auxilary Equipment Request 2 (Reposition request etc.)*)
+	Out_To_ECAT.Robot_IN[163]:= Aux_Req.2 AND FB_In.AuxReq_Ack.2;			(*Auxilary Equipment Request 4 (Reposition request etc.)*)
+	Out_To_ECAT.Robot_IN[164]:= Aux_Req.3 AND FB_In.AuxReq_Ack.3;			(*Auxilary Equipment Request 8 (Reposition request etc.)*)
+	Out_To_ECAT.Robot_IN[165]:= Aux_Req.4 AND FB_In.AuxReq_Ack.4;			(*Auxilary Equipment Request 16 (Reposition request etc.)*)
+	Out_To_ECAT.Robot_IN[166]:= Aux_Req.5 AND FB_In.AuxReq_Ack.5;			(*Auxilary Equipment Request 32 (Reposition request etc.)*)
+	Out_To_ECAT.Robot_IN[167]:= Aux_Req.6 AND FB_In.AuxReq_Ack.6;			(*Auxilary Equipment Request 64 (Reposition request etc.)*)
+	Out_To_ECAT.Robot_IN[168]:= Aux_Req.7 AND FB_In.AuxReq_Ack.7;			(*Auxilary Equipment Request 128 (Reposition request etc.)*)
+
+
+	IF FB_In.Robot_Type<>KUKA_KRC4c_SAFEOP_AGILUS
+		THEN
+			(*WCU#1*)
+			Out_To_ECAT.Robot_IN[169]:= NOT FB_In.Weld_Inhibit;											(*To WCU - Weld Enable*)
+			Out_To_ECAT.Robot_IN[170]:= FB_In.Alarm_RST;												(*To WCU - Alarm Reset*)
+			Out_To_ECAT.Robot_IN[171]:= WS[1].Cooling_OK OR FB_In.Option_Disable_WaterFLT;			(*To WCU - System Cooling OK*)
+			Out_To_ECAT.Robot_IN[172]:= FALSE;														(*To WCU - Spare*)
+			Out_To_ECAT.Robot_IN[173]:= Safety_PeriReady;												(*To WCU - Control Stop*)
+			Out_To_ECAT.Robot_IN[174]:= TRUE;														(*To WCU - Iso Contactor Saver*)
+			Out_To_ECAT.Robot_IN[176]:= ((Task_ID_Ack = 354) OR (Task_ID_Ack = 355))
+										AND Task_Completed;											(*To WCU - Reset All Steppers*)
+			Out_To_ECAT.Robot_IN[185]:= FALSE;														(*To WCU - Reset Stepper GR1*)
+			Out_To_ECAT.Robot_IN[186]:= FALSE;														(*To WCU - Reset Stepper GR2*)
+			(*WCU#2*)
+			Out_To_ECAT.Robot_IN[201]:= NOT FB_In.Weld_Inhibit;											(*To WCU - Weld Enable*)
+			Out_To_ECAT.Robot_IN[202]:= FB_In.Alarm_RST;												(*To WCU - Alarm Reset*)
+			Out_To_ECAT.Robot_IN[203]:= WS[2].Cooling_OK OR FB_In.Option_Disable_WaterFLT;			(*To WCU - System Cooling OK*)
+			Out_To_ECAT.Robot_IN[204]:= FALSE;														(*To WCU - Spare*)
+			Out_To_ECAT.Robot_IN[205]:= Safety_PeriReady;												(*To WCU - Control Stop*)
+			Out_To_ECAT.Robot_IN[206]:= TRUE;														(*To WCU - Iso Contactor Saver*)
+			Out_To_ECAT.Robot_IN[208]:= ((Task_ID_Ack = 354) OR (Task_ID_Ack = 355))
+										AND Task_Completed;											(*To WCU - Reset All Steppers*)
+			Out_To_ECAT.Robot_IN[217]:= FALSE;														(*To WCU - Reset Stepper GR1*)
+			Out_To_ECAT.Robot_IN[218]:= FALSE;														(*To WCU - Reset Stepper GR2*)
+			(*WCU#3*)
+			Out_To_ECAT.Robot_IN[233]:= NOT FB_In.Weld_Inhibit;											(*To WCU - Weld Enable*)
+			Out_To_ECAT.Robot_IN[234]:= FB_In.Alarm_RST;												(*To WCU - Alarm Reset*)
+			Out_To_ECAT.Robot_IN[235]:= WS[2].Cooling_OK OR FB_In.Option_Disable_WaterFLT;			(*To WCU - System Cooling OK*) (*de bug will need to tie to WS[3] once it is developed - JVD*)
+			Out_To_ECAT.Robot_IN[236]:= FALSE;														(*To WCU - Spare*)
+			Out_To_ECAT.Robot_IN[237]:= Safety_PeriReady;												(*To WCU - Control Stop*)
+			Out_To_ECAT.Robot_IN[238]:= TRUE;														(*To WCU - Iso Contactor Saver*)
+			Out_To_ECAT.Robot_IN[240]:= ((Task_ID_Ack = 354) OR (Task_ID_Ack = 355))
+										AND Task_Completed;											(*To WCU - Reset All Steppers*)
+			Out_To_ECAT.Robot_IN[249]:= FALSE;														(*To WCU - Reset Stepper GR1*)
+			Out_To_ECAT.Robot_IN[250]:= FALSE;														(*To WCU - Reset Stepper GR2*)
+			(*WCU#4*)
+			Out_To_ECAT.Robot_IN[265]:= NOT FB_In.Weld_Inhibit;											(*To WCU - Weld Enable*)
+			Out_To_ECAT.Robot_IN[266]:= FB_In.Alarm_RST;												(*To WCU - Alarm Reset*)
+			Out_To_ECAT.Robot_IN[267]:= WS[2].Cooling_OK OR FB_In.Option_Disable_WaterFLT;			(*To WCU - System Cooling OK*)(*de bug will need to tie to WS[4] once it is developed - JVD*)
+			Out_To_ECAT.Robot_IN[268]:= FALSE;														(*To WCU - Spare*)
+			Out_To_ECAT.Robot_IN[269]:= Safety_PeriReady;												(*To WCU - Control Stop*)
+			Out_To_ECAT.Robot_IN[270]:= TRUE;														(*To WCU - Iso Contactor Saver*)
+			Out_To_ECAT.Robot_IN[272]:= ((Task_ID_Ack = 354) OR (Task_ID_Ack = 355))
+										AND Task_Completed;											(*To WCU - Reset All Steppers*)
+			Out_To_ECAT.Robot_IN[281]:= FALSE;														(*To WCU - Reset Stepper GR1*)
+			Out_To_ECAT.Robot_IN[282]:= FALSE;														(*To WCU - Reset Stepper GR2*)
+
+			(*NOTE: New Fronius TPSi, b.lekx-toniolo (20170531)*)
+			Out_To_ECAT.Robot_IN[313]:=  FB_In.Weld_Inhibit;
+			Out_To_ECAT.Robot_IN[314]:= FB_In.Alarm_RST;
+
+			(*NOTE: old Fronius CMT, b.lekx-toniolo (20170531)*)
+			(*
+			Out_To_ECAT.Robot_IN[353]:= NOT FB_In.Weld_Inhibit;
+			Out_To_ECAT.Robot_IN[354]:= FB_In.Alarm_RST;
+			*)
+
+	ELSE (*Map as required for other robot type*)
+			Out_To_ECAT.Robot_IN[169]:= FALSE;
+			Out_To_ECAT.Robot_IN[170]:= FALSE;
+			Out_To_ECAT.Robot_IN[171]:= FALSE;
+			Out_To_ECAT.Robot_IN[172]:= FALSE;
+			Out_To_ECAT.Robot_IN[173]:= FALSE;
+			Out_To_ECAT.Robot_IN[174]:= FALSE;
+			Out_To_ECAT.Robot_IN[176]:= FALSE;
+			Out_To_ECAT.Robot_IN[185]:= FALSE;
+			Out_To_ECAT.Robot_IN[186]:= FALSE;
+
+			Out_To_ECAT.Robot_IN[201]:= FALSE;
+			Out_To_ECAT.Robot_IN[202]:= FALSE;
+			Out_To_ECAT.Robot_IN[203]:= FALSE;
+			Out_To_ECAT.Robot_IN[204]:= FALSE;
+			Out_To_ECAT.Robot_IN[205]:= FALSE;
+			Out_To_ECAT.Robot_IN[208]:= FALSE;
+			Out_To_ECAT.Robot_IN[217]:= FALSE;
+			Out_To_ECAT.Robot_IN[218]:= FALSE;
+
+	END_IF;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+(*end*)]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="FB_GTAC_Kuka_CUSTOM">
+      <LineId Id="3" Count="19" />
+      <LineId Id="4839" Count="8" />
+      <LineId Id="24" Count="162" />
+      <LineId Id="1624" Count="0" />
+      <LineId Id="1613" Count="0" />
+      <LineId Id="1639" Count="0" />
+      <LineId Id="2160" Count="0" />
+      <LineId Id="1640" Count="3" />
+      <LineId Id="1617" Count="0" />
+      <LineId Id="1630" Count="0" />
+      <LineId Id="1614" Count="0" />
+      <LineId Id="1633" Count="3" />
+      <LineId Id="1649" Count="0" />
+      <LineId Id="1644" Count="4" />
+      <LineId Id="1632" Count="0" />
+      <LineId Id="1638" Count="0" />
+      <LineId Id="1637" Count="0" />
+      <LineId Id="1612" Count="0" />
+      <LineId Id="187" Count="34" />
+      <LineId Id="5380" Count="1" />
+      <LineId Id="222" Count="18" />
+      <LineId Id="5394" Count="0" />
+      <LineId Id="241" Count="1" />
+      <LineId Id="5393" Count="0" />
+      <LineId Id="243" Count="1" />
+      <LineId Id="5392" Count="0" />
+      <LineId Id="245" Count="1" />
+      <LineId Id="5391" Count="0" />
+      <LineId Id="247" Count="1" />
+      <LineId Id="5390" Count="0" />
+      <LineId Id="249" Count="1" />
+      <LineId Id="5389" Count="0" />
+      <LineId Id="251" Count="1" />
+      <LineId Id="5388" Count="0" />
+      <LineId Id="253" Count="0" />
+      <LineId Id="5383" Count="0" />
+      <LineId Id="5387" Count="0" />
+      <LineId Id="5384" Count="0" />
+      <LineId Id="254" Count="0" />
+      <LineId Id="5385" Count="0" />
+      <LineId Id="255" Count="27" />
+      <LineId Id="5395" Count="0" />
+      <LineId Id="283" Count="115" />
+      <LineId Id="3721" Count="60" />
+      <LineId Id="3803" Count="0" />
+      <LineId Id="3782" Count="6" />
+      <LineId Id="3802" Count="0" />
+      <LineId Id="3789" Count="0" />
+      <LineId Id="3791" Count="9" />
+      <LineId Id="479" Count="124" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_GTAC_Kuka_CUSTOM.CycleTime">
+      <LineId Id="2" Count="236" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_GTAC_Kuka_CUSTOM.Inputs">
+      <LineId Id="2" Count="48" />
+      <LineId Id="378" Count="0" />
+      <LineId Id="380" Count="1" />
+      <LineId Id="53" Count="75" />
+      <LineId Id="377" Count="0" />
+      <LineId Id="129" Count="214" />
+      <LineId Id="374" Count="0" />
+      <LineId Id="376" Count="0" />
+      <LineId Id="382" Count="0" />
+      <LineId Id="384" Count="3" />
+      <LineId Id="383" Count="0" />
+      <LineId Id="344" Count="29" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_GTAC_Kuka_CUSTOM.Outputs">
+      <LineId Id="2" Count="57" />
+      <LineId Id="292" Count="0" />
+      <LineId Id="60" Count="231" />
+      <LineId Id="1" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

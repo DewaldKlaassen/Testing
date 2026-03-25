@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <POU Name="FB_GTAC_ProcessInterlock_20210526" Id="{f75caa47-bce6-4371-b675-0232650601e7}" SpecialFunc="None">
+    <Declaration><![CDATA[(*
+------------------------------------------------------------------------------------------
+REVISION NOTES:
+	Version 20210503
+		- intial concept, j.underhill
+	Version 20210526
+		- added changed QA Reset to have Complete and Restart functionality
+		- added Time Capture for Bypass activation
+------------------------------------------------------------------------------------------
+*)
+
+
+FUNCTION_BLOCK FB_GTAC_ProcessInterlock_20210526
+VAR_INPUT
+	QA_Restart: BOOL;			(*FB Input to Force Restart of Interlocked Process*)
+	QA_Complete: BOOL;			(*FB Input to Force Complete of Interlocked Process*)
+	QA_Bypass: BOOL;			(*FB Input to Bypass Process Interlock by Quality*)
+
+	Machine_Time: TimeStruct;	(*FB Input to Capture Time of Bypass*)
+
+	Process_Started: BOOL;		(*FB Input to Capture Conditions to Start the Interlocked Process*)
+	Offline_Process: BOOL;		(*FB Input to Capture Offline Process has Occured between Process Start and Complete*)
+	Process_Completed: BOOL;	(*FB Input to Capture Conditions to Finish the Interlocked Process*)
+
+END_VAR
+
+VAR
+	Bypass_TRIG: R_TRIG;		(*One Shot for Capture of Bypass Time*)
+END_VAR
+
+VAR PERSISTENT
+	InProcess: BOOL;			(*Bit to Capture In Process*)
+	OfflineProcess: BOOL;		(*Bit to Capture Offline Process*)
+	PrevProcess: BOOL;			(*Bit for Previous Process Interlock*)
+	NextProcess: BOOL;			(*Bit for Next Process Interlock*)
+	Bypass_Time: TimeStruct;	(*FB Output to Indicate Time that Bypass was applied*)
+END_VAR
+
+
+VAR_OUTPUT
+	Allow_PrevProcess: BOOL;	(*FB Output to Interlock with Prev Process to Continue*)
+	Allow_NextProcess: BOOL;	(*FB Output to Interlock with Next Process to Continue*)
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Capture In Process - Active From Process Started UNTIL Process Completed*)
+	IF Process_Started OR QA_Restart
+		THEN InProcess:= TRUE;
+	ELSIF Process_Completed OR QA_Bypass
+		THEN InProcess:= FALSE;
+	END_IF;
+
+(*Capture Offline Process - Active From Offline Process UNTIL Process Completed*)
+	IF (InProcess AND Offline_Process) OR QA_Restart
+		THEN OfflineProcess:= TRUE;
+	ELSIF Process_Completed AND NOT Offline_Process
+		THEN OfflineProcess:= FALSE;
+	END_IF;
+
+(*Allow Previous Process - Active From Process Completed UNTIL Process Started*)
+	IF Process_Completed OR QA_Complete
+		THEN PrevProcess:= TRUE;
+	ELSIF InProcess OR OfflineProcess
+		THEN PrevProcess:= FALSE;
+	END_IF;
+	Allow_PrevProcess:= PrevProcess OR QA_Bypass;
+
+(*Allow Next Process - Active From Offline Process UNTIL Process Completed*)
+	IF OfflineProcess
+		THEN NextProcess:= TRUE;
+	ELSIF (Process_Completed OR QA_Restart)
+		THEN NextProcess:= FALSE;
+	END_IF;
+	Allow_NextProcess:= NextProcess OR QA_Bypass;
+
+
+(*Capture Bypass Time*)
+	Bypass_TRIG.CLK:= QA_Bypass;
+	Bypass_TRIG();
+	IF Bypass_TRIG.Q
+		THEN Bypass_Time:= Machine_Time;
+	END_IF;
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_GTAC_ProcessInterlock_20210526">
+      <LineId Id="3" Count="36" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

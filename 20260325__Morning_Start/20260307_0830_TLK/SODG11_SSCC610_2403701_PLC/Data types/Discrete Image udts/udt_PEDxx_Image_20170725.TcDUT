@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.2">
+  <DUT Name="udt_PEDxx_Image_20170725" Id="{c3d1eccf-63e4-49e5-8c44-d1d6ac0a47f6}">
+    <Declaration><![CDATA[(*udt (user defined type) for all generic PEDs (Pedastals)
+	auth. Brent Lekx-Toniolo of Sodecia GTAC
+
+------------------------------------------------------------------------
+REVISION NOTES:
+
+	Version 20151104:
+	- initial concept, b.lekx-toniolo	
+	Version 20170725:
+	- added PP faults, j.vandongen
+	- added means of hiding N100 on the UI, j.vandongen
+------------------------------------------------------------------------
+
+*)
+
+TYPE udt_PEDxx_Image_20170725 :
+	STRUCT
+
+
+			(*Input nodes*)
+			N01: udt_EP1008_002_v2;
+			N02: udt_EP1008_002_v2;
+
+			(*Valve Bank*)
+			N100: udt_SMC_EX260_ValveBank;
+			N100_STAT: udt_SMC_EX260_STAT;
+
+			(*Cable Break States*)
+			ECatSlave_Cable_Breaks: UDINT;
+
+			(*Developed Data*)
+			CLFaults1: UDINT;
+			CLFaults2: UDINT;
+			CLFaults3: UDINT;
+			CLFaults4: UDINT;
+			CLFaulted: UDINT;
+			PPFaults: UDINT;
+			PPFaulted: UDINT;
+
+			VB_Node_Count: UDINT;
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

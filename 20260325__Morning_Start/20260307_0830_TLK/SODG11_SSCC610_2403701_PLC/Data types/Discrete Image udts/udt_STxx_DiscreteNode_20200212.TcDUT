@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <DUT Name="udt_STxx_DiscreteNode_20200212" Id="{0c67052d-649d-402d-8057-17dc7a62bc2b}">
+    <Declaration><![CDATA[(*
+udt (user defined type) for Visualization of Stud Weld Controller Discrete I/O Module
+	Author(S): Brent Lekx-Toniolo of Sodecia GTAC;
+---------------------------------------------------------------------------------------------
+REVISION NOTES:
+
+	Version 20121204
+		- Intiial Concept
+	Version 20200212
+		- Copied from old "Nelson" named udt, abstraced name only, no code changes, b.lekx-toniolo
+---------------------------------------------------------------------------------------------
+*)
+TYPE udt_STxx_DiscreteNode_20200212 :
+	STRUCT
+		T01: udt_EK1100;						(*Ecat Bus Coupler*)
+		T02_STAT: udt_EL6900_STAT_20160426;	(*EL Safety CPU status*)
+		T02_CMD: udt_EL6900_CMD_20121204;	(*EL Safety CPU command*)
+		T03: udt_EL1904_v2;					(*EL Safety Inputs*)
+		T04: udt_EL2904RO_v2;				(*EL Safety Outputs, Set to "I" as this terminal is safety rated, therefore read only!*)
+		T05: udt_EL6731;						(*EL Profibus Mater Terminal*)
+		Profinode_Stat: udt_ProfiNode_Status; 	(*Status Image of Profibus Node*)
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

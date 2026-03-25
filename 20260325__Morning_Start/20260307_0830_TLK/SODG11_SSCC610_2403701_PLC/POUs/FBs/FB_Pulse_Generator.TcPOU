@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FB_Pulse_Generator" Id="{e02c5d27-9361-4d4f-87ce-8b5e275fded7}" SpecialFunc="None">
+    <Declaration><![CDATA[
+(*Generic Pulse Generator to Create Adjustable Pulse WaveForm*)
+FUNCTION_BLOCK FB_Pulse_Generator
+VAR_INPUT
+	On_Time: TIME;
+	Off_Time: TIME;
+END_VAR
+
+VAR
+	Internal_On_TMR: TON;
+	Internal_Duty_Cycle: BYTE;
+	Internal_Off_TMR: TON;
+	Internal_Wave: BOOL;
+END_VAR
+
+VAR_OUTPUT
+	Wave: BOOL;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Estabish Timer Data*)
+
+	Internal_On_TMR.PT:=On_Time;
+	Internal_Off_TMR.PT:=Off_Time;
+	Internal_On_TMR();
+	Internal_Off_TMR();
+
+(*Generate Pulse*)
+	(*Pulse High*)
+	IF NOT Internal_Off_TMR.IN
+		THEN
+			Internal_On_TMR.IN:=TRUE;
+			Internal_Wave:=TRUE;
+	END_IF;
+	IF Internal_On_TMR.Q
+		THEN
+			Internal_On_TMR.IN:=FALSE;
+			Internal_Off_TMR.IN:= TRUE;
+	END_IF;
+
+	(*Pulse Low*)
+	IF NOT Internal_On_TMR.IN
+		THEN
+			Internal_Wave:=FALSE;
+	END_IF;
+
+	IF Internal_Off_TMR.Q
+		THEN
+			Internal_Off_TMR.IN:=FALSE;
+	END_IF;
+
+(*Transfer Output*)
+	Wave:=Internal_Wave;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Pulse_Generator">
+      <LineId Id="19" Count="32" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.11">
+  <DUT Name="udt_ProdReportxx_ToUI_20220224" Id="{3dd77afd-97d3-452c-b912-52bb2e345314}">
+    <Declaration><![CDATA[(*udt (user defined type) for interfacing to UI (User Interface)
+this udt represents data that is passed from PLC to EACH UI
+
+	Author(S): Brent Lekx-Toniolo of Sodecia GTAC;
+	Version 20141021
+		- Initial Concept
+	Version 20160229
+		- Updated udt instances, b.lekx-toniolo
+	Version 20191125
+		- Updated udt instances, b.lekx-toniolo
+	Version 20220224
+	- Overhaul during TcUI Migration project, b.lekx-toniolo / c.drees
+
+*)
+
+TYPE udt_ProdReportxx_ToUI_20220224 :
+	STRUCT
+	Curr_Prod_Report: udt_Generic_Production_20221007;
+	Days_Prod_Report: udt_Generic_Production_20221007;
+	Aft_Prod_Report: udt_Generic_Production_20221007;
+	Mid_Prod_Report: udt_Generic_Production_20221007;
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

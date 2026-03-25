@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_FixXX_Input_Image_20180202" Id="{10772d06-3809-4e82-9b62-1c3cdc147add}">
+    <Declaration><![CDATA[(*udt (user defined type) for all fixture input interface
+	auth. Rob Remillard and Brent Lekx-Toniolo of Sodecia GTAC
+
+------------------------------------------------------------------------
+REVISION NOTES:
+	V1.0 (pre date naming)
+	- initial concept, r.remillard/b.lekx-toniolo
+	Version 20160503:
+	- added node and VB configuration variables, b.lekx-toniolo	
+	Version 20170415:
+	-added second set of ManReqs2, j.vandongen
+	Version 20170612:
+	-added third set of ManReqs3, j.vandongen
+	Version 20170801:
+	-added ManReqs1, j.vandongen
+	Version 20180202:
+	-added Output_Node_Count and Water_Stand_Count, j.vandongen
+	Version 20220715:
+	-Added the Data for handling Auto Fixture Layouts -C.Drees
+	
+------------------------------------------------------------------------
+
+*)
+
+
+TYPE udt_FixXX_Input_Image_20180202 :
+STRUCT
+	Mode_Select: INT;
+	ResetProd: BOOL;
+	ModelData: INT;
+	ManReqs: DINT;
+	ManReqs1: DINT;
+	ManReqs2: DINT;
+	ManReqs3: DINT;
+	Go_Home: BOOL;
+	Bypass_REQS: UDINT;
+	CustomApplication_REQS: UDINT;
+(*Node Counts and configuration data*)
+	Input_Node_Count: UDINT;
+	VB_Node_Count: UDINT;
+	Output_Node_Count: UDINT;
+	Water_Stand_Count: UDINT;
+
+	(*Conveyor*)
+	Manual_Conveyor_Start : BOOL;	
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

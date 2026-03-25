@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project Crc="1308451317" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{b72de33d-8e70-4fa4-b8a1-90ec11a1f95f}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>TwinCAT3SafePlcProject</RootNamespace>
+    <AssemblyName>TwinCAT3SafePlcProject</AssemblyName>
+    <FileUpgradeFlags />
+    <UpgradeBackupLocation />
+    <OldToolsVersion>2.0</OldToolsVersion>
+    <TargetSystem>EL6900</TargetSystem>
+    <ProgrammingLanguage>Graphical Editor</ProgrammingLanguage>
+    <Worker>michael.chevalier</Worker>
+    <IntProjName>MD01.N01.EP1918</IntProjName>
+    <IsNewCreated>false</IsNewCreated>
+    <SPlcProjVersion>1.8.0.0</SPlcProjVersion>
+    <Name>MD03.N01.EP1918</Name>
+    <NextSdsId>33</NextSdsId>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>false</DebugSymbols>
+    <OutputPath>bin\Release\</OutputPath>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="GVLs\GVL.sgvl" />
+    <None Include="MD03_Function_Blocks\Alias Devices\ICxx_OPxx_CycleStart.sds" />
+    <None Include="MD03_Function_Blocks\Alias Devices\MD03N01.sds" />
+    <None Include="MD03_Function_Blocks\Alias Devices\MAINMD03N01_STATFBS_FB_ERR_B08.sds" />
+    <None Include="MD03_Function_Blocks\Alias Devices\MAINMD03N01_STATSGs_COM_ERR.sds" />
+    <None Include="MD03_Function_Blocks\Alias Devices\MAINMD03N01_STATSGs_FB_ERR.sds" />
+    <None Include="MD03_To_IC01_Decouple\Alias Devices\MAINMD03N01_STATSGs_COM_ERR.sds.sds" />
+    <None Include="MD03_To_IC01_Decouple\Alias Devices\IC01_Connection.sds" />
+    <None Include="TargetSystemConfig.xml">
+      <Visible>false</Visible>
+    </None>
+    <None Include="MD03_Function_Blocks\Alias Devices\MAINMD03N01_CMDSGS_ERRAck.sds" />
+    <None Include="MD03_Function_Blocks\Alias Devices\MAINMD03N01_CMDSGS_RUNSTOP.sds" />
+    <None Include="MD03_Function_Blocks\MD03_Function_Blocks.sal" />
+    <None Include="MD03_Function_Blocks\MD03_Function_Blocks.sal.diagram">
+      <Visible>false</Visible>
+      <DependentUpon>MD03_Function_Blocks\MD03_Function_Blocks.sal</DependentUpon>
+    </None>
+    <None Include="MD03_To_IC01_Decouple\Alias Devices\MAINMD03N01_CMDSGS_ERRAck.sds" />
+    <None Include="MD03_To_IC01_Decouple\Alias Devices\MAINMD03N01_CMDSGS_RUNSTOP.sds" />
+    <None Include="MD03_To_IC01_Decouple\MD03_To_IC01_Decouple.sal" />
+    <None Include="MD03_To_IC01_Decouple\MD03_To_IC01_Decouple.sal.diagram">
+      <Visible>false</Visible>
+      <DependentUpon>MD03_To_IC01_Decouple\MD03_To_IC01_Decouple.sal</DependentUpon>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="GVLs" />
+    <Folder Include="MD03_Function_Blocks" />
+    <Folder Include="MD03_Function_Blocks\Alias Devices" />
+    <Folder Include="MD03_To_IC01_Decouple" />
+    <Folder Include="MD03_To_IC01_Decouple\Alias Devices" />
+  </ItemGroup>
+  <ProjectExtensions />
+</Project>

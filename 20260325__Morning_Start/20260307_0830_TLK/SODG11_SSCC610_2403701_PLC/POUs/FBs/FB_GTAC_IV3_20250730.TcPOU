@@ -1,0 +1,537 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_GTAC_IV3_20250730" Id="{1c681abf-fea7-4e5f-849f-034562798ed8}" SpecialFunc="None">
+    <Declaration><![CDATA[(*FB for use with Keyence IV2 Sensors
+
+------------------------------------------------------------------------------------------
+REVISION NOTES:
+	Version 20210201: February 1st, 2021
+		- Initial Concept (C.Drees)
+	
+	Version20211109: November 9th, 2021
+		- Modified to handle ECAT Layout
+	
+	Version20211229: December 29th, 2021
+		- Added Discrete Node OK Status, j.underhill
+		
+	Version20220119: January 19th, 2022
+		- Added In Auto Status to Control Automated Program Selection, j.underhill
+		- Automated Program Selection to IV2 Controller, j.underhill
+		
+	Version20240315: March 15th, 2024
+		- Added "busy" Bit mirror to outputs for program selection backcheck, D Klaassen
+		- Added "ProgramSwitchComplete" to outputs for fast switching applications
+		- Added Current program to externally track which porgram is running
+		
+	Version20250725: July 25th, 2025
+	    - Automatic retry bit is addded 
+*)
+
+FUNCTION_BLOCK FB_GTAC_IV3_20250730
+VAR_INPUT
+	TriggerRequest: BOOL;			(*Boolean Input to issue a start capture trigger*)
+	WarningClear: BOOL;				(*Boolean to clear any warnings on IV2 system*)
+	ProgramSwitchRequest: BOOL;		(*Boolean to request a program change *)
+	ProgramRequest: INT;			(*Integer between 0 and 31 to switch the program to*)
+	BufferClear: BOOL;				(*Boolean to Clear Buffer, used to clear the I/O status from IV2 System*)
+	Reset_Sequence: BOOL;			(*Boolean to Reset the Sequence *)
+	In_Auto: BOOL;					(*Boolean to check status of Auto Mode*)
+	Discrete_In: udt_IVxx_Input_Image_20250812;
+
+END_VAR
+
+VAR_OUTPUT
+	IV_Check_OK: BOOL;				(*Camera Check Judgement OK*)
+	IV_Check_NOK: BOOL;				(*Camera Check Judgement Not OK *)
+	Camera_Faulted: BOOL;			(*Camera Sequence Faulted *)
+	Camera_Complete :BOOL;			(*Camera Sequence Complete*)
+	Discrete_Image:	udt_IV2_DiscreteImage;
+	ProgramSwitchComplete : BOOL; 	(* Camera Check for the program select *)
+	Tool_1_out: BOOL; 				(*Tool 1 Out feedback*)
+	Tool_2_out: BOOL; 				(*Tool 2 Out feedback*)
+	Tool_3_out: BOOL; 				(*Tool 3 Out feedback*)
+	Tool_4_out: BOOL; 				(*Tool 4 Out feedback*)
+	Tool_5_out: BOOL; 				(*Tool 5 Out feedback*)
+	Tool_6_out: BOOL; 				(*Tool 6 Out feedback*)
+	Tool_7_out: BOOL; 				(*Tool 7 Out feedback*)
+	Tool_8_out: BOOL; 				(*Tool 8 Out feedback*)
+	Tool_9_out: BOOL; 				(*Tool 9 Out feedback*)
+	Tool_10_out: BOOL; 				(*Tool 10 Out feedback*)
+	Tool_11_out: BOOL; 				(*Tool 11 Out feedback*)
+	Tool_12_out: BOOL; 				(*Tool 12 Out feedback*)
+	Tool_13_out: BOOL; 				(*Tool 13 Out feedback*)
+	
+	Logic_1_out :BOOL;
+	Logic_2_out :BOOL;
+	Logic_3_out :BOOL;
+	Logic_4_out :BOOL;
+	
+
+	
+	Result_Available: BOOL;						(*Response from IV2 when a result is ready*)
+	CurrentPrg_Out: INT;			(*Shows the Current program running on the unit*)
+	IV_Busy_Out: BOOL;
+	IV_Running_Outdr:BOOL;
+	Faulted: BOOL;
+	
+	
+END_VAR
+
+VAR
+	DiscreteNode_OK: BOOL;
+	PortB_MissingLink: BOOL;
+	ECAT_Input_Data AT %I*: udt_IV2_Inputs;	(*Input image array  EtherCAT*)	
+	ECAT_Output_Data AT %Q*:ARRAY[0..5]OF DWORD; 		(*Output Image Array EtherCAT*)
+
+	EIP_Input_Integer AT %I*:ARRAY [0..196] OF INT;		(*Input image array  ETHERNET/IP*)
+	EIP_Output_Integer AT %Q*: ARRAY [0..6] OF INT;		(*Output Image Array ETHERNET/IP*)
+
+	TriggerResponse: BOOL;						(*Response from IV2 when triggered*)
+	IV_Busy: BOOL;								(*Response from IV2 when processing an image*)
+	IV_Running: BOOL;							(*IV2 Running Status *)
+	IV_Ready: BOOL;								(*IV2 Ready to Run Status*)
+	IV_Warning: BOOL;							(*IV2 Warning, see warning Code*)
+	IV_Error: BOOL;								(*IV2 Error, See Error Code*)
+	Judgement_OK: BOOL;							(*IV2 Status, all Judgement Code OK *)
+	Logic1_OK: BOOL;								(*IV2 Logic 1 Judgement Code OK*)
+	Logic2_OK: BOOL;								(*IV2 Logic 2 Judgement Code OK*)
+	Logic3_OK: BOOL;								(*IV2 Logic 3 Judgement Code OK*)
+	Logic4_OK: BOOL;								(*IV2 Logic 4 Judgement Code OK*)
+	TOOL_OK:ARRAY [1..16] OF BOOL;				(*IV2 Boolean status of Pass fail for individual Tools*)
+	ProgramSwitch:BOOL;							(*IV2 Program Switch requested*)
+
+	CurrentPrg: INT;								(*IV2 Current Program Running *)
+	IV_Sequence: INT;							(*IV2 Sequence Step
+													0-  IV2 Not Ready
+													10-  IV2 is waiting for a trigger
+													20 - Wait for IV2 to be Busy Processing Image
+													30 - Wait for  IV2 to be finished processing
+													40 - Wait for  IV2 Trigger Response OK and not Failed
+													50 - Wait for IV2 to have a Result Available
+													60 - Pass/Fail based on Judgement Critera
+													70 - Sequence Complete
+												*)
+	TriggerFail: BOOL;								(*IV2 Trigger Failed Response*)
+	ProgramSwitchTON: TON;
+	ProgramSwitchTON2: TON;
+	FailureRecovery_Attempt : INT; 
+    Failure_Max_Attempt_Fault : BOOL ; 
+	Fault_Failure_Recovery_Tmrs: ARRAY [1..15] OF TON;
+	Fault_Delay: TIME:=T#2.5S;
+	Failure_Recovery_Seq : INT; (*Step indication*)
+	Fault_Failure_Recovery : ARRAY[1..15] OF BOOL; 
+    Failure_Recovery_Trial : BOOL;
+	Failure_Recovery_Trigger : BOOL; 
+	Failure_R_trig : R_TRIG;
+	Failure_Recovery_Delay : TON; (*a bit of delay for re trigger the other cam shots*)
+	
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Discrete I/O Node*)
+IF (ECAT_Input_Data.InfoData.State=8)
+	THEN DiscreteNode_OK:=TRUE;
+ELSE DiscreteNode_OK:=FALSE;
+END_IF;
+
+(*Develop Port Connection Warning Flags*)
+IF (ECAT_Input_Data.InfoData.State= 9224) (*State Machine for Link Missing at Port B*)
+	THEN PortB_MissingLink:= TRUE; (*PortB is OUT Port*)
+ELSE PortB_MissingLink := FALSE;
+END_IF;
+
+(*I/O Mapping from SM to internal Variables *)
+TriggerResponse:= EIP_Input_Integer[0].0 OR ECAT_Input_Data.TriggerResponse ;
+Result_Available:=EIP_Input_Integer[1].0 OR ECAT_Input_Data.ResultAvailable;
+IV_Busy:=EIP_Input_Integer[1].2 OR ECAT_Input_Data.Busy;
+IV_Running:=EIP_Input_Integer[1].3 OR ECAT_Input_Data.Running;
+IV_Ready:=EIP_Input_Integer[1].4 OR ECAT_Input_Data.TriggerReady;
+TriggerFail:=EIP_Input_Integer[1].8 OR ECAT_Input_Data.TriggerFailed;
+IV_Warning:=EIP_Input_Integer[1].14;
+IV_Error:=EIP_Input_Integer[1].15 OR ECAT_Input_Data.Error_Status;
+
+
+Judgement_OK:=EIP_Input_Integer[2].0 OR ECAT_Input_Data.OverallJudgementOK;
+Logic1_OK:= Logic_1_out := EIP_Input_Integer[2].2 OR ECAT_Input_Data.LogicResult[1];
+Logic2_OK:= Logic_2_out := EIP_Input_Integer[2].3 OR ECAT_Input_Data.LogicResult[2];
+Logic3_OK:= Logic_3_out := EIP_Input_Integer[2].4 OR ECAT_Input_Data.LogicResult[3];
+Logic4_OK:= Logic_4_out := EIP_Input_Integer[2].5 OR ECAT_Input_Data.LogicResult[4];
+
+Tool_OK[1]:= Tool_1_out := EIP_Input_Integer[3].0 OR ECAT_Input_Data.ToolResult[1];
+Tool_OK[2]:= Tool_2_out := EIP_Input_Integer[3].1 OR ECAT_Input_Data.ToolResult[2];
+Tool_OK[3]:= Tool_3_out := EIP_Input_Integer[3].2 OR ECAT_Input_Data.ToolResult[3];
+Tool_OK[4]:= Tool_4_out := EIP_Input_Integer[3].3 OR ECAT_Input_Data.ToolResult[4];
+Tool_OK[5]:= Tool_5_out := EIP_Input_Integer[3].4 OR ECAT_Input_Data.ToolResult[5];
+Tool_OK[6]:= Tool_6_out := EIP_Input_Integer[3].5 OR ECAT_Input_Data.ToolResult[6];
+Tool_OK[7]:= Tool_7_out :=EIP_Input_Integer[3].6 OR ECAT_Input_Data.ToolResult[7];
+Tool_OK[8]:= Tool_8_out :=EIP_Input_Integer[3].7 OR ECAT_Input_Data.ToolResult[8];
+Tool_OK[9]:= Tool_9_out :=EIP_Input_Integer[3].8 OR ECAT_Input_Data.ToolResult[9];
+Tool_OK[10]:= Tool_10_out :=EIP_Input_Integer[3].9 OR ECAT_Input_Data.ToolResult[10];
+Tool_OK[11]:= Tool_11_out :=EIP_Input_Integer[3].10 OR ECAT_Input_Data.ToolResult[11];
+Tool_OK[12]:= Tool_12_out :=EIP_Input_Integer[3].11 OR ECAT_Input_Data.ToolResult[12];
+Tool_OK[13]:= Tool_13_out :=EIP_Input_Integer[3].12 OR ECAT_Input_Data.ToolResult[13];
+Tool_OK[14]:= EIP_Input_Integer[3].13;	(*ECAT Not capable of Data*)
+Tool_OK[15]:= EIP_Input_Integer[3].14;	(*ECAT Not capable of Data*)
+Tool_OK[16]:= EIP_Input_Integer[3].15;	(*ECAT Not capable of Data*)
+
+IF EIP_Input_Integer[8] > 0 THEN
+	CurrentPrg:=EIP_Input_Integer[8];
+ELSIF ECAT_Input_Data.ProgramNumber > 0 THEN
+	CurrentPrg.0:= ECAT_Input_Data.ProgramNumber.0;
+	CurrentPrg.1:= ECAT_Input_Data.ProgramNumber.1;
+	CurrentPrg.2:= ECAT_Input_Data.ProgramNumber.2;
+	CurrentPrg.3:= ECAT_Input_Data.ProgramNumber.3;
+	CurrentPrg.4:= ECAT_Input_Data.ProgramNumber.4;
+	CurrentPrg.5:= ECAT_Input_Data.ProgramNumber.5;
+	CurrentPrg.6:= ECAT_Input_Data.ProgramNumber.6;
+ELSE
+	CurrentPrg:=0;
+END_IF
+
+(*IO Mapping from Internal Variables to SM*)
+EIP_Output_Integer[0].0 := ECAT_Output_Data[1].2:= TriggerRequest;
+EIP_Output_Integer[0].2 := ECAT_Output_Data[1].1:= ProgramSwitch;
+EIP_Output_Integer[0].3 := ECAT_Output_Data[1].6:= WarningClear;
+EIP_Output_Integer[0].5 := ECAT_Output_Data[1].5:= BufferClear;
+EIP_Output_Integer[2] := ProgramRequest;
+
+ECAT_Output_Data[2].1:=ProgramRequest.0;
+ECAT_Output_Data[3].1:=ProgramRequest.1;
+ECAT_Output_Data[4].1:=ProgramRequest.2;
+ECAT_Output_Data[5].1:=ProgramRequest.3;
+
+
+
+(*Camera Sequence*)
+CASE IV_Sequence OF
+
+	0: (*Wait for IV2 Camera to be ready *)
+
+		IF TriggerRequest THEN  (*NOTE: IF the trigger Request is kept on sequence can't start, the sequence must see a Rising edge on the "Trigger Request" *)
+			IV_Sequence:=999;
+		END_IF
+
+		IF IV_Running  AND NOT TriggerRequest THEN
+			IV_Sequence := 10;
+		END_IF
+
+	10: (*Wait for Trigger from Main Program Call *)
+		IF TriggerRequest THEN
+			IV_Sequence :=20;
+		END_IF
+
+	20: (*Wait for IV camera to be busy Processing the Image*)
+		IF IV_Busy THEN
+			IV_Sequence :=30;
+			IV_Busy_Out :=IV_Busy;
+		END_IF
+
+(*		IF NOT TriggerRequest THEN	(* "Trigger Request" must stay high during entire busy sequence*)
+			IV_Sequence:=999;
+		END_IF
+
+*)	30:(*Wait for IV Camera to be finished Processing the Image*)
+		IF NOT IV_Busy THEN
+			IV_Busy_Out := IV_Busy;
+			IV_Sequence :=40;
+		END_IF
+
+(*		IF NOT TriggerRequest THEN (* "Trigger Request" must stay high during entire busy sequence*)
+			IV_Sequence:=999;
+		END_IF
+*)
+
+	40:(*Verify that the trigger did not fail to take an image*)
+		IF  NOT TriggerFail THEN
+			IV_Sequence:=50;
+		END_IF
+
+		IF TriggerFail THEN  (*If the Trigger failed throw an FB Error *)
+			IV_Sequence :=999;
+		END_IF
+
+	50:(*Wait for a result to be available*)
+		IF Result_Available THEN
+			IV_Sequence :=60;
+		END_IF
+
+	60:(*Set Pass/Fail based on Overall Judgement status*)
+		IF Judgement_OK THEN
+			IV_Check_OK := TRUE;
+			IV_Check_NOK :=FALSE;
+			IV_Sequence:=70;
+		ELSE
+			IV_Check_NOK := TRUE;
+			IV_Check_OK :=FALSE;
+			IV_Sequence:=70;
+		END_IF
+
+	70:(*Set Camera Sequence Complete*)
+		Camera_Complete:=TRUE;
+
+
+	999: (*If any failure or fault occurs during the sequence, turn on the Camera Faulted bit*)
+		Camera_Faulted :=TRUE;
+		(*IF Judgement_OK THEN
+			IV_Sequence :=60;
+		END_IF*)
+
+END_CASE
+
+
+	(*If a Reset Sequence request turns on, reset the Sequence to 0*)
+	IF Reset_Sequence THEN
+		IV_Sequence:=0;
+		Camera_Complete:= FALSE;
+		Camera_Faulted:= FALSE;
+	END_IF
+
+	(*Reset Pass/Fail/Complete Bits if the sequence isn't complete*)
+	IF IV_Sequence <> 70 THEN
+		IV_Check_NOK := FALSE;
+		IV_Check_OK :=FALSE;
+		Camera_Complete:=FALSE;
+	END_IF
+	
+	(*Reset Fault on IV2 Controller*)
+	IF WarningClear THEN
+		Camera_Faulted:= FALSE;
+	END_IF
+
+	(*If a Program Switch is requested, and is required then issue a program switch to the IV2*)
+
+ProgramSwitchTON(in:=ProgramRequest <> CurrentPrg AND NOT ProgramSwitchTON2.Q,pt:=t#50ms);
+ProgramSwitchTON2(in:=ProgramSwitchTON.Q,pt:=T#50MS);
+
+ProgramSwitchRequest:= (ProgramRequest <> CurrentPrg) AND In_Auto;
+
+	IF ProgramSwitchRequest  AND ProgramSwitchTON.q THEN
+		IF ProgramRequest <> CurrentPrg  THEN
+			ProgramSwitch:=TRUE;
+		END_IF
+	ELSE
+		ProgramSwitch:=FALSE;
+	END_IF
+	
+	IF NOT ProgramSwitch THEN
+		ProgramSwitchComplete := TRUE;
+	ELSE 
+		ProgramSwitchComplete := False;
+	END_IF
+	CurrentPrg_OUT := CurrentPrg;
+	
+	(***************************************************************************************)
+	(*Auto recovery*)
+	IF Discrete_In.FailureRecovery_Enable AND ((FailureRecovery_Attempt) >= (Discrete_In.FailureRecovery_Attempt_Max)) 
+       AND IV_Check_NOK 
+	   THEN 
+	   FailureRecovery_Attempt := FailureRecovery_Attempt + 1;
+	   Failure_Recovery_Seq := 1;
+	END_IF
+	
+	Failure_R_trig(CLK:=Failure_Recovery_Trial , Q=> );
+	IF Failure_R_trig.Q 
+		THEN 
+		Reset_Sequence := TRUE;
+		Failure_Recovery_Seq :=2;
+	END_IF
+	
+	IF Reset_Sequence AND Failure_Recovery_Trial 
+		THEN
+		Failure_Recovery_Trigger := TRUE;
+		Failure_Recovery_Trial := FALSE;
+		Reset_Sequence := FALSE;
+		Failure_Recovery_Seq :=3;
+		
+	END_IF
+
+	Failure_Recovery_Delay(IN:=Failure_Recovery_Trigger , PT:= T#1.5S , Q=> , ET=> ); (*PT time need to be changed based on how many tools are used on cam program to spilt out the result*)	
+	IF Failure_Recovery_Delay.Q 
+		THEN 
+		TriggerRequest := TRUE;
+		Failure_Recovery_Trigger := FALSE;	
+		Failure_Recovery_Seq :=4;
+	END_IF
+	
+	IF (IV_Check_OK AND Camera_Complete) OR Discrete_In.IVx_Release  
+        THEN
+		Failure_Recovery_Seq :=0;
+		FailureRecovery_Attempt  := 0;
+	END_IF	
+	
+    (*Auto recovery Fault Flags*)
+	IF Discrete_In.FailureRecovery_Enable AND (FailureRecovery_Attempt >= Discrete_In.FailureRecovery_Attempt_Max) 
+		THEN 
+		Failure_Max_Attempt_Fault := TRUE; 
+	ELSE 
+		Failure_Max_Attempt_Fault := FALSE;
+	END_IF
+	
+	(*auto recovery seq Faults*)
+	Fault_Failure_Recovery_Tmrs[1].PT := Fault_Delay;
+	Fault_Failure_Recovery_Tmrs[1]();
+	Fault_Failure_Recovery_Tmrs[1].IN:= (Failure_Recovery_Seq = 1);
+	Fault_Failure_Recovery[1] := Fault_Failure_Recovery_Tmrs[1].Q; 
+	
+	Fault_Failure_Recovery_Tmrs[2].PT := Fault_Delay;
+	Fault_Failure_Recovery_Tmrs[2]();
+	Fault_Failure_Recovery_Tmrs[2].IN:= (Failure_Recovery_Seq = 2);
+	Fault_Failure_Recovery[2] := Fault_Failure_Recovery_Tmrs[2].Q;
+	
+	Fault_Failure_Recovery_Tmrs[3].PT := Fault_Delay;
+	Fault_Failure_Recovery_Tmrs[3]();
+	Fault_Failure_Recovery_Tmrs[3].IN:= (Failure_Recovery_Seq = 3);
+	Fault_Failure_Recovery[3] := Fault_Failure_Recovery_Tmrs[3].Q;
+	
+	Fault_Failure_Recovery_Tmrs[4].PT := Fault_Delay;
+	Fault_Failure_Recovery_Tmrs[4]();
+	Fault_Failure_Recovery_Tmrs[4].IN:= (Failure_Recovery_Seq = 4);
+	Fault_Failure_Recovery[4] := Fault_Failure_Recovery_Tmrs[4].Q;
+
+	IF IV_Error OR (ECAT_Input_Data.ErrorCode <> 0) OR TriggerFail OR Failure_Max_Attempt_Fault OR ECAT_Input_Data.NoFreeSpaceSD
+		THEN
+		Faulted:= TRUE;
+		ELSE
+		Faulted:= FALSE;
+	END_IF
+	
+	(***************************************************************************************)
+	
+	Discrete_Image.IV_Check_OK := IV_Check_OK;
+	Discrete_Image.IV_Check_NOK := IV_Check_NOK;
+	
+	Discrete_Image.Faulted:= Faulted;
+	Discrete_Image.PortB_MissingLink:= PortB_MissingLink;
+	Discrete_Image.Busy:= IV_Busy;
+	Discrete_Image.ErrorStatus:=IV_Error;
+	Discrete_Image.ErrorCode:=ECAT_Input_Data.ErrorCode;
+	Discrete_Image.InfoData:=Ecat_Input_Data.InfoData;
+	Discrete_Image.OverallJudgementOK:=Judgement_OK;
+	Discrete_Image.ProgramNumber:=CurrentPrg;
+	Discrete_Image.ResultAvailable:=Result_Available;
+	Discrete_Image.Running:=IV_Running;
+	Discrete_Image.TriggerOutput:=EIP_Output_Integer[0].0;
+	Discrete_Image.TriggerFailed:=TriggerFail;
+	Discrete_Image.TriggerReady:=IV_Ready;
+	Discrete_Image.TriggerResponse:=TriggerResponse;
+	
+	Discrete_Image.Fault_Failure_Recovery:= Fault_Failure_Recovery; 
+	Discrete_Image.Failure_Max_Attempt_Fault := Failure_Max_Attempt_Fault;
+	
+	]]></ST>
+    </Implementation>
+    <LineIds Name="FB_GTAC_IV3_20250730">
+      <LineId Id="497" Count="0" />
+      <LineId Id="500" Count="2" />
+      <LineId Id="493" Count="0" />
+      <LineId Id="576" Count="0" />
+      <LineId Id="575" Count="0" />
+      <LineId Id="577" Count="2" />
+      <LineId Id="494" Count="1" />
+      <LineId Id="68" Count="11" />
+      <LineId Id="1289" Count="3" />
+      <LineId Id="84" Count="16" />
+      <LineId Id="335" Count="0" />
+      <LineId Id="101" Count="1" />
+      <LineId Id="336" Count="1" />
+      <LineId Id="1187" Count="3" />
+      <LineId Id="1924" Count="1" />
+      <LineId Id="338" Count="2" />
+      <LineId Id="103" Count="6" />
+      <LineId Id="343" Count="0" />
+      <LineId Id="341" Count="0" />
+      <LineId Id="344" Count="2" />
+      <LineId Id="342" Count="0" />
+      <LineId Id="110" Count="22" />
+      <LineId Id="998" Count="0" />
+      <LineId Id="133" Count="7" />
+      <LineId Id="999" Count="0" />
+      <LineId Id="141" Count="38" />
+      <LineId Id="1091" Count="2" />
+      <LineId Id="180" Count="6" />
+      <LineId Id="651" Count="1" />
+      <LineId Id="187" Count="7" />
+      <LineId Id="724" Count="0" />
+      <LineId Id="729" Count="0" />
+      <LineId Id="725" Count="0" />
+      <LineId Id="728" Count="0" />
+      <LineId Id="727" Count="0" />
+      <LineId Id="195" Count="4" />
+      <LineId Id="731" Count="0" />
+      <LineId Id="730" Count="0" />
+      <LineId Id="200" Count="6" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="812" Count="0" />
+      <LineId Id="413" Count="0" />
+      <LineId Id="815" Count="1" />
+      <LineId Id="813" Count="1" />
+      <LineId Id="906" Count="0" />
+      <LineId Id="1430" Count="1" />
+      <LineId Id="1417" Count="1" />
+      <LineId Id="1420" Count="0" />
+      <LineId Id="1486" Count="0" />
+      <LineId Id="1426" Count="0" />
+      <LineId Id="1484" Count="0" />
+      <LineId Id="1424" Count="0" />
+      <LineId Id="1433" Count="2" />
+      <LineId Id="1438" Count="0" />
+      <LineId Id="1440" Count="0" />
+      <LineId Id="1530" Count="0" />
+      <LineId Id="1437" Count="0" />
+      <LineId Id="907" Count="0" />
+      <LineId Id="1448" Count="1" />
+      <LineId Id="1452" Count="0" />
+      <LineId Id="1469" Count="0" />
+      <LineId Id="1465" Count="0" />
+      <LineId Id="1487" Count="0" />
+      <LineId Id="1453" Count="0" />
+      <LineId Id="1450" Count="0" />
+      <LineId Id="1459" Count="0" />
+      <LineId Id="1444" Count="0" />
+      <LineId Id="1432" Count="0" />
+      <LineId Id="1463" Count="0" />
+      <LineId Id="1460" Count="0" />
+      <LineId Id="1482" Count="0" />
+      <LineId Id="1489" Count="0" />
+      <LineId Id="1461" Count="0" />
+      <LineId Id="1493" Count="1" />
+      <LineId Id="1498" Count="1" />
+      <LineId Id="1676" Count="0" />
+      <LineId Id="1501" Count="0" />
+      <LineId Id="1470" Count="0" />
+      <LineId Id="1478" Count="0" />
+      <LineId Id="1471" Count="0" />
+      <LineId Id="1474" Count="1" />
+      <LineId Id="1801" Count="0" />
+      <LineId Id="2182" Count="0" />
+      <LineId Id="1473" Count="0" />
+      <LineId Id="1491" Count="0" />
+      <LineId Id="1505" Count="1" />
+      <LineId Id="1511" Count="1" />
+      <LineId Id="1533" Count="0" />
+      <LineId Id="1529" Count="0" />
+      <LineId Id="1514" Count="2" />
+      <LineId Id="1534" Count="0" />
+      <LineId Id="1513" Count="0" />
+      <LineId Id="1518" Count="2" />
+      <LineId Id="1517" Count="0" />
+      <LineId Id="1535" Count="0" />
+      <LineId Id="1522" Count="3" />
+      <LineId Id="2308" Count="0" />
+      <LineId Id="1480" Count="0" />
+      <LineId Id="2310" Count="0" />
+      <LineId Id="2312" Count="2" />
+      <LineId Id="2311" Count="0" />
+      <LineId Id="2309" Count="0" />
+      <LineId Id="1427" Count="0" />
+      <LineId Id="2440" Count="2" />
+      <LineId Id="1428" Count="1" />
+      <LineId Id="2047" Count="0" />
+      <LineId Id="414" Count="4" />
+      <LineId Id="420" Count="6" />
+      <LineId Id="1541" Count="1" />
+      <LineId Id="1802" Count="0" />
+      <LineId Id="1678" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

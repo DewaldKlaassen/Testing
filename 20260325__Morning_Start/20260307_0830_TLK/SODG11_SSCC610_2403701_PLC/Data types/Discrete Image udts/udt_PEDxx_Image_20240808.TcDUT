@@ -1,0 +1,67 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_PEDxx_Image_20240808" Id="{accf1d02-a476-448c-a4e2-71f4e246b3ee}">
+    <Declaration><![CDATA[(*udt (user defined type) for all generic PEDs (Pedastals)
+	auth. Brent Lekx-Toniolo of Sodecia GTAC
+
+------------------------------------------------------------------------
+REVISION NOTES:
+
+	Version 20151104:
+	- initial concept, b.lekx-toniolo	
+	Version 20170725:
+	- added PP faults, j.vandongen
+	- added means of hiding N100 on the UI, j.vandongen
+	Version 20191115
+	- added N50, j.vandongen
+	Version 20240514
+	- added in Ped Type and Node Layout for future addition ideas, b.lekx-toniolo
+	Version 20240808
+	- added in the option variables for UI auto configuration, b.lekx-toniolo
+------------------------------------------------------------------------
+
+*)
+
+TYPE udt_PEDxx_Image_20240808 :
+	STRUCT
+
+			(*Ped Type*)
+			Ped_Type: INT;
+	
+			(*Input nodes*)
+			N01: udt_EP1008_002_v2;
+			N02: udt_EP1008_002_v2;
+
+			(*Output nodes*)
+			N50: udt_EP2028_002_v2;
+			N50_STAT: udt_EP2028_002_STAT;
+
+			(*Valve Bank*)
+			N100: udt_SMC_EX260_ValveBank;
+			N100_STAT: udt_SMC_EX260_STAT;
+
+			(*Cable Break States*)
+			ECatSlave_Cable_Breaks: ARRAY[0..1] OF DINT;
+
+			(*Developed Data*)
+			CLFaults1: UDINT;
+			CLFaults2: UDINT;
+			CLFaults3: UDINT;
+			CLFaults4: UDINT;
+			CLFaulted: UDINT;
+			PPFaults: UDINT;
+			PPFaulted: UDINT;
+			NodeLayout:udt_ECATNodeData_20221507;
+
+			Input_Node_Count: UDINT;
+			Output_Node_Count: UDINT;
+			VB_Node_Count: UDINT;
+			Option_SwingCylinder: BOOL;		
+			Option_TipDresser: BOOL;	
+			Option_TipChanger: BOOL;	
+			Part_Present_Count: UDINT;
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

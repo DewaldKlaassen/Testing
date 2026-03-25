@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <GVL Name="Global_Persistent_Variables" Id="{38c1e785-7324-46d0-854b-a5caef2578ab}">
+    <Declaration><![CDATA[{attribute 'Tc2GvlVarNames'}
+VAR_GLOBAL PERSISTENT
+
+	(* Persistent Data Frame Work for Interface to UI(s), be sure to see "Work Space" in Resources Tab for entitiy export*)
+	(*Interfacing to all UI(s)*)
+		In_From_ICxx_Pers: udt_UIcommon_InputPers_20250612; (* Data Frame Work for Receiving Persistent Data from any IC*)
+
+		
+	(*Part Data Area Custom for this machine - See "Product_Tracking" Action Under Main*)
+	(* 
+		The Generic_PassFail_Notes variable will be used for tracking state of each fixture the part visits
+		
+		Valid values will be:
+			"Pass" = Inspection of part complete and is considered passed or OK
+			"Fail" = Inspection of part is complete and is considered failed or NOK
+			"Comp" = The required Task has been completed
+			Blank =	The required Task has not yet been completed
+			
+		Array Layout to track above will be:
+			[1] = Fix01 (Set to "Comp" when welding is complete)
+			[2] = Fix02 (Set to "Comp" when welding is complete)
+	
+			[3] = Fix03 (Set to "Comp" when welding is complete)
+			[4] = Fix04 (Set to "Comp" when welding is complete)
+			
+			[5] = Fix05 (Set to "Comp" when insertion of part is ready)
+	
+			[11] = Fix101 (Set to "Comp" when welding is complete)
+			
+			[12] = Fix102 (Set to "Pass" or "Fail" depending on inspection results)
+			[13] = Fix103 (Set to "Comp" when part is successfully placed on conveyor to QA / NOK)
+			[15] = Fix105 (Set to "Comp" when part is successfully placed on conveyor to Paint)
+
+	*)	
+	
+	Blank_ProductData_Pers: udt_Generic_ProductReportData_20240909;		(*Blank data area used for blanking / resetting purposes*)
+	
+	Fix01_ProductData_Pers: udt_Generic_ProductReportData_20240909;		(*First Geo Set on TT01*)
+	Fix02_ProductData_Pers: udt_Generic_ProductReportData_20240909;		(*First Geo Set on TT01*)
+
+	EOAT04_1_ProductData_Pers: udt_Generic_ProductReportData_20240909;	(*MH Robot EOAT Side 1*)
+	EOAT04_2_ProductData_Pers: udt_Generic_ProductReportData_20240909;	(*MH Robot EOAT Side 2*)
+	Fix101_ProductData_Pers: udt_Generic_ProductReportData_20240909;	(*Finishing first Geo sets*)
+	
+	Fix03_ProductData_Pers: udt_Generic_ProductReportData_20240909;		(*Second Geo and Finish on TT02*)
+	Fix04_ProductData_Pers: udt_Generic_ProductReportData_20240909;		(*Second Geo and Finish on TT02*)
+
+	
+	Fix102_ProductData_Pers: udt_Generic_ProductReportData_20240909;	(*Vision Inspection Station*)
+	
+	Fix05_ProductData_Pers: udt_Generic_ProductReportData_20240909;		(*Insert Rewroked Parts Fixture (Insert parts only)*)
+
+	Fix103_ProductData_Pers: udt_Generic_ProductReportData_20240909;	(*QA Request / First off part / NOK (offload parts only)*)
+	
+	Fix104_ProductData_Pers: ARRAY [0..5] OF udt_Generic_ProductReportData_20240909;	(*Buffer rack before Paint (used if paint goes down*)
+	
+	Fix105_ProductData_Pers: udt_Generic_ProductReportData_20240909;	(*Hanging Rack to Paint*)
+	
+	
+END_VAR
+]]></Declaration>
+  </GVL>
+</TcPlcObject>

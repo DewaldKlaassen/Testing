@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_Generic_ShiftCommonConfig_20220420" Id="{25454dee-05b4-4b3e-9f4d-7c0f40beb4c3}">
+    <Declaration><![CDATA[(*udt (user defined type) for production shift config common data (production config data common to all shifts)
+
+
+	Author(S): Brent Lekx-Toniolo ;
+	20191125:
+	- Initial Concept
+	2020020
+	- Added a variable for Return to Defaults - C.Drees
+	
+
+
+*)
+
+
+TYPE udt_Generic_ShiftCommonConfig_20220420 :
+	STRUCT
+		Config_Source: UINT;			(*Selects source data for Production Shift Configuration (current allows UI or default configs, future addition shall allow config via spreadsheet*)
+		Shift_Enables: UINT;			(*Enable Flags for shifts in a 24 hour period*)
+		Break_Count: UINT;			(*Amount of breaks per shift*)
+		ResetProdConfig_To_Default:BOOL;
+		Config_Option_Flags: UINT;
+				(*
+				Flags shall be used to allow bit wise configuration to the production FB	
+				Current Option Flag Assignment:
+					Config_Option_Flags.0 = In Shift Change Time (used to feed Enable_InShift_Change input on FB_Production_Report_yyymmdd)
+					Config_Option_Flags.1 = spare
+					Config_Option_Flags.2 = spare
+					Config_Option_Flags.3 = spare
+					Config_Option_Flags.4 = spare
+					Config_Option_Flags.5 = spare
+					Config_Option_Flags.6 = spare
+					Config_Option_Flags.7 = spare
+					Config_Option_Flags.8 = spare
+					Config_Option_Flags.9 = spare
+					Config_Option_Flags.10 = Save Report as file type flag (0 = xls, 1= csv)
+					Config_Option_Flags.11 = spare
+					Config_Option_Flags.12 = spare
+					Config_Option_Flags.13 = spare
+					Config_Option_Flags.14 = spare
+					Config_Option_Flags.15 = spare
+				*)
+
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

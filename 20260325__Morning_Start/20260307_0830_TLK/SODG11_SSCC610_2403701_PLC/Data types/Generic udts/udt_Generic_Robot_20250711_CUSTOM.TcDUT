@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_Generic_Robot_20250711_CUSTOM" Id="{2ed29b51-041b-412c-aec5-b353557e11c2}">
+    <Declaration><![CDATA[(*udt (user defined type) for all generic Robot Data Required
+	Author(S): Brent Lekx-Toniolo of Sodecia GTAC;
+	Version 1.0: August 2010
+		- Initial Concept
+	Version 2.0: November 2012
+		- Expanded Equipment Interf Area
+		- Expanded Elements in each Array for more inter zone data areas
+	Version 20141014
+		- added RobotInters, b.lekx-toniolo
+	Version 20161202
+		- added AuxReq_Aux, j.vandongen
+	Version 20250711_CUSTOM
+		- added OK_ToEnter_EquipInterf9, w.griffiths
+
+*)
+
+
+
+TYPE udt_Generic_Robot_20250711_CUSTOM :
+	STRUCT
+		Safety_RST: BOOL;
+		Enable_Motion: BOOL;
+		Alarm_RST: BOOL;
+		Robot_Type: UINT;
+		Select_Play: BOOL;
+		Select_Teach: BOOL;
+		Select_Remote: BOOL;
+		Start_Scan: BOOL;
+		Stop_Scan: BOOL;
+		Stop_Scan2: BOOL;
+		In_DryCycle: BOOL;
+		Low_Speed: BOOL;
+		Major_Faults: BOOL;
+		Teach_Interlock: BOOL;
+		Weld_Inhibit: BOOL;
+		Power_Disable: BOOL;
+
+		OK_ToEnter_EquipInterf1: BOOL;
+		OK_ToEnter_EquipInterf2: BOOL;
+		OK_ToEnter_EquipInterf3: BOOL;
+		OK_ToEnter_EquipInterf4:  BOOL;
+		OK_ToEnter_EquipInterf5: BOOL;
+		OK_ToEnter_EquipInterf6: BOOL;
+		OK_ToEnter_EquipInterf7: BOOL;
+		OK_ToEnter_EquipInterf8:  BOOL;
+		OK_ToEnter_EquipInterf9:  BOOL;
+		OK_ToEnter_HumanInterf1: BOOL;
+		OK_ToEnter_HumanInterf2: BOOL;
+		OK_ToEnter_HumanInterf3: BOOL;
+		OK_ToEnter_HumanInterf4: BOOL;
+		OK_ToEnter_HumanInterf5: BOOL;
+		OK_ToEnter_HumanInterf6: BOOL;
+		OK_ToEnter_HumanInterf7: BOOL;
+		OK_ToEnter_HumanInterf8: BOOL;
+
+		OK_ToEnter_RobotInterfs: UINT;
+
+		Fix_ID: ARRAY [0..17] OF UINT;
+		EOAT_ID: ARRAY [0..17] OF UINT;
+		Model_ID: ARRAY [0..17] OF  UINT;
+		Task_ID: ARRAY [0..17] OF UINT;
+		PeripheralReq_Ack: ARRAY [0..17] OF UINT;
+		AuxReq_Ack: ARRAY [0..17] OF UINT;
+
+		Proceed_From_Pounce: ARRAY[0..17] OF BOOL;
+		Complete_Ack: ARRAY[0..17] OF BOOL;
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

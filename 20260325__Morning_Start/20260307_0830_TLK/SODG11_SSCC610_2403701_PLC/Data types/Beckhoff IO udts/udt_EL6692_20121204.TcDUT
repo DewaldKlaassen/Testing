@@ -1,0 +1,38 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_EL6692_20121204" Id="{4fa858d0-79da-4472-87b9-c4a369802ca1}">
+    <Declaration><![CDATA[(*udt (user defined type) of Beckhoff EL6692 - EtherCAT Bridge:
+	auth. Brent Lekx-Toniolo of Sodecia GTAC.; 
+	Version 1.0: November 2012
+		- Initial Concept
+	Version 20121204
+		Changes from v1
+			- Change to Naming Convention to include date as version
+
+	Last Edit: December 4th, 2012, blt
+*)
+
+TYPE udt_EL6692_20121204 :
+STRUCT
+	SyncMode: UINT;
+		(*	0: no Syncronisation
+			1: Secondary side is Sync Master
+			2: Primary side is Sync Master*)
+	TxPDO_Toogle: BOOL;
+		(*	Bit toggles when new data from other side received*)
+	TxPDO_State: BOOL;
+		(*	0: Other side is in OP state
+			>0: Error*)
+	Control_value_update_toggle: BOOL;
+		(*	Bit toggles when new DC control data available*)
+	Timestamp_update_toggle: BOOL;
+		(*	 Bit toggles when new timestamp data available*)
+	External_device_not_connected: BOOL;
+		(*	0: External device connected
+			1: External device not connected*)
+
+	InfoData: udt_ECATSlave_Status;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

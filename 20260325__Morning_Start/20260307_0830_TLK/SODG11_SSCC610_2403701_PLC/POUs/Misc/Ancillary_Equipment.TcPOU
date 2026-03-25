@@ -1,0 +1,633 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="Ancillary_Equipment" Id="{c935d0c9-5560-4368-9a45-297c66722999}" SpecialFunc="None">
+    <Declaration><![CDATA[(*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Program Used to group all Ancillary Equipment (Stud Controller, Sealant Controllers etc)
+	author: Brent Lekx-Toniolo of Sodecia GTAC
+	March, 2015
+--------------------------------------------------------------------------------------------------------------
+REVISION NOTES:
+	Date: March 2015
+	- Original Concept, b.lekx-toniolo
+
+--------------------------------------------------------------------------------------------------------------
+*)
+
+PROGRAM Ancillary_Equipment
+	VAR_INPUT
+		Enable_Prog: BOOL;
+	END_VAR
+
+	VAR
+		SIC01_Filename: STRING(12); 					(*12 character string that can be sent to the SIC marker to change the program name*)
+		SIC01_Variables: ARRAY[1..11] OF STRING[16]; 	(*16 Character string that can be sent to the SIC marker as variables controlled by the PLC.*)
+		
+		VFD1_OffDelay: TON;
+		VFD1_OffDelay2: TON;
+		VFD_OnOFF: SR;
+		
+		VFD2_OffDelay: TON;
+		VFD2_OffDelay2: TON;
+		VFD2_OnOFF: SR;
+
+		
+		Reset_NutOK: INT;
+		SIC01_Start_FumeExtractor: BOOL;
+		SIC01_Start_OffDelay: TOF;
+		SIC01_FumeExtractor_Ready: BOOL;
+		SIC01_FumeExtractor_Faulted: BOOL;
+		SIC01_FumeExtractor_FilterFault: BOOL;
+		SIC01_Variables16: ARRAY[1..8] OF STRING[16]; (* 16 Character string that can be sent to the SIC marker as variables controlled by the PLC. *)
+		SIC01_Variables32: ARRAY[9..12] OF STRING[32];
+		SIC01_Variables64: ARRAY[13..14] OF STRING[64];
+		SIC01_SerialNumberQR: STRING[16];
+		SIC01_SerialNumberQR1: STRING[31];
+		SIC01_SerialNumberQR2: STRING[16];
+		Serial_Number_Transfered_OK: BOOL;
+		sYear: STRING[4];
+		sTrimYear: STRING[2];
+		sDOY: STRING[3];
+		sItemNumber: STRING[10];
+		wDOY: WORD;
+		wYear: WORD;
+		wMonth: WORD;
+		wDay: WORD;
+		weekOfYear: WORD;
+		sWeekOfYear: STRING[2];
+		sDayOfWeek: STRING[2];
+		PartCountINC: R_TRIG;
+		Current_Time: DT;
+		Current_Time_Unix: UDINT;
+		KeepOpenTime: DINT;
+		Current_Time_DT: DT;
+		Current_Time_DTplus: DT;
+		sCurrent_Time_DTplus: STRING[22];
+		(*KOT = Keep Open Time*)
+		sYear_KOT: STRING[4];
+		sTrimYear_KOT: STRING[2];
+		sMonth_KOT: STRING[2];
+		sDOY_KOT: STRING[2];
+		wDOY_KOT: WORD;
+		wYear_KOT: WORD;
+		wMonth_KOT: WORD;
+		wDay_KOT: WORD;
+		KeepOpenDate: TIMESTRUCT;
+		lint_DOY_KOT: LINT;
+		lint_Month_KOT: LINT;
+		lint_DOY: LINT;
+		sDrawingNumber: String[3];
+		(*Keep Open Date Formulation*)
+		sKOD_Year_KOT: STRING[4];
+		sKOD_TrimYear_KOT: STRING[2];
+		sKOD_Month_KOT: STRING[2];
+		sKOD_DOY_KOT: STRING[2];
+		wKOD_DOY_KOT: WORD;
+		wKOD_Year_KOT: WORD;
+		wKOD_Month_KOT: WORD;
+		wKOD_Day_KOT: WORD;
+		sPart_Name : STRING[4];
+		Current_Shift: STRING[1];
+		DrawingLetter: STRING[255];
+		
+		SafeGuard01_ADVD: BOOL;
+		SafeGuard01_RETD: BOOL;
+		
+		
+END_VAR
+
+	(*data that needs to be retained in the event of a power cycle*)
+	VAR PERSISTENT
+		ItemNumber: DINT;
+		ProductionCount: UINT;
+		sProductionCount: STRING[5];
+		lint_ProductionCount: LINT;
+		DrawingNumberInput: STRING[255];
+		PaddedDrawingNumber: STRING[255];
+		PaddedDrawingLetter: STRING[255];
+		PartChangeNumber: STRING[1];
+		DrawingLetterInput: STRING[1];
+		FormattedDrawingNumber: STRING[3];
+	END_VAR
+
+	VAR_OUTPUT
+		Prog_Ok: BOOL;
+	END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[	(*Set Prog_OK to True*)
+	Prog_OK:= TRUE;
+
+	(*SIC Marking Controller #1*)
+	MAIN.SIC01(
+        Enable_Motion:= (MAIN.All_SafetyGates_OK AND MAIN.All_Estops_OK),
+
+		Comm_Method:= 2, (*Comm Method 1 is the older method of all string characters, Comm method 2 is the newer method of the data no GSD changes requried between the two modes*)
+		FileName_string:= SIC01_FileName,
+
+		LoadFile_bool:= ((MAIN.R4.Task_ID_Ack=Work_PED01) OR MAIN.SIC01.Retry ),
+		Start_bool:=  (Main.Ped[1].Enable_Motion AND (MAIN.R4.Task_ID_Ack=Work_Ped01) AND MAIN.R4.Peripheral_Req.0 AND NOT MAIN.SIC01.Retry),
+
+		ResetError_bool:= In_From_ICxx.ControlPower1,
+		CompleteReset_bool:= MAIN.PED[1].Work_Robots_Complete,
+		Bypass_bool:= In_From_ICxx.SIC01_BypassReq,
+		Variables:= SIC01_Variables,
+
+		DpState=> Out_To_ICxx.SIC01_DpState,
+		Profinode_OK_bool=> Out_To_ICxx.SIC01_ProfinodeOK,
+		SIC_Running_bool=> Out_To_ICxx.SIC01_Running,
+		LastDot_bool=> Out_To_ICxx.SIC01_LastDot,
+		BackHome_bool=> Out_To_ICxx.SIC01_BackHome,
+		Complete_bool=> Out_To_ICxx.SIC01_Complete,
+		DataReceived_string=> Out_To_ICxx.SIC01_Reply
+		);
+		(*Variables to Send to be printed*)
+		SIC01_Variables[1]:= FormattedDrawingNumber; 		
+		SIC01_Variables[2]:= Current_Shift; 	
+		SIC01_Variables[3]:= CONCAT('R',sDayOfWeek); 	
+		SIC01_Variables[4]:= CONCAT('R',sWeekOfYear); 
+		SIC01_Variables[5]:= CONCAT('R',sTrimYear); 
+		SIC01_Variables[6]:= EOAT04_2_ProductData_Pers.Product_Number;
+		
+		(*Call to Action*)
+		DMC_Code_Formation();
+
+
+		
+(*----------------------Motorized Roll Up Doors Controllers-------------------*)
+
+(*New Style Doors with it's own I/O*)
+	(*Motorized Roll Up Door #1 Control*)
+
+	MAIN.MD01(
+		(*FB Inputs*)
+		Enable_Motion:= MAIN.All_Estops_OK AND MAIN.IC01.OP1_LC_Clear,
+		CoE_Read_Trigger:= (GTAC_CONFIG.Option_MD_Count>=1) AND Pulse_CoERead,	(*Global Interval of CoE Reads*)
+		Ecat_Master_AmsNetID:= MAIN.ECAT_Master.AmsID,
+		Prev_EcatNode_Present:= NOT MAIN.IC01.EK1100_NotPresent, (*Ensure Previous Node Exists to determine Ecat Cable Break of this Devices Input Cable*)
+        Enable_Latch:= TRUE,
+		Fault_Time:= T#3S,
+		
+		Safety_RST:= MAIN.SAFETY_RESET,
+		OPxx_RST:= MAIN.IC01.OP1_Cycle_Start OR MAIN.IC01.OP2_Cycle_Start,
+
+		DoorClose_REQ:= (((Fix01.Door_Close_Req AND FIX01.TurntableB_At_Robot)
+						OR (Fix02.Door_Close_Req AND FIX02.TurntableA_At_Robot)) AND MAIN.IC01.OP1_LC_Clear),
+		DoorOpen_REQ:= ((Fix01.Door_Open_Req AND FIX01.TurntableB_At_Robot)
+						OR (Fix02.Door_Open_Req AND FIX02.TurntableA_At_Robot)),
+		DoorStop_REQ:= (*Fix01.Door_Close_Req OR Fix02.Door_Close_Req*)NOT MAIN.IC01.OP1_LC_Clear,
+
+		DoorClosed_Safety_Switches:= MAIN.MD01_N01_I0 AND MAIN.MD01_N01_I1 AND MAIN.MD01_N01_I2 AND MAIN.MD01_N01_I3,		(*Debug Tie in Switch Inputs here*)
+		
+		(*FB Outputs*)
+		DoorClose_CMD=> , 
+		DoorOpen_CMD=> ,  
+		Door_Closed=>,
+		Door_Opened=> ,
+		Door_Stopped=>,
+		Door_Faulted=>,
+		);
+		Out_To_ICxx.MD[1].Discrete_Image:= MAIN.MD01.Discrete_Image;
+		Out_To_ICxx.MD[1].ECAT_Cable_Breaks:= MAIN.MD01.ECatSlave_Cable_Breaks;
+		
+		
+	MAIN.MD02(
+		(*FB Inputs*)
+		Enable_Motion:= MAIN.All_Estops_OK AND MAIN.IC02.OP1_LC_Clear,
+		Prev_EcatNode_Present:= NOT MAIN.MD01.EP2624_PortB_MissingLink, (*Ensure Previous Node Exists to determine Ecat Cable Break of this Devices Input Cable*)
+        Enable_Latch:= TRUE,
+		Fault_Time:= T#3S,
+		
+		Safety_RST:= MAIN.SAFETY_RESET,
+		OPxx_RST:= MAIN.IC02.OP1_Cycle_Start OR MAIN.IC02.OP2_Cycle_Start,
+		
+		DoorClose_REQ:= (((Fix03.Door_Close_Req AND FIX03.TurntableB_At_Robot)
+						OR (Fix04.Door_Close_Req AND FIX04.TurntableA_At_Robot)) AND MAIN.IC02.OP1_LC_Clear),
+		DoorOpen_REQ:= ((Fix03.Door_Open_Req AND FIX03.TurntableB_At_Robot)
+						OR (Fix04.Door_Open_Req AND FIX04.TurntableA_At_Robot)),
+		DoorStop_REQ:= (*Fix03.Door_Close_Req OR Fix04.Door_Close_Req*)NOT MAIN.IC02.OP1_LC_Clear,
+
+		DoorClosed_Safety_Switches:= MAIN.MD02_N01_I0 AND MAIN.MD02_N01_I1 AND MAIN.MD02_N01_I2 AND MAIN.MD02_N01_I3,		(*Debug Tie in Switch Inputs here*)
+
+		(*FB Outputs*)
+		DoorClose_CMD=> , 
+		DoorOpen_CMD=> ,  
+		Door_Closed=>,
+		Door_Opened=> ,
+		Door_Stopped=>,
+		Door_Faulted=>,
+		);
+		Out_To_ICxx.MD[2].Discrete_Image:= MAIN.MD02.Discrete_Image;
+		Out_To_ICxx.MD[2].ECAT_Cable_Breaks:= MAIN.MD02.ECatSlave_Cable_Breaks;
+		
+		
+		(*
+	(*Internal MD*)	
+	MAIN.MD03(
+		(*FB Inputs*)
+		Enable_Motion:= MAIN.All_Estops_OK AND MAIN.IC01.OP1_LC_Clear,
+		Prev_EcatNode_Present:= NOT MAIN.ESW03.EP1908_NotPresent, (*Ensure Previous Node Exists to determine Ecat Cable Break of this Devices Input Cable*)
+        Enable_Latch:= TRUE,
+		Fault_Time:= T#3S,
+
+		DoorClose_REQ:= (Fix05.Door_Close_Req AND MAIN.IC01.OP1_LC_Clear),
+		DoorOpen_REQ:= Fix05.Door_Open_Req,
+		DoorStop_REQ:= Fix05.Door_Close_Req,
+
+		DoorClosed_Safety_Switches:= ,		(*Debug Tie in Switch Inputs here*)
+
+		(*FB Outputs*)
+		DoorClose_CMD=> , 
+		DoorOpen_CMD=> ,  
+		Door_Closed=>,
+		Door_Opened=> ,
+		Door_Stopped=>,
+		Door_Faulted=>,
+		);
+		Out_To_ICxx.MD[3].Discrete_Image:= MAIN.MD03.Discrete_Image;
+		Out_To_ICxx.MD[3].ECAT_Cable_Breaks:= MAIN.MD03.ECatSlave_Cable_Breaks;
+		
+		*)
+		
+SafeGuard01_ADVD:= MAIN.VertiGuard_N02.I.0 AND MAIN.VertiGuard_N02.I.1;
+SafeGuard01_RETD:= MAIN.VertiGuard_N02.I.2 AND MAIN.VertiGuard_N02.I.3;
+
+
+		
+			(*Safety Guard Controller for SafeGate 01*)
+	MAIN.VertiGuard_1(
+					(*FB Inputs*)
+					Enable_FB:= TRUE,
+					Enable_Motion:= MAIN.All_Estops_OK (*AND MAIN.IC01.OP1_LC_Clear*),
+					Enable_Latch:= TRUE,
+
+					GateOpened_Time:= T#500MS,					(*set this to delay the door open output, set to 500ms if door swtiches are used*)
+					GateClosed_Time:= T#500MS,					(*door closed delay*)
+					GateOpen_Precharge_Time:= T#0.5S,			(*Door Open Precharge Time*)
+					Fault_Time:= T#10S,
+
+					GateClose_REQ:= Fix102.Guard_Close_Req,
+					GateOpen_REQ:= Fix102.Guard_Open_Req,
+
+					GateClosed_Switches:= SafeGuard01_ADVD, 
+					GateOpened_Switches:= SafeGuard01_RETD, 
+
+					(*FB Outputs*)
+					GateClose_CMD=> , (*Mapped in Main*)
+					GateOpen_CMD=> ,  (*Mapped in Main*)
+					Gate_Closed=> ,
+					Gate_Opened=> ,
+					Faulted=>
+			);
+		
+(*------------------------------------- Conveyors --------------------------------------*)	
+	(*Debug example only*)
+		
+	(*Conveyor 01*)
+	MAIN.Conveyor01(
+		Enable_Motion:= MAIN.All_SafetyGates_OK AND MAIN.All_Estops_OK,
+		Enable_Start_Latch:= TRUE,				(*Set to True if you want the conveyor to run until the stop signal is activated*)
+
+		Start_Delay_Time:= T#1s,					(*Use this to delay the start of the conveyor signal.Set to T#0s if you dont want to use this.*)
+		Stop_Delay_Time:= T#250ms,				(*use this to delay the stop of the conveyor signal. Set to T#0s if you dont want to use this.*)
+
+		Start_Conveyor:= FALSE,					(*Start signal to conveyor*)
+		Stop_Conveyor:= FALSE,					(*Stop signal to conveyor*)
+
+		FB_OK=> ,
+		Conveyor_On_CMD=>						(*Mapp to output where the conveyor is being turned on and off*)
+		);
+
+
+(*Finished Part Outfeed - Conveyor*)
+	MAIN.VFD01(
+		Enable_Motion:= MAIN.All_Estops_OK AND MAIN.All_SafetyGates_OK,
+		All_Safeties_OK:= MAIN.All_Estops_OK AND MAIN.All_SafetyGates_OK,
+		Prev_EcatNode_Present:= (Fix103.N02.InfoData.State = 8), //debug - check proper ecat - rj
+
+		Operating_State_Switch_On:= NOT VFD1_OffDelay.Q AND NOT VFD1_OffDelay2.Q,
+		Enable_Voltage:= NOT VFD1_OffDelay.Q AND NOT VFD1_OffDelay2.Q,
+		Operating_State_Quick_Stop_Req:= NOT VFD1_OffDelay.Q AND NOT VFD1_OffDelay2.Q,
+		Enable_Operation:= NOT VFD1_OffDelay.Q AND NOT VFD1_OffDelay2.Q,
+		Fault_Reset:= In_From_ICxx.ControlPower1,
+		Halt:= FALSE,
+
+		Requested_Freq:= 50, (*Enter Value Between 0 and 50*)
+
+		FB_OK=> ,
+		Operating_State_Ready=> ,
+		Operating_State_Switched_On=> ,
+		Operating_State_Operation_enabled=> ,
+		Operating_State_Fault=> , 
+		Voltage_Enabled=> ,
+		Operating_State_Quick_Stop=> , 
+		Operating_State_Switch_On_Dissabled=> , 
+		Error_Class0=> , 
+		Halt_Requested=> , 
+		Remote=> ,
+		Target_Reached=> ,
+		Internal_Limit=> ,
+		Operating_Mode_Specific=> ,
+		X_ERR=> ,
+		X_End=> ,
+		Ref_OK=> ,
+		Discrete_Image=> );
+		
+		Out_To_ICxx.VFD[1].Discrete_Image:= MAIN.VFD01.Discrete_Image;
+		
+		(*If sensor is on for 5 seconds, shut off outfeed conveyor*)
+		VFD1_OffDelay(
+					IN:= Fix102.Part_Present1 AND NOT In_From_ICxx.ControlPower1,
+					PT:= T#5s,
+					Q=> ,
+					ET=> );
+
+		(*If Fixture 105 is in Auto for longer than x time and the sensor on the belt does not come on or the fixture is put into manual,  then stop the outfeed conveyor*)
+		VFD1_OffDelay2(
+					IN:= ((Fix102.In_Auto AND NOT Fix102.Part_Present3) OR Fix105.In_Manual)
+						AND NOT In_From_ICxx.ControlPower1,
+					PT:= T#130s,
+					Q=> ,
+					ET=> );
+					
+	MAIN.VFD02(
+		Enable_Motion:= MAIN.All_Estops_OK AND MAIN.All_SafetyGates_OK,
+		All_Safeties_OK:= MAIN.All_Estops_OK AND MAIN.All_SafetyGates_OK,
+		Prev_EcatNode_Present:= (Fix104.N02.InfoData.State = 8), //debug - check proper ecat - rj
+
+		Operating_State_Switch_On:= NOT VFD2_OffDelay.Q AND NOT VFD2_OffDelay2.Q,
+		Enable_Voltage:= NOT VFD2_OffDelay.Q AND NOT VFD2_OffDelay2.Q,
+		Operating_State_Quick_Stop_Req:= NOT VFD2_OffDelay.Q AND NOT VFD2_OffDelay2.Q,
+		Enable_Operation:= NOT VFD2_OffDelay.Q AND NOT VFD2_OffDelay2.Q,
+		Fault_Reset:= In_From_ICxx.ControlPower1,
+		Halt:= FALSE,
+
+		Requested_Freq:= 50, (*Enter Value Between 0 and 50*)
+
+		FB_OK=> ,
+		Operating_State_Ready=> ,
+		Operating_State_Switched_On=> ,
+		Operating_State_Operation_enabled=> ,
+		Operating_State_Fault=> , 
+		Voltage_Enabled=> ,
+		Operating_State_Quick_Stop=> , 
+		Operating_State_Switch_On_Dissabled=> , 
+		Error_Class0=> , 
+		Halt_Requested=> , 
+		Remote=> ,
+		Target_Reached=> ,
+		Internal_Limit=> ,
+		Operating_Mode_Specific=> ,
+		X_ERR=> ,
+		X_End=> ,
+		Ref_OK=> ,
+		Discrete_Image=> );
+		
+		Out_To_ICxx.VFD[2].Discrete_Image:= MAIN.VFD02.Discrete_Image;
+		
+		(*If sensor is on for 5 seconds, shut off outfeed conveyor*)
+		VFD2_OffDelay(
+					IN:= Fix102.Part_Present1 AND NOT In_From_ICxx.ControlPower1,
+					PT:= T#5s,
+					Q=> ,
+					ET=> );
+
+		(*If Fixture 105 is in Auto for longer than x time and the sensor on the belt does not come on or the fixture is put into manual,  then stop the outfeed conveyor*)
+		VFD2_OffDelay2(
+					IN:= ((Fix102.In_Auto AND NOT Fix102.Part_Present3) OR Fix105.In_Manual)
+						AND NOT In_From_ICxx.ControlPower1,
+					PT:= T#130s,
+					Q=> ,
+					ET=> );]]></ST>
+    </Implementation>
+    <Action Name="DMC_Code_Formation" Id="{9c7f4d18-1cc5-4356-836f-b4e2ecf52b1e}">
+      <Implementation>
+        <ST><![CDATA[
+	(*Formation of the String Variables For The DMC Code/Print Data*)
+	(*-------------------------------------------------------*)
+	
+	(*Production Lifetime Counter*)
+	PartCountINC.CLK:= Out_To_ICxx.SIC01_Complete;
+	PartCountINC();
+	
+	IF PartCountINC.Q
+		THEN
+		ProductionCount:= ProductionCount + 1;
+	END_IF
+
+	sItemNumber:= DWORD_TO_STRING(ItemNumber);
+	lint_ProductionCount:= DWORD_TO_LINT(ProductionCount);
+	sProductionCount:= LINT_TO_DECSTR(lint_ProductionCount,5);
+	
+
+	(*-------------------------------------------------------*)
+	(*Date Formating*)
+	sYear:= WORD_TO_STRING(Main.Local_Time.wYear);			(*Convert Year to String*)
+	sTrimYear:= DELETE(STR:=sYear,2,2);						(*Remove first two digits to format year to 'YY'*)
+	
+	(*Get Day of Year and Convert to String*)
+	wDOY:= F_GetDOYOfYearMonthDay(Main.Local_Time.wYear, Main.Local_Time.wMonth, Main.Local_Time.wDay );
+	lint_DOY:= WORD_TO_LINT(wDOY);
+	sDOY:= LINT_TO_DECSTR(lint_DOY,3);	
+	
+	(*Get Week of the Year Fucntion*)
+	weekOfYear := F_GetWeekOfTheYear(Current_Time);
+	sWeekOfYear:= WORD_TO_STRING(weekOfYear);				(*Convert Date/Time to String*)		
+	
+	(*Convert Day of the week to String*)
+	sDayOfWeek:= WORD_TO_STRING(Main.Local_Time.wDayOfWeek);
+	
+	
+	(*-------------------------------------------------------*)
+	(*Program to use on Flashed memory of SiC Marker*)
+	SIC01_FileName:= '01'; 	
+	
+	
+	(*-------------------------------------------------------*)
+	(*Keep-Open Time*)
+	(*Keep Open time, 1 day is 86400s, customer requested 30 days = 2592000s*)
+	KeepOpenTime:= 30 * 86400;
+	Current_Time:= SYSTEMTIME_TO_DT(Main.Local_Time);
+	Current_Time_Unix:= DT_TO_UDINT(Current_Time);
+	
+	(*Model Code Addition to Printed string*)
+	IF EOAT02.EOAT_Full THEN 
+			sPart_Name := '';
+	END_IF
+	
+	(*Example*)
+	IF MAIN.Ped[5].Work_Robots_Complete
+		THEN
+	Current_Time_DTplus:= UDINT_TO_DT(Current_Time_Unix + KeepOpenTime);
+	(*Convert to string to send to SiC Marker*)
+	sCurrent_Time_DTplus:= DT_TO_STRING(Current_Time_DTplus);
+	
+	(*Grab YYMMDD for Keep Open Time*)
+	KeepOpenDate:= DT_TO_SYSTEMTIME(Current_Time_DTplus);
+	(*Year*)
+	sYear_KOT:= WORD_TO_STRING(KeepOpenDate.wYear);			(*Convert Year to String*)
+	sTrimYear_KOT:= DELETE(STR:=sYear_KOT,2,2);				
+	(*Month*)
+	lint_Month_KOT:= WORD_TO_LINT(KeepOpenDate.wMonth);
+	sMonth_KOT:= LINT_TO_DECSTR(lint_Month_KOT,2);
+	(*Day*)
+	lint_DOY_KOT:= WORD_TO_LINT(KeepOpenDate.wDay);
+	sDOY_KOT:= LINT_TO_DECSTR(lint_DOY_KOT,2);
+	
+	END_IF
+	
+	
+	(*-------------------------------------------------------*)
+	(*User input - Drawing Number*)
+	F_FormatArgToStr(
+	bSign:= FALSE, 
+	bBlank:= FALSE, 
+	bNull:= TRUE, 
+	bHash:= FALSE, 
+	bLAlign:= FALSE, 
+	bWidth:= FALSE, 
+	iWidth:= 3, 
+	iPrecision:= 3, 
+	eFmtType:= TYPEFIELD_S, 
+	arg:= F_STRING(DrawingNumberInput), 
+	sOut:=  PaddedDrawingNumber);
+	
+	FormattedDrawingNumber:= F_ToUCase(PaddedDrawingNumber);
+	
+	(*-------------------------------------------------------*)
+	(*User input - Part Change Letter*)
+	F_FormatArgToStr(
+	bSign:= FALSE, 
+	bBlank:= FALSE, 
+	bNull:= TRUE, 
+	bHash:= FALSE, 
+	bLAlign:= FALSE, 
+	bWidth:= FALSE, 
+	iWidth:= 0, 
+	iPrecision:= 1, 
+	eFmtType:= TYPEFIELD_S, 
+	arg:= F_STRING(DrawingLetter), 
+	sOut:=  PaddedDrawingLetter);
+	
+	DrawingLetterInput:= F_ToUCase(PaddedDrawingLetter); (*Force Upper Case - just in case*)
+	
+	
+	(*-------------------------------------------------------*)
+	(*Shift Letter*)
+	Current_Shift:= Fix01.Production_Report.Shift_Letter;
+	
+	
+	
+	
+	]]></ST>
+      </Implementation>
+    </Action>
+    <LineIds Name="Ancillary_Equipment">
+      <LineId Id="31" Count="1" />
+      <LineId Id="452" Count="1" />
+      <LineId Id="455" Count="6" />
+      <LineId Id="1188" Count="0" />
+      <LineId Id="463" Count="13" />
+      <LineId Id="1204" Count="6" />
+      <LineId Id="1293" Count="0" />
+      <LineId Id="1291" Count="1" />
+      <LineId Id="479" Count="0" />
+      <LineId Id="1190" Count="0" />
+      <LineId Id="502" Count="0" />
+      <LineId Id="743" Count="3" />
+      <LineId Id="828" Count="0" />
+      <LineId Id="747" Count="2" />
+      <LineId Id="1129" Count="1" />
+      <LineId Id="829" Count="0" />
+      <LineId Id="750" Count="1" />
+      <LineId Id="1520" Count="2" />
+      <LineId Id="752" Count="1" />
+      <LineId Id="1783" Count="0" />
+      <LineId Id="754" Count="0" />
+      <LineId Id="1784" Count="0" />
+      <LineId Id="755" Count="0" />
+      <LineId Id="1899" Count="0" />
+      <LineId Id="756" Count="0" />
+      <LineId Id="1900" Count="0" />
+      <LineId Id="757" Count="0" />
+      <LineId Id="760" Count="5" />
+      <LineId Id="503" Count="0" />
+      <LineId Id="792" Count="0" />
+      <LineId Id="826" Count="1" />
+      <LineId Id="1187" Count="0" />
+      <LineId Id="898" Count="5" />
+      <LineId Id="1517" Count="0" />
+      <LineId Id="904" Count="0" />
+      <LineId Id="1518" Count="1" />
+      <LineId Id="905" Count="0" />
+      <LineId Id="1785" Count="0" />
+      <LineId Id="906" Count="0" />
+      <LineId Id="1786" Count="0" />
+      <LineId Id="907" Count="14" />
+      <LineId Id="1898" Count="0" />
+      <LineId Id="946" Count="1" />
+      <LineId Id="922" Count="23" />
+      <LineId Id="1405" Count="0" />
+      <LineId Id="1667" Count="0" />
+      <LineId Id="1662" Count="0" />
+      <LineId Id="1666" Count="0" />
+      <LineId Id="1670" Count="1" />
+      <LineId Id="1664" Count="0" />
+      <LineId Id="1635" Count="23" />
+      <LineId Id="767" Count="0" />
+      <LineId Id="505" Count="0" />
+      <LineId Id="768" Count="0" />
+      <LineId Id="865" Count="0" />
+      <LineId Id="769" Count="0" />
+      <LineId Id="1171" Count="14" />
+      <LineId Id="981" Count="49" />
+      <LineId Id="980" Count="0" />
+      <LineId Id="1088" Count="0" />
+      <LineId Id="1036" Count="47" />
+      <LineId Id="1035" Count="0" />
+    </LineIds>
+    <LineIds Name="Ancillary_Equipment.DMC_Code_Formation">
+      <LineId Id="165" Count="1" />
+      <LineId Id="170" Count="1" />
+      <LineId Id="290" Count="0" />
+      <LineId Id="172" Count="2" />
+      <LineId Id="178" Count="0" />
+      <LineId Id="180" Count="2" />
+      <LineId Id="192" Count="4" />
+      <LineId Id="203" Count="9" />
+      <LineId Id="300" Count="0" />
+      <LineId Id="303" Count="0" />
+      <LineId Id="301" Count="0" />
+      <LineId Id="305" Count="0" />
+      <LineId Id="307" Count="1" />
+      <LineId Id="306" Count="0" />
+      <LineId Id="291" Count="1" />
+      <LineId Id="213" Count="3" />
+      <LineId Id="293" Count="0" />
+      <LineId Id="217" Count="5" />
+      <LineId Id="269" Count="0" />
+      <LineId Id="271" Count="1" />
+      <LineId Id="275" Count="0" />
+      <LineId Id="270" Count="0" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="327" Count="0" />
+      <LineId Id="224" Count="19" />
+      <LineId Id="294" Count="0" />
+      <LineId Id="244" Count="14" />
+      <LineId Id="276" Count="0" />
+      <LineId Id="295" Count="0" />
+      <LineId Id="278" Count="0" />
+      <LineId Id="313" Count="11" />
+      <LineId Id="277" Count="0" />
+      <LineId Id="325" Count="1" />
+      <LineId Id="281" Count="0" />
+      <LineId Id="296" Count="0" />
+      <LineId Id="282" Count="0" />
+      <LineId Id="279" Count="0" />
+      <LineId Id="260" Count="1" />
+      <LineId Id="283" Count="0" />
+      <LineId Id="304" Count="0" />
+      <LineId Id="262" Count="0" />
+      <LineId Id="60" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

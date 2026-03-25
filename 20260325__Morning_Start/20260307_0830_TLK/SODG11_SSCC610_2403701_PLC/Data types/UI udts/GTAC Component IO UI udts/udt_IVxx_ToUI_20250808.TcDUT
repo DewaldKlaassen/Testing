@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_IVxx_ToUI_20250808" Id="{30cf2c99-576a-4b41-9a6d-b44b7e415b93}">
+    <Declaration><![CDATA[(*udt (user defined type) for interfacing to UI (User Interface)
+this udt represents data that is passed from PLC to EACH UI
+
+	Author(S): R.jones of Sodecia GTAC;
+	- Initial Concept
+	Version 20250723
+
+*)
+
+TYPE udt_IVxx_ToUI_20250808 :
+	STRUCT
+
+	(*Input and Output Data Images*)
+	Discrete_Image: udt_IV2_DiscreteImage;
+	(*EtherCAT Cable Break Flags*)
+	ECAT_Cable_Breaks: UDINT;
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

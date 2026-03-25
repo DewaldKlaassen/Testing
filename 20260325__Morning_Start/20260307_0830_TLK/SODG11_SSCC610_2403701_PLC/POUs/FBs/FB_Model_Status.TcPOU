@@ -1,0 +1,103 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FB_Model_Status" Id="{4021a93e-480d-4b12-93ba-42fa482c1d73}" SpecialFunc="None">
+    <Declaration><![CDATA[(*FB for ???:
+	Original Author(s): ??? 
+	August 2010; version 3.0*)
+
+FUNCTION_BLOCK FB_Model_Status
+
+	VAR_INPUT
+		Enable_FB: BOOL;
+		Enable_LookFor_Hole: BOOL;
+		Found_Metal_Sensor: BOOL;
+		Found_Hole_Sensor: BOOL;
+		Retracted_Sensor: BOOL;
+		Advance_Solenoid: BOOL;
+		Retract_Solenoid: BOOL;
+		Metal_Delay: TIME;
+		Hole_Delay: TIME;
+		Ret_Delay: TIME;
+		Fault_Delay: TIME;
+	END_VAR
+
+	VAR
+		At_Metal: BOOL;
+		At_Hole: BOOL;
+		At_Retracted: BOOL;
+		Metal_Delay_TMR: TON;
+		Hole_Delay_TMR: TON;
+		Ret_Delay_TMR: TON;
+		Sensor_FLT_TMR: TON;
+		Advancing_FLT_TMR: TON;
+		Retracting_FLT_TMR: TON;
+	END_VAR
+
+	VAR_OUTPUT
+		FB_OK: BOOL;
+		In_Metal_Position: BOOL;
+		In_Hole_Position: BOOL;
+		In_Retracted_Position: BOOL;
+		Faulted: BOOL;
+		Sensor_Fault: BOOL;
+		Advancing_Fault: BOOL;
+		Retracting_Fault: BOOL;
+	END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[	(*Set FB_OK to True*)
+	FB_OK:= TRUE;
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Internal Code $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Develop Metal Position*)
+	At_Metal:=Found_Metal_Sensor AND NOT Retracted_Sensor;
+	(*Develop Hole Position*)
+	At_Hole:=Found_Hole_Sensor AND NOT Retracted_Sensor;
+
+	(*Develop Retracted Position*)
+	At_Retracted:=Retracted_Sensor AND NOT Found_Metal_Sensor AND NOT Found_Hole_Sensor;
+
+	(*Delay Metal  Position Output*)
+	Metal_Delay_TMR.PT:=Metal_Delay;
+	Metal_Delay_TMR.IN:=At_Metal;
+	Metal_Delay_TMR();
+	In_Metal_Position:=Metal_Delay_TMR.Q;
+
+	(*Delay Hole  Position Output*)
+	Hole_Delay_TMR.PT:=Hole_Delay;
+	Hole_Delay_TMR.IN:=At_Hole;
+	Hole_Delay_TMR();
+	In_Hole_Position:=Hole_Delay_TMR.Q;
+
+	(*Delay Retracted Position Output*)
+	Ret_Delay_TMR.PT:=Ret_Delay;
+	Ret_Delay_TMR.IN:=At_Retracted;
+	Ret_Delay_TMR();
+	In_Retracted_Position:=Ret_Delay_TMR.Q;
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Fault Code $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Sensor Fault*)
+	Sensor_FLT_TMR.PT:=Fault_Delay;
+	Sensor_FLT_TMR.IN:=(NOT At_Metal AND NOT At_Hole AND NOT At_Retracted) OR (At_Metal AND At_Retracted) OR (At_Hole AND At_Retracted) OR (At_Metal AND At_Hole);
+	Sensor_FLT_TMR();
+	Sensor_Fault:=Sensor_FLT_TMR.Q;
+
+	(*Advancing Fault*)
+	Advancing_FLT_TMR.PT:=Fault_Delay;
+	Advancing_FLT_TMR.IN:=Advance_Solenoid AND (NOT At_Metal OR NOT At_Hole) AND NOT Sensor_Fault;
+	Advancing_FLT_TMR();
+	Advancing_Fault:=Advancing_FLT_TMR.Q;
+
+	(*Retracting Fault*)
+	Retracting_FLT_TMR.PT:=Fault_Delay;
+	Retracting_FLT_TMR.IN:=Retract_Solenoid AND NOT At_Retracted AND NOT Sensor_Fault;
+	Retracting_FLT_TMR();
+	Retracting_Fault:=Retracting_FLT_TMR.Q;
+
+	(*Develop Fault Output*)
+	Faulted:= Sensor_Fault OR Advancing_Fault OR Retracting_Fault;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Model_Status">
+      <LineId Id="43" Count="49" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

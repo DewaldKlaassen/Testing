@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_Schneider_VFD_20180808" Id="{0978f93d-4454-4f34-82c8-377847fca6e2}">
+    <Declaration><![CDATA[(*udt (user defined type) for Schneider Electric VFD I/O Module
+	Author(S): Justin Vandongen of Sodecia GTAC;
+
+------------------------------------------------------------------------
+	REVISION NOTES:
+
+	Version 20180808
+		- Initial Concept, j.vandongen
+		- tested on ATV320 v1.11 ethercat module from schneider, j.vandongen
+
+------------------------------------------------------------------------
+*)
+
+TYPE udt_Schneider_VFD_20180808 :
+	STRUCT
+	 	InfoData: udt_ECATSlave_Status;
+	END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

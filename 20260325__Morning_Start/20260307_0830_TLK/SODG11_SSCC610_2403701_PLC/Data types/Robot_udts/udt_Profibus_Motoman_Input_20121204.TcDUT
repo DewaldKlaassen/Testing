@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <DUT Name="udt_Profibus_Motoman_Input_20121204" Id="{8112dc7e-0213-469e-b37a-7429e948582a}">
+    <Declaration><![CDATA[(*udt (user defined type) for all Motoman Robot Controllers with HMS AnyBus Profibus Interface Card
+	Author(S): Brent Lekx-Toniolo/Rob Remillard of Sodecia GTAC;
+	Version 1.0: August 2010
+		- Initial Concept
+	Version 20121204
+		Changes from v1
+			- Increased Size to 32 Bytes
+			- Change to Naming Convention to include date as version
+
+	Last Edit: December 4th, 2012, blt
+*)
+
+TYPE udt_Profibus_Motoman_Input_20121204 :
+	STRUCT
+		Inputs:udt_ProfiNode_Status;
+		(*Output Data From Robot, 32 Bytes total size*)
+		SYS:UDINT;
+		OG4: BYTE;
+		OG5: BYTE;
+		OG6: BYTE;
+		OG7: BYTE;
+		OG8: BYTE;
+		OG9: BYTE;
+		OG10: BYTE;
+		OG11: BYTE;
+		OG12: BYTE;
+		OG13: BYTE;
+		OG14: BYTE;
+		OG15: BYTE;
+		OG16: BYTE;
+		OG17: BYTE;
+		OG18: BYTE;
+		OG19: BYTE;
+		OG20: BYTE;
+		OG21: BYTE;
+		OG22: BYTE;
+		OG23: BYTE;
+		OG24: BYTE;
+		OG25: BYTE;
+		OG26: BYTE;
+		OG27: BYTE;
+		OG28: BYTE;
+		OG29: BYTE;
+		OG30: BYTE;
+		OG31: BYTE;
+		OG32: BYTE;
+		OG33: BYTE;
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

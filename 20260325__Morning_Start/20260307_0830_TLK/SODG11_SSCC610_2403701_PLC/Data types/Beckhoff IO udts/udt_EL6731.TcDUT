@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_EL6731" Id="{71710546-430b-454b-813d-8b87d4242f55}">
+    <Declaration><![CDATA[(*udt (user defined type) of Beckhoff EL6731 - Profibus Mater, ECAT Terminal:
+	auth. Brent Lekx-Toniolo of Toniolo Research & Development Inc.; 
+	July 2010; version 1.0*)
+
+
+TYPE udt_EL6731 :
+STRUCT
+	Error: USINT;
+	(*Error:
+	 indicates the number of boxes with a BoxState unequal zero*)
+	Wc_State: BOOL;
+	(*0 = Data valid
+	1 = Data invalid*)
+	InfoData: udt_ECATSlave_Status;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

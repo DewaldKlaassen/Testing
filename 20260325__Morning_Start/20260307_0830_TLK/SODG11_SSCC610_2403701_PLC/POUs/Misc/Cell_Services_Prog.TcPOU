@@ -1,0 +1,4543 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="Cell_Services_Prog" Id="{425107ba-9f67-4a23-b822-bdc63beb5685}" SpecialFunc="None">
+    <Declaration><![CDATA[(*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Program Used to handle all Ancillary Service Requests for All Robots
+Service Requests include Mastering Test, Brake Test, Tip Change and Tip Dress
+	author: Brent Lekx-Toniolo of Sodecia GTAC
+	July, 2013
+--------------------------------------------------------------------------------------------------------------
+REVISION NOTES:
+	Date: October 2014
+	- Added capability of up to 30 robots, b.lekx-toniolo
+	Date: December 2014
+ 	- changed All_Robots_Clear MAIN.Rx.Task_ID_Ack from 250 to 350, b.lekx-toniolo
+ 	- added NOT  GTAC_CONFIG.Under_Construction TO Robot_Reqs_masterTest and BrakeTest and TipChange, JVD
+	Date: March 2015
+	- added/changed code to force Master and Brake Test Ext and allow all robots to ack such before starting full master or brake tests, blt
+	Date: May 2016
+	- added config data to auto configure code, b.lekx-toniolo (blt)
+	Date: June 2017
+	- broke out IF formatiing in task_id code, b.lekx-toniolo (blt)
+	Date:May 2021 
+	-Cleaned up Steppers Reset  to ensure that ALL steppers that are enabled are checked (CD)
+	-Cleaned up Tip Change Requests to be easier to read and troubleshoot (CD)
+	Date: June 2024
+	- Massaged in TraccTCP code developed / tested by Wes Griffiths on project 2302901 (blt)
+	Date: Sept 2024
+	- Correction to Start brake Test code as per SSCC610 GH Issues #140, (blt and wg)
+--------------------------------------------------------------------------------------------------------------
+*)
+
+PROGRAM Cell_Services_Prog
+	VAR_INPUT
+		Enable_Prog: BOOL;
+		Enable_Motion: BOOL;
+		Discrete_In: udt_FixXX_Input_Image_20180202;
+		Dry_Cycle: BOOL;
+		Cell_In_Services: BOOL;
+	END_VAR
+
+	VAR
+(*Hardware Related Data Types*)
+
+
+(*Standard Internal Variables*)
+
+		(*General Internals*)
+		In_Auto: BOOL;
+		In_Manual: BOOL;
+
+		Auto_Run: BOOL;
+		Reset_All_Completes:BOOL;
+		All_Robots_Clear: BOOL;
+		All_Robots_WorkingOK: BOOL;
+		All_Robots_Complete: BOOL;
+		All_Robots_SteppersRST: BOOL;
+		Start_All_MTRobots: BOOL;
+		All_MTRobots_Proceed: BOOL;
+		Start_All_BTRobots: BOOL;
+		All_BTRobots_Proceed: BOOL;
+		Start_All_TCRobots: BOOL;
+		All_TCRobots_Proceed: BOOL;
+		Start_All_TDRobots: BOOL;
+		All_TDRobots_Proceed: BOOL;
+		
+		(*Custom for CCB*)
+		Start_All_TraccTCP: BOOL;
+		All_TraccTCP_Proceed: BOOL;
+		
+		Start_TDRobot_1: BOOL;
+		Start_TDRobot_2: BOOL;
+		Start_TDRobot_3: BOOL;
+		Start_TDRobot_4: BOOL;
+		Start_TDRobot_5: BOOL;
+		Start_TDRobot_6: BOOL;
+		Start_TDRobot_7: BOOL;
+		Start_TDRobot_8: BOOL;
+		Start_TDRobot_9: BOOL;
+		Start_TDRobot_10: BOOL;
+		Start_TDRobot_11: BOOL;
+		Start_TDRobot_12: BOOL;
+		Start_TDRobot_13: BOOL;
+		Start_TDRobot_14: BOOL;
+		Start_TDRobot_15: BOOL;
+		Start_TDRobot_16: BOOL;
+		Start_TDRobot_17: BOOL;
+		Start_TDRobot_18: BOOL;
+		Start_TDRobot_19: BOOL;
+		Start_TDRobot_20: BOOL;
+		Start_TDRobot_21: BOOL;
+		Start_TDRobot_22: BOOL;
+		Start_TDRobot_23: BOOL;
+		Start_TDRobot_24: BOOL;
+		Start_TDRobot_25: BOOL;
+		Start_TDRobot_26: BOOL;
+		Start_TDRobot_27: BOOL;
+		Start_TDRobot_28: BOOL;
+		Start_TDRobot_29: BOOL;
+		Start_TDRobot_30: BOOL;
+
+		TDRobot_1_Proceed: BOOL;
+		TDRobot_2_Proceed: BOOL;
+		TDRobot_3_Proceed: BOOL;
+		TDRobot_4_Proceed: BOOL;
+		TDRobot_5_Proceed: BOOL;
+		TDRobot_6_Proceed: BOOL;
+		TDRobot_7_Proceed: BOOL;
+		TDRobot_8_Proceed: BOOL;
+		TDRobot_9_Proceed: BOOL;
+		TDRobot_10_Proceed: BOOL;
+		TDRobot_11_Proceed: BOOL;
+		TDRobot_12_Proceed: BOOL;
+		TDRobot_13_Proceed: BOOL;
+		TDRobot_14_Proceed: BOOL;
+		TDRobot_15_Proceed: BOOL;
+		TDRobot_16_Proceed: BOOL;
+		TDRobot_17_Proceed: BOOL;
+		TDRobot_18_Proceed: BOOL;
+		TDRobot_19_Proceed: BOOL;
+		TDRobot_20_Proceed: BOOL;
+		TDRobot_21_Proceed: BOOL;
+		TDRobot_22_Proceed: BOOL;
+		TDRobot_23_Proceed: BOOL;
+		TDRobot_24_Proceed: BOOL;
+		TDRobot_25_Proceed: BOOL;
+		TDRobot_26_Proceed: BOOL;
+		TDRobot_27_Proceed: BOOL;
+		TDRobot_28_Proceed: BOOL;
+		TDRobot_29_Proceed: BOOL;
+		TDRobot_30_Proceed: BOOL;
+		
+		(*Custom to CCB*)
+		Start_TraccTCP_1: BOOL;
+		Start_TraccTCP_2: BOOL;
+		Start_TraccTCP_3: BOOL;
+		Start_TraccTCP_4: BOOL;
+		Start_TraccTCP_5: BOOL;
+		Start_TraccTCP_6: BOOL;
+		Start_TraccTCP_7: BOOL;
+		Start_TraccTCP_8: BOOL;
+		Start_TraccTCP_9: BOOL;
+		Start_TraccTCP_10: BOOL;
+		Start_TraccTCP_11: BOOL;
+		Start_TraccTCP_12: BOOL;
+		Start_TraccTCP_13: BOOL;
+		Start_TraccTCP_14: BOOL;
+		Start_TraccTCP_15: BOOL;
+		Start_TraccTCP_16: BOOL;
+		Start_TraccTCP_17: BOOL;
+		Start_TraccTCP_18: BOOL;
+		Start_TraccTCP_19: BOOL;
+		Start_TraccTCP_20: BOOL;
+		Start_TraccTCP_21: BOOL;
+		Start_TraccTCP_22: BOOL;
+		Start_TraccTCP_23: BOOL;
+		Start_TraccTCP_24: BOOL;
+		Start_TraccTCP_25: BOOL;
+		Start_TraccTCP_26: BOOL;
+		Start_TraccTCP_27: BOOL;
+		Start_TraccTCP_28: BOOL;
+		Start_TraccTCP_29: BOOL;
+		Start_TraccTCP_30: BOOL;
+		TraccRobot_1_Proceed: BOOL;
+		TraccRobot_2_Proceed: BOOL;
+		TraccRobot_3_Proceed: BOOL;
+		TraccRobot_4_Proceed: BOOL;
+		TraccRobot_5_Proceed: BOOL;
+		TraccRobot_6_Proceed: BOOL;
+		TraccRobot_7_Proceed: BOOL;
+		TraccRobot_8_Proceed: BOOL;
+		TraccRobot_9_Proceed: BOOL;
+		TraccRobot_10_Proceed: BOOL;
+		TraccRobot_11_Proceed: BOOL;
+		TraccRobot_12_Proceed: BOOL;
+		TraccRobot_13_Proceed: BOOL;
+		TraccRobot_14_Proceed: BOOL;
+		TraccRobot_15_Proceed: BOOL;
+		TraccRobot_16_Proceed: BOOL;
+		TraccRobot_17_Proceed: BOOL;
+		TraccRobot_18_Proceed: BOOL;
+		TraccRobot_19_Proceed: BOOL;
+		TraccRobot_20_Proceed: BOOL;
+		TraccRobot_21_Proceed: BOOL;
+		TraccRobot_22_Proceed: BOOL;
+		TraccRobot_23_Proceed: BOOL;
+		TraccRobot_24_Proceed: BOOL;
+		TraccRobot_25_Proceed: BOOL;
+		TraccRobot_26_Proceed: BOOL;
+		TraccRobot_27_Proceed: BOOL;
+		TraccRobot_28_Proceed: BOOL;
+		TraccRobot_29_Proceed: BOOL;
+		TraccRobot_30_Proceed: BOOL;
+		
+
+		Robot_Reqs_TipDress: BOOL;
+		Robot1_Reqs_TipDress: BOOL;
+		Robot2_Reqs_TipDress: BOOL;
+		Robot3_Reqs_TipDress: BOOL;
+		Robot4_Reqs_TipDress: BOOL;
+		Robot5_Reqs_TipDress: BOOL;
+		Robot6_Reqs_TipDress: BOOL;
+		Robot7_Reqs_TipDress: BOOL;
+		Robot8_Reqs_TipDress: BOOL;
+		Robot9_Reqs_TipDress: BOOL;
+		Robot10_Reqs_TipDress: BOOL;
+		Robot11_Reqs_TipDress: BOOL;
+		Robot12_Reqs_TipDress: BOOL;
+		Robot13_Reqs_TipDress: BOOL;
+		Robot14_Reqs_TipDress: BOOL;
+		Robot15_Reqs_TipDress: BOOL;
+		Robot16_Reqs_TipDress: BOOL;
+		Robot17_Reqs_TipDress: BOOL;
+		Robot18_Reqs_TipDress: BOOL;
+		Robot19_Reqs_TipDress: BOOL;
+		Robot20_Reqs_TipDress: BOOL;
+		Robot21_Reqs_TipDress: BOOL;
+		Robot22_Reqs_TipDress: BOOL;
+		Robot23_Reqs_TipDress: BOOL;
+		Robot24_Reqs_TipDress: BOOL;
+		Robot25_Reqs_TipDress: BOOL;
+		Robot26_Reqs_TipDress: BOOL;
+		Robot27_Reqs_TipDress: BOOL;
+		Robot28_Reqs_TipDress: BOOL;
+		Robot29_Reqs_TipDress: BOOL;
+		Robot30_Reqs_TipDress: BOOL;
+		
+		(*Custom for CCB*)
+		Robot_Reqs_TraccTCP: BOOL;
+		Robot1_Reqs_TraccTCP: BOOL;
+		Robot2_Reqs_TraccTCP: BOOL;
+		Robot3_Reqs_TraccTCP: BOOL;
+		Robot4_Reqs_TraccTCP: BOOL;
+		Robot5_Reqs_TraccTCP: BOOL;
+		Robot6_Reqs_TraccTCP: BOOL;
+		Robot7_Reqs_TraccTCP: BOOL;
+		Robot8_Reqs_TraccTCP: BOOL;
+		Robot9_Reqs_TraccTCP: BOOL;
+		Robot10_Reqs_TraccTCP: BOOL;
+		Robot11_Reqs_TraccTCP: BOOL;
+		Robot12_Reqs_TraccTCP: BOOL;
+		Robot13_Reqs_TraccTCP: BOOL;
+		Robot14_Reqs_TraccTCP: BOOL;
+		Robot15_Reqs_TraccTCP: BOOL;
+		Robot16_Reqs_TraccTCP: BOOL;
+		Robot17_Reqs_TraccTCP: BOOL;
+		Robot18_Reqs_TraccTCP: BOOL;
+		Robot19_Reqs_TraccTCP: BOOL;
+		Robot20_Reqs_TraccTCP: BOOL;
+		Robot21_Reqs_TraccTCP: BOOL;
+		Robot22_Reqs_TraccTCP: BOOL;
+		Robot23_Reqs_TraccTCP: BOOL;
+		Robot24_Reqs_TraccTCP: BOOL;
+		Robot25_Reqs_TraccTCP: BOOL;
+		Robot26_Reqs_TraccTCP: BOOL;
+		Robot27_Reqs_TraccTCP: BOOL;
+		Robot28_Reqs_TraccTCP: BOOL;
+		Robot29_Reqs_TraccTCP: BOOL;
+		Robot30_Reqs_TraccTCP: BOOL;
+				
+		Prod_Inc: R_TRIG;
+		Cycle_Time: TON;
+		Cycle_Time_Pulse: R_TRIG;
+		Date_Stamp_TMR: TON;
+		Date_StampHome_TMR: TON;
+		CLFaulted:BOOL;
+		PPFaulted: BOOL;
+
+(*Non-Standard Variables*)
+
+		(*FB Instances*)
+		(*Tool Positions*)
+			(*Add User Indivdual Position Variables Here*)
+
+		(*Part Present Sensors*)
+			(*Add User Sensor Variables Here*)
+		(*Motion Sequence Variables*)
+			Clamp_Step: UINT;
+			Repo1_Step: UINT;
+			Repo2_Step: UINT;
+			Repo3_Step: UINT;
+			Repo4_Step: UINT;
+			Unclamp_Step: UINT;
+
+	END_VAR
+
+	(*data that needs to be retained in the event of a power cycle*)
+	VAR PERSISTENT
+		Master_Tests_Complete: BOOL;
+		Brake_Tests_Complete: BOOL;
+		Tip_Change_Complete: BOOL;
+		Tip_Dress_CompleteAll:BOOL;
+		Tip_Dress_Complete1:BOOL;
+		Tip_Dress_Complete2:BOOL;
+		Tip_Dress_Complete3:BOOL;
+		Tip_Dress_Complete4:BOOL;
+		Tip_Dress_Complete5:BOOL;
+		Tip_Dress_Complete6:BOOL;
+		Tip_Dress_Complete7:BOOL;
+		Tip_Dress_Complete8:BOOL;
+		Tip_Dress_Complete9:BOOL;
+		Tip_Dress_Complete10:BOOL;
+		Tip_Dress_Complete11:BOOL;
+		Tip_Dress_Complete12:BOOL;
+		Tip_Dress_Complete13:BOOL;
+		Tip_Dress_Complete14:BOOL;
+		Tip_Dress_Complete15:BOOL;
+		Tip_Dress_Complete16:BOOL;
+		Tip_Dress_Complete17:BOOL;
+		Tip_Dress_Complete18:BOOL;
+		Tip_Dress_Complete19:BOOL;
+		Tip_Dress_Complete20:BOOL;
+		Tip_Dress_Complete21:BOOL;
+		Tip_Dress_Complete22:BOOL;
+		Tip_Dress_Complete23:BOOL;
+		Tip_Dress_Complete24:BOOL;
+		Tip_Dress_Complete25:BOOL;
+		Tip_Dress_Complete26:BOOL;
+		Tip_Dress_Complete27:BOOL;
+		Tip_Dress_Complete28:BOOL;
+		Tip_Dress_Complete29:BOOL;
+		Tip_Dress_Complete30:BOOL;
+		
+		(*Custom for CCB*)
+		TraccTCP_CompleteALL:BOOL;
+		TraccTCP_Complete1:BOOL;
+		TraccTCP_Complete2:BOOL;
+		TraccTCP_Complete3:BOOL;
+		TraccTCP_Complete4:BOOL;
+		TraccTCP_Complete5:BOOL;
+		TraccTCP_Complete6:BOOL;
+		TraccTCP_Complete7:BOOL;
+		TraccTCP_Complete8:BOOL;
+		TraccTCP_Complete9:BOOL;
+		TraccTCP_Complete10:BOOL;
+		TraccTCP_Complete11:BOOL;
+		TraccTCP_Complete12:BOOL;
+		TraccTCP_Complete13:BOOL;
+		TraccTCP_Complete14:BOOL;
+		TraccTCP_Complete15:BOOL;
+		TraccTCP_Complete16:BOOL;
+		TraccTCP_Complete17:BOOL;
+		TraccTCP_Complete18:BOOL;
+		TraccTCP_Complete19:BOOL;
+		TraccTCP_Complete20:BOOL;
+		TraccTCP_Complete21:BOOL;
+		TraccTCP_Complete22:BOOL;
+		TraccTCP_Complete23:BOOL;
+		TraccTCP_Complete24:BOOL;
+		TraccTCP_Complete25:BOOL;
+		TraccTCP_Complete26:BOOL;
+		TraccTCP_Complete27:BOOL;
+		TraccTCP_Complete28:BOOL;
+		TraccTCP_Complete29:BOOL;
+		TraccTCP_Complete30:BOOL;
+
+		Cycle_Complete: BOOL;
+		Production_Count:INT;
+		Repo_REQS: UINT;
+
+		Human_Reqs_MasterTest: BOOL;
+		Human_Reqs_BrakeTest: BOOL;
+		Human_Reqs_TipChange: BOOL;
+		All_RobotsReq_MasterTest: BOOL;
+		All_RobotsReq_BrakeTest: BOOL;
+		A_Robot_Reqs_MasterTest: BOOL;
+		A_Robot_Reqs_BrakeTest: BOOL;
+		Robot_Reqs_TipChange: BOOL;
+		TipChange_Reqs_TipDress: BOOL;
+
+		Human_Reqs_TipDressR1: BOOL;
+		Human_Reqs_TipDressR2: BOOL;
+		Human_Reqs_TipDressR3: BOOL;
+		Human_Reqs_TipDressR4: BOOL;
+		Human_Reqs_TipDressR5: BOOL;
+		Human_Reqs_TipDressR6: BOOL;
+		Human_Reqs_TipDressR7: BOOL;
+		Human_Reqs_TipDressR8: BOOL;
+		Human_Reqs_TipDressR9: BOOL;
+		Human_Reqs_TipDressR10: BOOL;
+		Human_Reqs_TipDressR11: BOOL;
+		Human_Reqs_TipDressR12: BOOL;
+		Human_Reqs_TipDressR13: BOOL;
+		Human_Reqs_TipDressR14: BOOL;
+		Human_Reqs_TipDressR15: BOOL;
+		Human_Reqs_TipDressR16: BOOL;
+		Human_Reqs_TipDressR17: BOOL;
+		Human_Reqs_TipDressR18: BOOL;
+		Human_Reqs_TipDressR19: BOOL;
+		Human_Reqs_TipDressR20: BOOL;
+		Human_Reqs_TipDressR21: BOOL;
+		Human_Reqs_TipDressR22: BOOL;
+		Human_Reqs_TipDressR23: BOOL;
+		Human_Reqs_TipDressR24: BOOL;
+		Human_Reqs_TipDressR25: BOOL;
+		Human_Reqs_TipDressR26: BOOL;
+		Human_Reqs_TipDressR27: BOOL;
+		Human_Reqs_TipDressR28: BOOL;
+		Human_Reqs_TipDressR29: BOOL;
+		Human_Reqs_TipDressR30: BOOL;
+		
+		Human_Reqs_TraccTCP_R1: BOOL;
+		Human_Reqs_TraccTCP_R2: BOOL;
+		Human_Reqs_TraccTCP_R3: BOOL;
+		Human_Reqs_TraccTCP_R4: BOOL;
+		Human_Reqs_TraccTCP_R5: BOOL;
+		Human_Reqs_TraccTCP_R6: BOOL;
+		Human_Reqs_TraccTCP_R7: BOOL;
+		Human_Reqs_TraccTCP_R8: BOOL;
+		Human_Reqs_TraccTCP_R9: BOOL;
+		Human_Reqs_TraccTCP_R10: BOOL;
+		Human_Reqs_TraccTCP_R11: BOOL;
+		Human_Reqs_TraccTCP_R12: BOOL;
+		Human_Reqs_TraccTCP_R13: BOOL;
+		Human_Reqs_TraccTCP_R14: BOOL;
+		Human_Reqs_TraccTCP_R15: BOOL;
+		Human_Reqs_TraccTCP_R16: BOOL;
+		Human_Reqs_TraccTCP_R17: BOOL;
+		Human_Reqs_TraccTCP_R18: BOOL;
+		Human_Reqs_TraccTCP_R19: BOOL;
+		Human_Reqs_TraccTCP_R20: BOOL;
+		Human_Reqs_TraccTCP_R21: BOOL;
+		Human_Reqs_TraccTCP_R22: BOOL;
+		Human_Reqs_TraccTCP_R23: BOOL;
+		Human_Reqs_TraccTCP_R24: BOOL;
+		Human_Reqs_TraccTCP_R25: BOOL;
+		Human_Reqs_TraccTCP_R26: BOOL;
+		Human_Reqs_TraccTCP_R27: BOOL;
+		Human_Reqs_TraccTCP_R28: BOOL;
+		Human_Reqs_TraccTCP_R29: BOOL;
+		Human_Reqs_TraccTCP_R30: BOOL;
+	END_VAR
+
+	VAR_OUTPUT
+		Prog_Ok: BOOL;
+		Prod_Count_Out: INT;
+		Cycle_Time_Out: TIME;
+		PrevCycle_Time_Out: TIME;
+		Model_ID: UINT;
+		Service_Call_ForAllRobots: BOOL;
+		Service_Call_ForRobot1: BOOL;
+		Service_Call_ForRobot2: BOOL;
+		Service_Call_ForRobot3: BOOL;
+		Service_Call_ForRobot4: BOOL;
+		Service_Call_ForRobot5: BOOL;
+		Service_Call_ForRobot6: BOOL;
+		Service_Call_ForRobot7: BOOL;
+		Service_Call_ForRobot8: BOOL;
+		Service_Call_ForRobot9: BOOL;
+		Service_Call_ForRobot10: BOOL;
+		Service_Call_ForRobot11: BOOL;
+		Service_Call_ForRobot12: BOOL;
+		Service_Call_ForRobot13: BOOL;
+		Service_Call_ForRobot14: BOOL;
+		Service_Call_ForRobot15: BOOL;
+		Service_Call_ForRobot16: BOOL;
+		Service_Call_ForRobot17: BOOL;
+		Service_Call_ForRobot18: BOOL;
+		Service_Call_ForRobot19: BOOL;
+		Service_Call_ForRobot20: BOOL;
+		Service_Call_ForRobot21: BOOL;
+		Service_Call_ForRobot22: BOOL;
+		Service_Call_ForRobot23: BOOL;
+		Service_Call_ForRobot24: BOOL;
+		Service_Call_ForRobot25: BOOL;
+		Service_Call_ForRobot26: BOOL;
+		Service_Call_ForRobot27: BOOL;
+		Service_Call_ForRobot28: BOOL;
+		Service_Call_ForRobot29: BOOL;
+		Service_Call_ForRobot30: BOOL;
+		Robots_Clear_ToProceed: BOOL;
+		Task_ID: UINT;
+		Fix_ID: UINT;
+		All_Complete_Ack: BOOL;
+		Repo_Ack: UINT;
+		Rxx_ReadyAt_TipChangePosition: UDINT;
+	END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[
+
+	(*Set FB_OK to True*)
+	Prog_OK:= TRUE;
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$Gather Status Of Hardware $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Discrete I/O Node*)
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Gather Safety Inputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Gather Standard Inputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+(*Master Test Request from any IC*)
+	IF In_From_ICxx.Force_Master_Test
+		THEN
+			Human_Reqs_MasterTest:= TRUE; (*Reset at Master_Test_Complete*)
+	END_IF;
+(*Master Test Reqs from any Robot*)
+	IF NOT GTAC_CONFIG.Under_Construction
+		AND (MAIN.R1.Master_Test_Reqd
+			OR MAIN.R2.Master_Test_Reqd
+			OR MAIN.R3.Master_Test_Reqd
+			OR MAIN.R4.Master_Test_Reqd
+			OR MAIN.R5.Master_Test_Reqd
+			OR MAIN.R6.Master_Test_Reqd
+			OR MAIN.R7.Master_Test_Reqd
+			OR MAIN.R8.Master_Test_Reqd
+			OR MAIN.R9.Master_Test_Reqd
+			OR MAIN.R10.Master_Test_Reqd
+			OR MAIN.R11.Master_Test_Reqd
+			OR MAIN.R12.Master_Test_Reqd
+			OR MAIN.R13.Master_Test_Reqd
+			OR MAIN.R14.Master_Test_Reqd
+			OR MAIN.R15.Master_Test_Reqd
+			OR MAIN.R16.Master_Test_Reqd
+			OR MAIN.R17.Master_Test_Reqd
+			OR MAIN.R18.Master_Test_Reqd
+			OR MAIN.R19.Master_Test_Reqd
+			OR MAIN.R20.Master_Test_Reqd
+			OR MAIN.R21.Master_Test_Reqd
+			OR MAIN.R22.Master_Test_Reqd
+			OR MAIN.R23.Master_Test_Reqd
+			OR MAIN.R24.Master_Test_Reqd
+			OR MAIN.R25.Master_Test_Reqd
+			OR MAIN.R26.Master_Test_Reqd
+			OR MAIN.R27.Master_Test_Reqd
+			OR MAIN.R28.Master_Test_Reqd
+			OR MAIN.R29.Master_Test_Reqd
+			OR MAIN.R30.Master_Test_Reqd)
+	THEN
+
+                   	A_Robot_Reqs_MasterTest := TRUE;  (*Reset at Master Test_Complete*)
+
+	END_IF;
+
+
+
+(*Brake Test Request from any IC*)
+	IF In_From_ICxx.Force_Brake_Test
+		THEN
+			Human_Reqs_BrakeTest:= TRUE; (*Reset at Brake_Test_Complete*)
+	END_IF;
+(*Brake Test Reqs from any Robot*)
+	IF NOT GTAC_CONFIG.Under_Construction
+ 		AND NOT All_RobotsReq_BrakeTest
+                    AND (MAIN.R1.Brake_Test_Reqd
+				OR MAIN.R2.Brake_Test_Reqd
+				OR MAIN.R3.Brake_Test_Reqd
+				OR MAIN.R4.Brake_Test_Reqd
+				OR MAIN.R5.Brake_Test_Reqd
+				OR MAIN.R6.Brake_Test_Reqd
+				OR MAIN.R7.Brake_Test_Reqd
+				OR MAIN.R8.Brake_Test_Reqd
+				OR MAIN.R9.Brake_Test_Reqd
+				OR MAIN.R10.Brake_Test_Reqd
+				OR MAIN.R11.Brake_Test_Reqd
+				OR MAIN.R12.Brake_Test_Reqd
+				OR MAIN.R13.Brake_Test_Reqd
+				OR MAIN.R14.Brake_Test_Reqd
+				OR MAIN.R15.Brake_Test_Reqd
+				OR MAIN.R16.Brake_Test_Reqd
+				OR MAIN.R17.Brake_Test_Reqd
+				OR MAIN.R18.Brake_Test_Reqd
+				OR MAIN.R19.Brake_Test_Reqd
+				OR MAIN.R20.Brake_Test_Reqd
+				OR MAIN.R21.Brake_Test_Reqd
+				OR MAIN.R22.Brake_Test_Reqd
+				OR MAIN.R23.Brake_Test_Reqd
+				OR MAIN.R24.Brake_Test_Reqd
+				OR MAIN.R25.Brake_Test_Reqd
+				OR MAIN.R26.Brake_Test_Reqd
+				OR MAIN.R27.Brake_Test_Reqd
+				OR MAIN.R28.Brake_Test_Reqd
+				OR MAIN.R29.Brake_Test_Reqd
+				OR MAIN.R30.Brake_Test_Reqd)
+	THEN
+
+                           		A_Robot_Reqs_BrakeTest := TRUE;  (*Reset at Brake Test_Complete*)
+
+	END_IF;
+
+(*Brake Test Reqs from ALL Robots*)
+	IF NOT GTAC_CONFIG.Under_Construction
+                     AND (MAIN.R1.Brake_Test_Reqd AND
+				(MAIN.R2.Brake_Test_Reqd OR GTAC_CONFIG.Option_Robot_Count<2) AND
+				(MAIN.R3.Brake_Test_Reqd OR GTAC_CONFIG.Option_Robot_Count<3) AND
+				(MAIN.R4.Brake_Test_Reqd OR GTAC_CONFIG.Option_Robot_Count<4) AND
+				(MAIN.R5.Brake_Test_Reqd OR GTAC_CONFIG.Option_Robot_Count<5) AND
+				(MAIN.R6.Brake_Test_Reqd OR GTAC_CONFIG.Option_Robot_Count<6) AND
+				(MAIN.R7.Brake_Test_Reqd OR GTAC_CONFIG.Option_Robot_Count<7) AND
+				(MAIN.R8.Brake_Test_Reqd OR GTAC_CONFIG.Option_Robot_Count<8) AND
+				(MAIN.R9.Brake_Test_Reqd OR GTAC_CONFIG.Option_Robot_Count<9) AND
+				(MAIN.R10.Brake_Test_Reqd OR GTAC_CONFIG.Option_Robot_Count<10) AND
+				(MAIN.R11.Brake_Test_Reqd OR GTAC_CONFIG.Option_Robot_Count<11) AND
+				(MAIN.R12.Brake_Test_Reqd OR GTAC_CONFIG.Option_Robot_Count<12) AND
+				(MAIN.R13.Brake_Test_Reqd OR GTAC_CONFIG.Option_Robot_Count<13) AND
+				(MAIN.R14.Brake_Test_Reqd OR GTAC_CONFIG.Option_Robot_Count<14) AND
+				(MAIN.R15.Brake_Test_Reqd OR GTAC_CONFIG.Option_Robot_Count<15) AND
+				(MAIN.R16.Brake_Test_Reqd OR GTAC_CONFIG.Option_Robot_Count<16) AND
+				(MAIN.R17.Brake_Test_Reqd OR GTAC_CONFIG.Option_Robot_Count<17) AND
+				(MAIN.R18.Brake_Test_Reqd OR GTAC_CONFIG.Option_Robot_Count<18) AND
+				(MAIN.R19.Brake_Test_Reqd OR GTAC_CONFIG.Option_Robot_Count<19) AND
+				(MAIN.R20.Brake_Test_Reqd OR GTAC_CONFIG.Option_Robot_Count<20) AND
+				(MAIN.R21.Brake_Test_Reqd OR GTAC_CONFIG.Option_Robot_Count<21) AND
+				(MAIN.R22.Brake_Test_Reqd OR GTAC_CONFIG.Option_Robot_Count<22) AND
+				(MAIN.R23.Brake_Test_Reqd OR GTAC_CONFIG.Option_Robot_Count<23) AND
+				(MAIN.R24.Brake_Test_Reqd OR GTAC_CONFIG.Option_Robot_Count<24) AND
+				(MAIN.R25.Brake_Test_Reqd OR GTAC_CONFIG.Option_Robot_Count<25) AND
+				(MAIN.R26.Brake_Test_Reqd OR GTAC_CONFIG.Option_Robot_Count<26) AND
+				(MAIN.R27.Brake_Test_Reqd OR GTAC_CONFIG.Option_Robot_Count<27) AND
+				(MAIN.R28.Brake_Test_Reqd OR GTAC_CONFIG.Option_Robot_Count<28) AND
+				(MAIN.R29.Brake_Test_Reqd OR GTAC_CONFIG.Option_Robot_Count<29) AND
+				(MAIN.R30.Brake_Test_Reqd OR GTAC_CONFIG.Option_Robot_Count<30))
+	THEN
+
+                           		All_RobotsReq_BrakeTest := TRUE;  (*Reset at Brake Test_Complete*)
+				A_Robot_Reqs_BrakeTest := FALSE;
+				Human_Reqs_BrakeTest:= FALSE;
+
+	END_IF;
+
+
+(*TipChange Request from any IC*)
+	IF In_From_ICxx.Force_TipChange
+		THEN
+			Human_Reqs_TipChange:= TRUE; (*Reset at Tip_Change_Complete*)
+	END_IF;
+
+(*Tip Change Requests from any Robot (WCU)*)
+  	IF NOT GTAC_CONFIG.Under_Construction
+                     	AND ((MAIN.R1.Any_WCU_TipChng_Rqst) OR (MAIN.R2.Any_WCU_TipChng_Rqst) OR (MAIN.R3.Any_WCU_TipChng_Rqst)
+                                	OR (MAIN.R4.Any_WCU_TipChng_Rqst) OR (MAIN.R5.Any_WCU_TipChng_Rqst)	OR (MAIN.R6.Any_WCU_TipChng_Rqst)
+                                	OR (MAIN.R7.Any_WCU_TipChng_Rqst) OR (MAIN.R8.Any_WCU_TipChng_Rqst) OR (MAIN.R9.Any_WCU_TipChng_Rqst)
+                                	OR (MAIN.R10.Any_WCU_TipChng_Rqst) OR (MAIN.R11.Any_WCU_TipChng_Rqst) OR (MAIN.R12.Any_WCU_TipChng_Rqst)
+                                	OR (MAIN.R13.Any_WCU_TipChng_Rqst) OR (MAIN.R14.Any_WCU_TipChng_Rqst) OR (MAIN.R15.Any_WCU_TipChng_Rqst)
+                                	OR (MAIN.R16.Any_WCU_TipChng_Rqst) OR (MAIN.R17.Any_WCU_TipChng_Rqst) OR (MAIN.R18.Any_WCU_TipChng_Rqst)
+                                	OR (MAIN.R19.Any_WCU_TipChng_Rqst) OR (MAIN.R20.Any_WCU_TipChng_Rqst) OR (MAIN.R21.Any_WCU_TipChng_Rqst)
+                                	OR (MAIN.R22.Any_WCU_TipChng_Rqst) OR (MAIN.R23.Any_WCU_TipChng_Rqst) OR (MAIN.R24.Any_WCU_TipChng_Rqst)
+                                	OR (MAIN.R25.Any_WCU_TipChng_Rqst) OR (MAIN.R26.Any_WCU_TipChng_Rqst) OR (MAIN.R27.Any_WCU_TipChng_Rqst)
+                                	OR (MAIN.R28.Any_WCU_TipChng_Rqst) OR (MAIN.R29.Any_WCU_TipChng_Rqst) OR (MAIN.R30.Any_WCU_TipChng_Rqst))
+						OR In_From_ICxx.Force_TipChange
+	THEN
+
+                                                                Robot_Reqs_TipChange := TRUE;  (*Reset at Tip_Change_Complete*)
+
+	END_IF;
+
+(*All Steppers Are Reset*)
+All_Robots_SteppersRST:= (MAIN.R1.All_WCUSteppers_Reset AND
+						(MAIN.R2.All_WCUSteppers_Reset OR GTAC_CONFIG.Option_Robot_Count<2) AND
+						(MAIN.R3.All_WCUSteppers_Reset OR GTAC_CONFIG.Option_Robot_Count<3) AND
+						(MAIN.R4.All_WCUSteppers_Reset OR GTAC_CONFIG.Option_Robot_Count<4) AND
+						(MAIN.R5.All_WCUSteppers_Reset OR GTAC_CONFIG.Option_Robot_Count<5) AND
+						(MAIN.R6.All_WCUSteppers_Reset OR GTAC_CONFIG.Option_Robot_Count<6) AND
+						(MAIN.R7.All_WCUSteppers_Reset OR GTAC_CONFIG.Option_Robot_Count<7) AND
+						(MAIN.R8.All_WCUSteppers_Reset OR GTAC_CONFIG.Option_Robot_Count<8) AND
+						(MAIN.R9.All_WCUSteppers_Reset OR GTAC_CONFIG.Option_Robot_Count<9) AND
+						(MAIN.R10.All_WCUSteppers_Reset OR GTAC_CONFIG.Option_Robot_Count<10) AND
+						(MAIN.R11.All_WCUSteppers_Reset OR GTAC_CONFIG.Option_Robot_Count<11) AND
+						(MAIN.R12.All_WCUSteppers_Reset OR GTAC_CONFIG.Option_Robot_Count<12) AND
+						(MAIN.R13.All_WCUSteppers_Reset OR GTAC_CONFIG.Option_Robot_Count<13) AND
+						(MAIN.R14.All_WCUSteppers_Reset OR GTAC_CONFIG.Option_Robot_Count<14) AND
+						(MAIN.R15.All_WCUSteppers_Reset OR GTAC_CONFIG.Option_Robot_Count<15) AND
+						(MAIN.R16.All_WCUSteppers_Reset OR GTAC_CONFIG.Option_Robot_Count<16) AND
+						(MAIN.R17.All_WCUSteppers_Reset OR GTAC_CONFIG.Option_Robot_Count<17) AND
+						(MAIN.R18.All_WCUSteppers_Reset OR GTAC_CONFIG.Option_Robot_Count<18) AND
+						(MAIN.R19.All_WCUSteppers_Reset OR GTAC_CONFIG.Option_Robot_Count<19) AND
+						(MAIN.R20.All_WCUSteppers_Reset OR GTAC_CONFIG.Option_Robot_Count<20) AND
+						(MAIN.R21.All_WCUSteppers_Reset OR GTAC_CONFIG.Option_Robot_Count<21) AND
+						(MAIN.R22.All_WCUSteppers_Reset OR GTAC_CONFIG.Option_Robot_Count<22) AND
+						(MAIN.R23.All_WCUSteppers_Reset OR GTAC_CONFIG.Option_Robot_Count<23) AND
+						(MAIN.R24.All_WCUSteppers_Reset OR GTAC_CONFIG.Option_Robot_Count<24) AND
+						(MAIN.R25.All_WCUSteppers_Reset OR GTAC_CONFIG.Option_Robot_Count<25) AND
+						(MAIN.R26.All_WCUSteppers_Reset OR GTAC_CONFIG.Option_Robot_Count<26) AND
+						(MAIN.R27.All_WCUSteppers_Reset OR GTAC_CONFIG.Option_Robot_Count<27) AND
+						(MAIN.R28.All_WCUSteppers_Reset OR GTAC_CONFIG.Option_Robot_Count<28) AND
+						(MAIN.R29.All_WCUSteppers_Reset OR GTAC_CONFIG.Option_Robot_Count<29) AND
+						(MAIN.R30.All_WCUSteppers_Reset OR GTAC_CONFIG.Option_Robot_Count<30))
+						OR GTAC_CONFIG.Under_Construction;
+
+(*Tip Dress Request Section*)
+(*TipDress Request from any IC*)
+IF In_From_ICxx.R1_Dress_Req
+	THEN
+		Human_Reqs_TipDressR1:= TRUE; (*Reset at Tip_Dress_Complete1*)
+END_IF;
+(*Tip Dress/Ream Requests from Robots (WCU)*)
+(*Robot #1 Tip Dress Request*)
+IF (MAIN.R1.WCU1_DressReqd_1
+	OR MAIN.R1.WCU1_DressReqd_2
+	OR MAIN.R1.Ream_Reqd)
+	THEN
+		Robot1_Reqs_TipDress:= TRUE;
+END_IF;
+
+(*TipDress Request from any IC*)
+IF In_From_ICxx.R2_Dress_Req
+	THEN
+		Human_Reqs_TipDressR2:= TRUE; (*Reset at Tip_Dress_Complete2*)
+END_IF;
+(*Robot #2 Tip Dress Request*)
+IF (MAIN.R2.WCU1_DressReqd_1
+	OR MAIN.R2.WCU1_DressReqd_2
+	OR MAIN.R2.Ream_Reqd)
+	THEN
+		Robot2_Reqs_TipDress:= TRUE;
+END_IF;
+
+(*TipDress Request from any IC*)
+IF In_From_ICxx.R3_Dress_Req
+	THEN
+		Human_Reqs_TipDressR3:= TRUE; (*Reset at Tip_Dress_Complete3*)
+END_IF;
+(*Robot #3 Tip Dress Request*)
+IF (MAIN.R3.WCU1_DressReqd_1
+	OR MAIN.R3.WCU1_DressReqd_2
+	OR MAIN.R3.Ream_Reqd)
+	THEN
+		Robot3_Reqs_TipDress:= TRUE;
+END_IF;
+
+(*TipDress Request from any IC*)
+IF In_From_ICxx.R4_Dress_Req
+	THEN
+		Human_Reqs_TipDressR4:= TRUE; (*Reset at Tip_Dress_Complete4*)
+END_IF;
+(*Robot #4 Tip Dress Request*)
+IF (MAIN.R4.WCU1_DressReqd_1
+	OR MAIN.R4.WCU1_DressReqd_2
+	OR MAIN.R4.Ream_Reqd)
+	THEN
+		Robot4_Reqs_TipDress:=TRUE;
+END_IF;
+
+(*TipDress Request from any IC*)
+IF In_From_ICxx.R5_Dress_Req
+	THEN
+		Human_Reqs_TipDressR5:= TRUE; (*Reset at Tip_Dress_Complete5*)
+END_IF;
+(*Robot #5 Tip Dress Request*)
+IF (MAIN.R5.WCU1_DressReqd_1
+	OR MAIN.R5.WCU1_DressReqd_2
+	OR MAIN.R5.Ream_Reqd)
+	THEN
+		Robot5_Reqs_TipDress:= TRUE;
+END_IF;
+
+(*TipDress Request from any IC*)
+IF In_From_ICxx.R6_Dress_Req
+	THEN
+		Human_Reqs_TipDressR6:= TRUE; (*Reset at Tip_Dress_Complete6*)
+END_IF;
+(*Robot #6 Tip Dress Request*)
+IF (MAIN.R6.WCU1_DressReqd_1
+	OR MAIN.R6.WCU1_DressReqd_2
+	OR MAIN.R6.Ream_Reqd)
+	THEN
+		Robot6_Reqs_TipDress:= TRUE;
+END_IF;
+
+(*TipDress Request from any IC*)
+IF In_From_ICxx.R7_Dress_Req
+	THEN
+		Human_Reqs_TipDressR7:= TRUE; (*Reset at Tip_Dress_Complete7*)
+END_IF;
+(*Robot #7 Tip Dress Request*)
+IF (MAIN.R7.WCU1_DressReqd_1
+	OR MAIN.R7.WCU1_DressReqd_2
+	OR MAIN.R7.Ream_Reqd)
+	THEN
+		Robot7_Reqs_TipDress:= TRUE;
+END_IF;
+
+(*TipDress Request from any IC*)
+IF In_From_ICxx.R8_Dress_Req
+	THEN
+		Human_Reqs_TipDressR8:= TRUE; (*Reset at Tip_Dress_Complete8*)
+END_IF;
+(*Robot #8 Tip Dress Request*)
+IF (MAIN.R8.WCU1_DressReqd_1
+	OR MAIN.R8.WCU1_DressReqd_2
+	OR MAIN.R8.Ream_Reqd)
+	THEN
+		Robot8_Reqs_TipDress:= TRUE;
+END_IF;
+
+(*TipDress Request from any IC*)
+IF In_From_ICxx.R9_Dress_Req
+	THEN
+		Human_Reqs_TipDressR9:= TRUE; (*Reset at Tip_Dress_Complete9*)
+END_IF;
+(*Robot #9 Tip Dress Request*)
+IF (MAIN.R9.WCU1_DressReqd_1
+	OR MAIN.R9.WCU1_DressReqd_2
+	OR MAIN.R9.Ream_Reqd)
+	THEN
+		Robot9_Reqs_TipDress:= TRUE;
+END_IF;
+
+(*TipDress Request from any IC*)
+IF In_From_ICxx.R10_Dress_Req
+	THEN
+		Human_Reqs_TipDressR10:= TRUE; (*Reset at Tip_Dress_Complete10*)
+END_IF;
+(*Robot #10 Tip Dress Request*)
+IF (MAIN.R10.WCU1_DressReqd_1
+	OR MAIN.R10.WCU1_DressReqd_2
+	OR MAIN.R10.Ream_Reqd)
+	THEN
+		Robot10_Reqs_TipDress:= TRUE;
+END_IF;
+
+(*TipDress Request from any IC*)
+IF In_From_ICxx.R11_Dress_Req
+	THEN
+		Human_Reqs_TipDressR11:= TRUE; (*Reset at Tip_Dress_Complete11*)
+END_IF;
+(*Robot #11 Tip Dress Request*)
+IF (MAIN.R11.WCU1_DressReqd_1
+	OR MAIN.R11.WCU1_DressReqd_2
+	OR MAIN.R11.Ream_Reqd)
+	THEN
+		Robot11_Reqs_TipDress:= TRUE;
+END_IF;
+
+(*TipDress Request from any IC*)
+IF In_From_ICxx.R12_Dress_Req
+	THEN
+		Human_Reqs_TipDressR12:= TRUE; (*Reset at Tip_Dress_Complete12*)
+END_IF;
+(*Robot #12 Tip Dress Request*)
+IF (MAIN.R12.WCU1_DressReqd_1
+	OR MAIN.R12.WCU1_DressReqd_2
+	OR MAIN.R12.Ream_Reqd)
+	THEN
+		Robot12_Reqs_TipDress:= TRUE;
+END_IF;
+
+(*TipDress Request from any IC*)
+IF In_From_ICxx.R13_Dress_Req
+	THEN
+		Human_Reqs_TipDressR13:= TRUE; (*Reset at Tip_Dress_Complete13*)
+END_IF;
+(*Robot #13 Tip Dress Request*)
+IF (MAIN.R13.WCU1_DressReqd_1
+	OR MAIN.R13.WCU1_DressReqd_2
+	OR MAIN.R13.Ream_Reqd)
+	THEN
+		Robot13_Reqs_TipDress:=TRUE;
+END_IF;
+
+(*TipDress Request from any IC*)
+IF In_From_ICxx.R14_Dress_Req
+	THEN
+		Human_Reqs_TipDressR14:= TRUE; (*Reset at Tip_Dress_Complete14*)
+END_IF;
+(*Robot #14 Tip Dress Request*)
+IF (MAIN.R14.WCU1_DressReqd_1
+	OR MAIN.R14.WCU1_DressReqd_2
+	OR MAIN.R14.Ream_Reqd)
+	THEN
+		Robot14_Reqs_TipDress:= TRUE;
+END_IF;
+
+(*TipDress Request from any IC*)
+IF In_From_ICxx.R15_Dress_Req
+	THEN
+		Human_Reqs_TipDressR15:= TRUE; (*Reset at Tip_Dress_Complete15*)
+END_IF;
+(*Robot #15 Tip Dress Request*)
+IF (MAIN.R15.WCU1_DressReqd_1
+	OR MAIN.R15.WCU1_DressReqd_2
+	OR MAIN.R15.Ream_Reqd)
+	THEN
+		Robot15_Reqs_TipDress:= TRUE;
+END_IF;
+
+(*TipDress Request from any IC*)
+IF In_From_ICxx.R16_Dress_Req
+	THEN
+		Human_Reqs_TipDressR16:= TRUE; (*Reset at Tip_Dress_Complete16*)
+END_IF;
+(*Robot #16 Tip Dress Request*)
+IF (MAIN.R16.WCU1_DressReqd_1
+	OR MAIN.R16.WCU1_DressReqd_2
+	OR MAIN.R16.Ream_Reqd)
+	THEN
+		Robot16_Reqs_TipDress:= TRUE;
+END_IF;
+
+(*TipDress Request from any IC*)
+IF In_From_ICxx.R17_Dress_Req
+	THEN
+		Human_Reqs_TipDressR17:= TRUE; (*Reset at Tip_Dress_Complete17*)
+END_IF;
+(*Robot #17 Tip Dress Request*)
+IF (MAIN.R17.WCU1_DressReqd_1
+	OR MAIN.R17.WCU1_DressReqd_2
+	OR MAIN.R17.Ream_Reqd)
+	THEN
+		Robot17_Reqs_TipDress:= TRUE;
+END_IF;
+
+(*TipDress Request from any IC*)
+IF In_From_ICxx.R18_Dress_Req
+	THEN
+		Human_Reqs_TipDressR18:= TRUE; (*Reset at Tip_Dress_Complete18*)
+END_IF;
+(*Robot #18 Tip Dress Request*)
+IF (MAIN.R18.WCU1_DressReqd_1
+	OR MAIN.R18.WCU1_DressReqd_2
+	OR MAIN.R18.Ream_Reqd)
+	THEN
+		Robot18_Reqs_TipDress:= TRUE;
+END_IF;
+
+(*TipDress Request from any IC*)
+IF In_From_ICxx.R19_Dress_Req
+	THEN
+		Human_Reqs_TipDressR19:= TRUE; (*Reset at Tip_Dress_Complete19*)
+END_IF;
+(*Robot #19 Tip Dress Request*)
+IF (MAIN.R19.WCU1_DressReqd_1
+	OR MAIN.R19.WCU1_DressReqd_2
+	OR MAIN.R19.Ream_Reqd)
+	THEN
+		Robot19_Reqs_TipDress:= TRUE;
+END_IF;
+
+(*TipDress Request from any IC*)
+IF In_From_ICxx.R20_Dress_Req
+	THEN
+		Human_Reqs_TipDressR20:= TRUE; (*Reset at Tip_Dress_Complete20*)
+END_IF;
+(*Robot #20 Tip Dress Request*)
+IF (MAIN.R20.WCU1_DressReqd_1
+	OR MAIN.R20.WCU1_DressReqd_2
+	OR MAIN.R20.Ream_Reqd)
+	THEN
+		Robot20_Reqs_TipDress:= TRUE;
+END_IF;
+
+(*TipDress Request from any IC*)
+IF In_From_ICxx.R21_Dress_Req
+	THEN
+		Human_Reqs_TipDressR21:= TRUE; (*Reset at Tip_Dress_Complete21*)
+END_IF;
+(*Robot #21 Tip Dress Request*)
+IF (MAIN.R21.WCU1_DressReqd_1
+	OR MAIN.R21.WCU1_DressReqd_2
+	OR MAIN.R21.Ream_Reqd)
+	THEN
+		Robot21_Reqs_TipDress:= TRUE;
+END_IF;
+
+(*TipDress Request from any IC*)
+IF In_From_ICxx.R22_Dress_Req
+	THEN
+		Human_Reqs_TipDressR22:= TRUE; (*Reset at Tip_Dress_Complete22*)
+END_IF;
+(*Robot #22 Tip Dress Request*)
+IF (MAIN.R22.WCU1_DressReqd_1 OR MAIN.R22.WCU1_DressReqd_2)
+	THEN
+		Robot22_Reqs_TipDress:= TRUE;
+END_IF;
+
+(*TipDress Request from any IC*)
+IF In_From_ICxx.R23_Dress_Req
+	THEN
+		Human_Reqs_TipDressR23:= TRUE; (*Reset at Tip_Dress_Complete23*)
+END_IF;
+(*Robot #23 Tip Dress Request*)
+IF (MAIN.R23.WCU1_DressReqd_1
+	OR MAIN.R23.WCU1_DressReqd_2
+	OR MAIN.R23.Ream_Reqd)
+	THEN
+		Robot23_Reqs_TipDress:= TRUE;
+END_IF;
+
+(*TipDress Request from any IC*)
+IF In_From_ICxx.R24_Dress_Req
+	THEN
+		Human_Reqs_TipDressR24:= TRUE; (*Reset at Tip_Dress_Complete24*)
+END_IF;
+(*Robot #24 Tip Dress Request*)
+IF (MAIN.R24.WCU1_DressReqd_1
+	OR MAIN.R24.WCU1_DressReqd_2
+	OR MAIN.R24.Ream_Reqd)
+	THEN
+		Robot24_Reqs_TipDress:= TRUE;
+END_IF;
+
+(*TipDress Request from any IC*)
+IF In_From_ICxx.R25_Dress_Req
+	THEN
+		Human_Reqs_TipDressR25:= TRUE; (*Reset at Tip_Dress_Complete25*)
+END_IF;
+(*Robot #25 Tip Dress Request*)
+IF (MAIN.R25.WCU1_DressReqd_1
+	OR MAIN.R25.WCU1_DressReqd_2
+	OR MAIN.R25.Ream_Reqd)
+	THEN
+		Robot25_Reqs_TipDress:= TRUE;
+END_IF;
+
+(*TipDress Request from any IC*)
+IF In_From_ICxx.R26_Dress_Req
+	THEN
+		Human_Reqs_TipDressR26:= TRUE; (*Reset at Tip_Dress_Complete26*)
+END_IF;
+(*Robot #26 Tip Dress Request*)
+IF (MAIN.R26.WCU1_DressReqd_1
+	OR MAIN.R26.WCU1_DressReqd_2
+	OR MAIN.R26.Ream_Reqd)
+	THEN
+		Robot26_Reqs_TipDress:= TRUE;
+END_IF;
+
+(*TipDress Request from any IC*)
+IF In_From_ICxx.R27_Dress_Req
+	THEN
+		Human_Reqs_TipDressR27:= TRUE; (*Reset at Tip_Dress_Complete27*)
+END_IF;
+(*Robot #27 Tip Dress Request*)
+IF (MAIN.R27.WCU1_DressReqd_1
+	OR MAIN.R27.WCU1_DressReqd_2
+	OR MAIN.R27.Ream_Reqd)
+	THEN
+		Robot27_Reqs_TipDress:= TRUE;
+END_IF;
+
+(*TipDress Request from any IC*)
+IF In_From_ICxx.R28_Dress_Req
+	THEN
+		Human_Reqs_TipDressR28:= TRUE; (*Reset at Tip_Dress_Complete28*)
+END_IF;
+(*Robot #28 Tip Dress Request*)
+IF (MAIN.R28.WCU1_DressReqd_1
+	OR MAIN.R28.WCU1_DressReqd_2
+	OR MAIN.R28.Ream_Reqd)
+	THEN
+		Robot28_Reqs_TipDress:= TRUE;
+END_IF;
+
+(*TipDress Request from any IC*)
+IF In_From_ICxx.R29_Dress_Req
+	THEN
+		Human_Reqs_TipDressR29:= TRUE; (*Reset at Tip_Dress_Complete29*)
+END_IF;
+(*Robot #29 Tip Dress Request*)
+IF (MAIN.R29.WCU1_DressReqd_1
+	OR MAIN.R29.WCU1_DressReqd_2
+	OR MAIN.R29.Ream_Reqd)
+	THEN
+		Robot29_Reqs_TipDress:= TRUE;
+END_IF;
+
+(*TipDress Request from any IC*)
+IF In_From_ICxx.R30_Dress_Req
+	THEN
+		Human_Reqs_TipDressR30:= TRUE; (*Reset at Tip_Dress_Complete30*)
+END_IF;
+(*Robot #30 Tip Dress Request*)
+IF (MAIN.R30.WCU1_DressReqd_1
+	OR MAIN.R30.WCU1_DressReqd_2
+	OR MAIN.R30.Ream_Reqd)
+	THEN
+		Robot30_Reqs_TipDress:= TRUE;
+END_IF;
+
+(*Gather REQS*)	
+	IF Robot1_Reqs_TipDress
+		OR Robot2_Reqs_TipDress
+		OR Robot3_Reqs_TipDress
+		OR Robot4_Reqs_TipDress
+		OR Robot5_Reqs_TipDress
+		OR Robot6_Reqs_TipDress
+		OR Robot7_Reqs_TipDress
+		OR Robot8_Reqs_TipDress
+		OR Robot9_Reqs_TipDress
+		OR Robot10_Reqs_TipDress
+		OR Robot11_Reqs_TipDress
+		OR Robot12_Reqs_TipDress
+		OR Robot13_Reqs_TipDress
+		OR Robot14_Reqs_TipDress
+		OR Robot15_Reqs_TipDress
+		OR Robot16_Reqs_TipDress
+		OR Robot17_Reqs_TipDress
+		OR Robot18_Reqs_TipDress
+		OR Robot19_Reqs_TipDress
+		OR Robot20_Reqs_TipDress
+		OR Robot21_Reqs_TipDress
+		OR Robot22_Reqs_TipDress
+		OR Robot23_Reqs_TipDress
+		OR Robot24_Reqs_TipDress
+		OR Robot25_Reqs_TipDress
+		OR Robot26_Reqs_TipDress
+		OR Robot27_Reqs_TipDress
+		OR Robot28_Reqs_TipDress
+		OR Robot29_Reqs_TipDress
+		OR Robot30_Reqs_TipDress
+		OR In_From_ICxx.Rxx_Dress_Req (*Tip Dress All from UI*)
+
+	THEN
+		Robot_Reqs_TipDress:= TRUE;
+
+	END_IF
+
+
+(*Tracc TCP Requests*)	
+
+(*Robot 1 TraccTCP Request from IC01*)
+	IF In_From_ICxx.R1_TraccTCP_Req
+		THEN
+			Human_Reqs_TraccTCP_R1:= TRUE;		(*Reset at TraccTCP Complete*)
+	END_IF
+(*Robot 1 TraccTCP Request*)
+	IF MAIN.R1.TraccTCP_Reqd
+		THEN
+			Robot1_Reqs_TraccTCP:= TRUE;
+	END_IF
+	
+(*Robot 2 TraccTCP Request from IC01*)
+	IF In_From_ICxx.R2_TraccTCP_Req
+		THEN
+			Human_Reqs_TraccTCP_R2:= TRUE;		(*Reset at TraccTCP Complete*)
+	END_IF
+(*Robot 2 TraccTCP Request*)
+	IF MAIN.R2.TraccTCP_Reqd
+		THEN
+			Robot2_Reqs_TraccTCP:= TRUE;
+	END_IF
+	
+(*Robot 3 TraccTCP Request from IC01*)
+	IF In_From_ICxx.R3_TraccTCP_Req
+		THEN
+			Human_Reqs_TraccTCP_R3:= TRUE;		(*Reset at TraccTCP Complete*)
+	END_IF
+(*Robot 3 TraccTCP Request*)
+	IF MAIN.R3.TraccTCP_Reqd
+		THEN
+			Robot3_Reqs_TraccTCP:= TRUE;
+	END_IF;
+	
+(*Robot 4 TraccTCP Request from IC01*)
+	IF In_From_ICxx.R4_TraccTCP_Req
+		THEN
+			Human_Reqs_TraccTCP_R4:= TRUE;		(*Reset at TraccTCP Complete*)
+	END_IF;
+(*Robot 4 TraccTCP Request*)
+	IF MAIN.R4.TraccTCP_Reqd
+		THEN
+			Robot4_Reqs_TraccTCP:= TRUE;
+	END_IF;
+
+(*Robot 5 TraccTCP Request from IC01*)
+	IF In_From_ICxx.R5_TraccTCP_Req
+		THEN
+			Human_Reqs_TraccTCP_R5:= TRUE;		(*Reset at TraccTCP Complete*)
+	END_IF
+(*Robot 1 TraccTCP Request*)
+	IF MAIN.R5.TraccTCP_Reqd
+		THEN
+			Robot5_Reqs_TraccTCP:= TRUE;
+	END_IF;
+	
+(*Robot 6 TraccTCP Request from IC01*)
+	IF In_From_ICxx.R6_TraccTCP_Req
+		THEN
+			Human_Reqs_TraccTCP_R6:= TRUE;		(*Reset at TraccTCP Complete*)
+	END_IF
+(*Robot 6 TraccTCP Request*)
+	IF MAIN.R6.TraccTCP_Reqd
+		THEN
+			Robot6_Reqs_TraccTCP:= TRUE;
+	END_IF;
+	
+(*Robot 7 TraccTCP Request from IC01*)
+	IF In_From_ICxx.R7_TraccTCP_Req
+		THEN
+			Human_Reqs_TraccTCP_R7:= TRUE;		(*Reset at TraccTCP Complete*)
+	END_IF;
+(*Robot 7 TraccTCP Request*)
+	IF MAIN.R7.TraccTCP_Reqd
+		THEN
+			Robot7_Reqs_TraccTCP:= TRUE;
+	END_IF;
+
+(*Robot 8 TraccTCP Request from IC01*)
+	IF In_From_ICxx.R8_TraccTCP_Req
+		THEN
+			Human_Reqs_TraccTCP_R8:= TRUE;		(*Reset at TraccTCP Complete*)
+	END_IF;
+(*Robot 8 TraccTCP Request*)
+	IF MAIN.R8.TraccTCP_Reqd
+		THEN
+			Robot8_Reqs_TraccTCP:= TRUE;
+	END_IF;
+
+(*Robot 9 TraccTCP Request from IC01*)
+	IF In_From_ICxx.R9_TraccTCP_Req
+		THEN
+			Human_Reqs_TraccTCP_R9:= TRUE;		(*Reset at TraccTCP Complete*)
+	END_IF;
+(*Robot 9 TraccTCP Request*)
+	IF MAIN.R9.TraccTCP_Reqd
+		THEN
+			Robot9_Reqs_TraccTCP:= TRUE;
+	END_IF;
+	
+(*Robot 10 TraccTCP Request from IC01*)
+	IF In_From_ICxx.R10_TraccTCP_Req
+		THEN
+			Human_Reqs_TraccTCP_R10:= TRUE;		(*Reset at TraccTCP Complete*)
+	END_IF;
+(*Robot 10 TraccTCP Request*)
+	IF MAIN.R10.TraccTCP_Reqd
+		THEN
+			Robot10_Reqs_TraccTCP:= TRUE;
+	END_IF;
+
+(*Robot 11 TraccTCP Request from IC01*)
+	IF In_From_ICxx.R11_TraccTCP_Req
+		THEN
+			Human_Reqs_TraccTCP_R11:= TRUE;		(*Reset at TraccTCP Complete*)
+	END_IF;
+(*Robot 11 TraccTCP Request*)
+	IF MAIN.R11.TraccTCP_Reqd
+		THEN
+			Robot11_Reqs_TraccTCP:= TRUE;
+	END_IF;
+	
+(*Robot 12 TraccTCP Request from IC01*)
+	IF In_From_ICxx.R12_TraccTCP_Req
+		THEN
+			Human_Reqs_TraccTCP_R12:= TRUE;		(*Reset at TraccTCP Complete*)
+	END_IF;
+(*Robot 12 TraccTCP Request*)
+	IF MAIN.R12.TraccTCP_Reqd
+		THEN
+			Robot12_Reqs_TraccTCP:= TRUE;
+	END_IF;
+	
+(*Robot 13 TraccTCP Request from IC01*)
+	IF In_From_ICxx.R13_TraccTCP_Req
+		THEN
+			Human_Reqs_TraccTCP_R13:= TRUE;		(*Reset at TraccTCP Complete*)
+	END_IF;
+(*Robot 13 TraccTCP Request*)
+	IF MAIN.R13.TraccTCP_Reqd
+		THEN
+			Robot13_Reqs_TraccTCP:= TRUE;
+	END_IF;
+	
+(*Robot 14 TraccTCP Request from IC01*)
+	IF In_From_ICxx.R14_TraccTCP_Req
+		THEN
+			Human_Reqs_TraccTCP_R14:= TRUE;		(*Reset at TraccTCP Complete*)
+	END_IF;
+(*Robot 14 TraccTCP Request*)
+	IF MAIN.R14.TraccTCP_Reqd
+		THEN
+			Robot14_Reqs_TraccTCP:= TRUE;
+	END_IF;
+
+(*Robot 15 TraccTCP Request from IC01*)
+	IF In_From_ICxx.R15_TraccTCP_Req
+		THEN
+			Human_Reqs_TraccTCP_R15:= TRUE;		(*Reset at TraccTCP Complete*)
+	END_IF;
+(*Robot 15 TraccTCP Request*)
+	IF MAIN.R15.TraccTCP_Reqd
+		THEN
+			Robot15_Reqs_TraccTCP:= TRUE;
+	END_IF;
+	
+(*Robot 16 TraccTCP Request from IC01*)
+	IF In_From_ICxx.R16_TraccTCP_Req
+		THEN
+			Human_Reqs_TraccTCP_R16:= TRUE;		(*Reset at TraccTCP Complete*)
+	END_IF;
+(*Robot 16 TraccTCP Request*)
+	IF MAIN.R16.TraccTCP_Reqd
+		THEN
+			Robot16_Reqs_TraccTCP:= TRUE;
+	END_IF;
+	
+(*Robot 17 TraccTCP Request from IC01*)
+	IF In_From_ICxx.R17_TraccTCP_Req
+		THEN
+			Human_Reqs_TraccTCP_R17:= TRUE;		(*Reset at TraccTCP Complete*)
+	END_IF;
+(*Robot 17 TraccTCP Request*)
+	IF MAIN.R17.TraccTCP_Reqd
+		THEN
+			Robot17_Reqs_TraccTCP:= TRUE;
+	END_IF;
+	
+(*Robot 18 TraccTCP Request from IC01*)
+	IF In_From_ICxx.R18_TraccTCP_Req
+		THEN
+			Human_Reqs_TraccTCP_R18:= TRUE;		(*Reset at TraccTCP Complete*)
+	END_IF;
+(*Robot 18 TraccTCP Request*)
+	IF MAIN.R18.TraccTCP_Reqd
+		THEN
+			Robot18_Reqs_TraccTCP:= TRUE;
+	END_IF;
+	
+(*Robot 19 TraccTCP Request from IC01*)
+	IF In_From_ICxx.R19_TraccTCP_Req
+		THEN
+			Human_Reqs_TraccTCP_R19:= TRUE;		(*Reset at TraccTCP Complete*)
+	END_IF;
+(*Robot 19 TraccTCP Request*)
+	IF MAIN.R19.TraccTCP_Reqd
+		THEN
+			Robot19_Reqs_TraccTCP:= TRUE;
+	END_IF;
+	
+(*Robot 20 TraccTCP Request from IC01*)
+	IF In_From_ICxx.R20_TraccTCP_Req
+		THEN
+			Human_Reqs_TraccTCP_R20:= TRUE;		(*Reset at TraccTCP Complete*)
+	END_IF;
+(*Robot 21 TraccTCP Request*)
+	IF MAIN.R21.TraccTCP_Reqd
+		THEN
+			Robot21_Reqs_TraccTCP:= TRUE;
+	END_IF;
+
+(*Robot 21 TraccTCP Request from IC01*)
+	IF In_From_ICxx.R21_TraccTCP_Req
+		THEN
+			Human_Reqs_TraccTCP_R21:= TRUE;		(*Reset at TraccTCP Complete*)
+	END_IF;
+(*Robot 21 TraccTCP Request*)
+	IF MAIN.R21.TraccTCP_Reqd
+		THEN
+			Robot21_Reqs_TraccTCP:= TRUE;
+	END_IF;
+	
+(*Robot 22 TraccTCP Request from IC01*)
+	IF In_From_ICxx.R22_TraccTCP_Req
+		THEN
+			Human_Reqs_TraccTCP_R22:= TRUE;		(*Reset at TraccTCP Complete*)
+	END_IF;
+(*Robot 22 TraccTCP Request*)
+	IF MAIN.R22.TraccTCP_Reqd
+		THEN
+			Robot22_Reqs_TraccTCP:= TRUE;
+	END_IF;
+	
+(*Robot 23 TraccTCP Request from IC01*)
+	IF In_From_ICxx.R23_TraccTCP_Req
+		THEN
+			Human_Reqs_TraccTCP_R23:= TRUE;		(*Reset at TraccTCP Complete*)
+	END_IF;
+(*Robot 23 TraccTCP Request*)
+	IF MAIN.R23.TraccTCP_Reqd
+		THEN
+			Robot23_Reqs_TraccTCP:= TRUE;
+	END_IF;
+	
+(*Robot 24 TraccTCP Request from IC01*)
+	IF In_From_ICxx.R24_TraccTCP_Req
+		THEN
+			Human_Reqs_TraccTCP_R24:= TRUE;		(*Reset at TraccTCP Complete*)
+	END_IF;
+(*Robot 24 TraccTCP Request*)
+	IF MAIN.R24.TraccTCP_Reqd
+		THEN
+			Robot24_Reqs_TraccTCP:= TRUE;
+	END_IF;
+	
+(*Robot 25 TraccTCP Request from IC01*)
+	IF In_From_ICxx.R25_TraccTCP_Req
+		THEN
+			Human_Reqs_TraccTCP_R25:= TRUE;		(*Reset at TraccTCP Complete*)
+	END_IF;
+(*Robot 25 TraccTCP Request*)
+	IF MAIN.R25.TraccTCP_Reqd
+		THEN
+			Robot25_Reqs_TraccTCP:= TRUE;
+	END_IF;
+	
+(*Robot 26 TraccTCP Request from IC01*)
+	IF In_From_ICxx.R26_TraccTCP_Req
+		THEN
+			Human_Reqs_TraccTCP_R26:= TRUE;		(*Reset at TraccTCP Complete*)
+	END_IF;
+(*Robot 26 TraccTCP Request*)
+	IF MAIN.R26.TraccTCP_Reqd
+		THEN
+			Robot26_Reqs_TraccTCP:= TRUE;
+	END_IF;
+	
+(*Robot 27 TraccTCP Request from IC01*)
+	IF In_From_ICxx.R27_TraccTCP_Req
+		THEN
+			Human_Reqs_TraccTCP_R27:= TRUE;		(*Reset at TraccTCP Complete*)
+	END_IF;
+(*Robot 27 TraccTCP Request*)
+	IF MAIN.R27.TraccTCP_Reqd
+		THEN
+			Robot27_Reqs_TraccTCP:= TRUE;
+	END_IF;
+	
+(*Robot 28 TraccTCP Request from IC01*)
+	IF In_From_ICxx.R28_TraccTCP_Req
+		THEN
+			Human_Reqs_TraccTCP_R28:= TRUE;		(*Reset at TraccTCP Complete*)
+	END_IF;
+(*Robot 28 TraccTCP Request*)
+	IF MAIN.R28.TraccTCP_Reqd
+		THEN
+			Robot28_Reqs_TraccTCP:= TRUE;
+	END_IF;
+	
+(*Robot 29 TraccTCP Request from IC01*)
+	IF In_From_ICxx.R29_TraccTCP_Req
+		THEN
+			Human_Reqs_TraccTCP_R29:= TRUE;		(*Reset at TraccTCP Complete*)
+	END_IF;
+(*Robot 29 TraccTCP Request*)
+	IF MAIN.R29.TraccTCP_Reqd
+		THEN
+			Robot29_Reqs_TraccTCP:= TRUE;
+	END_IF;
+	
+(*Robot 30 TraccTCP Request from IC01*)
+	IF In_From_ICxx.R30_TraccTCP_Req
+		THEN
+			Human_Reqs_TraccTCP_R30:= TRUE;		(*Reset at TraccTCP Complete*)
+	END_IF;
+(*Robot 30 TraccTCP Request*)
+	IF MAIN.R30.TraccTCP_Reqd
+		THEN
+			Robot30_Reqs_TraccTCP:= TRUE;
+	END_IF;
+	
+(*Gather REQS*)	
+	IF Robot1_Reqs_TraccTCP
+		OR Robot2_Reqs_TraccTCP
+		OR Robot3_Reqs_TraccTCP
+		OR Robot4_Reqs_TraccTCP
+		OR Robot5_Reqs_TraccTCP
+		OR Robot6_Reqs_TraccTCP
+		OR Robot7_Reqs_TraccTCP
+		OR Robot8_Reqs_TraccTCP
+		OR Robot9_Reqs_TraccTCP
+		OR Robot10_Reqs_TraccTCP
+		OR Robot11_Reqs_TraccTCP
+		OR Robot12_Reqs_TraccTCP
+		OR Robot13_Reqs_TraccTCP
+		OR Robot14_Reqs_TraccTCP
+		OR Robot15_Reqs_TraccTCP
+		OR Robot16_Reqs_TraccTCP
+		OR Robot17_Reqs_TraccTCP
+		OR Robot18_Reqs_TraccTCP
+		OR Robot19_Reqs_TraccTCP
+		OR Robot20_Reqs_TraccTCP
+		OR Robot21_Reqs_TraccTCP
+		OR Robot22_Reqs_TraccTCP
+		OR Robot23_Reqs_TraccTCP
+		OR Robot24_Reqs_TraccTCP
+		OR Robot25_Reqs_TraccTCP
+		OR Robot26_Reqs_TraccTCP
+		OR Robot27_Reqs_TraccTCP
+		OR Robot28_Reqs_TraccTCP
+		OR Robot29_Reqs_TraccTCP
+		OR Robot30_Reqs_TraccTCP
+		OR In_From_ICxx.Rxx_TraccTCP_Req (*TraccTCP All from UI*)
+	THEN
+		Robot_Reqs_TraccTCP:= TRUE;
+	END_IF;	
+
+
+
+
+
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Internal Code $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+(*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> Auto Run Cycle >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+	(*Control of Auto_Run*)
+	Auto_Run:= Enable_Motion AND NOT Cycle_Complete;
+
+	(*Auto Run Enables All Other Auto Cycle Code*)
+	IF Auto_Run
+		THEN
+			(*----------Start Master Test Robots----------*)
+			IF NOT Cycle_Complete AND (A_Robot_Reqs_MasterTest OR Human_Reqs_MasterTest)
+				THEN
+					(*Start All Robots*)
+					Start_All_MTRobots:= TRUE;
+					(*Allow Robots To Proceed*)
+					All_MTRobots_Proceed:= All_Robots_WorkingOK;
+			ELSE
+					Start_All_MTRobots:= FALSE;
+					All_MTRobots_Proceed:= FALSE;
+			END_IF;
+			(*-------Start Brake Test Robots----------*)
+			IF NOT Cycle_Complete AND (All_RobotsReq_BrakeTest OR Human_Reqs_BrakeTest)
+					AND NOT Start_All_MTRobots
+				THEN
+					(*Start All Robots*)
+					Start_All_BTRobots:= TRUE;
+					(*Allow Robots To Proceed*)
+					All_BTRobots_Proceed:= All_Robots_WorkingOK;
+			ELSE
+					Start_All_BTRobots:= FALSE;
+					All_BTRobots_Proceed:= FALSE;
+			END_IF;
+			(*---------Start Tip Change Robots-------------*)
+			IF NOT Cycle_Complete AND (Human_Reqs_TipChange OR Robot_Reqs_TipChange)
+					AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+				THEN
+					(*Start All Robots*)
+					Start_All_TCRobots:= TRUE;
+					(*Allow Robots To Proceed*)
+					All_TCRobots_Proceed:= All_Robots_WorkingOK;
+			ELSE
+					Start_All_TCRobots:= FALSE;
+					All_TCRobots_Proceed:= FALSE;
+			END_IF;
+
+			(*---------Common Tip Dress-------------*)
+			IF NOT Cycle_Complete AND Robot_Reqs_TipDress
+					AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots
+				THEN
+					(*Start All Robots*)
+					Start_All_TDRobots:= TRUE;
+					(*Allow Robots To Proceed*)
+					All_TDRobots_Proceed:= All_Robots_WorkingOK;
+			ELSE
+					Start_All_TDRobots:= FALSE;
+					All_TDRobots_Proceed:= FALSE;
+			END_IF;
+			
+			(*---------Common TraccTCP-------------*) 
+			IF NOT Cycle_Complete AND Robot_Reqs_TraccTCP
+					AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots
+					AND NOT Start_All_TDRobots
+				THEN
+					(*Start All Robots*)
+					Start_All_TraccTCP:= TRUE;
+					(*Allow Robots To Proceed*)
+					All_TraccTCP_Proceed:= All_Robots_WorkingOK;
+			ELSE
+					Start_All_TraccTCP:= FALSE;
+					All_TraccTCP_Proceed:= FALSE;
+			END_IF;
+
+			(*------------Seperated Dresses--------------*)
+			(*Robot 1*)
+			IF (Robot1_Reqs_TipDress OR Human_Reqs_TipDressR1)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R1.Task_ID_Ack=Tip_Dress))
+				THEN
+					(*Start Robot*)
+					Start_TDRobot_1:= TRUE;
+					(*Allow Robot To Proceed*)
+					TDRobot_1_Proceed:= TRUE;
+			ELSE
+					Start_TDRobot_1:= FALSE;
+					TDRobot_1_Proceed:= FALSE;
+			END_IF;
+
+			(*Robot 2*)
+			IF (Robot2_Reqs_TipDress OR Human_Reqs_TipDressR2)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R2.Task_ID_Ack=Tip_Dress))
+				THEN
+					(*Start Robot*)
+					Start_TDRobot_2:= TRUE;
+					(*Allow Robot To Proceed*)
+					TDRobot_2_Proceed:= TRUE;
+			ELSE
+					Start_TDRobot_2:= FALSE;
+					TDRobot_2_Proceed:= FALSE;
+			END_IF;
+
+			(*Robot 3*)
+			IF (Robot3_Reqs_TipDress OR Human_Reqs_TipDressR3)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R3.Task_ID_Ack=Tip_Dress))
+				THEN
+					(*Start Robot*)
+					Start_TDRobot_3:= TRUE;
+					(*Allow Robot To Proceed*)
+					TDRobot_3_Proceed:= TRUE;
+			ELSE
+					Start_TDRobot_3:= FALSE;
+					TDRobot_3_Proceed:= FALSE;
+			END_IF;
+
+			(*Robot 4*)
+			IF (Robot4_Reqs_TipDress OR Human_Reqs_TipDressR4)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R4.Task_ID_Ack=Tip_Dress))
+				THEN
+					(*Start Robot*)
+					Start_TDRobot_4:= TRUE;
+					(*Allow Robot To Proceed*)
+					TDRobot_4_Proceed:= TRUE;
+			ELSE
+					Start_TDRobot_4:= FALSE;
+					TDRobot_4_Proceed:= FALSE;
+			END_IF;
+
+			(*Robot 5*)
+			IF (Robot5_Reqs_TipDress OR Human_Reqs_TipDressR5)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R5.Task_ID_Ack=Tip_Dress))
+				THEN
+					(*Start Robot*)
+					Start_TDRobot_5:= TRUE;
+					(*Allow Robot To Proceed*)
+					TDRobot_5_Proceed:= TRUE;
+			ELSE
+					Start_TDRobot_5:= FALSE;
+					TDRobot_5_Proceed:= FALSE;
+			END_IF;
+
+			(*Robot 6*)
+			IF (Robot6_Reqs_TipDress OR Human_Reqs_TipDressR6)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R6.Task_ID_Ack=Tip_Dress))
+				THEN
+					(*Start Robot*)
+					Start_TDRobot_6:= TRUE;
+					(*Allow Robot To Proceed*)
+					TDRobot_6_Proceed:= TRUE;
+			ELSE
+					Start_TDRobot_6:= FALSE;
+					TDRobot_6_Proceed:= FALSE;
+			END_IF;
+
+			(*Robot 7*)
+			IF (Robot7_Reqs_TipDress OR Human_Reqs_TipDressR7)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R7.Task_ID_Ack=Tip_Dress))
+				THEN
+					(*Start Robot*)
+					Start_TDRobot_7:= TRUE;
+					(*Allow Robot To Proceed*)
+					TDRobot_7_Proceed:= TRUE;
+			ELSE
+					Start_TDRobot_7:= FALSE;
+					TDRobot_7_Proceed:= FALSE;
+			END_IF;
+
+			(*Robot 8*)
+			IF (Robot8_Reqs_TipDress OR Human_Reqs_TipDressR8)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R8.Task_ID_Ack=Tip_Dress))
+				THEN
+					(*Start Robot*)
+					Start_TDRobot_8:= TRUE;
+					(*Allow Robot To Proceed*)
+					TDRobot_8_Proceed:= TRUE;
+			ELSE
+					Start_TDRobot_8:= FALSE;
+					TDRobot_8_Proceed:= FALSE;
+			END_IF;
+
+			(*Robot 9*)
+			IF (Robot9_Reqs_TipDress OR Human_Reqs_TipDressR9)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R9.Task_ID_Ack=Tip_Dress))
+				THEN
+					(*Start Robot*)
+					Start_TDRobot_9:= TRUE;
+					(*Allow Robot To Proceed*)
+					TDRobot_9_Proceed:= TRUE;
+			ELSE
+					Start_TDRobot_9:= FALSE;
+					TDRobot_9_Proceed:= FALSE;
+			END_IF;
+
+			(*Robot 10*)
+			IF (Robot10_Reqs_TipDress OR Human_Reqs_TipDressR10)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R10.Task_ID_Ack=Tip_Dress))
+				THEN
+					(*Start Robot*)
+					Start_TDRobot_10:= TRUE;
+					(*Allow Robot To Proceed*)
+					TDRobot_10_Proceed:= TRUE;
+			ELSE
+					Start_TDRobot_10:= FALSE;
+					TDRobot_10_Proceed:= FALSE;
+			END_IF;
+
+			(*Robot 11*)
+			IF (Robot11_Reqs_TipDress OR Human_Reqs_TipDressR11)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R11.Task_ID_Ack=Tip_Dress))
+				THEN
+					(*Start Robot*)
+					Start_TDRobot_11:= TRUE;
+					(*Allow Robot To Proceed*)
+					TDRobot_11_Proceed:= TRUE;
+			ELSE
+					Start_TDRobot_11:= FALSE;
+					TDRobot_11_Proceed:= FALSE;
+			END_IF;
+
+			(*Robot 12*)
+			IF (Robot12_Reqs_TipDress OR Human_Reqs_TipDressR12)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R12.Task_ID_Ack=Tip_Dress))
+				THEN
+					(*Start Robot*)
+					Start_TDRobot_12:= TRUE;
+					(*Allow Robot To Proceed*)
+					TDRobot_12_Proceed:= TRUE;
+			ELSE
+					Start_TDRobot_12:= FALSE;
+					TDRobot_12_Proceed:= FALSE;
+			END_IF;
+
+			(*Robot 13*)
+			IF (Robot13_Reqs_TipDress OR Human_Reqs_TipDressR13)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R13.Task_ID_Ack=Tip_Dress))
+				THEN
+					(*Start Robot*)
+					Start_TDRobot_13:= TRUE;
+					(*Allow Robot To Proceed*)
+					TDRobot_13_Proceed:= TRUE;
+			ELSE
+					Start_TDRobot_13:= FALSE;
+					TDRobot_13_Proceed:= FALSE;
+			END_IF;
+
+			(*Robot 14*)
+			IF (Robot14_Reqs_TipDress OR Human_Reqs_TipDressR14)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R14.Task_ID_Ack=Tip_Dress))
+				THEN
+					(*Start Robot*)
+					Start_TDRobot_14:= TRUE;
+					(*Allow Robot To Proceed*)
+					TDRobot_14_Proceed:= TRUE;
+			ELSE
+					Start_TDRobot_14:= FALSE;
+					TDRobot_14_Proceed:= FALSE;
+			END_IF;
+
+			(*Robot 15*)
+			IF (Robot15_Reqs_TipDress OR Human_Reqs_TipDressR15)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R15.Task_ID_Ack=Tip_Dress))
+				THEN
+					(*Start Robot*)
+					Start_TDRobot_15:= TRUE;
+					(*Allow Robot To Proceed*)
+					TDRobot_15_Proceed:= TRUE;
+			ELSE
+					Start_TDRobot_15:= FALSE;
+					TDRobot_15_Proceed:= FALSE;
+			END_IF;
+
+			(*Robot 16*)
+			IF (Robot16_Reqs_TipDress OR Human_Reqs_TipDressR16)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R16.Task_ID_Ack=Tip_Dress))
+				THEN
+					(*Start Robot*)
+					Start_TDRobot_16:= TRUE;
+					(*Allow Robot To Proceed*)
+					TDRobot_16_Proceed:= TRUE;
+			ELSE
+					Start_TDRobot_16:= FALSE;
+					TDRobot_16_Proceed:= FALSE;
+			END_IF;
+
+			(*Robot 17*)
+			IF (Robot17_Reqs_TipDress OR Human_Reqs_TipDressR17)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R17.Task_ID_Ack=Tip_Dress))
+				THEN
+					(*Start Robot*)
+					Start_TDRobot_17:= TRUE;
+					(*Allow Robot To Proceed*)
+					TDRobot_17_Proceed:= TRUE;
+			ELSE
+					Start_TDRobot_17:= FALSE;
+					TDRobot_17_Proceed:= FALSE;
+			END_IF;
+
+			(*Robot 18*)
+			IF (Robot18_Reqs_TipDress OR Human_Reqs_TipDressR18)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R18.Task_ID_Ack=Tip_Dress))
+				THEN
+					(*Start Robot*)
+					Start_TDRobot_18:= TRUE;
+					(*Allow Robot To Proceed*)
+					TDRobot_18_Proceed:= TRUE;
+			ELSE
+					Start_TDRobot_18:= FALSE;
+					TDRobot_18_Proceed:= FALSE;
+			END_IF;
+
+			(*Robot 19*)
+			IF (Robot19_Reqs_TipDress OR Human_Reqs_TipDressR19)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R19.Task_ID_Ack=Tip_Dress))
+				THEN
+					(*Start Robot*)
+					Start_TDRobot_19:= TRUE;
+					(*Allow Robot To Proceed*)
+					TDRobot_19_Proceed:= TRUE;
+			ELSE
+					Start_TDRobot_19:= FALSE;
+					TDRobot_19_Proceed:= FALSE;
+			END_IF;
+
+			(*Robot 20*)
+			IF (Robot20_Reqs_TipDress OR Human_Reqs_TipDressR20)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R20.Task_ID_Ack=Tip_Dress))
+				THEN
+					(*Start Robot*)
+					Start_TDRobot_20:= TRUE;
+					(*Allow Robot To Proceed*)
+					TDRobot_20_Proceed:= TRUE;
+			ELSE
+					Start_TDRobot_20:= FALSE;
+					TDRobot_20_Proceed:= FALSE;
+			END_IF;
+
+			(*Robot 21*)
+			IF (Robot21_Reqs_TipDress OR Human_Reqs_TipDressR21)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R21.Task_ID_Ack=Tip_Dress))
+				THEN
+					(*Start Robot*)
+					Start_TDRobot_21:= TRUE;
+					(*Allow Robot To Proceed*)
+					TDRobot_20_Proceed:= TRUE;
+			ELSE
+					Start_TDRobot_21:= FALSE;
+					TDRobot_21_Proceed:= FALSE;
+			END_IF;
+
+			(*Robot 22*)
+			IF (Robot22_Reqs_TipDress OR Human_Reqs_TipDressR22)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R22.Task_ID_Ack=Tip_Dress))
+				THEN
+					(*Start Robot*)
+					Start_TDRobot_22:= TRUE;
+					(*Allow Robot To Proceed*)
+					TDRobot_22_Proceed:= TRUE;
+			ELSE
+					Start_TDRobot_22:= FALSE;
+					TDRobot_22_Proceed:= FALSE;
+			END_IF;
+
+			(*Robot 23*)
+			IF (Robot23_Reqs_TipDress OR Human_Reqs_TipDressR23)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R23.Task_ID_Ack=Tip_Dress))
+				THEN
+					(*Start Robot*)
+					Start_TDRobot_23:= TRUE;
+					(*Allow Robot To Proceed*)
+					TDRobot_23_Proceed:= TRUE;
+			ELSE
+					Start_TDRobot_23:= FALSE;
+					TDRobot_23_Proceed:= FALSE;
+			END_IF;
+
+			(*Robot 24*)
+			IF (Robot24_Reqs_TipDress OR Human_Reqs_TipDressR24)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R24.Task_ID_Ack=Tip_Dress))
+				THEN
+					(*Start Robot*)
+					Start_TDRobot_24:= TRUE;
+					(*Allow Robot To Proceed*)
+					TDRobot_24_Proceed:= TRUE;
+			ELSE
+					Start_TDRobot_24:= FALSE;
+					TDRobot_24_Proceed:= FALSE;
+			END_IF;
+
+			(*Robot 25*)
+			IF (Robot25_Reqs_TipDress OR Human_Reqs_TipDressR25)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R25.Task_ID_Ack=Tip_Dress))
+				THEN
+					(*Start Robot*)
+					Start_TDRobot_25:= TRUE;
+					(*Allow Robot To Proceed*)
+					TDRobot_25_Proceed:= TRUE;
+			ELSE
+					Start_TDRobot_25:= FALSE;
+					TDRobot_25_Proceed:= FALSE;
+			END_IF;
+
+			(*Robot 26*)
+			IF (Robot26_Reqs_TipDress OR Human_Reqs_TipDressR26)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R26.Task_ID_Ack=Tip_Dress))
+				THEN
+					(*Start Robot*)
+					Start_TDRobot_26:= TRUE;
+					(*Allow Robot To Proceed*)
+					TDRobot_26_Proceed:= TRUE;
+			ELSE
+					Start_TDRobot_26:= FALSE;
+					TDRobot_26_Proceed:= FALSE;
+			END_IF;
+
+			(*Robot 27*)
+			IF (Robot27_Reqs_TipDress OR Human_Reqs_TipDressR27)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R27.Task_ID_Ack=Tip_Dress))
+				THEN
+					(*Start Robot*)
+					Start_TDRobot_27:= TRUE;
+					(*Allow Robot To Proceed*)
+					TDRobot_27_Proceed:= TRUE;
+			ELSE
+					Start_TDRobot_27:= FALSE;
+					TDRobot_27_Proceed:= FALSE;
+			END_IF;
+
+			(*Robot 28*)
+			IF (Robot28_Reqs_TipDress OR Human_Reqs_TipDressR28)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R28.Task_ID_Ack=Tip_Dress))
+				THEN
+					(*Start Robot*)
+					Start_TDRobot_28:= TRUE;
+					(*Allow Robot To Proceed*)
+					TDRobot_28_Proceed:= TRUE;
+			ELSE
+					Start_TDRobot_28:= FALSE;
+					TDRobot_28_Proceed:= FALSE;
+			END_IF;
+
+			(*Robot 29*)
+			IF (Robot29_Reqs_TipDress OR Human_Reqs_TipDressR29)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R29.Task_ID_Ack=Tip_Dress))
+				THEN
+					(*Start Robot*)
+					Start_TDRobot_29:= TRUE;
+					(*Allow Robot To Proceed*)
+					TDRobot_29_Proceed:= TRUE;
+			ELSE
+					Start_TDRobot_29:= FALSE;
+					TDRobot_29_Proceed:= FALSE;
+			END_IF;
+
+			(*Robot 30*)
+			IF (Robot30_Reqs_TipDress OR Human_Reqs_TipDressR30)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R30.Task_ID_Ack=Tip_Dress))
+				THEN
+					(*Start Robot*)
+					Start_TDRobot_30:= TRUE;
+					(*Allow Robot To Proceed*)
+					TDRobot_30_Proceed:= TRUE;
+			ELSE
+					Start_TDRobot_30:= FALSE;
+					TDRobot_30_Proceed:= FALSE;
+			END_IF;
+
+			(*------------------Separated TraccTCP------------------*)			
+			(*Robot 1*)
+			IF (Human_Reqs_TraccTCP_R1)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R1.Task_ID_Ack=Tracc_TCP))
+				THEN
+					(*Start Robot*)
+					Start_TraccTCP_1:= TRUE;
+					(*Allow Robot to Proceed*)
+					TraccRobot_1_Proceed:= TRUE;
+			ELSE
+					Start_TraccTCP_1:= FALSE;
+					TraccRobot_1_Proceed:= FALSE;
+			END_IF;
+				
+			(*Robot 2*)
+			IF (Human_Reqs_TraccTCP_R2)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R2.Task_ID_Ack=Tracc_TCP))
+				THEN
+					(*Start Robot*)
+					Start_TraccTCP_2:= TRUE;
+					(*Allow Robot to Proceed*)
+					TraccRobot_2_Proceed:= TRUE;
+			ELSE
+					Start_TraccTCP_2:= FALSE;
+					TraccRobot_2_Proceed:= FALSE;		
+			END_IF;
+			
+			(*Robot 3*)
+			IF (Human_Reqs_TraccTCP_R3)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R3.Task_ID_Ack=Tracc_TCP))
+				THEN
+					(*Start Robot*)
+					Start_TraccTCP_3:= TRUE;
+					(*Allow Robot to Proceed*)
+					TraccRobot_3_Proceed:= TRUE;
+			ELSE
+					Start_TraccTCP_3:= FALSE;
+					TraccRobot_3_Proceed:= FALSE;
+			END_IF;
+			
+			(*Robot 4*)
+			IF (Human_Reqs_TraccTCP_R4)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R4.Task_ID_Ack=Tracc_TCP))
+				THEN
+					(*Start Robot*)
+					Start_TraccTCP_4:= TRUE;
+					(*Allow Robot to Proceed*)
+					TraccRobot_4_Proceed:= TRUE;
+			ELSE
+					Start_TraccTCP_4:= FALSE;
+					TraccRobot_4_Proceed:= FALSE;
+			END_IF;	
+			
+			(*Robot 5*)
+			IF (Human_Reqs_TraccTCP_R5)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R5.Task_ID_Ack=Tracc_TCP))
+				THEN
+					(*Start Robot*)
+					Start_TraccTCP_5:= TRUE;
+					(*Allow Robot to Proceed*)
+					TraccRobot_5_Proceed:= TRUE;
+			ELSE
+					Start_TraccTCP_5:= FALSE;
+					TraccRobot_5_Proceed:= FALSE;
+			END_IF;	
+			
+			(*Robot 6*)
+			IF (Human_Reqs_TraccTCP_R6)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R6.Task_ID_Ack=Tracc_TCP))
+				THEN
+					(*Start Robot*)
+					Start_TraccTCP_6:= TRUE;
+					(*Allow Robot to Proceed*)
+					TraccRobot_6_Proceed:= TRUE;
+			ELSE
+					Start_TraccTCP_6:= FALSE;
+					TraccRobot_6_Proceed:= FALSE;
+			END_IF;	
+			
+			(*Robot 7*)
+			IF (Human_Reqs_TraccTCP_R7)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R7.Task_ID_Ack=Tracc_TCP))
+				THEN
+					(*Start Robot*)
+					Start_TraccTCP_7:= TRUE;
+					(*Allow Robot to Proceed*)
+					TraccRobot_7_Proceed:= TRUE;
+			ELSE
+					Start_TraccTCP_7:= FALSE;
+					TraccRobot_7_Proceed:= FALSE;
+			END_IF;	
+			
+			(*Robot 8*)
+			IF (Human_Reqs_TraccTCP_R8)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R8.Task_ID_Ack=Tracc_TCP))
+				THEN
+					(*Start Robot*)
+					Start_TraccTCP_8:= TRUE;
+					(*Allow Robot to Proceed*)
+					TraccRobot_8_Proceed:= TRUE;
+			ELSE
+					Start_TraccTCP_8:= FALSE;
+					TraccRobot_8_Proceed:= FALSE;
+			END_IF;	
+			
+			(*Robot 9*)
+			IF (Human_Reqs_TraccTCP_R9)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R9.Task_ID_Ack=Tracc_TCP))
+				THEN
+					(*Start Robot*)
+					Start_TraccTCP_9:= TRUE;
+					(*Allow Robot to Proceed*)
+					TraccRobot_9_Proceed:= TRUE;
+			ELSE
+					Start_TraccTCP_9:= FALSE;
+					TraccRobot_9_Proceed:= FALSE;
+			END_IF;	
+			
+			(*Robot 10*)
+			IF (Human_Reqs_TraccTCP_R10)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R10.Task_ID_Ack=Tracc_TCP))
+				THEN
+					(*Start Robot*)
+					Start_TraccTCP_10:= TRUE;
+					(*Allow Robot to Proceed*)
+					TraccRobot_10_Proceed:= TRUE;
+			ELSE
+					Start_TraccTCP_10:= FALSE;
+					TraccRobot_10_Proceed:= FALSE;
+			END_IF;	
+			
+			(*Robot 11*)
+			IF (Human_Reqs_TraccTCP_R11)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R11.Task_ID_Ack=Tracc_TCP))
+				THEN
+					(*Start Robot*)
+					Start_TraccTCP_11:= TRUE;
+					(*Allow Robot to Proceed*)
+					TraccRobot_11_Proceed:= TRUE;
+			ELSE
+					Start_TraccTCP_11:= FALSE;
+					TraccRobot_11_Proceed:= FALSE;
+			END_IF;	
+			
+			(*Robot 12*)
+			IF (Human_Reqs_TraccTCP_R12)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R12.Task_ID_Ack=Tracc_TCP))
+				THEN
+					(*Start Robot*)
+					Start_TraccTCP_12:= TRUE;
+					(*Allow Robot to Proceed*)
+					TraccRobot_12_Proceed:= TRUE;
+			ELSE
+					Start_TraccTCP_12:= FALSE;
+					TraccRobot_12_Proceed:= FALSE;
+			END_IF;	
+			
+			(*Robot 13*)
+			IF (Human_Reqs_TraccTCP_R13)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R13.Task_ID_Ack=Tracc_TCP))
+				THEN
+					(*Start Robot*)
+					Start_TraccTCP_13:= TRUE;
+					(*Allow Robot to Proceed*)
+					TraccRobot_13_Proceed:= TRUE;
+			ELSE
+					Start_TraccTCP_13:= FALSE;
+					TraccRobot_13_Proceed:= FALSE;
+			END_IF;	
+			
+			(*Robot 14*)
+			IF (Human_Reqs_TraccTCP_R14)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R14.Task_ID_Ack=Tracc_TCP))
+				THEN
+					(*Start Robot*)
+					Start_TraccTCP_14:= TRUE;
+					(*Allow Robot to Proceed*)
+					TraccRobot_14_Proceed:= TRUE;
+			ELSE
+					Start_TraccTCP_14:= FALSE;
+					TraccRobot_14_Proceed:= FALSE;
+			END_IF;	
+			
+			(*Robot 15*)
+			IF (Human_Reqs_TraccTCP_R15)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R15.Task_ID_Ack=Tracc_TCP))
+				THEN
+					(*Start Robot*)
+					Start_TraccTCP_15:= TRUE;
+					(*Allow Robot to Proceed*)
+					TraccRobot_15_Proceed:= TRUE;
+			ELSE
+					Start_TraccTCP_15:= FALSE;
+					TraccRobot_15_Proceed:= FALSE;
+			END_IF;	
+			
+			(*Robot 16*)
+			IF (Human_Reqs_TraccTCP_R16)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R16.Task_ID_Ack=Tracc_TCP))
+				THEN
+					(*Start Robot*)
+					Start_TraccTCP_16:= TRUE;
+					(*Allow Robot to Proceed*)
+					TraccRobot_16_Proceed:= TRUE;
+			ELSE
+					Start_TraccTCP_16:= FALSE;
+					TraccRobot_16_Proceed:= FALSE;
+			END_IF;	
+			
+			(*Robot 17*)
+			IF (Human_Reqs_TraccTCP_R4)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R17.Task_ID_Ack=Tracc_TCP))
+				THEN
+					(*Start Robot*)
+					Start_TraccTCP_17:= TRUE;
+					(*Allow Robot to Proceed*)
+					TraccRobot_17_Proceed:= TRUE;
+			ELSE
+					Start_TraccTCP_17:= FALSE;
+					TraccRobot_17_Proceed:= FALSE;
+			END_IF;	
+			
+			(*Robot 18*)
+			IF (Human_Reqs_TraccTCP_R18)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R18.Task_ID_Ack=Tracc_TCP))
+				THEN
+					(*Start Robot*)
+					Start_TraccTCP_18:= TRUE;
+					(*Allow Robot to Proceed*)
+					TraccRobot_18_Proceed:= TRUE;
+			ELSE
+					Start_TraccTCP_18:= FALSE;
+					TraccRobot_18_Proceed:= FALSE;
+			END_IF;	
+			
+			(*Robot 19*)
+			IF (Human_Reqs_TraccTCP_R19)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R19.Task_ID_Ack=Tracc_TCP))
+				THEN
+					(*Start Robot*)
+					Start_TraccTCP_19:= TRUE;
+					(*Allow Robot to Proceed*)
+					TraccRobot_19_Proceed:= TRUE;
+			ELSE
+					Start_TraccTCP_19:= FALSE;
+					TraccRobot_19_Proceed:= FALSE;
+			END_IF;	
+			
+			(*Robot 20*)
+			IF (Human_Reqs_TraccTCP_R20)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R20.Task_ID_Ack=Tracc_TCP))
+				THEN
+					(*Start Robot*)
+					Start_TraccTCP_20:= TRUE;
+					(*Allow Robot to Proceed*)
+					TraccRobot_20_Proceed:= TRUE;
+			ELSE
+					Start_TraccTCP_20:= FALSE;
+					TraccRobot_20_Proceed:= FALSE;
+			END_IF;	
+			
+			(*Robot 21*)
+			IF (Human_Reqs_TraccTCP_R21)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R21.Task_ID_Ack=Tracc_TCP))
+				THEN
+					(*Start Robot*)
+					Start_TraccTCP_21:= TRUE;
+					(*Allow Robot to Proceed*)
+					TraccRobot_21_Proceed:= TRUE;
+			ELSE
+					Start_TraccTCP_21:= FALSE;
+					TraccRobot_21_Proceed:= FALSE;
+			END_IF;	
+			
+			(*Robot 22*)
+			IF (Human_Reqs_TraccTCP_R22)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R22.Task_ID_Ack=Tracc_TCP))
+				THEN
+					(*Start Robot*)
+					Start_TraccTCP_22:= TRUE;
+					(*Allow Robot to Proceed*)
+					TraccRobot_22_Proceed:= TRUE;
+			ELSE
+					Start_TraccTCP_22:= FALSE;
+					TraccRobot_22_Proceed:= FALSE;
+			END_IF;	
+			
+			(*Robot 23*)
+			IF (Human_Reqs_TraccTCP_R23)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R23.Task_ID_Ack=Tracc_TCP))
+				THEN
+					(*Start Robot*)
+					Start_TraccTCP_23:= TRUE;
+					(*Allow Robot to Proceed*)
+					TraccRobot_23_Proceed:= TRUE;
+			ELSE
+					Start_TraccTCP_23:= FALSE;
+					TraccRobot_23_Proceed:= FALSE;
+			END_IF;	
+			
+			(*Robot 24*)
+			IF (Human_Reqs_TraccTCP_R24)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R24.Task_ID_Ack=Tracc_TCP))
+				THEN
+					(*Start Robot*)
+					Start_TraccTCP_24:= TRUE;
+					(*Allow Robot to Proceed*)
+					TraccRobot_24_Proceed:= TRUE;
+			ELSE
+					Start_TraccTCP_24:= FALSE;
+					TraccRobot_24_Proceed:= FALSE;
+			END_IF;	
+			
+			(*Robot 25*)
+			IF (Human_Reqs_TraccTCP_R25)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R25.Task_ID_Ack=Tracc_TCP))
+				THEN
+					(*Start Robot*)
+					Start_TraccTCP_25:= TRUE;
+					(*Allow Robot to Proceed*)
+					TraccRobot_25_Proceed:= TRUE;
+			ELSE
+					Start_TraccTCP_25:= FALSE;
+					TraccRobot_25_Proceed:= FALSE;
+			END_IF;	
+			
+			(*Robot 26*)
+			IF (Human_Reqs_TraccTCP_R26)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R26.Task_ID_Ack=Tracc_TCP))
+				THEN
+					(*Start Robot*)
+					Start_TraccTCP_26:= TRUE;
+					(*Allow Robot to Proceed*)
+					TraccRobot_26_Proceed:= TRUE;
+			ELSE
+					Start_TraccTCP_26:= FALSE;
+					TraccRobot_26_Proceed:= FALSE;
+			END_IF;	
+			
+			(*Robot 27*)
+			IF (Human_Reqs_TraccTCP_R27)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R27.Task_ID_Ack=Tracc_TCP))
+				THEN
+					(*Start Robot*)
+					Start_TraccTCP_27:= TRUE;
+					(*Allow Robot to Proceed*)
+					TraccRobot_27_Proceed:= TRUE;
+			ELSE
+					Start_TraccTCP_27:= FALSE;
+					TraccRobot_27_Proceed:= FALSE;
+			END_IF;	
+			
+			(*Robot 28*)
+			IF (Human_Reqs_TraccTCP_R28)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R28.Task_ID_Ack=Tracc_TCP))
+				THEN
+					(*Start Robot*)
+					Start_TraccTCP_28:= TRUE;
+					(*Allow Robot to Proceed*)
+					TraccRobot_28_Proceed:= TRUE;
+			ELSE
+					Start_TraccTCP_28:= FALSE;
+					TraccRobot_28_Proceed:= FALSE;
+			END_IF;	
+			
+			(*Robot 29*)
+			IF (Human_Reqs_TraccTCP_R29)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R29.Task_ID_Ack=Tracc_TCP))
+				THEN
+					(*Start Robot*)
+					Start_TraccTCP_29:= TRUE;
+					(*Allow Robot to Proceed*)
+					TraccRobot_29_Proceed:= TRUE;
+			ELSE
+					Start_TraccTCP_29:= FALSE;
+					TraccRobot_29_Proceed:= FALSE;
+			END_IF;
+			
+			(*Robot 30*)
+			IF (Human_Reqs_TraccTCP_R30)
+					AND ((NOT Start_All_MTRobots AND NOT Start_All_BTRobots
+					AND NOT Start_All_TCRobots AND NOT Start_All_TDRobots)
+					OR (MAIN.R30.Task_ID_Ack=Tracc_TCP))
+				THEN
+					(*Start Robot*)
+					Start_TraccTCP_30:= TRUE;
+					(*Allow Robot to Proceed*)
+					TraccRobot_30_Proceed:= TRUE;
+			ELSE
+					Start_TraccTCP_30:= FALSE;
+					TraccRobot_30_Proceed:= FALSE;
+			END_IF;	
+				
+
+			
+			
+			
+	ELSE
+		Start_All_MTRobots:= FALSE;
+		Start_All_BTRobots:= FALSE;
+		Start_All_TCRobots:= FALSE;
+		Start_All_TDRobots:= FALSE;
+		Start_TDRobot_1:= FALSE;
+		Start_TDRobot_2:= FALSE;
+		Start_TDRobot_3:= FALSE;
+		Start_TDRobot_4:= FALSE;
+		Start_TDRobot_5:= FALSE;
+		Start_TDRobot_6:= FALSE;
+		Start_TDRobot_7:= FALSE;
+		Start_TDRobot_8:= FALSE;
+		Start_TDRobot_9:= FALSE;
+		Start_TDRobot_10:= FALSE;
+		Start_TDRobot_11:= FALSE;
+		Start_TDRobot_12:= FALSE;
+		Start_TDRobot_13:= FALSE;
+		Start_TDRobot_14:= FALSE;
+		Start_TDRobot_15:= FALSE;
+		Start_TDRobot_16:= FALSE;
+		Start_TDRobot_17:= FALSE;
+		Start_TDRobot_18:= FALSE;
+		Start_TDRobot_19:= FALSE;
+		Start_TDRobot_20:= FALSE;
+		Start_TDRobot_21:= FALSE;
+		Start_TDRobot_22:= FALSE;
+		Start_TDRobot_23:= FALSE;
+		Start_TDRobot_24:= FALSE;
+		Start_TDRobot_25:= FALSE;
+		Start_TDRobot_26:= FALSE;
+		Start_TDRobot_27:= FALSE;
+		Start_TDRobot_28:= FALSE;
+		Start_TDRobot_29:= FALSE;
+		Start_TDRobot_30:= FALSE;
+		Start_All_TraccTCP:= FALSE;
+		Start_TraccTCP_1:= FALSE;
+		Start_TraccTCP_2:= FALSE;
+		Start_TraccTCP_3:= FALSE;
+		Start_TraccTCP_4:= FALSE;
+		Start_TraccTCP_5:= FALSE;
+		Start_TraccTCP_6:= FALSE;
+		Start_TraccTCP_7:= FALSE;
+		Start_TraccTCP_8:= FALSE;
+		Start_TraccTCP_9:= FALSE;
+		Start_TraccTCP_10:= FALSE;
+		Start_TraccTCP_11:= FALSE;
+		Start_TraccTCP_12:= FALSE;
+		Start_TraccTCP_13:= FALSE;
+		Start_TraccTCP_14:= FALSE;
+		Start_TraccTCP_15:= FALSE;
+		Start_TraccTCP_16:= FALSE;
+		Start_TraccTCP_17:= FALSE;
+		Start_TraccTCP_18:= FALSE;
+		Start_TraccTCP_19:= FALSE;
+		Start_TraccTCP_20:= FALSE;
+		Start_TraccTCP_21:= FALSE;
+		Start_TraccTCP_22:= FALSE;
+		Start_TraccTCP_23:= FALSE;
+		Start_TraccTCP_24:= FALSE;
+		Start_TraccTCP_25:= FALSE;
+		Start_TraccTCP_26:= FALSE;
+		Start_TraccTCP_27:= FALSE;
+		Start_TraccTCP_28:= FALSE;
+		Start_TraccTCP_29:= FALSE;
+		Start_TraccTCP_30:= FALSE;
+	END_IF;
+
+(*---------------------------------------------------------------Completes----------------------------------------------------*)
+	(*All Robots Complete Master Test*)
+	IF Start_All_MTRobots AND All_Robots_Complete
+		THEN
+		Master_Tests_Complete:= TRUE;
+		Human_Reqs_MasterTest:= FALSE;
+		A_Robot_Reqs_MasterTest:= FALSE;
+	END_IF;
+	(*All Robots Complete Brake Test*)
+	IF Start_All_BTRobots AND All_Robots_Complete
+		THEN
+		Brake_Tests_Complete:= TRUE;
+		Human_Reqs_BrakeTest:= FALSE;
+		A_Robot_Reqs_BrakeTest:= FALSE;
+		All_RobotsReq_BrakeTest:= FALSE;
+	END_IF;
+	(*All Robots Complete Tip Change*)
+	IF Start_All_TCRobots AND All_Robots_SteppersRST AND All_Robots_Complete
+		THEN
+		Tip_Change_Complete:= TRUE;
+		Human_Reqs_TipChange:= FALSE;
+	         Robot_Reqs_TipChange := FALSE;
+	END_IF;
+
+	(*All Robots Complete Tip Dress*)
+	IF Start_All_TDRobots AND All_Robots_Complete
+		THEN
+		Tip_Dress_CompleteAll:= TRUE;
+		TipChange_Reqs_TipDress:= FALSE;
+		Robot_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot1 Complete Tip Dress*)
+	IF Tip_Dress_Complete1
+		THEN
+		Human_Reqs_TipDressR1:= FALSE;
+		Robot1_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot2 Complete Tip Dress*)
+	IF Tip_Dress_Complete2
+		THEN
+		Human_Reqs_TipDressR2:= FALSE;
+		Robot2_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot3 Complete Tip Dress*)
+	IF Tip_Dress_Complete3
+		THEN
+		Human_Reqs_TipDressR3:= FALSE;
+		Robot3_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot4 Complete Tip Dress*)
+	IF Tip_Dress_Complete4
+		THEN
+		Human_Reqs_TipDressR4:= FALSE;
+		Robot4_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot5 Complete Tip Dress*)
+	IF Tip_Dress_Complete5
+		THEN
+		Human_Reqs_TipDressR5:= FALSE;
+		Robot5_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot6 Complete Tip Dress*)
+	IF Tip_Dress_Complete6
+		THEN
+		Human_Reqs_TipDressR6:= FALSE;
+		Robot6_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot7 Complete Tip Dress*)
+	IF Tip_Dress_Complete7
+		THEN
+		Human_Reqs_TipDressR7:= FALSE;
+		Robot7_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot8 Complete Tip Dress*)
+	IF Tip_Dress_Complete8
+		THEN
+		Human_Reqs_TipDressR8:= FALSE;
+		Robot8_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot9 Complete Tip Dress*)
+	IF Tip_Dress_Complete9
+		THEN
+		Human_Reqs_TipDressR9:= FALSE;
+		Robot9_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot10 Complete Tip Dress*)
+	IF Tip_Dress_Complete10
+		THEN
+		Human_Reqs_TipDressR10:= FALSE;
+		Robot10_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot11 Complete Tip Dress*)
+	IF Tip_Dress_Complete11
+		THEN
+		Human_Reqs_TipDressR11:= FALSE;
+		Robot11_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot12 Complete Tip Dress*)
+	IF Tip_Dress_Complete12
+		THEN
+		Human_Reqs_TipDressR12:= FALSE;
+		Robot12_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot13 Complete Tip Dress*)
+	IF Tip_Dress_Complete13
+		THEN
+		Human_Reqs_TipDressR13:= FALSE;
+		Robot13_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot14 Complete Tip Dress*)
+	IF Tip_Dress_Complete14
+		THEN
+		Human_Reqs_TipDressR14:= FALSE;
+		Robot14_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot15 Complete Tip Dress*)
+	IF Tip_Dress_Complete15
+		THEN
+		Human_Reqs_TipDressR15:= FALSE;
+		Robot15_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot16 Complete Tip Dress*)
+	IF Tip_Dress_Complete16
+		THEN
+		Human_Reqs_TipDressR16:= FALSE;
+		Robot16_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot17 Complete Tip Dress*)
+	IF Tip_Dress_Complete17
+		THEN
+		Human_Reqs_TipDressR17:= FALSE;
+		Robot17_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot18 Complete Tip Dress*)
+	IF Tip_Dress_Complete18
+		THEN
+		Human_Reqs_TipDressR18:= FALSE;
+		Robot18_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot19 Complete Tip Dress*)
+	IF Tip_Dress_Complete19
+		THEN
+		Human_Reqs_TipDressR19:= FALSE;
+		Robot19_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot20 Complete Tip Dress*)
+	IF Tip_Dress_Complete20
+		THEN
+		Human_Reqs_TipDressR20:= FALSE;
+		Robot20_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot21 Complete Tip Dress*)
+	IF Tip_Dress_Complete21
+		THEN
+		Human_Reqs_TipDressR21:= FALSE;
+		Robot21_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot22 Complete Tip Dress*)
+	IF Tip_Dress_Complete22
+		THEN
+		Human_Reqs_TipDressR22:= FALSE;
+		Robot22_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot23 Complete Tip Dress*)
+	IF Tip_Dress_Complete23
+		THEN
+		Human_Reqs_TipDressR23:= FALSE;
+		Robot23_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot24 Complete Tip Dress*)
+	IF Tip_Dress_Complete24
+		THEN
+		Human_Reqs_TipDressR24:= FALSE;
+		Robot24_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot25 Complete Tip Dress*)
+	IF Tip_Dress_Complete25
+		THEN
+		Human_Reqs_TipDressR25:= FALSE;
+		Robot25_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot26 Complete Tip Dress*)
+	IF Tip_Dress_Complete26
+		THEN
+		Human_Reqs_TipDressR26:= FALSE;
+		Robot26_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot27 Complete Tip Dress*)
+	IF Tip_Dress_Complete27
+		THEN
+		Human_Reqs_TipDressR27:= FALSE;
+		Robot27_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot28 Complete Tip Dress*)
+	IF Tip_Dress_Complete28
+		THEN
+		Human_Reqs_TipDressR28:= FALSE;
+		Robot28_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot29 Complete Tip Dress*)
+	IF Tip_Dress_Complete29
+		THEN
+		Human_Reqs_TipDressR29:= FALSE;
+		Robot29_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot30 Complete Tip Dress*)
+	IF Tip_Dress_Complete30
+		THEN
+		Human_Reqs_TipDressR30:= FALSE;
+		Robot30_Reqs_TipDress:= FALSE;
+	END_IF;
+
+	(*Robot 1 Complete TraccTCP*)
+	IF TraccTCP_Complete1
+		THEN
+		Human_Reqs_TraccTCP_R1:= FALSE;
+		Robot1_Reqs_TraccTCP:= FALSE;
+	END_IF;
+
+	(*Robot 2 Complete TraccTCP*)
+	IF TraccTCP_Complete2
+		THEN
+		Human_Reqs_TraccTCP_R2:= FALSE;
+		Robot2_Reqs_TraccTCP:= FALSE;
+	END_IF;
+
+	(*Robot 3 Complete TraccTCP*)
+	IF TraccTCP_Complete3
+		THEN
+		Human_Reqs_TraccTCP_R3:= FALSE;
+		Robot3_Reqs_TraccTCP:= FALSE;
+	END_IF;
+
+	(*Robot 4 Complete TraccTCP*)
+	IF TraccTCP_Complete4
+		THEN
+		Human_Reqs_TraccTCP_R4:= FALSE;
+		Robot4_Reqs_TraccTCP:= FALSE;
+	END_IF;	
+
+	(*Robot 5 Complete TraccTCP*)
+	IF TraccTCP_Complete5
+		THEN
+		Human_Reqs_TraccTCP_R5:= FALSE;
+		Robot5_Reqs_TraccTCP:= FALSE;
+	END_IF;
+
+	(*Robot 6 Complete TraccTCP*)
+	IF TraccTCP_Complete6
+		THEN
+		Human_Reqs_TraccTCP_R6:= FALSE;
+		Robot6_Reqs_TraccTCP:= FALSE;
+	END_IF;
+
+	(*Robot 7 Complete TraccTCP*)
+	IF TraccTCP_Complete7
+		THEN
+		Human_Reqs_TraccTCP_R7:= FALSE;
+		Robot7_Reqs_TraccTCP:= FALSE;
+	END_IF;
+	
+	(*Robot 8 Complete TraccTCP*)
+	IF TraccTCP_Complete8
+		THEN
+		Human_Reqs_TraccTCP_R8:= FALSE;
+		Robot8_Reqs_TraccTCP:= FALSE;
+	END_IF;
+	
+	(*Robot 9 Complete TraccTCP*)
+	IF TraccTCP_Complete9
+		THEN
+		Human_Reqs_TraccTCP_R9:= FALSE;
+		Robot9_Reqs_TraccTCP:= FALSE;
+	END_IF;
+	
+	(*Robot 10 Complete TraccTCP*)
+	IF TraccTCP_Complete10
+		THEN
+		Human_Reqs_TraccTCP_R10:= FALSE;
+		Robot10_Reqs_TraccTCP:= FALSE;
+	END_IF;
+
+	(*Robot 11 Complete TraccTCP*)
+	IF TraccTCP_Complete11
+		THEN
+		Human_Reqs_TraccTCP_R11:= FALSE;
+		Robot11_Reqs_TraccTCP:= FALSE;
+	END_IF;
+	
+	(*Robot 12 Complete TraccTCP*)
+	IF TraccTCP_Complete12
+		THEN
+		Human_Reqs_TraccTCP_R12:= FALSE;
+		Robot12_Reqs_TraccTCP:= FALSE;
+	END_IF;
+	
+	(*Robot 13 Complete TraccTCP*)
+	IF TraccTCP_Complete13
+		THEN
+		Human_Reqs_TraccTCP_R13:= FALSE;
+		Robot13_Reqs_TraccTCP:= FALSE;
+	END_IF;
+	
+	(*Robot 14 Complete TraccTCP*)
+	IF TraccTCP_Complete14
+		THEN
+		Human_Reqs_TraccTCP_R14:= FALSE;
+		Robot14_Reqs_TraccTCP:= FALSE;
+	END_IF;
+	
+	(*Robot 15 Complete TraccTCP*)
+	IF TraccTCP_Complete15
+		THEN
+		Human_Reqs_TraccTCP_R15:= FALSE;
+		Robot15_Reqs_TraccTCP:= FALSE;
+	END_IF;
+	
+	(*Robot 16 Complete TraccTCP*)
+	IF TraccTCP_Complete16
+		THEN
+		Human_Reqs_TraccTCP_R16:= FALSE;
+		Robot16_Reqs_TraccTCP:= FALSE;
+	END_IF;
+	
+	(*Robot 17 Complete TraccTCP*)
+	IF TraccTCP_Complete17
+		THEN
+		Human_Reqs_TraccTCP_R17:= FALSE;
+		Robot17_Reqs_TraccTCP:= FALSE;
+	END_IF;
+	
+	(*Robot 18 Complete TraccTCP*)
+	IF TraccTCP_Complete18
+		THEN
+		Human_Reqs_TraccTCP_R18:= FALSE;
+		Robot18_Reqs_TraccTCP:= FALSE;
+	END_IF;
+	
+	(*Robot 19 Complete TraccTCP*)
+	IF TraccTCP_Complete19
+		THEN
+		Human_Reqs_TraccTCP_R19:= FALSE;
+		Robot19_Reqs_TraccTCP:= FALSE;
+	END_IF;
+	
+	(*Robot 20 Complete TraccTCP*)
+	IF TraccTCP_Complete20
+		THEN
+		Human_Reqs_TraccTCP_R20:= FALSE;
+		Robot20_Reqs_TraccTCP:= FALSE;
+	END_IF;
+
+	(*Robot 21 Complete TraccTCP*)
+	IF TraccTCP_Complete21
+		THEN
+		Human_Reqs_TraccTCP_R21:= FALSE;
+		Robot21_Reqs_TraccTCP:= FALSE;
+	END_IF;
+	
+	(*Robot 22 Complete TraccTCP*)
+	IF TraccTCP_Complete22
+		THEN
+		Human_Reqs_TraccTCP_R22:= FALSE;
+		Robot22_Reqs_TraccTCP:= FALSE;
+	END_IF;
+	
+	(*Robot 23 Complete TraccTCP*)
+	IF TraccTCP_Complete23
+		THEN
+		Human_Reqs_TraccTCP_R23:= FALSE;
+		Robot23_Reqs_TraccTCP:= FALSE;
+	END_IF;
+	
+	(*Robot 24 Complete TraccTCP*)
+	IF TraccTCP_Complete24
+		THEN
+		Human_Reqs_TraccTCP_R24:= FALSE;
+		Robot24_Reqs_TraccTCP:= FALSE;
+	END_IF;
+	
+	(*Robot 25 Complete TraccTCP*)
+	IF TraccTCP_Complete25
+		THEN
+		Human_Reqs_TraccTCP_R25:= FALSE;
+		Robot25_Reqs_TraccTCP:= FALSE;
+	END_IF;
+	
+	(*Robot 26 Complete TraccTCP*)
+	IF TraccTCP_Complete26
+		THEN
+		Human_Reqs_TraccTCP_R26:= FALSE;
+		Robot26_Reqs_TraccTCP:= FALSE;
+	END_IF;
+	
+	(*Robot 27 Complete TraccTCP*)
+	IF TraccTCP_Complete27
+		THEN
+		Human_Reqs_TraccTCP_R27:= FALSE;
+		Robot27_Reqs_TraccTCP:= FALSE;
+	END_IF;
+	
+	(*Robot 28 Complete TraccTCP*)
+	IF TraccTCP_Complete28
+		THEN
+		Human_Reqs_TraccTCP_R28:= FALSE;
+		Robot28_Reqs_TraccTCP:= FALSE;
+	END_IF;
+	
+	(*Robot 29 Complete TraccTCP*)
+	IF TraccTCP_Complete29
+		THEN
+		Human_Reqs_TraccTCP_R29:= FALSE;
+		Robot29_Reqs_TraccTCP:= FALSE;
+	END_IF;
+	
+	(*Robot 30 Complete TraccTCP*)
+	IF TraccTCP_Complete30
+		THEN
+		Human_Reqs_TraccTCP_R30:= FALSE;
+		Robot30_Reqs_TraccTCP:= FALSE;
+	END_IF;
+	
+	
+	
+(*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Cycle Complete !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*)
+	(*Set Cycle Complete*)
+	IF Auto_Run AND (Master_Tests_Complete OR Brake_Tests_Complete OR Tip_Change_Complete OR Tip_Dress_CompleteAll OR TraccTCP_CompleteAll)
+		THEN Cycle_Complete:= TRUE;
+	END_IF;
+	(*Reset All Completes*)
+	IF Cycle_Complete AND All_Robots_Clear
+		THEN
+					Reset_All_Completes:= TRUE;
+	END_IF;
+	(*Perform Actual Reset*)
+		IF Reset_All_Completes
+			THEN
+				Cycle_Complete:= FALSE;
+				Human_Reqs_MasterTest := FALSE;
+				A_Robot_Reqs_MasterTest :=FALSE;
+				Master_Tests_Complete:= FALSE;
+				Human_Reqs_BrakeTest := FALSE;
+				A_Robot_Reqs_BrakeTest := FALSE;
+				All_RobotsReq_BrakeTest := FALSE;
+				Brake_Tests_Complete:= FALSE;
+				Tip_Change_Complete:= FALSE;
+				Tip_Dress_CompleteAll:= FALSE;
+				TraccTCP_CompleteAll:= FALSE;
+				Reset_All_Completes:= FALSE;
+		END_IF;
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Production Counter $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Increment Tip Change Counter*)
+	Prod_Inc.CLK:= Tip_Change_Complete;
+	Prod_Inc();
+	IF Prod_Inc.Q
+		THEN
+		Production_Count:= Production_Count+1;
+	END_IF;
+	IF Discrete_In.ResetProd
+		THEN
+		Production_Count:= 0;
+	END_IF;
+	Prod_Count_Out:= Production_Count;
+(*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Cycle Time Counters ~~~~~~~~~~~~~~~~~~~~~~~~~*)
+	(*Move Previous To Register*)
+	Cycle_Time_Pulse.CLK:= Tip_Change_Complete;
+	Cycle_Time_Pulse();
+	IF Cycle_Time_Pulse.Q
+		THEN
+		PrevCycle_Time_Out:= Cycle_Time_Out;
+	END_IF;
+	(*Monitor Current Cycle Time*)
+		Cycle_Time.PT:= T#9999S;
+		Cycle_Time.IN:= Auto_Run AND NOT Cycle_Complete;
+		Cycle_Time();
+		Cycle_Time_Out:= Cycle_Time.ET;
+
+(*^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ General Visualization ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*)
+
+(*#################################### Register Robots to Tool ##################################*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+
+	(*Data From All Robot(s)*)
+
+	All_Robots_Clear:= MAIN.R1.Clear_Of_EquipInterf8 AND MAIN.R1.Task_ID_Ack<350 AND
+					(MAIN.R2.Clear_Of_EquipInterf8 AND MAIN.R2.Task_ID_Ack<350 OR GTAC_CONFIG.Option_Robot_Count<2) AND
+					(MAIN.R3.Clear_Of_EquipInterf8 AND MAIN.R3.Task_ID_Ack<350 OR GTAC_CONFIG.Option_Robot_Count<3) AND
+					(MAIN.R4.Clear_Of_EquipInterf8 AND MAIN.R4.Task_ID_Ack<350 OR GTAC_CONFIG.Option_Robot_Count<4) AND
+					(MAIN.R5.Clear_Of_EquipInterf8 AND MAIN.R5.Task_ID_Ack<350 OR GTAC_CONFIG.Option_Robot_Count<5) AND
+					(MAIN.R6.Clear_Of_EquipInterf8 AND MAIN.R6.Task_ID_Ack<350 OR GTAC_CONFIG.Option_Robot_Count<6) AND
+					(MAIN.R7.Clear_Of_EquipInterf8 AND MAIN.R7.Task_ID_Ack<350 OR GTAC_CONFIG.Option_Robot_Count<7) AND
+					(MAIN.R8.Clear_Of_EquipInterf8 AND MAIN.R8.Task_ID_Ack<350 OR GTAC_CONFIG.Option_Robot_Count<8) AND
+					(MAIN.R9.Clear_Of_EquipInterf8 AND MAIN.R9.Task_ID_Ack<350 OR GTAC_CONFIG.Option_Robot_Count<9) AND
+					(MAIN.R10.Clear_Of_EquipInterf8 AND MAIN.R10.Task_ID_Ack<350 OR GTAC_CONFIG.Option_Robot_Count<10) AND
+					(MAIN.R11.Clear_Of_EquipInterf8 AND MAIN.R11.Task_ID_Ack<350 OR GTAC_CONFIG.Option_Robot_Count<11) AND
+					(MAIN.R12.Clear_Of_EquipInterf8 AND MAIN.R12.Task_ID_Ack<350 OR GTAC_CONFIG.Option_Robot_Count<12) AND
+					(MAIN.R13.Clear_Of_EquipInterf8 AND MAIN.R13.Task_ID_Ack<350 OR GTAC_CONFIG.Option_Robot_Count<13) AND
+					(MAIN.R14.Clear_Of_EquipInterf8 AND MAIN.R14.Task_ID_Ack<350 OR GTAC_CONFIG.Option_Robot_Count<14) AND
+					(MAIN.R15.Clear_Of_EquipInterf8 AND MAIN.R15.Task_ID_Ack<350 OR GTAC_CONFIG.Option_Robot_Count<15) AND
+					(MAIN.R16.Clear_Of_EquipInterf8 AND MAIN.R16.Task_ID_Ack<350 OR GTAC_CONFIG.Option_Robot_Count<16) AND
+					(MAIN.R17.Clear_Of_EquipInterf8 AND MAIN.R17.Task_ID_Ack<350 OR GTAC_CONFIG.Option_Robot_Count<17) AND
+					(MAIN.R18.Clear_Of_EquipInterf8 AND MAIN.R18.Task_ID_Ack<350 OR GTAC_CONFIG.Option_Robot_Count<18) AND
+					(MAIN.R19.Clear_Of_EquipInterf8 AND MAIN.R19.Task_ID_Ack<350 OR GTAC_CONFIG.Option_Robot_Count<19) AND
+					(MAIN.R20.Clear_Of_EquipInterf8 AND MAIN.R20.Task_ID_Ack<350 OR GTAC_CONFIG.Option_Robot_Count<20) AND
+					(MAIN.R21.Clear_Of_EquipInterf8 AND MAIN.R21.Task_ID_Ack<350 OR GTAC_CONFIG.Option_Robot_Count<21) AND
+					(MAIN.R22.Clear_Of_EquipInterf8 AND MAIN.R22.Task_ID_Ack<350 OR GTAC_CONFIG.Option_Robot_Count<22) AND
+					(MAIN.R23.Clear_Of_EquipInterf8 AND MAIN.R23.Task_ID_Ack<350 OR GTAC_CONFIG.Option_Robot_Count<23) AND
+					(MAIN.R24.Clear_Of_EquipInterf8 AND MAIN.R24.Task_ID_Ack<350 OR GTAC_CONFIG.Option_Robot_Count<24) AND
+					(MAIN.R25.Clear_Of_EquipInterf8 AND MAIN.R25.Task_ID_Ack<350 OR GTAC_CONFIG.Option_Robot_Count<25) AND
+					(MAIN.R26.Clear_Of_EquipInterf8 AND MAIN.R26.Task_ID_Ack<350 OR GTAC_CONFIG.Option_Robot_Count<26) AND
+					(MAIN.R27.Clear_Of_EquipInterf8 AND MAIN.R27.Task_ID_Ack<350 OR GTAC_CONFIG.Option_Robot_Count<27) AND
+					(MAIN.R28.Clear_Of_EquipInterf8 AND MAIN.R28.Task_ID_Ack<350 OR GTAC_CONFIG.Option_Robot_Count<28) AND
+					(MAIN.R29.Clear_Of_EquipInterf8 AND MAIN.R29.Task_ID_Ack<350 OR GTAC_CONFIG.Option_Robot_Count<29) AND
+					(MAIN.R30.Clear_Of_EquipInterf8 AND MAIN.R30.Task_ID_Ack<350 OR GTAC_CONFIG.Option_Robot_Count<30);
+
+	All_Robots_WorkingOK:=  (Start_All_MTRobots AND MAIN.R1.Task_ID_Ack=Master_Test AND MAIN.R1.Operating AND
+											(MAIN.R2.Task_ID_Ack=Master_Test AND MAIN.R2.Operating OR GTAC_CONFIG.Option_Robot_Count<2) AND
+											(MAIN.R3.Task_ID_Ack=Master_Test AND MAIN.R3.Operating OR GTAC_CONFIG.Option_Robot_Count<3) AND
+											(MAIN.R4.Task_ID_Ack=Master_Test AND MAIN.R4.Operating OR GTAC_CONFIG.Option_Robot_Count<4) AND
+											(MAIN.R5.Task_ID_Ack=Master_Test AND MAIN.R5.Operating OR GTAC_CONFIG.Option_Robot_Count<5) AND
+											(MAIN.R6.Task_ID_Ack=Master_Test AND MAIN.R6.Operating OR GTAC_CONFIG.Option_Robot_Count<6) AND
+											(MAIN.R7.Task_ID_Ack=Master_Test AND MAIN.R7.Operating OR GTAC_CONFIG.Option_Robot_Count<7) AND
+											(MAIN.R8.Task_ID_Ack= Master_Test AND MAIN.R8.Operating OR GTAC_CONFIG.Option_Robot_Count<8) AND
+											(MAIN.R9.Task_ID_Ack=Master_Test AND MAIN.R9.Operating OR GTAC_CONFIG.Option_Robot_Count<9) AND
+											(MAIN.R10.Task_ID_Ack= Master_Test AND MAIN.R10.Operating OR GTAC_CONFIG.Option_Robot_Count<10) AND
+											(MAIN.R11.Task_ID_Ack=Master_Test AND MAIN.R11.Operating OR GTAC_CONFIG.Option_Robot_Count<11) AND
+											(MAIN.R12.Task_ID_Ack=Master_Test AND MAIN.R12.Operating OR GTAC_CONFIG.Option_Robot_Count<12) AND
+											(MAIN.R13.Task_ID_Ack=Master_Test AND MAIN.R13.Operating OR GTAC_CONFIG.Option_Robot_Count<13) AND
+											(MAIN.R14.Task_ID_Ack=Master_Test AND MAIN.R14.Operating OR GTAC_CONFIG.Option_Robot_Count<14) AND
+											(MAIN.R15.Task_ID_Ack=Master_Test AND MAIN.R15.Operating OR GTAC_CONFIG.Option_Robot_Count<15) AND
+											(MAIN.R16.Task_ID_Ack=Master_Test AND MAIN.R16.Operating OR GTAC_CONFIG.Option_Robot_Count<16) AND
+											(MAIN.R17.Task_ID_Ack=Master_Test AND MAIN.R17.Operating OR GTAC_CONFIG.Option_Robot_Count<17) AND
+											(MAIN.R18.Task_ID_Ack= Master_Test AND MAIN.R18.Operating OR GTAC_CONFIG.Option_Robot_Count<18) AND
+											(MAIN.R19.Task_ID_Ack=Master_Test AND MAIN.R19.Operating OR GTAC_CONFIG.Option_Robot_Count<19) AND
+											(MAIN.R20.Task_ID_Ack=Master_Test AND MAIN.R20.Operating OR GTAC_CONFIG.Option_Robot_Count<20) AND
+											(MAIN.R21.Task_ID_Ack=Master_Test AND MAIN.R21.Operating OR GTAC_CONFIG.Option_Robot_Count<21) AND
+											(MAIN.R22.Task_ID_Ack=Master_Test AND MAIN.R22.Operating OR GTAC_CONFIG.Option_Robot_Count<22) AND
+											(MAIN.R23.Task_ID_Ack=Master_Test AND MAIN.R23.Operating OR GTAC_CONFIG.Option_Robot_Count<23) AND
+											(MAIN.R24.Task_ID_Ack=Master_Test AND MAIN.R24.Operating OR GTAC_CONFIG.Option_Robot_Count<24) AND
+											(MAIN.R25.Task_ID_Ack=Master_Test AND MAIN.R25.Operating OR GTAC_CONFIG.Option_Robot_Count<25) AND
+											(MAIN.R26.Task_ID_Ack=Master_Test AND MAIN.R26.Operating OR GTAC_CONFIG.Option_Robot_Count<26) AND
+											(MAIN.R27.Task_ID_Ack=Master_Test AND MAIN.R27.Operating OR GTAC_CONFIG.Option_Robot_Count<27) AND
+											(MAIN.R28.Task_ID_Ack=Master_Test AND MAIN.R28.Operating OR GTAC_CONFIG.Option_Robot_Count<28) AND
+											(MAIN.R29.Task_ID_Ack=Master_Test AND MAIN.R29.Operating OR GTAC_CONFIG.Option_Robot_Count<29) AND
+											(MAIN.R30.Task_ID_Ack=Master_Test AND MAIN.R30.Operating OR GTAC_CONFIG.Option_Robot_Count<30))
+											OR
+							(Start_All_BTRobots AND MAIN.R1.Task_ID_Ack=Brake_Test AND MAIN.R1.Operating AND
+											(MAIN.R2.Task_ID_Ack=Brake_Test AND MAIN.R2.Operating OR GTAC_CONFIG.Option_Robot_Count<2) AND
+											(MAIN.R3.Task_ID_Ack=Brake_Test AND MAIN.R3.Operating OR GTAC_CONFIG.Option_Robot_Count<3) AND
+											(MAIN.R4.Task_ID_Ack=Brake_Test AND MAIN.R4.Operating OR GTAC_CONFIG.Option_Robot_Count<4) AND
+											(MAIN.R5.Task_ID_Ack=Brake_Test AND MAIN.R5.Operating OR GTAC_CONFIG.Option_Robot_Count<5) AND
+											(MAIN.R6.Task_ID_Ack=Brake_Test AND MAIN.R6.Operating OR GTAC_CONFIG.Option_Robot_Count<6) AND
+											(MAIN.R7.Task_ID_Ack=Brake_Test AND MAIN.R7.Operating OR GTAC_CONFIG.Option_Robot_Count<7) AND
+											(MAIN.R8.Task_ID_Ack=Brake_Test AND MAIN.R8.Operating OR GTAC_CONFIG.Option_Robot_Count<8) AND
+											(MAIN.R9.Task_ID_Ack=Brake_Test AND MAIN.R9.Operating OR GTAC_CONFIG.Option_Robot_Count<9) AND
+											(MAIN.R10.Task_ID_Ack=Brake_Test AND MAIN.R10.Operating OR GTAC_CONFIG.Option_Robot_Count<10) AND
+											(MAIN.R11.Task_ID_Ack=Brake_Test AND MAIN.R11.Operating OR GTAC_CONFIG.Option_Robot_Count<11) AND
+											(MAIN.R12.Task_ID_Ack=Brake_Test AND MAIN.R12.Operating OR GTAC_CONFIG.Option_Robot_Count<12) AND
+											(MAIN.R13.Task_ID_Ack=Brake_Test AND MAIN.R13.Operating OR GTAC_CONFIG.Option_Robot_Count<13) AND
+											(MAIN.R14.Task_ID_Ack=Brake_Test AND MAIN.R14.Operating OR GTAC_CONFIG.Option_Robot_Count<14) AND
+											(MAIN.R15.Task_ID_Ack=Brake_Test AND MAIN.R15.Operating OR GTAC_CONFIG.Option_Robot_Count<15) AND
+											(MAIN.R16.Task_ID_Ack=Brake_Test AND MAIN.R16.Operating OR GTAC_CONFIG.Option_Robot_Count<16) AND
+											(MAIN.R17.Task_ID_Ack=Brake_Test AND MAIN.R17.Operating OR GTAC_CONFIG.Option_Robot_Count<17) AND
+											(MAIN.R18.Task_ID_Ack=Brake_Test AND MAIN.R18.Operating OR GTAC_CONFIG.Option_Robot_Count<18) AND
+											(MAIN.R19.Task_ID_Ack=Brake_Test AND MAIN.R19.Operating OR GTAC_CONFIG.Option_Robot_Count<19) AND
+											(MAIN.R20.Task_ID_Ack=Brake_Test AND MAIN.R20.Operating OR GTAC_CONFIG.Option_Robot_Count<20) AND
+											(MAIN.R21.Task_ID_Ack=Brake_Test AND MAIN.R21.Operating OR GTAC_CONFIG.Option_Robot_Count<21) AND
+											(MAIN.R22.Task_ID_Ack=Brake_Test AND MAIN.R22.Operating OR GTAC_CONFIG.Option_Robot_Count<22) AND
+											(MAIN.R23.Task_ID_Ack=Brake_Test AND MAIN.R23.Operating OR GTAC_CONFIG.Option_Robot_Count<23) AND
+											(MAIN.R24.Task_ID_Ack=Brake_Test AND MAIN.R24.Operating OR GTAC_CONFIG.Option_Robot_Count<24) AND
+											(MAIN.R25.Task_ID_Ack=Brake_Test AND MAIN.R25.Operating OR GTAC_CONFIG.Option_Robot_Count<25) AND
+											(MAIN.R26.Task_ID_Ack=Brake_Test AND MAIN.R26.Operating OR GTAC_CONFIG.Option_Robot_Count<26) AND
+											(MAIN.R27.Task_ID_Ack=Brake_Test AND MAIN.R27.Operating OR GTAC_CONFIG.Option_Robot_Count<27) AND
+											(MAIN.R28.Task_ID_Ack=Brake_Test AND MAIN.R28.Operating OR GTAC_CONFIG.Option_Robot_Count<28) AND
+											(MAIN.R29.Task_ID_Ack=Brake_Test AND MAIN.R29.Operating OR GTAC_CONFIG.Option_Robot_Count<29) AND
+											(MAIN.R30.Task_ID_Ack=Brake_Test AND MAIN.R30.Operating OR GTAC_CONFIG.Option_Robot_Count<30))
+											OR
+							(Start_All_TCRobots AND MAIN.R1.Task_ID_Ack=Tip_Change AND MAIN.R1.Operating AND
+											(MAIN.R2.Task_ID_Ack=Tip_Change AND MAIN.R2.Operating OR GTAC_CONFIG.Option_Robot_Count<2) AND
+											(MAIN.R3.Task_ID_Ack=Tip_Change AND MAIN.R3.Operating OR GTAC_CONFIG.Option_Robot_Count<3) AND
+											(MAIN.R4.Task_ID_Ack=Tip_Change AND MAIN.R4.Operating OR GTAC_CONFIG.Option_Robot_Count<4) AND
+											(MAIN.R5.Task_ID_Ack=Tip_Change AND MAIN.R5.Operating OR GTAC_CONFIG.Option_Robot_Count<5) AND
+											(MAIN.R6.Task_ID_Ack=Tip_Change AND MAIN.R6.Operating OR GTAC_CONFIG.Option_Robot_Count<6) AND
+											(MAIN.R7.Task_ID_Ack=Tip_Change AND MAIN.R7.Operating OR GTAC_CONFIG.Option_Robot_Count<7) AND
+											(MAIN.R8.Task_ID_Ack=Tip_Change AND MAIN.R8.Operating OR GTAC_CONFIG.Option_Robot_Count<8) AND
+											(MAIN.R9.Task_ID_Ack=Tip_Change AND MAIN.R9.Operating OR GTAC_CONFIG.Option_Robot_Count<9) AND
+											(MAIN.R10.Task_ID_Ack=Tip_Change AND MAIN.R10.Operating OR GTAC_CONFIG.Option_Robot_Count<10) AND
+											(MAIN.R11.Task_ID_Ack=Tip_Change AND MAIN.R11.Operating OR GTAC_CONFIG.Option_Robot_Count<11) AND
+											(MAIN.R12.Task_ID_Ack=Tip_Change AND MAIN.R12.Operating OR GTAC_CONFIG.Option_Robot_Count<12) AND
+											(MAIN.R13.Task_ID_Ack=Tip_Change AND MAIN.R13.Operating OR GTAC_CONFIG.Option_Robot_Count<13) AND
+											(MAIN.R14.Task_ID_Ack=Tip_Change AND MAIN.R14.Operating OR GTAC_CONFIG.Option_Robot_Count<14) AND
+											(MAIN.R15.Task_ID_Ack=Tip_Change AND MAIN.R15.Operating OR GTAC_CONFIG.Option_Robot_Count<15) AND
+											(MAIN.R16.Task_ID_Ack=Tip_Change AND MAIN.R16.Operating OR GTAC_CONFIG.Option_Robot_Count<16) AND
+											(MAIN.R17.Task_ID_Ack=Tip_Change AND MAIN.R17.Operating OR GTAC_CONFIG.Option_Robot_Count<17) AND
+											(MAIN.R18.Task_ID_Ack=Tip_Change AND MAIN.R18.Operating OR GTAC_CONFIG.Option_Robot_Count<18) AND
+											(MAIN.R19.Task_ID_Ack=Tip_Change AND MAIN.R19.Operating OR GTAC_CONFIG.Option_Robot_Count<19) AND
+											(MAIN.R20.Task_ID_Ack=Tip_Change AND MAIN.R20.Operating OR GTAC_CONFIG.Option_Robot_Count<20) AND
+											(MAIN.R21.Task_ID_Ack=Tip_Change AND MAIN.R21.Operating OR GTAC_CONFIG.Option_Robot_Count<21) AND
+											(MAIN.R22.Task_ID_Ack=Tip_Change AND MAIN.R22.Operating OR GTAC_CONFIG.Option_Robot_Count<22) AND
+											(MAIN.R23.Task_ID_Ack=Tip_Change AND MAIN.R23.Operating OR GTAC_CONFIG.Option_Robot_Count<23) AND
+											(MAIN.R24.Task_ID_Ack=Tip_Change AND MAIN.R24.Operating OR GTAC_CONFIG.Option_Robot_Count<24) AND
+											(MAIN.R25.Task_ID_Ack=Tip_Change AND MAIN.R25.Operating OR GTAC_CONFIG.Option_Robot_Count<25) AND
+											(MAIN.R26.Task_ID_Ack=Tip_Change AND MAIN.R26.Operating OR GTAC_CONFIG.Option_Robot_Count<26) AND
+											(MAIN.R27.Task_ID_Ack=Tip_Change AND MAIN.R27.Operating OR GTAC_CONFIG.Option_Robot_Count<27) AND
+											(MAIN.R28.Task_ID_Ack=Tip_Change AND MAIN.R28.Operating OR GTAC_CONFIG.Option_Robot_Count<28) AND
+											(MAIN.R29.Task_ID_Ack=Tip_Change AND MAIN.R29.Operating OR GTAC_CONFIG.Option_Robot_Count<29) AND
+											(MAIN.R30.Task_ID_Ack=Tip_Change AND MAIN.R30.Operating OR GTAC_CONFIG.Option_Robot_Count<30))
+											OR
+							(Start_All_TDRobots AND MAIN.R1.Task_ID_Ack=Tip_Dress AND MAIN.R1.Operating AND
+											(MAIN.R2.Task_ID_Ack=Tip_Dress AND MAIN.R2.Operating OR GTAC_CONFIG.Option_Robot_Count<2) AND
+											(MAIN.R3.Task_ID_Ack=Tip_Dress AND MAIN.R3.Operating OR GTAC_CONFIG.Option_Robot_Count<3) AND
+											(MAIN.R4.Task_ID_Ack=Tip_Dress AND MAIN.R4.Operating OR GTAC_CONFIG.Option_Robot_Count<4) AND
+											(MAIN.R5.Task_ID_Ack=Tip_Dress AND MAIN.R5.Operating OR GTAC_CONFIG.Option_Robot_Count<5) AND
+											(MAIN.R6.Task_ID_Ack=Tip_Dress AND MAIN.R6.Operating OR GTAC_CONFIG.Option_Robot_Count<6) AND
+											(MAIN.R7.Task_ID_Ack=Tip_Dress AND MAIN.R7.Operating OR GTAC_CONFIG.Option_Robot_Count<7) AND
+											(MAIN.R8.Task_ID_Ack=Tip_Dress AND MAIN.R8.Operating OR GTAC_CONFIG.Option_Robot_Count<8) AND
+											(MAIN.R9.Task_ID_Ack=Tip_Dress AND MAIN.R9.Operating OR GTAC_CONFIG.Option_Robot_Count<9) AND
+											(MAIN.R10.Task_ID_Ack=Tip_Dress AND MAIN.R10.Operating OR GTAC_CONFIG.Option_Robot_Count<10) AND
+											(MAIN.R11.Task_ID_Ack=Tip_Dress AND MAIN.R11.Operating OR GTAC_CONFIG.Option_Robot_Count<11) AND
+											(MAIN.R12.Task_ID_Ack=Tip_Dress AND MAIN.R12.Operating OR GTAC_CONFIG.Option_Robot_Count<12) AND
+											(MAIN.R13.Task_ID_Ack=Tip_Dress AND MAIN.R13.Operating OR GTAC_CONFIG.Option_Robot_Count<13) AND
+											(MAIN.R14.Task_ID_Ack=Tip_Dress AND MAIN.R14.Operating OR GTAC_CONFIG.Option_Robot_Count<14) AND
+											(MAIN.R15.Task_ID_Ack=Tip_Dress AND MAIN.R15.Operating OR GTAC_CONFIG.Option_Robot_Count<15) AND
+											(MAIN.R16.Task_ID_Ack=Tip_Dress AND MAIN.R16.Operating OR GTAC_CONFIG.Option_Robot_Count<16) AND
+											(MAIN.R17.Task_ID_Ack=Tip_Dress AND MAIN.R17.Operating OR GTAC_CONFIG.Option_Robot_Count<17) AND
+											(MAIN.R18.Task_ID_Ack=Tip_Dress AND MAIN.R18.Operating OR GTAC_CONFIG.Option_Robot_Count<18) AND
+											(MAIN.R19.Task_ID_Ack=Tip_Dress AND MAIN.R19.Operating OR GTAC_CONFIG.Option_Robot_Count<19) AND
+											(MAIN.R20.Task_ID_Ack=Tip_Dress AND MAIN.R20.Operating OR GTAC_CONFIG.Option_Robot_Count<20) AND
+											(MAIN.R21.Task_ID_Ack=Tip_Dress AND MAIN.R21.Operating OR GTAC_CONFIG.Option_Robot_Count<21) AND
+											(MAIN.R22.Task_ID_Ack=Tip_Dress AND MAIN.R22.Operating OR GTAC_CONFIG.Option_Robot_Count<22) AND
+											(MAIN.R23.Task_ID_Ack=Tip_Dress AND MAIN.R23.Operating OR GTAC_CONFIG.Option_Robot_Count<23) AND
+											(MAIN.R24.Task_ID_Ack=Tip_Dress AND MAIN.R24.Operating OR GTAC_CONFIG.Option_Robot_Count<24) AND
+											(MAIN.R25.Task_ID_Ack=Tip_Dress AND MAIN.R25.Operating OR GTAC_CONFIG.Option_Robot_Count<25) AND
+											(MAIN.R26.Task_ID_Ack=Tip_Dress AND MAIN.R26.Operating OR GTAC_CONFIG.Option_Robot_Count<26) AND
+											(MAIN.R27.Task_ID_Ack=Tip_Dress AND MAIN.R27.Operating OR GTAC_CONFIG.Option_Robot_Count<27) AND
+											(MAIN.R28.Task_ID_Ack=Tip_Dress AND MAIN.R28.Operating OR GTAC_CONFIG.Option_Robot_Count<28) AND
+											(MAIN.R29.Task_ID_Ack=Tip_Dress AND MAIN.R29.Operating OR GTAC_CONFIG.Option_Robot_Count<29) AND
+											(MAIN.R30.Task_ID_Ack=Tip_Dress AND MAIN.R30.Operating OR GTAC_CONFIG.Option_Robot_Count<30))
+											OR
+							(Start_All_TraccTCP AND MAIN.R1.Task_ID_Ack=Tracc_TCP AND MAIN.R1.Operating AND
+											(MAIN.R2.Task_ID_Ack=Tracc_TCP AND MAIN.R2.Operating OR GTAC_CONFIG.Option_Robot_Count<2) AND
+											(MAIN.R3.Task_ID_Ack=Tracc_TCP AND MAIN.R3.Operating OR GTAC_CONFIG.Option_Robot_Count<3) AND
+											(MAIN.R4.Task_ID_Ack=Tracc_TCP AND MAIN.R4.Operating OR GTAC_CONFIG.Option_Robot_Count<4) AND
+											(MAIN.R5.Task_ID_Ack=Tracc_TCP AND MAIN.R5.Operating OR GTAC_CONFIG.Option_Robot_Count<5) AND
+											(MAIN.R6.Task_ID_Ack=Tracc_TCP AND MAIN.R6.Operating OR GTAC_CONFIG.Option_Robot_Count<6) AND
+											(MAIN.R7.Task_ID_Ack=Tracc_TCP AND MAIN.R7.Operating OR GTAC_CONFIG.Option_Robot_Count<7) AND
+											(MAIN.R8.Task_ID_Ack=Tracc_TCP AND MAIN.R8.Operating OR GTAC_CONFIG.Option_Robot_Count<8) AND
+											(MAIN.R9.Task_ID_Ack=Tracc_TCP AND MAIN.R9.Operating OR GTAC_CONFIG.Option_Robot_Count<9) AND
+											(MAIN.R10.Task_ID_Ack=Tracc_TCP AND MAIN.R10.Operating OR GTAC_CONFIG.Option_Robot_Count<10) AND
+											(MAIN.R11.Task_ID_Ack=Tracc_TCP AND MAIN.R11.Operating OR GTAC_CONFIG.Option_Robot_Count<11) AND
+											(MAIN.R12.Task_ID_Ack=Tracc_TCP AND MAIN.R12.Operating OR GTAC_CONFIG.Option_Robot_Count<12) AND
+											(MAIN.R13.Task_ID_Ack=Tracc_TCP AND MAIN.R13.Operating OR GTAC_CONFIG.Option_Robot_Count<13) AND
+											(MAIN.R14.Task_ID_Ack=Tracc_TCP AND MAIN.R14.Operating OR GTAC_CONFIG.Option_Robot_Count<14) AND
+											(MAIN.R15.Task_ID_Ack=Tracc_TCP AND MAIN.R15.Operating OR GTAC_CONFIG.Option_Robot_Count<15) AND
+											(MAIN.R16.Task_ID_Ack=Tracc_TCP AND MAIN.R16.Operating OR GTAC_CONFIG.Option_Robot_Count<16) AND
+											(MAIN.R17.Task_ID_Ack=Tracc_TCP AND MAIN.R17.Operating OR GTAC_CONFIG.Option_Robot_Count<17) AND
+											(MAIN.R18.Task_ID_Ack=Tracc_TCP AND MAIN.R18.Operating OR GTAC_CONFIG.Option_Robot_Count<18) AND
+											(MAIN.R19.Task_ID_Ack=Tracc_TCP AND MAIN.R19.Operating OR GTAC_CONFIG.Option_Robot_Count<19) AND
+											(MAIN.R20.Task_ID_Ack=Tracc_TCP AND MAIN.R20.Operating OR GTAC_CONFIG.Option_Robot_Count<20) AND
+											(MAIN.R21.Task_ID_Ack=Tracc_TCP AND MAIN.R21.Operating OR GTAC_CONFIG.Option_Robot_Count<21) AND
+											(MAIN.R22.Task_ID_Ack=Tracc_TCP AND MAIN.R22.Operating OR GTAC_CONFIG.Option_Robot_Count<22) AND
+											(MAIN.R23.Task_ID_Ack=Tracc_TCP AND MAIN.R23.Operating OR GTAC_CONFIG.Option_Robot_Count<23) AND
+											(MAIN.R24.Task_ID_Ack=Tracc_TCP AND MAIN.R24.Operating OR GTAC_CONFIG.Option_Robot_Count<24) AND
+											(MAIN.R25.Task_ID_Ack=Tracc_TCP AND MAIN.R25.Operating OR GTAC_CONFIG.Option_Robot_Count<25) AND
+											(MAIN.R26.Task_ID_Ack=Tracc_TCP AND MAIN.R26.Operating OR GTAC_CONFIG.Option_Robot_Count<26) AND
+											(MAIN.R27.Task_ID_Ack=Tracc_TCP AND MAIN.R27.Operating OR GTAC_CONFIG.Option_Robot_Count<27) AND
+											(MAIN.R28.Task_ID_Ack=Tracc_TCP AND MAIN.R28.Operating OR GTAC_CONFIG.Option_Robot_Count<28) AND
+											(MAIN.R29.Task_ID_Ack=Tracc_TCP AND MAIN.R29.Operating OR GTAC_CONFIG.Option_Robot_Count<29) AND
+											(MAIN.R30.Task_ID_Ack=Tracc_TCP AND MAIN.R30.Operating OR GTAC_CONFIG.Option_Robot_Count<30));
+		All_Robots_Complete:= (Start_All_MTRobots AND MAIN.R1.Task_ID_Ack=Master_Test AND MAIN.R1.Task_Completed AND
+											(MAIN.R2.Task_ID_Ack=Master_Test AND MAIN.R2.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<2) AND
+											(MAIN.R3.Task_ID_Ack=Master_Test AND MAIN.R3.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<3) AND
+											(MAIN.R4.Task_ID_Ack=Master_Test AND MAIN.R4.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<4) AND
+											(MAIN.R5.Task_ID_Ack=Master_Test AND MAIN.R5.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<5) AND
+											(MAIN.R6.Task_ID_Ack=Master_Test AND MAIN.R6.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<6) AND
+											(MAIN.R7.Task_ID_Ack=Master_Test AND MAIN.R7.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<7) AND
+											(MAIN.R8.Task_ID_Ack= Master_Test AND MAIN.R8.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<8) AND
+											(MAIN.R9.Task_ID_Ack=Master_Test AND MAIN.R9.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<9) AND
+											(MAIN.R10.Task_ID_Ack=Master_Test AND MAIN.R10.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<10) AND
+											(MAIN.R11.Task_ID_Ack=Master_Test AND MAIN.R11.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<11) AND
+											(MAIN.R12.Task_ID_Ack=Master_Test AND MAIN.R12.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<12) AND
+											(MAIN.R13.Task_ID_Ack=Master_Test AND MAIN.R13.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<13) AND
+											(MAIN.R14.Task_ID_Ack=Master_Test AND MAIN.R14.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<14) AND
+											(MAIN.R15.Task_ID_Ack=Master_Test AND MAIN.R15.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<15) AND
+											(MAIN.R16.Task_ID_Ack=Master_Test AND MAIN.R16.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<16) AND
+											(MAIN.R17.Task_ID_Ack=Master_Test AND MAIN.R17.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<17) AND
+											(MAIN.R18.Task_ID_Ack= Master_Test AND MAIN.R18.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<18) AND
+											(MAIN.R19.Task_ID_Ack=Master_Test AND MAIN.R19.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<19) AND
+											(MAIN.R20.Task_ID_Ack=Master_Test AND MAIN.R20.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<20) AND
+											(MAIN.R21.Task_ID_Ack=Master_Test AND MAIN.R21.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<21) AND
+											(MAIN.R22.Task_ID_Ack=Master_Test AND MAIN.R22.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<22) AND
+											(MAIN.R23.Task_ID_Ack=Master_Test AND MAIN.R23.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<23) AND
+											(MAIN.R24.Task_ID_Ack=Master_Test AND MAIN.R24.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<24) AND
+											(MAIN.R25.Task_ID_Ack=Master_Test AND MAIN.R25.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<25) AND
+											(MAIN.R26.Task_ID_Ack=Master_Test AND MAIN.R26.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<26) AND
+											(MAIN.R27.Task_ID_Ack=Master_Test AND MAIN.R27.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<27) AND
+											(MAIN.R28.Task_ID_Ack=Master_Test AND MAIN.R28.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<28) AND
+											(MAIN.R29.Task_ID_Ack=Master_Test AND MAIN.R29.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<29) AND
+											(MAIN.R30.Task_ID_Ack=Master_Test AND MAIN.R30.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<30))
+											OR
+							(Start_All_BTRobots AND MAIN.R1.Task_ID_Ack=Brake_Test AND MAIN.R1.Task_Completed AND
+											(MAIN.R2.Task_ID_Ack=Brake_Test AND MAIN.R2.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<2) AND
+											(MAIN.R3.Task_ID_Ack=Brake_Test AND MAIN.R3.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<3) AND
+											(MAIN.R4.Task_ID_Ack=Brake_Test AND MAIN.R4.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<4) AND
+											(MAIN.R5.Task_ID_Ack=Brake_Test AND MAIN.R5.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<5) AND
+											(MAIN.R6.Task_ID_Ack=Brake_Test AND MAIN.R6.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<6) AND
+											(MAIN.R7.Task_ID_Ack=Brake_Test AND MAIN.R7.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<7) AND
+											(MAIN.R8.Task_ID_Ack=Brake_Test AND MAIN.R8.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<8) AND
+											(MAIN.R9.Task_ID_Ack=Brake_Test AND MAIN.R9.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<9) AND
+											(MAIN.R10.Task_ID_Ack=Brake_Test AND MAIN.R10.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<10) AND
+											(MAIN.R11.Task_ID_Ack=Brake_Test AND MAIN.R11.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<11) AND
+											(MAIN.R12.Task_ID_Ack=Brake_Test AND MAIN.R12.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<12) AND
+											(MAIN.R13.Task_ID_Ack=Brake_Test AND MAIN.R13.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<13) AND
+											(MAIN.R14.Task_ID_Ack=Brake_Test AND MAIN.R14.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<14) AND
+											(MAIN.R15.Task_ID_Ack=Brake_Test AND MAIN.R15.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<15) AND
+											(MAIN.R16.Task_ID_Ack=Brake_Test AND MAIN.R16.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<16) AND
+											(MAIN.R17.Task_ID_Ack=Brake_Test AND MAIN.R17.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<17) AND
+											(MAIN.R18.Task_ID_Ack=Brake_Test AND MAIN.R18.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<18) AND
+											(MAIN.R19.Task_ID_Ack=Brake_Test AND MAIN.R19.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<19) AND
+											(MAIN.R20.Task_ID_Ack=Brake_Test AND MAIN.R20.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<20) AND
+											(MAIN.R21.Task_ID_Ack=Brake_Test AND MAIN.R21.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<21) AND
+											(MAIN.R22.Task_ID_Ack=Brake_Test AND MAIN.R22.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<22) AND
+											(MAIN.R23.Task_ID_Ack=Brake_Test AND MAIN.R23.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<23) AND
+											(MAIN.R24.Task_ID_Ack=Brake_Test AND MAIN.R24.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<24) AND
+											(MAIN.R25.Task_ID_Ack=Brake_Test AND MAIN.R25.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<25) AND
+											(MAIN.R26.Task_ID_Ack=Brake_Test AND MAIN.R26.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<26) AND
+											(MAIN.R27.Task_ID_Ack=Brake_Test AND MAIN.R27.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<27) AND
+											(MAIN.R28.Task_ID_Ack=Brake_Test AND MAIN.R28.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<28) AND
+											(MAIN.R29.Task_ID_Ack=Brake_Test AND MAIN.R29.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<29) AND
+											(MAIN.R30.Task_ID_Ack=Brake_Test AND MAIN.R30.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<30))
+											OR
+							(Start_All_TCRobots AND MAIN.R1.Task_ID_Ack=Tip_Change AND MAIN.R1.Task_Completed AND
+											(MAIN.R2.Task_ID_Ack=Tip_Change AND MAIN.R2.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<2) AND
+											(MAIN.R3.Task_ID_Ack=Tip_Change AND MAIN.R3.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<3) AND
+											(MAIN.R4.Task_ID_Ack=Tip_Change AND MAIN.R4.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<4) AND
+											(MAIN.R5.Task_ID_Ack=Tip_Change AND MAIN.R5.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<5) AND
+											(MAIN.R6.Task_ID_Ack=Tip_Change AND MAIN.R6.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<6) AND
+											(MAIN.R7.Task_ID_Ack=Tip_Change AND MAIN.R7.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<7) AND
+											(MAIN.R8.Task_ID_Ack=Tip_Change AND MAIN.R8.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<8) AND
+											(MAIN.R9.Task_ID_Ack=Tip_Change AND MAIN.R9.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<9) AND
+											(MAIN.R10.Task_ID_Ack=Tip_Change AND MAIN.R10.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<10) AND
+											(MAIN.R11.Task_ID_Ack=Tip_Change AND MAIN.R11.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<11) AND
+											(MAIN.R12.Task_ID_Ack=Tip_Change AND MAIN.R12.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<12) AND
+											(MAIN.R13.Task_ID_Ack=Tip_Change AND MAIN.R13.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<13) AND
+											(MAIN.R14.Task_ID_Ack=Tip_Change AND MAIN.R14.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<14) AND
+											(MAIN.R15.Task_ID_Ack=Tip_Change AND MAIN.R15.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<15) AND
+											(MAIN.R16.Task_ID_Ack=Tip_Change AND MAIN.R16.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<16) AND
+											(MAIN.R17.Task_ID_Ack=Tip_Change AND MAIN.R17.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<17) AND
+											(MAIN.R18.Task_ID_Ack=Tip_Change AND MAIN.R18.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<18) AND
+											(MAIN.R19.Task_ID_Ack=Tip_Change AND MAIN.R19.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<19) AND
+											(MAIN.R20.Task_ID_Ack=Tip_Change AND MAIN.R20.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<20) AND
+											(MAIN.R21.Task_ID_Ack=Tip_Change AND MAIN.R21.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<21) AND
+											(MAIN.R22.Task_ID_Ack=Tip_Change AND MAIN.R22.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<22) AND
+											(MAIN.R23.Task_ID_Ack=Tip_Change AND MAIN.R23.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<23) AND
+											(MAIN.R24.Task_ID_Ack=Tip_Change AND MAIN.R24.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<24) AND
+											(MAIN.R25.Task_ID_Ack=Tip_Change AND MAIN.R25.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<25) AND
+											(MAIN.R26.Task_ID_Ack=Tip_Change AND MAIN.R26.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<26) AND
+											(MAIN.R27.Task_ID_Ack=Tip_Change AND MAIN.R27.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<27) AND
+											(MAIN.R28.Task_ID_Ack=Tip_Change AND MAIN.R28.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<28) AND
+											(MAIN.R29.Task_ID_Ack=Tip_Change AND MAIN.R29.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<29) AND
+											(MAIN.R30.Task_ID_Ack=Tip_Change AND MAIN.R30.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<30) AND
+											All_Robots_SteppersRST)
+											OR
+							(Start_All_TDRobots AND MAIN.R1.Task_ID_Ack=Tip_Dress AND MAIN.R1.Task_Completed AND
+											(MAIN.R2.Task_ID_Ack=Tip_Dress AND MAIN.R2.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<2) AND
+											(MAIN.R3.Task_ID_Ack=Tip_Dress AND MAIN.R3.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<3) AND
+											(MAIN.R4.Task_ID_Ack=Tip_Dress AND MAIN.R4.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<4) AND
+											(MAIN.R5.Task_ID_Ack=Tip_Dress AND MAIN.R5.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<5) AND
+											(MAIN.R6.Task_ID_Ack=Tip_Dress AND MAIN.R6.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<6) AND
+											(MAIN.R7.Task_ID_Ack=Tip_Dress AND MAIN.R7.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<7) AND
+											(MAIN.R8.Task_ID_Ack=Tip_Dress AND MAIN.R8.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<8) AND
+											(MAIN.R9.Task_ID_Ack=Tip_Dress AND MAIN.R9.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<9) AND
+											(MAIN.R10.Task_ID_Ack=Tip_Dress AND MAIN.R10.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<10) AND
+											(MAIN.R11.Task_ID_Ack=Tip_Dress AND MAIN.R11.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<11) AND
+											(MAIN.R12.Task_ID_Ack=Tip_Dress AND MAIN.R12.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<12) AND
+											(MAIN.R13.Task_ID_Ack=Tip_Dress AND MAIN.R13.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<13) AND
+											(MAIN.R14.Task_ID_Ack=Tip_Dress AND MAIN.R14.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<14) AND
+											(MAIN.R15.Task_ID_Ack=Tip_Dress AND MAIN.R15.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<15) AND
+											(MAIN.R16.Task_ID_Ack=Tip_Dress AND MAIN.R16.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<16) AND
+											(MAIN.R17.Task_ID_Ack=Tip_Dress AND MAIN.R17.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<17) AND
+											(MAIN.R18.Task_ID_Ack=Tip_Dress AND MAIN.R18.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<18) AND
+											(MAIN.R19.Task_ID_Ack=Tip_Dress AND MAIN.R19.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<19) AND
+											(MAIN.R20.Task_ID_Ack=Tip_Dress AND MAIN.R20.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<20) AND
+											(MAIN.R21.Task_ID_Ack=Tip_Dress AND MAIN.R21.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<21) AND
+											(MAIN.R22.Task_ID_Ack=Tip_Dress AND MAIN.R22.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<22) AND
+											(MAIN.R23.Task_ID_Ack=Tip_Dress AND MAIN.R23.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<23) AND
+											(MAIN.R24.Task_ID_Ack=Tip_Dress AND MAIN.R24.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<24) AND
+											(MAIN.R25.Task_ID_Ack=Tip_Dress AND MAIN.R25.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<25) AND
+											(MAIN.R26.Task_ID_Ack=Tip_Dress AND MAIN.R26.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<26) AND
+											(MAIN.R27.Task_ID_Ack=Tip_Dress AND MAIN.R27.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<27) AND
+											(MAIN.R28.Task_ID_Ack=Tip_Dress AND MAIN.R28.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<28) AND
+											(MAIN.R29.Task_ID_Ack=Tip_Dress AND MAIN.R29.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<29) AND
+											(MAIN.R30.Task_ID_Ack=Tip_Dress AND MAIN.R30.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<30))
+											OR
+							(Start_All_TraccTCP AND MAIN.R1.Task_ID_Ack=Tracc_TCP AND MAIN.R1.Task_Completed AND
+											(MAIN.R2.Task_ID_Ack=Tracc_TCP AND MAIN.R2.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<2) AND
+											(MAIN.R3.Task_ID_Ack=Tracc_TCP AND MAIN.R3.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<3) AND
+											(MAIN.R4.Task_ID_Ack=Tracc_TCP AND MAIN.R4.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<4) AND
+											(MAIN.R5.Task_ID_Ack=Tracc_TCP AND MAIN.R5.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<5) AND
+											(MAIN.R6.Task_ID_Ack=Tracc_TCP AND MAIN.R6.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<6) AND
+											(MAIN.R7.Task_ID_Ack=Tracc_TCP AND MAIN.R7.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<7) AND
+											(MAIN.R8.Task_ID_Ack=Tracc_TCP AND MAIN.R8.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<8) AND
+											(MAIN.R9.Task_ID_Ack=Tracc_TCP AND MAIN.R9.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<9) AND
+											(MAIN.R10.Task_ID_Ack=Tracc_TCP AND MAIN.R10.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<10) AND
+											(MAIN.R11.Task_ID_Ack=Tracc_TCP AND MAIN.R11.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<11) AND
+											(MAIN.R12.Task_ID_Ack=Tracc_TCP AND MAIN.R12.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<12) AND
+											(MAIN.R13.Task_ID_Ack=Tracc_TCP AND MAIN.R13.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<13) AND
+											(MAIN.R14.Task_ID_Ack=Tracc_TCP AND MAIN.R14.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<14) AND
+											(MAIN.R15.Task_ID_Ack=Tracc_TCP AND MAIN.R15.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<15) AND
+											(MAIN.R16.Task_ID_Ack=Tracc_TCP AND MAIN.R16.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<16) AND
+											(MAIN.R17.Task_ID_Ack=Tracc_TCP AND MAIN.R17.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<17) AND
+											(MAIN.R18.Task_ID_Ack=Tracc_TCP AND MAIN.R18.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<18) AND
+											(MAIN.R19.Task_ID_Ack=Tracc_TCP AND MAIN.R19.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<19) AND
+											(MAIN.R20.Task_ID_Ack=Tracc_TCP AND MAIN.R20.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<20) AND
+											(MAIN.R21.Task_ID_Ack=Tracc_TCP AND MAIN.R21.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<21) AND
+											(MAIN.R22.Task_ID_Ack=Tracc_TCP AND MAIN.R22.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<22) AND
+											(MAIN.R23.Task_ID_Ack=Tracc_TCP AND MAIN.R23.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<23) AND
+											(MAIN.R24.Task_ID_Ack=Tracc_TCP AND MAIN.R24.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<24) AND
+											(MAIN.R25.Task_ID_Ack=Tracc_TCP AND MAIN.R25.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<25) AND
+											(MAIN.R26.Task_ID_Ack=Tracc_TCP AND MAIN.R26.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<26) AND
+											(MAIN.R27.Task_ID_Ack=Tracc_TCP AND MAIN.R27.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<27) AND
+											(MAIN.R28.Task_ID_Ack=Tracc_TCP AND MAIN.R28.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<28) AND
+											(MAIN.R29.Task_ID_Ack=Tracc_TCP AND MAIN.R29.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<29) AND
+											(MAIN.R30.Task_ID_Ack=Tracc_TCP AND MAIN.R30.Task_Completed OR GTAC_CONFIG.Option_Robot_Count<30));
+											(*ADD MORE*)
+	(*Completes for running seperated tip dress jobs*)
+	Tip_Dress_Complete1:= MAIN.R1.Task_ID_Ack=Tip_Dress AND MAIN.R1.Task_Completed AND NOT Start_All_TDRobots;
+	Tip_Dress_Complete2:= MAIN.R2.Task_ID_Ack=Tip_Dress AND MAIN.R2.Task_Completed AND NOT Start_All_TDRobots;
+	Tip_Dress_Complete3:= MAIN.R3.Task_ID_Ack=Tip_Dress AND MAIN.R3.Task_Completed AND NOT Start_All_TDRobots;
+	Tip_Dress_Complete4:= MAIN.R4.Task_ID_Ack=Tip_Dress AND MAIN.R4.Task_Completed AND NOT Start_All_TDRobots;
+	Tip_Dress_Complete5:= MAIN.R5.Task_ID_Ack=Tip_Dress AND MAIN.R5.Task_Completed AND NOT Start_All_TDRobots;
+	Tip_Dress_Complete6:= MAIN.R6.Task_ID_Ack=Tip_Dress AND MAIN.R6.Task_Completed AND NOT Start_All_TDRobots;
+	Tip_Dress_Complete7:= MAIN.R7.Task_ID_Ack=Tip_Dress AND MAIN.R7.Task_Completed AND NOT Start_All_TDRobots;
+	Tip_Dress_Complete8:= MAIN.R8.Task_ID_Ack=Tip_Dress AND MAIN.R8.Task_Completed AND NOT Start_All_TDRobots;
+	Tip_Dress_Complete9:= MAIN.R9.Task_ID_Ack=Tip_Dress AND MAIN.R9.Task_Completed AND NOT Start_All_TDRobots;
+	Tip_Dress_Complete10:= MAIN.R10.Task_ID_Ack=Tip_Dress AND MAIN.R10.Task_Completed AND NOT Start_All_TDRobots;
+	Tip_Dress_Complete11:= MAIN.R11.Task_ID_Ack=Tip_Dress AND MAIN.R11.Task_Completed AND NOT Start_All_TDRobots;
+	Tip_Dress_Complete12:= MAIN.R12.Task_ID_Ack=Tip_Dress AND MAIN.R12.Task_Completed AND NOT Start_All_TDRobots;
+	Tip_Dress_Complete13:= MAIN.R13.Task_ID_Ack=Tip_Dress AND MAIN.R13.Task_Completed AND NOT Start_All_TDRobots;
+	Tip_Dress_Complete14:= MAIN.R14.Task_ID_Ack=Tip_Dress AND MAIN.R14.Task_Completed AND NOT Start_All_TDRobots;
+	Tip_Dress_Complete15:= MAIN.R15.Task_ID_Ack=Tip_Dress AND MAIN.R15.Task_Completed AND NOT Start_All_TDRobots;
+	Tip_Dress_Complete16:= MAIN.R16.Task_ID_Ack=Tip_Dress AND MAIN.R16.Task_Completed AND NOT Start_All_TDRobots;
+	Tip_Dress_Complete17:= MAIN.R17.Task_ID_Ack=Tip_Dress AND MAIN.R17.Task_Completed AND NOT Start_All_TDRobots;
+	Tip_Dress_Complete18:= MAIN.R18.Task_ID_Ack=Tip_Dress AND MAIN.R18.Task_Completed AND NOT Start_All_TDRobots;
+	Tip_Dress_Complete19:= MAIN.R19.Task_ID_Ack=Tip_Dress AND MAIN.R19.Task_Completed AND NOT Start_All_TDRobots;
+	Tip_Dress_Complete20:= MAIN.R20.Task_ID_Ack=Tip_Dress AND MAIN.R20.Task_Completed AND NOT Start_All_TDRobots;
+	Tip_Dress_Complete21:= MAIN.R21.Task_ID_Ack=Tip_Dress AND MAIN.R21.Task_Completed AND NOT Start_All_TDRobots;
+	Tip_Dress_Complete22:= MAIN.R22.Task_ID_Ack=Tip_Dress AND MAIN.R22.Task_Completed AND NOT Start_All_TDRobots;
+	Tip_Dress_Complete23:= MAIN.R23.Task_ID_Ack=Tip_Dress AND MAIN.R23.Task_Completed AND NOT Start_All_TDRobots;
+	Tip_Dress_Complete24:= MAIN.R24.Task_ID_Ack=Tip_Dress AND MAIN.R24.Task_Completed AND NOT Start_All_TDRobots;
+	Tip_Dress_Complete25:= MAIN.R25.Task_ID_Ack=Tip_Dress AND MAIN.R25.Task_Completed AND NOT Start_All_TDRobots;
+	Tip_Dress_Complete26:= MAIN.R26.Task_ID_Ack=Tip_Dress AND MAIN.R26.Task_Completed AND NOT Start_All_TDRobots;
+	Tip_Dress_Complete27:= MAIN.R27.Task_ID_Ack=Tip_Dress AND MAIN.R27.Task_Completed AND NOT Start_All_TDRobots;
+	Tip_Dress_Complete28:= MAIN.R28.Task_ID_Ack=Tip_Dress AND MAIN.R28.Task_Completed AND NOT Start_All_TDRobots;
+	Tip_Dress_Complete29:= MAIN.R29.Task_ID_Ack=Tip_Dress AND MAIN.R29.Task_Completed AND NOT Start_All_TDRobots;
+	Tip_Dress_Complete30:= MAIN.R30.Task_ID_Ack=Tip_Dress AND MAIN.R30.Task_Completed AND NOT Start_All_TDRobots;
+
+	(*Completes for running seperated TraccTCP  jobs*)
+	TraccTCP_Complete1:= MAIN.R1.Task_ID_Ack=Tracc_TCP AND MAIN.R1.Task_Completed AND NOT Start_All_TraccTCP;
+	TraccTCP_Complete2:= MAIN.R2.Task_ID_Ack=Tracc_TCP AND MAIN.R2.Task_Completed AND NOT Start_All_TraccTCP;
+	TraccTCP_Complete3:= MAIN.R3.Task_ID_Ack=Tracc_TCP AND MAIN.R3.Task_Completed AND NOT Start_All_TraccTCP;
+	TraccTCP_Complete4:= MAIN.R4.Task_ID_Ack=Tracc_TCP AND MAIN.R4.Task_Completed AND NOT Start_All_TraccTCP;
+	TraccTCP_Complete5:= MAIN.R5.Task_ID_Ack=Tracc_TCP AND MAIN.R5.Task_Completed AND NOT Start_All_TraccTCP;
+	TraccTCP_Complete6:= MAIN.R6.Task_ID_Ack=Tracc_TCP AND MAIN.R6.Task_Completed AND NOT Start_All_TraccTCP;
+	TraccTCP_Complete7:= MAIN.R7.Task_ID_Ack=Tracc_TCP AND MAIN.R7.Task_Completed AND NOT Start_All_TraccTCP;
+	TraccTCP_Complete8:= MAIN.R8.Task_ID_Ack=Tracc_TCP AND MAIN.R8.Task_Completed AND NOT Start_All_TraccTCP;
+	TraccTCP_Complete9:= MAIN.R9.Task_ID_Ack=Tracc_TCP AND MAIN.R9.Task_Completed AND NOT Start_All_TraccTCP;
+	TraccTCP_Complete10:= MAIN.R10.Task_ID_Ack=Tracc_TCP AND MAIN.R10.Task_Completed AND NOT Start_All_TraccTCP;
+	TraccTCP_Complete11:= MAIN.R11.Task_ID_Ack=Tracc_TCP AND MAIN.R11.Task_Completed AND NOT Start_All_TraccTCP;
+	TraccTCP_Complete12:= MAIN.R12.Task_ID_Ack=Tracc_TCP AND MAIN.R12.Task_Completed AND NOT Start_All_TraccTCP;
+	TraccTCP_Complete13:= MAIN.R13.Task_ID_Ack=Tracc_TCP AND MAIN.R13.Task_Completed AND NOT Start_All_TraccTCP;
+	TraccTCP_Complete14:= MAIN.R14.Task_ID_Ack=Tracc_TCP AND MAIN.R14.Task_Completed AND NOT Start_All_TraccTCP;
+	TraccTCP_Complete15:= MAIN.R15.Task_ID_Ack=Tracc_TCP AND MAIN.R15.Task_Completed AND NOT Start_All_TraccTCP;
+	TraccTCP_Complete16:= MAIN.R16.Task_ID_Ack=Tracc_TCP AND MAIN.R16.Task_Completed AND NOT Start_All_TraccTCP;
+	TraccTCP_Complete17:= MAIN.R17.Task_ID_Ack=Tracc_TCP AND MAIN.R17.Task_Completed AND NOT Start_All_TraccTCP;
+	TraccTCP_Complete18:= MAIN.R18.Task_ID_Ack=Tracc_TCP AND MAIN.R18.Task_Completed AND NOT Start_All_TraccTCP;
+	TraccTCP_Complete19:= MAIN.R19.Task_ID_Ack=Tracc_TCP AND MAIN.R19.Task_Completed AND NOT Start_All_TraccTCP;
+	TraccTCP_Complete20:= MAIN.R20.Task_ID_Ack=Tracc_TCP AND MAIN.R20.Task_Completed AND NOT Start_All_TraccTCP;
+	TraccTCP_Complete21:= MAIN.R21.Task_ID_Ack=Tracc_TCP AND MAIN.R21.Task_Completed AND NOT Start_All_TraccTCP;
+	TraccTCP_Complete22:= MAIN.R22.Task_ID_Ack=Tracc_TCP AND MAIN.R22.Task_Completed AND NOT Start_All_TraccTCP;
+	TraccTCP_Complete23:= MAIN.R23.Task_ID_Ack=Tracc_TCP AND MAIN.R23.Task_Completed AND NOT Start_All_TraccTCP;
+	TraccTCP_Complete24:= MAIN.R24.Task_ID_Ack=Tracc_TCP AND MAIN.R24.Task_Completed AND NOT Start_All_TraccTCP;
+	TraccTCP_Complete25:= MAIN.R25.Task_ID_Ack=Tracc_TCP AND MAIN.R25.Task_Completed AND NOT Start_All_TraccTCP;
+	TraccTCP_Complete26:= MAIN.R26.Task_ID_Ack=Tracc_TCP AND MAIN.R26.Task_Completed AND NOT Start_All_TraccTCP;
+	TraccTCP_Complete27:= MAIN.R27.Task_ID_Ack=Tracc_TCP AND MAIN.R27.Task_Completed AND NOT Start_All_TraccTCP;
+	TraccTCP_Complete28:= MAIN.R28.Task_ID_Ack=Tracc_TCP AND MAIN.R28.Task_Completed AND NOT Start_All_TraccTCP;
+	TraccTCP_Complete29:= MAIN.R29.Task_ID_Ack=Tracc_TCP AND MAIN.R29.Task_Completed AND NOT Start_All_TraccTCP;
+	TraccTCP_Complete30:= MAIN.R30.Task_ID_Ack=Tracc_TCP AND MAIN.R30.Task_Completed AND NOT Start_All_TraccTCP;
+	
+	(*Data To All Robots*)
+
+	(*Task ID*)
+	IF Service_Call_ForAllRobots
+		THEN
+		R1_Data.Task_ID[16]:=Task_ID;
+		R2_Data.Task_ID[16]:=Task_ID;
+		R3_Data.Task_ID[16]:=Task_ID;
+		R4_Data.Task_ID[16]:=Task_ID;
+		R5_Data.Task_ID[16]:=Task_ID;
+		R6_Data.Task_ID[16]:=Task_ID;
+		R7_Data.Task_ID[16]:=Task_ID;
+		R8_Data.Task_ID[16]:=Task_ID;
+		R9_Data.Task_ID[16]:=Task_ID;
+		R10_Data.Task_ID[16]:=Task_ID;
+		R11_Data.Task_ID[16]:=Task_ID;
+		R12_Data.Task_ID[16]:=Task_ID;
+		R13_Data.Task_ID[16]:=Task_ID;
+		R14_Data.Task_ID[16]:=Task_ID;
+		R15_Data.Task_ID[16]:=Task_ID;
+		R16_Data.Task_ID[16]:=Task_ID;
+		R17_Data.Task_ID[16]:=Task_ID;
+		R18_Data.Task_ID[16]:=Task_ID;
+		R19_Data.Task_ID[16]:=Task_ID;
+		R20_Data.Task_ID[16]:=Task_ID;
+		R21_Data.Task_ID[16]:=Task_ID;
+		R22_Data.Task_ID[16]:=Task_ID;
+		R23_Data.Task_ID[16]:=Task_ID;
+		R24_Data.Task_ID[16]:=Task_ID;
+		R25_Data.Task_ID[16]:=Task_ID;
+		R26_Data.Task_ID[16]:=Task_ID;
+		R27_Data.Task_ID[16]:=Task_ID;
+		R28_Data.Task_ID[16]:=Task_ID;
+		R29_Data.Task_ID[16]:=Task_ID;
+		R30_Data.Task_ID[16]:=Task_ID;
+	END_IF;
+
+	IF Service_Call_ForRobot1 AND Start_TDRobot_1
+		THEN
+		R1_Data.Task_ID[16]:=Tip_Dress;	
+	ELSIF (Service_Call_ForRobot1 AND Start_TraccTCP_1 )
+		THEN
+		R1_Data.Task_ID[16]:=Tracc_TCP;
+	ELSIF NOT Service_Call_ForAllRobots
+		THEN
+		R1_Data.Task_ID[16]:=0;
+	END_IF;
+
+	IF Service_Call_ForRobot2 AND Start_TDRobot_2
+		THEN
+		R2_Data.Task_ID[16]:=Tip_Dress;
+	ELSIF (Service_Call_ForRobot2 AND Start_TraccTCP_2 )
+		THEN
+		R2_Data.Task_ID[16]:=Tracc_TCP;
+	ELSIF NOT Service_Call_ForAllRobots
+		THEN
+		R2_Data.Task_ID[16]:=0;
+	END_IF;
+
+	IF Service_Call_ForRobot3 AND Start_TDRobot_3
+		THEN
+		R3_Data.Task_ID[16]:=Tip_Dress;
+	ELSIF (Service_Call_ForRobot3 AND Start_TraccTCP_3 )
+		THEN
+		R3_Data.Task_ID[16]:=Tracc_TCP;
+	ELSIF NOT Service_Call_ForAllRobots
+		THEN
+		R3_Data.Task_ID[16]:=0;			
+	END_IF;
+
+	IF Service_Call_ForRobot4 AND Start_TDRobot_4
+		THEN
+		R4_Data.Task_ID[16]:=Tip_Dress;
+	ELSIF (Service_Call_ForRobot4 AND Start_TraccTCP_4)
+		THEN
+		R4_Data.Task_ID[16]:=Tracc_TCP;
+	ELSIF NOT Service_Call_ForAllRobots
+		THEN
+		R4_Data.Task_ID[16]:=0;	
+	END_IF;
+
+	IF Service_Call_ForRobot5
+		THEN
+		R5_Data.Task_ID[16]:=Tip_Dress;
+	ELSIF (Service_Call_ForRobot5 AND Start_TraccTCP_5 )
+		THEN
+		R5_Data.Task_ID[16]:=Tracc_TCP;
+	ELSIF NOT Service_Call_ForAllRobots
+		THEN
+		R5_Data.Task_ID[16]:=0;
+	END_IF;
+
+	IF Service_Call_ForRobot6
+		THEN
+		R6_Data.Task_ID[16]:=Tip_Dress;
+	ELSIF (Service_Call_ForRobot6 AND Start_TraccTCP_6 )
+		THEN
+		R6_Data.Task_ID[16]:=Tracc_TCP;
+	ELSIF NOT Service_Call_ForAllRobots
+		THEN
+		R6_Data.Task_ID[16]:=0;
+	END_IF;
+
+	IF Service_Call_ForRobot7
+		THEN
+		R7_Data.Task_ID[16]:=Tip_Dress;
+	ELSIF (Service_Call_ForRobot7 AND Start_TraccTCP_7 )
+		THEN
+		R7_Data.Task_ID[16]:=Tracc_TCP;
+	ELSIF NOT Service_Call_ForAllRobots
+		THEN
+		R7_Data.Task_ID[16]:=0;
+	END_IF;
+
+	IF Service_Call_ForRobot8
+		THEN
+		R8_Data.Task_ID[16]:=Tip_Dress;
+	ELSIF (Service_Call_ForRobot8 AND Start_TraccTCP_8 )
+		THEN
+		R8_Data.Task_ID[16]:=Tracc_TCP;
+	ELSIF NOT Service_Call_ForAllRobots
+		THEN
+		R8_Data.Task_ID[16]:=0;
+	END_IF;
+
+	IF Service_Call_ForRobot9
+		THEN
+		R9_Data.Task_ID[16]:=Tip_Dress;
+	ELSIF (Service_Call_ForRobot9 AND Start_TraccTCP_9 )
+		THEN
+		R9_Data.Task_ID[16]:=Tracc_TCP;
+	ELSIF NOT Service_Call_ForAllRobots
+		THEN
+		R9_Data.Task_ID[16]:=0;
+	END_IF;
+
+	IF Service_Call_ForRobot10
+		THEN
+		R10_Data.Task_ID[16]:=Tip_Dress;
+	ELSIF (Service_Call_ForRobot10 AND Start_TraccTCP_10 )
+		THEN
+		R10_Data.Task_ID[16]:=Tracc_TCP;
+	ELSIF NOT Service_Call_ForAllRobots
+		THEN
+		R10_Data.Task_ID[16]:=0;
+	END_IF;
+
+	IF Service_Call_ForRobot11
+		THEN
+		R11_Data.Task_ID[16]:=Tip_Dress;
+	ELSIF (Service_Call_ForRobot11 AND Start_TraccTCP_11 )
+		THEN
+		R11_Data.Task_ID[16]:=Tracc_TCP;
+	ELSIF NOT Service_Call_ForAllRobots
+		THEN
+		R11_Data.Task_ID[16]:=0;
+	END_IF;
+
+	IF Service_Call_ForRobot12
+		THEN
+		R12_Data.Task_ID[16]:=Tip_Dress;
+	ELSIF (Service_Call_ForRobot12 AND Start_TraccTCP_12 )
+		THEN
+		R12_Data.Task_ID[16]:=Tracc_TCP;
+	ELSIF NOT Service_Call_ForAllRobots
+		THEN
+		R12_Data.Task_ID[16]:=0;
+	END_IF;
+
+	IF Service_Call_ForRobot13
+		THEN
+		R13_Data.Task_ID[16]:=Tip_Dress;
+	ELSIF (Service_Call_ForRobot13 AND Start_TraccTCP_13 )
+		THEN
+		R13_Data.Task_ID[16]:=Tracc_TCP;
+	ELSIF NOT Service_Call_ForAllRobots
+		THEN
+		R13_Data.Task_ID[16]:=0;
+	END_IF;
+
+	IF Service_Call_ForRobot14
+		THEN
+		R14_Data.Task_ID[16]:=Tip_Dress;
+	ELSIF (Service_Call_ForRobot14 AND Start_TraccTCP_14 )
+		THEN
+		R14_Data.Task_ID[16]:=Tracc_TCP;
+	ELSIF NOT Service_Call_ForAllRobots
+		THEN
+		R14_Data.Task_ID[16]:=0;
+	END_IF;
+
+	IF Service_Call_ForRobot15
+		THEN
+		R15_Data.Task_ID[16]:=Tip_Dress;
+	ELSIF (Service_Call_ForRobot15 AND Start_TraccTCP_15 )
+		THEN
+		R15_Data.Task_ID[16]:=Tracc_TCP;
+	ELSIF NOT Service_Call_ForAllRobots
+		THEN
+		R15_Data.Task_ID[16]:=0;
+	END_IF;
+
+	IF Service_Call_ForRobot16
+		THEN
+		R16_Data.Task_ID[16]:=Tip_Dress;
+	ELSIF (Service_Call_ForRobot16 AND Start_TraccTCP_16 )
+		THEN
+		R16_Data.Task_ID[16]:=Tracc_TCP;
+	ELSIF NOT Service_Call_ForAllRobots
+		THEN
+		R16_Data.Task_ID[16]:=0;
+	END_IF;
+
+	IF Service_Call_ForRobot17
+		THEN
+		R17_Data.Task_ID[16]:=Tip_Dress;
+	ELSIF (Service_Call_ForRobot17 AND Start_TraccTCP_17 )
+		THEN
+		R17_Data.Task_ID[16]:=Tracc_TCP;
+	ELSIF NOT Service_Call_ForAllRobots
+		THEN
+		R17_Data.Task_ID[16]:=0;
+	END_IF;
+
+	IF Service_Call_ForRobot18
+		THEN
+		R18_Data.Task_ID[16]:=Tip_Dress;
+	ELSIF (Service_Call_ForRobot18 AND Start_TraccTCP_18 )
+		THEN
+		R18_Data.Task_ID[16]:=Tracc_TCP;
+	ELSIF NOT Service_Call_ForAllRobots
+		THEN
+		R18_Data.Task_ID[16]:=0;
+	END_IF;
+
+	IF Service_Call_ForRobot19
+		THEN
+		R19_Data.Task_ID[16]:=Tip_Dress;
+	ELSIF (Service_Call_ForRobot19 AND Start_TraccTCP_19 )
+		THEN
+		R19_Data.Task_ID[16]:=Tracc_TCP;
+	ELSIF NOT Service_Call_ForAllRobots
+		THEN
+		R19_Data.Task_ID[16]:=0;
+	END_IF;
+
+	IF Service_Call_ForRobot20
+		THEN
+		R20_Data.Task_ID[16]:=Tip_Dress;
+	ELSIF (Service_Call_ForRobot20 AND Start_TraccTCP_20 )
+		THEN
+		R20_Data.Task_ID[16]:=Tracc_TCP;
+	ELSIF NOT Service_Call_ForAllRobots
+		THEN
+		R20_Data.Task_ID[16]:=0;
+	END_IF;
+
+	IF Service_Call_ForRobot21
+		THEN
+		R21_Data.Task_ID[16]:=Tip_Dress;
+	ELSIF (Service_Call_ForRobot21 AND Start_TraccTCP_21 )
+		THEN
+		R21_Data.Task_ID[16]:=Tracc_TCP;
+	ELSIF NOT Service_Call_ForAllRobots
+		THEN
+		R21_Data.Task_ID[16]:=0;
+	END_IF;
+
+	IF Service_Call_ForRobot22
+		THEN
+		R22_Data.Task_ID[16]:=Tip_Dress;
+	ELSIF (Service_Call_ForRobot22 AND Start_TraccTCP_22 )
+		THEN
+		R22_Data.Task_ID[16]:=Tracc_TCP;
+	ELSIF NOT Service_Call_ForAllRobots
+		THEN
+		R22_Data.Task_ID[16]:=0;
+	END_IF;
+
+	IF Service_Call_ForRobot23
+		THEN
+		R23_Data.Task_ID[16]:=Tip_Dress;
+	ELSIF (Service_Call_ForRobot23 AND Start_TraccTCP_23 )
+		THEN
+		R23_Data.Task_ID[16]:=Tracc_TCP;
+	ELSIF NOT Service_Call_ForAllRobots
+		THEN
+		R23_Data.Task_ID[16]:=0;
+	END_IF;
+
+	IF Service_Call_ForRobot24
+		THEN
+		R24_Data.Task_ID[16]:=Tip_Dress;
+	ELSIF (Service_Call_ForRobot24 AND Start_TraccTCP_24 )
+		THEN
+		R24_Data.Task_ID[16]:=Tracc_TCP;
+	ELSIF NOT Service_Call_ForAllRobots
+		THEN
+		R24_Data.Task_ID[16]:=0;
+	END_IF;
+
+	IF Service_Call_ForRobot25
+		THEN
+		R25_Data.Task_ID[16]:=Tip_Dress;
+	ELSIF (Service_Call_ForRobot25 AND Start_TraccTCP_25 )
+		THEN
+		R25_Data.Task_ID[16]:=Tracc_TCP;
+	ELSIF NOT Service_Call_ForAllRobots
+		THEN
+		R25_Data.Task_ID[16]:=0;
+	END_IF;
+
+	IF Service_Call_ForRobot26
+		THEN
+		R26_Data.Task_ID[16]:=Tip_Dress;
+	ELSIF (Service_Call_ForRobot26 AND Start_TraccTCP_26 )
+		THEN
+		R26_Data.Task_ID[16]:=Tracc_TCP;
+	ELSIF NOT Service_Call_ForAllRobots
+		THEN
+		R26_Data.Task_ID[16]:=0;
+	END_IF;
+
+	IF Service_Call_ForRobot27
+		THEN
+		R27_Data.Task_ID[16]:=Tip_Dress;
+	ELSIF (Service_Call_ForRobot27 AND Start_TraccTCP_27 )
+		THEN
+		R27_Data.Task_ID[16]:=Tracc_TCP;
+	ELSIF NOT Service_Call_ForAllRobots
+		THEN
+		R27_Data.Task_ID[16]:=0;
+	END_IF;
+
+	IF Service_Call_ForRobot28
+		THEN
+		R28_Data.Task_ID[16]:=Tip_Dress;
+	ELSIF (Service_Call_ForRobot28 AND Start_TraccTCP_28 )
+		THEN
+		R28_Data.Task_ID[16]:=Tracc_TCP;
+	ELSIF NOT Service_Call_ForAllRobots
+		THEN
+		R28_Data.Task_ID[16]:=0;
+	END_IF;
+
+	IF Service_Call_ForRobot29
+		THEN
+		R29_Data.Task_ID[16]:=Tip_Dress;
+	ELSIF (Service_Call_ForRobot29 AND Start_TraccTCP_29 )
+		THEN
+		R29_Data.Task_ID[16]:=Tracc_TCP;
+	ELSIF NOT Service_Call_ForAllRobots
+		THEN
+		R29_Data.Task_ID[16]:=0;
+	END_IF;
+
+	IF Service_Call_ForRobot30
+		THEN
+		R30_Data.Task_ID[16]:=Tip_Dress;
+	ELSIF (Service_Call_ForRobot30 AND Start_TraccTCP_30 )
+		THEN
+		R30_Data.Task_ID[16]:=Tracc_TCP;
+	ELSIF NOT Service_Call_ForAllRobots
+		THEN
+		R30_Data.Task_ID[16]:=0;
+	END_IF;
+
+	(*Fix ID*)
+	R1_Data.Fix_ID[16]:= Fix_ID;
+	R2_Data.Fix_ID[16]:= Fix_ID;
+	R3_Data.Fix_ID[16]:= Fix_ID;
+	R4_Data.Fix_ID[16]:= Fix_ID;
+	R5_Data.Fix_ID[16]:= Fix_ID;
+	R6_Data.Fix_ID[16]:= Fix_ID;
+	R7_Data.Fix_ID[16]:= Fix_ID;
+	R8_Data.Fix_ID[16]:= Fix_ID;
+	R9_Data.Fix_ID[16]:= Fix_ID;
+	R10_Data.Fix_ID[16]:= Fix_ID;
+	R11_Data.Fix_ID[16]:= Fix_ID;
+	R12_Data.Fix_ID[16]:= Fix_ID;
+	R13_Data.Fix_ID[16]:= Fix_ID;
+	R14_Data.Fix_ID[16]:= Fix_ID;
+	R15_Data.Fix_ID[16]:= Fix_ID;
+	R16_Data.Fix_ID[16]:= Fix_ID;
+	R17_Data.Fix_ID[16]:= Fix_ID;
+	R18_Data.Fix_ID[16]:= Fix_ID;
+	R19_Data.Fix_ID[16]:= Fix_ID;
+	R20_Data.Fix_ID[16]:= Fix_ID;
+	R21_Data.Fix_ID[16]:= Fix_ID;
+	R22_Data.Fix_ID[16]:= Fix_ID;
+	R23_Data.Fix_ID[16]:= Fix_ID;
+	R24_Data.Fix_ID[16]:= Fix_ID;
+	R25_Data.Fix_ID[16]:= Fix_ID;
+	R26_Data.Fix_ID[16]:= Fix_ID;
+	R27_Data.Fix_ID[16]:= Fix_ID;
+	R28_Data.Fix_ID[16]:= Fix_ID;
+	R29_Data.Fix_ID[16]:= Fix_ID;
+	R30_Data.Fix_ID[16]:= Fix_ID;
+
+	(*Model ID*)
+	R1_Data.Model_ID[16]:= Model_ID;
+	R2_Data.Model_ID[16]:= Model_ID;
+	R3_Data.Model_ID[16]:= Model_ID;
+	R4_Data.Model_ID[16]:= Model_ID;
+	R5_Data.Model_ID[16]:= Model_ID;
+	R6_Data.Model_ID[16]:= Model_ID;
+	R7_Data.Model_ID[16]:= Model_ID;
+	R8_Data.Model_ID[16]:= Model_ID;
+	R9_Data.Model_ID[16]:= Model_ID;
+	R10_Data.Model_ID[16]:= Model_ID;
+	R11_Data.Model_ID[16]:= Model_ID;
+	R12_Data.Model_ID[16]:= Model_ID;
+	R13_Data.Model_ID[16]:= Model_ID;
+	R14_Data.Model_ID[16]:= Model_ID;
+	R15_Data.Model_ID[16]:= Model_ID;
+	R16_Data.Model_ID[16]:= Model_ID;
+	R17_Data.Model_ID[16]:= Model_ID;
+	R18_Data.Model_ID[16]:= Model_ID;
+	R19_Data.Model_ID[16]:= Model_ID;
+	R20_Data.Model_ID[16]:= Model_ID;
+	R21_Data.Model_ID[16]:= Model_ID;
+	R22_Data.Model_ID[16]:= Model_ID;
+	R23_Data.Model_ID[16]:= Model_ID;
+	R24_Data.Model_ID[16]:= Model_ID;
+	R25_Data.Model_ID[16]:= Model_ID;
+	R26_Data.Model_ID[16]:= Model_ID;
+	R27_Data.Model_ID[16]:= Model_ID;
+	R28_Data.Model_ID[16]:= Model_ID;
+	R29_Data.Model_ID[16]:= Model_ID;
+	R30_Data.Model_ID[16]:= Model_ID;
+
+	(*Proceed from Pounce*)
+	R1_Data.Proceed_From_Pounce[16]:= Robots_Clear_ToProceed OR (Service_Call_ForRobot1);
+	R2_Data.Proceed_From_Pounce[16]:= Robots_Clear_ToProceed OR (Service_Call_ForRobot2);
+	R3_Data.Proceed_From_Pounce[16]:= Robots_Clear_ToProceed OR (Service_Call_ForRobot3);
+	R4_Data.Proceed_From_Pounce[16]:= Robots_Clear_ToProceed OR (Service_Call_ForRobot4);
+	R5_Data.Proceed_From_Pounce[16]:= Robots_Clear_ToProceed OR (Service_Call_ForRobot5);
+	R6_Data.Proceed_From_Pounce[16]:= Robots_Clear_ToProceed OR (Service_Call_ForRobot6);
+	R7_Data.Proceed_From_Pounce[16]:= Robots_Clear_ToProceed OR (Service_Call_ForRobot7);
+	R8_Data.Proceed_From_Pounce[16]:= Robots_Clear_ToProceed OR (Service_Call_ForRobot8);
+	R9_Data.Proceed_From_Pounce[16]:= Robots_Clear_ToProceed OR (Service_Call_ForRobot9);
+	R10_Data.Proceed_From_Pounce[16]:= Robots_Clear_ToProceed OR (Service_Call_ForRobot10);
+	R11_Data.Proceed_From_Pounce[16]:= Robots_Clear_ToProceed OR (Service_Call_ForRobot11);
+	R12_Data.Proceed_From_Pounce[16]:= Robots_Clear_ToProceed OR (Service_Call_ForRobot12);
+	R13_Data.Proceed_From_Pounce[16]:= Robots_Clear_ToProceed OR (Service_Call_ForRobot13);
+	R14_Data.Proceed_From_Pounce[16]:= Robots_Clear_ToProceed OR (Service_Call_ForRobot14);
+	R15_Data.Proceed_From_Pounce[16]:= Robots_Clear_ToProceed OR (Service_Call_ForRobot15);
+	R16_Data.Proceed_From_Pounce[16]:= Robots_Clear_ToProceed OR (Service_Call_ForRobot16);
+	R17_Data.Proceed_From_Pounce[16]:= Robots_Clear_ToProceed OR (Service_Call_ForRobot17);
+	R18_Data.Proceed_From_Pounce[16]:= Robots_Clear_ToProceed OR (Service_Call_ForRobot18);
+	R19_Data.Proceed_From_Pounce[16]:= Robots_Clear_ToProceed OR (Service_Call_ForRobot19);
+	R20_Data.Proceed_From_Pounce[16]:= Robots_Clear_ToProceed OR (Service_Call_ForRobot20);
+	R21_Data.Proceed_From_Pounce[16]:= Robots_Clear_ToProceed OR (Service_Call_ForRobot21);
+	R22_Data.Proceed_From_Pounce[16]:= Robots_Clear_ToProceed OR (Service_Call_ForRobot22);
+	R23_Data.Proceed_From_Pounce[16]:= Robots_Clear_ToProceed OR (Service_Call_ForRobot23);
+	R24_Data.Proceed_From_Pounce[16]:= Robots_Clear_ToProceed OR (Service_Call_ForRobot24);
+	R25_Data.Proceed_From_Pounce[16]:= Robots_Clear_ToProceed OR (Service_Call_ForRobot25);
+	R26_Data.Proceed_From_Pounce[16]:= Robots_Clear_ToProceed OR (Service_Call_ForRobot26);
+	R27_Data.Proceed_From_Pounce[16]:= Robots_Clear_ToProceed OR (Service_Call_ForRobot27);
+	R28_Data.Proceed_From_Pounce[16]:= Robots_Clear_ToProceed OR (Service_Call_ForRobot28);
+	R29_Data.Proceed_From_Pounce[16]:= Robots_Clear_ToProceed OR (Service_Call_ForRobot29);
+	R30_Data.Proceed_From_Pounce[16]:= Robots_Clear_ToProceed OR (Service_Call_ForRobot30);
+
+	(*Complete Acks*)
+	R1_Data.Complete_Ack[16]:=All_Complete_Ack OR (Tip_Dress_Complete1) OR TraccTCP_Complete1;
+	R2_Data.Complete_Ack[16]:=All_Complete_Ack OR (Tip_Dress_Complete2) OR TraccTCP_Complete2;
+	R3_Data.Complete_Ack[16]:=All_Complete_Ack OR (Tip_Dress_Complete3) OR TraccTCP_Complete3;
+	R4_Data.Complete_Ack[16]:=All_Complete_Ack OR (Tip_Dress_Complete4) OR TraccTCP_Complete4;
+	R5_Data.Complete_Ack[16]:=All_Complete_Ack OR (Tip_Dress_Complete5) OR TraccTCP_Complete5;
+	R6_Data.Complete_Ack[16]:=All_Complete_Ack OR (Tip_Dress_Complete6) OR TraccTCP_Complete6;
+	R7_Data.Complete_Ack[16]:=All_Complete_Ack OR (Tip_Dress_Complete7) OR TraccTCP_Complete7;
+	R8_Data.Complete_Ack[16]:=All_Complete_Ack OR (Tip_Dress_Complete8) OR TraccTCP_Complete8;
+	R9_Data.Complete_Ack[16]:=All_Complete_Ack OR (Tip_Dress_Complete9) OR TraccTCP_Complete9;
+	R10_Data.Complete_Ack[16]:=All_Complete_Ack OR (Tip_Dress_Complete10) OR TraccTCP_Complete10;
+	R11_Data.Complete_Ack[16]:=All_Complete_Ack OR (Tip_Dress_Complete11) OR TraccTCP_Complete11;
+	R12_Data.Complete_Ack[16]:=All_Complete_Ack OR (Tip_Dress_Complete12) OR TraccTCP_Complete12;
+	R13_Data.Complete_Ack[16]:=All_Complete_Ack OR (Tip_Dress_Complete13) OR TraccTCP_Complete13;
+	R14_Data.Complete_Ack[16]:=All_Complete_Ack OR (Tip_Dress_Complete14) OR TraccTCP_Complete14;
+	R15_Data.Complete_Ack[16]:=All_Complete_Ack OR (Tip_Dress_Complete15) OR TraccTCP_Complete15;
+	R16_Data.Complete_Ack[16]:=All_Complete_Ack OR (Tip_Dress_Complete16) OR TraccTCP_Complete16;
+	R17_Data.Complete_Ack[16]:=All_Complete_Ack OR (Tip_Dress_Complete17) OR TraccTCP_Complete17;
+	R18_Data.Complete_Ack[16]:=All_Complete_Ack OR (Tip_Dress_Complete18) OR TraccTCP_Complete18;
+	R19_Data.Complete_Ack[16]:=All_Complete_Ack OR (Tip_Dress_Complete19) OR TraccTCP_Complete19;
+	R20_Data.Complete_Ack[16]:=All_Complete_Ack OR (Tip_Dress_Complete20) OR TraccTCP_Complete20;
+	R21_Data.Complete_Ack[16]:=All_Complete_Ack OR (Tip_Dress_Complete21) OR TraccTCP_Complete21;
+	R22_Data.Complete_Ack[16]:=All_Complete_Ack OR (Tip_Dress_Complete22) OR TraccTCP_Complete22;
+	R23_Data.Complete_Ack[16]:=All_Complete_Ack OR (Tip_Dress_Complete23) OR TraccTCP_Complete23;
+	R24_Data.Complete_Ack[16]:=All_Complete_Ack OR (Tip_Dress_Complete24) OR TraccTCP_Complete24;
+	R25_Data.Complete_Ack[16]:=All_Complete_Ack OR (Tip_Dress_Complete25) OR TraccTCP_Complete25;
+	R26_Data.Complete_Ack[16]:=All_Complete_Ack OR (Tip_Dress_Complete26) OR TraccTCP_Complete26;
+	R27_Data.Complete_Ack[16]:=All_Complete_Ack OR (Tip_Dress_Complete27) OR TraccTCP_Complete27;
+	R28_Data.Complete_Ack[16]:=All_Complete_Ack OR (Tip_Dress_Complete28) OR TraccTCP_Complete28;
+	R29_Data.Complete_Ack[16]:=All_Complete_Ack OR (Tip_Dress_Complete29) OR TraccTCP_Complete29;
+	R30_Data.Complete_Ack[16]:=All_Complete_Ack OR (Tip_Dress_Complete30) OR TraccTCP_Complete30;
+
+	(*Peripheral Req Acks*)
+	R1_Data.PeripheralReq_Ack[16]:= Repo_Ack;
+	
+	IF MAIN.R1.Task_ID_Ack=Tip_Dress THEN
+		R1_Data.PeripheralReq_Ack[16].1 := MAIN.R1.Peripheral_Req.1 AND MAIN.R1.Reamer[1].Ream_Delay.Q  AND MAIN.R1.Reamer[1].Ream_Clamp_Open; 
+		R1_Data.PeripheralReq_Ack[16].2 := MAIN.R1.Peripheral_Req.2 AND MAIN.R1.Reamer[1].Spray_Delay.Q; 
+		R1_Data.PeripheralReq_Ack[16].4 := MAIN.R1.Peripheral_Req.4 AND MAIN.R1.Reamer[1].WireCutter_Delay.Q; 
+	END_IF
+	
+	R2_Data.PeripheralReq_Ack[16]:= Repo_Ack;
+	
+	IF MAIN.R2.Task_ID_Ack=Tip_Dress THEN
+		R2_Data.PeripheralReq_Ack[16].1 := MAIN.R2.Peripheral_Req.1 AND MAIN.R2.Reamer[1].Ream_Delay.Q AND MAIN.R2.Reamer[1].Ream_Clamp_Open; 
+		R2_Data.PeripheralReq_Ack[16].2 := MAIN.R2.Peripheral_Req.2 AND MAIN.R2.Reamer[1].Spray_Delay.Q; 
+		R2_Data.PeripheralReq_Ack[16].4 := MAIN.R2.Peripheral_Req.4 AND MAIN.R2.Reamer[1].WireCutter_Delay.Q; 
+	END_IF
+	
+	R3_Data.PeripheralReq_Ack[16]:= Repo_Ack;
+	
+	IF MAIN.R3.Task_ID_Ack=Tip_Dress THEN
+		R3_Data.PeripheralReq_Ack[16].1 := MAIN.R3.Peripheral_Req.1 AND MAIN.R3.Reamer[1].Ream_Delay.Q AND MAIN.R3.Reamer[1].Ream_Clamp_Open; 
+		R3_Data.PeripheralReq_Ack[16].2 := MAIN.R3.Peripheral_Req.2 AND MAIN.R3.Reamer[1].Spray_Delay.Q; 
+		R3_Data.PeripheralReq_Ack[16].4 := MAIN.R3.Peripheral_Req.4 AND MAIN.R3.Reamer[1].WireCutter_Delay.Q; 
+	END_IF
+	
+	R5_Data.PeripheralReq_Ack[16]:= Repo_Ack;
+	
+	IF MAIN.R5.Task_ID_Ack=Tip_Dress THEN
+		R5_Data.PeripheralReq_Ack[16].1 := MAIN.R5.Peripheral_Req.1 AND MAIN.R5.Reamer[1].Ream_Delay.Q AND MAIN.R5.Reamer[1].Ream_Clamp_Open; 
+		R5_Data.PeripheralReq_Ack[16].2 := MAIN.R5.Peripheral_Req.2 AND MAIN.R5.Reamer[1].Spray_Delay.Q; 
+		R5_Data.PeripheralReq_Ack[16].4 := MAIN.R5.Peripheral_Req.4 AND MAIN.R5.Reamer[1].WireCutter_Delay.Q; 
+	END_IF
+	
+	R6_Data.PeripheralReq_Ack[16]:= Repo_Ack;
+	
+	IF MAIN.R6.Task_ID_Ack=Tip_Dress THEN
+		R6_Data.PeripheralReq_Ack[16].1 := MAIN.R6.Peripheral_Req.1 AND MAIN.R6.Reamer[1].Ream_Delay.Q AND MAIN.R6.Reamer[1].Ream_Clamp_Open; 
+		R6_Data.PeripheralReq_Ack[16].2 := MAIN.R6.Peripheral_Req.2 AND MAIN.R6.Reamer[1].Spray_Delay.Q; 
+		R6_Data.PeripheralReq_Ack[16].4 := MAIN.R6.Peripheral_Req.4 AND MAIN.R6.Reamer[1].WireCutter_Delay.Q; 
+	END_IF
+	
+	R7_Data.PeripheralReq_Ack[16]:= Repo_Ack;
+	
+	IF MAIN.R7.Task_ID_Ack=Tip_Dress THEN
+		R7_Data.PeripheralReq_Ack[16].1 := MAIN.R7.Peripheral_Req.1 AND MAIN.R7.Reamer[1].Ream_Delay.Q AND MAIN.R7.Reamer[1].Ream_Clamp_Open; 
+		R7_Data.PeripheralReq_Ack[16].2 := MAIN.R7.Peripheral_Req.2 AND MAIN.R7.Reamer[1].Spray_Delay.Q; 
+		R7_Data.PeripheralReq_Ack[16].4 := MAIN.R7.Peripheral_Req.4 AND MAIN.R7.Reamer[1].WireCutter_Delay.Q; 
+	END_IF
+	
+	R8_Data.PeripheralReq_Ack[16]:= Repo_Ack;
+	
+	IF MAIN.R8.Task_ID_Ack=Tip_Dress THEN
+		R8_Data.PeripheralReq_Ack[16].1 := MAIN.R8.Peripheral_Req.1 AND MAIN.R8.Reamer[1].Ream_Delay.Q AND MAIN.R8.Reamer[1].Ream_Clamp_Open; 
+		R8_Data.PeripheralReq_Ack[16].2 := MAIN.R8.Peripheral_Req.2 AND MAIN.R8.Reamer[1].Spray_Delay.Q; 
+		R8_Data.PeripheralReq_Ack[16].4 := MAIN.R8.Peripheral_Req.4 AND MAIN.R8.Reamer[1].WireCutter_Delay.Q; 
+	END_IF
+	
+	R9_Data.PeripheralReq_Ack[16]:= Repo_Ack;
+	
+	IF MAIN.R9.Task_ID_Ack=Tip_Dress THEN
+		R9_Data.PeripheralReq_Ack[16].1 := MAIN.R9.Peripheral_Req.1 AND MAIN.R9.Reamer[1].Ream_Delay.Q AND MAIN.R9.Reamer[1].Ream_Clamp_Open; 
+		R9_Data.PeripheralReq_Ack[16].2 := MAIN.R9.Peripheral_Req.2 AND MAIN.R9.Reamer[1].Spray_Delay.Q; 
+		R9_Data.PeripheralReq_Ack[16].4 := MAIN.R9.Peripheral_Req.4 AND MAIN.R9.Reamer[1].WireCutter_Delay.Q; 
+	END_IF
+	
+
+	R4_Data.PeripheralReq_Ack[16]:= Repo_Ack;
+	R10_Data.PeripheralReq_Ack[16]:= Repo_Ack;
+	R11_Data.PeripheralReq_Ack[16]:= Repo_Ack;
+	R12_Data.PeripheralReq_Ack[16]:= Repo_Ack;
+	R13_Data.PeripheralReq_Ack[16]:= Repo_Ack;
+	R14_Data.PeripheralReq_Ack[16]:= Repo_Ack;
+	R15_Data.PeripheralReq_Ack[16]:= Repo_Ack;
+	R16_Data.PeripheralReq_Ack[16]:= Repo_Ack;
+	R17_Data.PeripheralReq_Ack[16]:= Repo_Ack;
+	R18_Data.PeripheralReq_Ack[16]:= Repo_Ack;
+	R19_Data.PeripheralReq_Ack[16]:= Repo_Ack;
+	R20_Data.PeripheralReq_Ack[16]:= Repo_Ack;
+	R21_Data.PeripheralReq_Ack[16]:= Repo_Ack;
+	R22_Data.PeripheralReq_Ack[16]:= Repo_Ack;
+	R23_Data.PeripheralReq_Ack[16]:= Repo_Ack;
+	R24_Data.PeripheralReq_Ack[16]:= Repo_Ack;
+	R25_Data.PeripheralReq_Ack[16]:= Repo_Ack;
+	R26_Data.PeripheralReq_Ack[16]:= Repo_Ack;
+	R27_Data.PeripheralReq_Ack[16]:= Repo_Ack;
+	R28_Data.PeripheralReq_Ack[16]:= Repo_Ack;
+	R29_Data.PeripheralReq_Ack[16]:= Repo_Ack;
+	R30_Data.PeripheralReq_Ack[16]:= Repo_Ack;
+
+(*%%%%%%%%%%%%%% Call Robots to Tool and Give Them, Task ID, Fixture ID and Model ID %%%%%%%%%%%%%%%%%*)
+
+	(* Perform Call To Service*)
+	Service_Call_ForAllRobots:= (Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots)
+								OR (NOT Start_All_MTRobots AND Start_All_BTRobots AND NOT Start_All_TCRobots)
+								OR (NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND Start_All_TCRobots);
+
+	Service_Call_ForRobot1:= (Start_TDRobot_1 OR Start_TraccTCP_1) AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots;
+	Service_Call_ForRobot2:= (Start_TDRobot_2 OR Start_TraccTCP_2) AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots;
+	Service_Call_ForRobot3:= (Start_TDRobot_3 OR Start_TraccTCP_3) AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots;
+	Service_Call_ForRobot4:= (Start_TDRobot_4 OR Start_TraccTCP_4) AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots;
+	Service_Call_ForRobot5:= (Start_TDRobot_5 OR Start_TraccTCP_5) AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots;
+	Service_Call_ForRobot6:= (Start_TDRobot_6 OR Start_TraccTCP_6) AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots;
+	Service_Call_ForRobot7:= (Start_TDRobot_7 OR Start_TraccTCP_7) AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots;
+	Service_Call_ForRobot8:= (Start_TDRobot_8 OR Start_TraccTCP_8) AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots;
+	Service_Call_ForRobot9:= (Start_TDRobot_9 OR Start_TraccTCP_9) AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots;
+	Service_Call_ForRobot10:= (Start_TDRobot_10 OR Start_TraccTCP_10) AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots;
+	Service_Call_ForRobot11:= (Start_TDRobot_11 OR Start_TraccTCP_11) AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots;
+	Service_Call_ForRobot12:= (Start_TDRobot_12 OR Start_TraccTCP_12) AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots;
+	Service_Call_ForRobot13:= (Start_TDRobot_13 OR Start_TraccTCP_13) AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots;
+	Service_Call_ForRobot14:= (Start_TDRobot_14 OR Start_TraccTCP_14) AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots;
+	Service_Call_ForRobot15:= (Start_TDRobot_15 OR Start_TraccTCP_15) AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots;
+	Service_Call_ForRobot16:= (Start_TDRobot_16 OR Start_TraccTCP_16) AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots;
+	Service_Call_ForRobot17:= (Start_TDRobot_17 OR Start_TraccTCP_17) AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots;
+	Service_Call_ForRobot18:= (Start_TDRobot_18 OR Start_TraccTCP_18) AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots;
+	Service_Call_ForRobot19:= (Start_TDRobot_19 OR Start_TraccTCP_19) AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots;
+	Service_Call_ForRobot20:= (Start_TDRobot_20 OR Start_TraccTCP_20) AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots;
+	Service_Call_ForRobot21:= (Start_TDRobot_21 OR Start_TraccTCP_21) AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots;
+	Service_Call_ForRobot22:= (Start_TDRobot_22 OR Start_TraccTCP_22) AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots;
+	Service_Call_ForRobot23:= (Start_TDRobot_23 OR Start_TraccTCP_23) AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots;
+	Service_Call_ForRobot24:= (Start_TDRobot_24 OR Start_TraccTCP_24) AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots;
+	Service_Call_ForRobot25:= (Start_TDRobot_25 OR Start_TraccTCP_25) AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots;
+	Service_Call_ForRobot26:= (Start_TDRobot_26 OR Start_TraccTCP_26) AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots;
+	Service_Call_ForRobot27:= (Start_TDRobot_27 OR Start_TraccTCP_27) AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots;
+	Service_Call_ForRobot28:= (Start_TDRobot_28 OR Start_TraccTCP_28) AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots;
+	Service_Call_ForRobot29:= (Start_TDRobot_29 OR Start_TraccTCP_29) AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots;
+	Service_Call_ForRobot30:= (Start_TDRobot_30 OR Start_TraccTCP_30) AND NOT Start_All_MTRobots AND NOT Start_All_BTRobots AND NOT Start_All_TCRobots;
+
+	(*Allow Robots to Proceed Into Tool*)
+	(*!!!!!This is the final OK to allow Robots Into the Tool Area, So it Better Be Ready!!!!!!!*)
+	IF Enable_Motion
+		THEN
+			IF (All_MTRobots_Proceed OR All_BTRobots_Proceed OR All_TCRobots_Proceed OR All_TraccTCP_Proceed) AND All_Robots_WorkingOK
+				THEN Robots_Clear_ToProceed:=TRUE;
+				ELSE Robots_Clear_ToProceed:= FALSE;
+			END_IF;
+		ELSE Robots_Clear_ToProceed:= FALSE;
+	END_IF;
+
+	(*Develop Task IDs - See Global Variable, "TaskID_Record"*)
+
+	IF Start_All_MTRobots AND Enable_Motion
+		THEN
+			Task_ID:= Master_Test;
+	ELSIF Start_All_BTRobots AND Enable_Motion
+		THEN
+			Task_ID:= Brake_Test;
+	ELSIF Start_All_TCRobots AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Change;
+	ELSIF Start_All_TDRobots AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TDRobot_1 AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TDRobot_2 AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TDRobot_3 AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TDRobot_4 AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TDRobot_5 AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TDRobot_6 AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TDRobot_7 AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TDRobot_8 AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TDRobot_9 AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TDRobot_10 AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TDRobot_11 AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TDRobot_12 AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TDRobot_13 AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TDRobot_14 AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TDRobot_15 AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TDRobot_16 AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TDRobot_17 AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TDRobot_18 AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TDRobot_19 AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TDRobot_20 AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TDRobot_21 AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TDRobot_22 AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TDRobot_23 AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TDRobot_24 AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TDRobot_25 AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TDRobot_26 AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TDRobot_27 AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TDRobot_28 AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TDRobot_29 AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TDRobot_30 AND Enable_Motion
+		THEN
+			Task_ID:= Tip_Dress;
+	ELSIF Start_TraccTCP_1 AND Enable_Motion
+		THEN
+			Task_ID:= Tracc_TCP;
+	ELSIF Start_TraccTCP_2 AND Enable_Motion
+		THEN
+			Task_ID:= Tracc_TCP;
+	ELSIF Start_TraccTCP_3 AND Enable_Motion
+		THEN
+			Task_ID:= Tracc_TCP;
+	ELSIF Start_TraccTCP_4 AND Enable_Motion
+		THEN
+			Task_ID:= Tracc_TCP;		
+(*ADD MORE*)			
+	ELSE Task_ID:= 0;
+	END_IF;
+
+
+
+	(*Develop Fixture ID*)
+	Fix_ID:= 1;					(*In Future Map Beckhoff Dip Switch Data From IP67 Block to Here*)
+	(*Develop Model ID*)
+	Model_ID:= Discrete_In.ModelData;		(*1 = AB Ring 4DR, 2 = AB Ring 5DR*)
+
+
+(*+++++++++++++++++++++++++++++++++++++++++++++++ Task Complete Acks ++++++++++++++++++++++++++*)
+
+	(*Complete Ack*)
+	All_Complete_Ack:= All_Robots_Complete AND Cycle_Complete;
+
+
+
+(*!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! Tool Repositions !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+(*+++++++++++THIS AREA IS CUSTOM PER INSTALLATION AND WILL HAVE TO BE MODIFIED PER +++++++++++++*)
+
+	(*Reposition Request#1*)
+	IF MAIN.R1.Task_ID_Ack=Tip_Change AND MAIN.R1.Peripheral_Req.0 AND
+		(MAIN.R2.Task_ID_Ack=Tip_Change AND MAIN.R2.Peripheral_Req.0 OR GTAC_CONFIG.Option_Robot_Count<2) AND
+		(MAIN.R3.Task_ID_Ack=Tip_Change AND MAIN.R3.Peripheral_Req.0 OR GTAC_CONFIG.Option_Robot_Count<3) AND
+		(MAIN.R4.Task_ID_Ack=Tip_Change AND MAIN.R4.Peripheral_Req.0 OR GTAC_CONFIG.Option_Robot_Count<4) AND
+		(MAIN.R5.Task_ID_Ack=Tip_Change AND MAIN.R5.Peripheral_Req.0 OR GTAC_CONFIG.Option_Robot_Count<5) AND
+		(MAIN.R6.Task_ID_Ack=Tip_Change AND MAIN.R6.Peripheral_Req.0 OR GTAC_CONFIG.Option_Robot_Count<6) AND
+		(MAIN.R7.Task_ID_Ack=Tip_Change AND MAIN.R7.Peripheral_Req.0 OR GTAC_CONFIG.Option_Robot_Count<7) AND
+		(MAIN.R8.Task_ID_Ack=Tip_Change AND MAIN.R8.Peripheral_Req.0 OR GTAC_CONFIG.Option_Robot_Count<8) AND
+		(MAIN.R9.Task_ID_Ack=Tip_Change AND MAIN.R9.Peripheral_Req.0 OR GTAC_CONFIG.Option_Robot_Count<9) AND
+		(MAIN.R10.Task_ID_Ack=Tip_Change AND MAIN.R10.Peripheral_Req.0 OR GTAC_CONFIG.Option_Robot_Count<10) AND
+		(MAIN.R11.Task_ID_Ack=Tip_Change AND MAIN.R11.Peripheral_Req.0 OR GTAC_CONFIG.Option_Robot_Count<11) AND
+		(MAIN.R12.Task_ID_Ack=Tip_Change AND MAIN.R12.Peripheral_Req.0 OR GTAC_CONFIG.Option_Robot_Count<12) AND
+		(MAIN.R13.Task_ID_Ack=Tip_Change AND MAIN.R13.Peripheral_Req.0 OR GTAC_CONFIG.Option_Robot_Count<13) AND
+		(MAIN.R14.Task_ID_Ack=Tip_Change AND MAIN.R14.Peripheral_Req.0 OR GTAC_CONFIG.Option_Robot_Count<14) AND
+		(MAIN.R15.Task_ID_Ack=Tip_Change AND MAIN.R15.Peripheral_Req.0 OR GTAC_CONFIG.Option_Robot_Count<15) AND
+		(MAIN.R16.Task_ID_Ack=Tip_Change AND MAIN.R16.Peripheral_Req.0 OR GTAC_CONFIG.Option_Robot_Count<16) AND
+		(MAIN.R17.Task_ID_Ack=Tip_Change AND MAIN.R17.Peripheral_Req.0 OR GTAC_CONFIG.Option_Robot_Count<17) AND
+		(MAIN.R18.Task_ID_Ack=Tip_Change AND MAIN.R18.Peripheral_Req.0 OR GTAC_CONFIG.Option_Robot_Count<18) AND
+		(MAIN.R19.Task_ID_Ack=Tip_Change AND MAIN.R19.Peripheral_Req.0 OR GTAC_CONFIG.Option_Robot_Count<19) AND
+		(MAIN.R20.Task_ID_Ack=Tip_Change AND MAIN.R20.Peripheral_Req.0 OR GTAC_CONFIG.Option_Robot_Count<20) AND
+		(MAIN.R21.Task_ID_Ack=Tip_Change AND MAIN.R21.Peripheral_Req.0 OR GTAC_CONFIG.Option_Robot_Count<21) AND
+		(MAIN.R22.Task_ID_Ack=Tip_Change AND MAIN.R22.Peripheral_Req.0 OR GTAC_CONFIG.Option_Robot_Count<22) AND
+		(MAIN.R23.Task_ID_Ack=Tip_Change AND MAIN.R23.Peripheral_Req.0 OR GTAC_CONFIG.Option_Robot_Count<23) AND
+		(MAIN.R24.Task_ID_Ack=Tip_Change AND MAIN.R24.Peripheral_Req.0 OR GTAC_CONFIG.Option_Robot_Count<24) AND
+		(MAIN.R25.Task_ID_Ack=Tip_Change AND MAIN.R25.Peripheral_Req.0 OR GTAC_CONFIG.Option_Robot_Count<25) AND
+		(MAIN.R26.Task_ID_Ack=Tip_Change AND MAIN.R26.Peripheral_Req.0 OR GTAC_CONFIG.Option_Robot_Count<26) AND
+		(MAIN.R27.Task_ID_Ack=Tip_Change AND MAIN.R27.Peripheral_Req.0 OR GTAC_CONFIG.Option_Robot_Count<27) AND
+		(MAIN.R28.Task_ID_Ack=Tip_Change AND MAIN.R28.Peripheral_Req.0 OR GTAC_CONFIG.Option_Robot_Count<28) AND
+		(MAIN.R29.Task_ID_Ack=Tip_Change AND MAIN.R29.Peripheral_Req.0 OR GTAC_CONFIG.Option_Robot_Count<29) AND
+		(MAIN.R30.Task_ID_Ack=Tip_Change AND MAIN.R30.Peripheral_Req.0 OR GTAC_CONFIG.Option_Robot_Count<30)
+		THEN
+			Repo_Reqs.0:= TRUE;
+	END_IF;
+	(*Reposition Request#2*)
+	IF (MAIN.R1.Peripheral_Req.1) AND (MAIN.R1.Task_ID_Ack=Tip_Dress)
+		THEN
+			Repo_Reqs.1:= TRUE;
+	END_IF;
+	(*Reposition Request#3*)
+	IF (MAIN.R2.Peripheral_Req.2) AND (MAIN.R2.Task_ID_Ack=Tip_Dress)
+		THEN
+			Repo_Reqs.2:= TRUE;
+	END_IF;
+	(*Reposition Request#4*)
+	IF (MAIN.R3.Peripheral_Req.3) AND (MAIN.R3.Task_ID_Ack=Tip_Dress)
+		THEN
+			Repo_Reqs.3:= TRUE;
+	END_IF;
+	(*Reposition Request#5*)
+	IF (MAIN.R4.Peripheral_Req.4) AND (MAIN.R4.Task_ID_Ack=Tip_Dress)
+		THEN
+			Repo_Reqs.4:= TRUE;
+	END_IF;
+	(*----Add more as required-----*)
+	(*----Add more as required-----*)
+
+
+	(*Reset All Reposition Acks At the End Of Cycle*)
+	IF Cycle_Complete
+		THEN
+			Repo_Reqs:= 0;
+	END_IF;
+(*------------------------- Reposition Acks ---------------------*)
+	Repo_Ack.0:= Repo_Reqs.0 AND In_From_ICxx.TipChange_Complete;
+	(*Debug - Example of reamer. adjust to the robot as needed. this is setup for a fronius reamer
+	Repo_Ack.1:= Repo_Reqs.1 AND MAIN.R2.Reamer[1].WireCutter_ACK AND (MAIN.R2.Task_ID_Ack=Tip_Dress); 
+	Repo_Ack.2:= Repo_Reqs.2 AND MAIN.R2.Reamer[1].Injector_ACK AND (MAIN.R2.Task_ID_Ack=Tip_Dress);
+	Repo_Ack.3:= Repo_Reqs.3 AND MAIN.R2.Reamer[1].LifterUp_ACK AND (MAIN.R2.Task_ID_Ack=Tip_Dress);
+	Repo_Ack.4:= Repo_Reqs.4 AND MAIN.R2.Reamer[1].Clamp_ACK AND (MAIN.R2.Task_ID_Ack=Tip_Dress);
+	Repo_ACk.5:= Repo_Reqs.5 AND MAIN.R2.Reamer[1].Reaming_Complete AND (MAIN.R2.Task_ID_Ack=Tip_Dress);*)
+
+(*------------------------ Reposition Visualization --------------------------*)
+	Rxx_ReadyAt_TipChangePosition.1:= MAIN.R1.Task_ID_Ack=Tip_Change AND MAIN.R1.Peripheral_Req.0;
+	Rxx_ReadyAt_TipChangePosition.2:= MAIN.R2.Task_ID_Ack=Tip_Change AND MAIN.R2.Peripheral_Req.0;
+	Rxx_ReadyAt_TipChangePosition.3:= MAIN.R3.Task_ID_Ack=Tip_Change AND MAIN.R3.Peripheral_Req.0;
+	Rxx_ReadyAt_TipChangePosition.4:= MAIN.R4.Task_ID_Ack=Tip_Change AND MAIN.R4.Peripheral_Req.0;
+	Rxx_ReadyAt_TipChangePosition.5:= MAIN.R5.Task_ID_Ack=Tip_Change AND MAIN.R5.Peripheral_Req.0;
+	Rxx_ReadyAt_TipChangePosition.6:= MAIN.R6.Task_ID_Ack=Tip_Change AND MAIN.R6.Peripheral_Req.0;
+	Rxx_ReadyAt_TipChangePosition.7:= MAIN.R7.Task_ID_Ack=Tip_Change AND MAIN.R7.Peripheral_Req.0;
+	Rxx_ReadyAt_TipChangePosition.8:= MAIN.R8.Task_ID_Ack=Tip_Change AND MAIN.R8.Peripheral_Req.0;
+	Rxx_ReadyAt_TipChangePosition.9:= MAIN.R9.Task_ID_Ack=Tip_Change AND MAIN.R9.Peripheral_Req.0;
+	Rxx_ReadyAt_TipChangePosition.10:= MAIN.R10.Task_ID_Ack=Tip_Change AND MAIN.R10.Peripheral_Req.0;
+	Rxx_ReadyAt_TipChangePosition.11:= MAIN.R11.Task_ID_Ack=Tip_Change AND MAIN.R11.Peripheral_Req.0;
+	Rxx_ReadyAt_TipChangePosition.12:= MAIN.R12.Task_ID_Ack=Tip_Change AND MAIN.R12.Peripheral_Req.0;
+	Rxx_ReadyAt_TipChangePosition.13:= MAIN.R13.Task_ID_Ack=Tip_Change AND MAIN.R13.Peripheral_Req.0;
+	Rxx_ReadyAt_TipChangePosition.14:= MAIN.R14.Task_ID_Ack=Tip_Change AND MAIN.R14.Peripheral_Req.0;
+	Rxx_ReadyAt_TipChangePosition.15:= MAIN.R15.Task_ID_Ack=Tip_Change AND MAIN.R15.Peripheral_Req.0;
+	Rxx_ReadyAt_TipChangePosition.16:= MAIN.R16.Task_ID_Ack=Tip_Change AND MAIN.R16.Peripheral_Req.0;
+	Rxx_ReadyAt_TipChangePosition.17:= MAIN.R17.Task_ID_Ack=Tip_Change AND MAIN.R17.Peripheral_Req.0;
+	Rxx_ReadyAt_TipChangePosition.18:= MAIN.R18.Task_ID_Ack=Tip_Change AND MAIN.R18.Peripheral_Req.0;
+	Rxx_ReadyAt_TipChangePosition.19:= MAIN.R19.Task_ID_Ack=Tip_Change AND MAIN.R19.Peripheral_Req.0;
+	Rxx_ReadyAt_TipChangePosition.20:= MAIN.R20.Task_ID_Ack=Tip_Change AND MAIN.R20.Peripheral_Req.0;
+	Rxx_ReadyAt_TipChangePosition.21:= MAIN.R21.Task_ID_Ack=Tip_Change AND MAIN.R21.Peripheral_Req.0;
+	Rxx_ReadyAt_TipChangePosition.22:= MAIN.R22.Task_ID_Ack=Tip_Change AND MAIN.R22.Peripheral_Req.0;
+	Rxx_ReadyAt_TipChangePosition.23:= MAIN.R23.Task_ID_Ack=Tip_Change AND MAIN.R23.Peripheral_Req.0;
+	Rxx_ReadyAt_TipChangePosition.24:= MAIN.R24.Task_ID_Ack=Tip_Change AND MAIN.R24.Peripheral_Req.0;
+	Rxx_ReadyAt_TipChangePosition.25:= MAIN.R25.Task_ID_Ack=Tip_Change AND MAIN.R25.Peripheral_Req.0;
+	Rxx_ReadyAt_TipChangePosition.26:= MAIN.R26.Task_ID_Ack=Tip_Change AND MAIN.R26.Peripheral_Req.0;
+	Rxx_ReadyAt_TipChangePosition.27:= MAIN.R27.Task_ID_Ack=Tip_Change AND MAIN.R27.Peripheral_Req.0;
+	Rxx_ReadyAt_TipChangePosition.28:= MAIN.R28.Task_ID_Ack=Tip_Change AND MAIN.R28.Peripheral_Req.0;
+	Rxx_ReadyAt_TipChangePosition.29:= MAIN.R29.Task_ID_Ack=Tip_Change AND MAIN.R29.Peripheral_Req.0;
+	Rxx_ReadyAt_TipChangePosition.30:= MAIN.R30.Task_ID_Ack=Tip_Change AND MAIN.R30.Peripheral_Req.0;
+	Rxx_ReadyAt_TipChangePosition.0:= Repo_Reqs.0;
+
+(*?????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????????*)
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Faults $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Transfer Standard Outputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Transfer Safety Outputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)]]></ST>
+    </Implementation>
+    <LineIds Name="Cell_Services_Prog">
+      <LineId Id="305" Count="146" />
+      <LineId Id="3057" Count="51" />
+      <LineId Id="524" Count="389" />
+      <LineId Id="3889" Count="0" />
+      <LineId Id="915" Count="37" />
+      <LineId Id="3807" Count="11" />
+      <LineId Id="3820" Count="32" />
+      <LineId Id="4551" Count="11" />
+      <LineId Id="4564" Count="42" />
+      <LineId Id="4563" Count="0" />
+      <LineId Id="4607" Count="20" />
+      <LineId Id="3862" Count="0" />
+      <LineId Id="4629" Count="9" />
+      <LineId Id="4628" Count="0" />
+      <LineId Id="4640" Count="10" />
+      <LineId Id="4652" Count="20" />
+      <LineId Id="4651" Count="0" />
+      <LineId Id="4674" Count="9" />
+      <LineId Id="4673" Count="0" />
+      <LineId Id="4685" Count="9" />
+      <LineId Id="4684" Count="0" />
+      <LineId Id="4696" Count="9" />
+      <LineId Id="4639" Count="0" />
+      <LineId Id="4706" Count="9" />
+      <LineId Id="4695" Count="0" />
+      <LineId Id="4717" Count="20" />
+      <LineId Id="4716" Count="0" />
+      <LineId Id="4739" Count="9" />
+      <LineId Id="4738" Count="0" />
+      <LineId Id="4750" Count="9" />
+      <LineId Id="4749" Count="0" />
+      <LineId Id="4761" Count="9" />
+      <LineId Id="4760" Count="0" />
+      <LineId Id="4772" Count="20" />
+      <LineId Id="4771" Count="0" />
+      <LineId Id="4794" Count="9" />
+      <LineId Id="4793" Count="0" />
+      <LineId Id="4805" Count="9" />
+      <LineId Id="4804" Count="0" />
+      <LineId Id="4816" Count="9" />
+      <LineId Id="4815" Count="0" />
+      <LineId Id="4827" Count="9" />
+      <LineId Id="4826" Count="0" />
+      <LineId Id="3853" Count="4" />
+      <LineId Id="3863" Count="25" />
+      <LineId Id="3858" Count="3" />
+      <LineId Id="953" Count="66" />
+      <LineId Id="3903" Count="0" />
+      <LineId Id="3890" Count="12" />
+      <LineId Id="1020" Count="450" />
+      <LineId Id="3904" Count="0" />
+      <LineId Id="3908" Count="60" />
+      <LineId Id="3970" Count="389" />
+      <LineId Id="1471" Count="0" />
+      <LineId Id="3905" Count="2" />
+      <LineId Id="1472" Count="34" />
+      <LineId Id="4360" Count="30" />
+      <LineId Id="1507" Count="242" />
+      <LineId Id="4391" Count="27" />
+      <LineId Id="4843" Count="0" />
+      <LineId Id="4837" Count="5" />
+      <LineId Id="4844" Count="13" />
+      <LineId Id="1750" Count="0" />
+      <LineId Id="4859" Count="6" />
+      <LineId Id="4867" Count="5" />
+      <LineId Id="4866" Count="0" />
+      <LineId Id="4874" Count="12" />
+      <LineId Id="4873" Count="0" />
+      <LineId Id="4887" Count="6" />
+      <LineId Id="4895" Count="5" />
+      <LineId Id="4894" Count="0" />
+      <LineId Id="4902" Count="5" />
+      <LineId Id="4901" Count="0" />
+      <LineId Id="4909" Count="5" />
+      <LineId Id="4908" Count="0" />
+      <LineId Id="4916" Count="5" />
+      <LineId Id="4915" Count="0" />
+      <LineId Id="4923" Count="5" />
+      <LineId Id="4922" Count="0" />
+      <LineId Id="4930" Count="5" />
+      <LineId Id="4929" Count="0" />
+      <LineId Id="4937" Count="5" />
+      <LineId Id="4936" Count="0" />
+      <LineId Id="4944" Count="12" />
+      <LineId Id="4943" Count="0" />
+      <LineId Id="4958" Count="5" />
+      <LineId Id="4957" Count="0" />
+      <LineId Id="4965" Count="5" />
+      <LineId Id="4964" Count="0" />
+      <LineId Id="4972" Count="6" />
+      <LineId Id="4980" Count="5" />
+      <LineId Id="4979" Count="0" />
+      <LineId Id="4987" Count="5" />
+      <LineId Id="4986" Count="0" />
+      <LineId Id="4994" Count="5" />
+      <LineId Id="4993" Count="0" />
+      <LineId Id="5001" Count="5" />
+      <LineId Id="5000" Count="0" />
+      <LineId Id="5008" Count="5" />
+      <LineId Id="5007" Count="0" />
+      <LineId Id="5015" Count="5" />
+      <LineId Id="5014" Count="0" />
+      <LineId Id="4971" Count="0" />
+      <LineId Id="4858" Count="0" />
+      <LineId Id="1751" Count="1" />
+      <LineId Id="4421" Count="23" />
+      <LineId Id="1777" Count="190" />
+      <LineId Id="4446" Count="3" />
+      <LineId Id="4445" Count="0" />
+      <LineId Id="5021" Count="25" />
+      <LineId Id="1969" Count="123" />
+      <LineId Id="4451" Count="3" />
+      <LineId Id="5053" Count="25" />
+      <LineId Id="4450" Count="0" />
+      <LineId Id="2093" Count="30" />
+      <LineId Id="4455" Count="0" />
+      <LineId Id="4457" Count="3" />
+      <LineId Id="2124" Count="0" />
+      <LineId Id="5079" Count="25" />
+      <LineId Id="4456" Count="0" />
+      <LineId Id="2125" Count="36" />
+      <LineId Id="4462" Count="42" />
+      <LineId Id="5105" Count="0" />
+      <LineId Id="2182" Count="2" />
+      <LineId Id="5106" Count="5" />
+      <LineId Id="2185" Count="4" />
+      <LineId Id="5112" Count="5" />
+      <LineId Id="2190" Count="4" />
+      <LineId Id="5118" Count="5" />
+      <LineId Id="2195" Count="4" />
+      <LineId Id="5124" Count="5" />
+      <LineId Id="2200" Count="4" />
+      <LineId Id="5130" Count="5" />
+      <LineId Id="2205" Count="4" />
+      <LineId Id="5136" Count="5" />
+      <LineId Id="2210" Count="4" />
+      <LineId Id="5142" Count="5" />
+      <LineId Id="2215" Count="4" />
+      <LineId Id="5148" Count="5" />
+      <LineId Id="2220" Count="4" />
+      <LineId Id="5154" Count="5" />
+      <LineId Id="2225" Count="4" />
+      <LineId Id="5160" Count="5" />
+      <LineId Id="2230" Count="4" />
+      <LineId Id="5166" Count="5" />
+      <LineId Id="2235" Count="4" />
+      <LineId Id="5172" Count="5" />
+      <LineId Id="2240" Count="4" />
+      <LineId Id="5178" Count="5" />
+      <LineId Id="2245" Count="4" />
+      <LineId Id="5184" Count="5" />
+      <LineId Id="2250" Count="4" />
+      <LineId Id="5190" Count="5" />
+      <LineId Id="2255" Count="4" />
+      <LineId Id="5196" Count="5" />
+      <LineId Id="2260" Count="4" />
+      <LineId Id="5202" Count="5" />
+      <LineId Id="2265" Count="4" />
+      <LineId Id="5208" Count="5" />
+      <LineId Id="2270" Count="4" />
+      <LineId Id="5214" Count="5" />
+      <LineId Id="2275" Count="4" />
+      <LineId Id="5220" Count="5" />
+      <LineId Id="2280" Count="4" />
+      <LineId Id="5226" Count="5" />
+      <LineId Id="2285" Count="4" />
+      <LineId Id="5232" Count="5" />
+      <LineId Id="2290" Count="4" />
+      <LineId Id="5238" Count="5" />
+      <LineId Id="2295" Count="4" />
+      <LineId Id="5244" Count="5" />
+      <LineId Id="2300" Count="4" />
+      <LineId Id="5250" Count="5" />
+      <LineId Id="2305" Count="4" />
+      <LineId Id="5256" Count="5" />
+      <LineId Id="2310" Count="98" />
+      <LineId Id="4505" Count="3" />
+      <LineId Id="2413" Count="27" />
+      <LineId Id="5736" Count="21" />
+      <LineId Id="5735" Count="0" />
+      <LineId Id="5761" Count="0" />
+      <LineId Id="5763" Count="5" />
+      <LineId Id="5762" Count="0" />
+      <LineId Id="5758" Count="0" />
+      <LineId Id="5769" Count="5" />
+      <LineId Id="5759" Count="1" />
+      <LineId Id="5777" Count="5" />
+      <LineId Id="5775" Count="0" />
+      <LineId Id="5783" Count="0" />
+      <LineId Id="5785" Count="5" />
+      <LineId Id="5784" Count="0" />
+      <LineId Id="5776" Count="0" />
+      <LineId Id="5793" Count="5" />
+      <LineId Id="5791" Count="1" />
+      <LineId Id="2443" Count="1" />
+      <LineId Id="2450" Count="28" />
+      <LineId Id="4509" Count="3" />
+      <LineId Id="2483" Count="141" />
+      <LineId Id="4514" Count="11" />
+      <LineId Id="4513" Count="0" />
+      <LineId Id="2625" Count="55" />
+      <LineId Id="4526" Count="19" />
+      <LineId Id="4547" Count="3" />
+      <LineId Id="2696" Count="53" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

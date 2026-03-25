@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <DUT Name="udt_RobotDiscreteNode_ImageFSOE_20151028" Id="{432e5e8a-57c4-47ba-83ba-5847fd754b04}">
+    <Declaration><![CDATA[(*udt (user defined type) for Visualization of Robot Discrete Image Conforming to SSCCV5.00 with SAFEOP + FSoE (Kuka)
+	Author(S): Brent Lekx-Toniolo;
+	Version 20151028
+		- Initial Concept,blt
+
+*)
+TYPE udt_RobotDiscreteNode_ImageFSOE_20151028 :
+	STRUCT
+
+		T01: udt_EK1100;						(*Ecat Bus Coupler*)
+		T02_STAT: udt_EL6900_STAT_20160426;	(*EL Safety CPU*)
+		T02_CMD: udt_EL6900_CMD_20121204;
+		T03 : udt_EL1904_v2;					(*EL1904*)
+		T04: udt_EK1122;						(*EK1122*)
+
+		RT01: udt_EK1100;					(*EK1100 for SYS-X-44 master connection*)
+		RT02: udt_EL6695_20151028;			(*EL EtherCat Bridge, Specific to Kuka FSOE*)
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

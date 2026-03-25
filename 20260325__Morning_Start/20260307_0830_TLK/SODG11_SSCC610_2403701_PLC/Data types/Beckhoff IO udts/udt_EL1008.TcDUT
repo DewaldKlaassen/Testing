@@ -1,0 +1,24 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_EL1008" Id="{6c52d1fc-62e3-4b8e-87e2-9d6a6c34cd7a}">
+    <Declaration><![CDATA[(*udt (user defined type) of Beckhoff EL1008 Terminal, 8-channel digital input, 24 V DC, 3 ms
+	auth. Brent Lekx-Toniolo of Toniolo Research & Development Inc.; 
+	
+------------------------------------------------------------------------
+REVISION NOTES:
+	Version 1.0: June 2023
+		- Initial Concept, Copied From Original 6900 STAT, a. lopez
+
+------------------------------------------------------------------------
+*)
+
+
+TYPE udt_EL1008 :
+STRUCT
+	I: BYTE;				(*Input 0 - 7*)
+
+	InfoData: udt_ECATSlave_Status;
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

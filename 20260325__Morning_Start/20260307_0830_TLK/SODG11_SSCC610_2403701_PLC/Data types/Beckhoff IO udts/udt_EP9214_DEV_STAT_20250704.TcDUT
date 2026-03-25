@@ -1,0 +1,34 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_EP9214_DEV_STAT_20250704" Id="{f34f1d38-bed3-4ae6-ae2b-9a7f1b1e2219}">
+    <Declaration><![CDATA[(*udt (user defined type) of Beckhoff EP9214 IP67 Block - Power Distribution Block, individual channel data:
+	To work in conjunction of udt_EP9214_STAT_yyyymmdd
+	auth. Brent Lekx-Toniolo, copy/paste from 9224 from r.jones of Sodecia GTAC; 
+
+------------------------------------------------------------------------
+REVISION NOTES:
+	Version 20250704
+		- Initial Concept
+------------------------------------------------------------------------
+
+*)
+
+
+TYPE udt_EP9214_DEV_STAT_20250704 :
+STRUCT
+
+	Temperature_Warning: BOOL;
+	Temperature_Error: BOOL;
+	Us_Warning: BOOL;
+	Us_Error: BOOL;
+	Up_Warning: BOOL;
+	Up_Error: BOOL;
+	Global_Error_Bit: BOOL;
+	Reset_Input: BOOL;
+	TxPDO_State: BOOL;
+	TxPDO_Toggle: BOOL;
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

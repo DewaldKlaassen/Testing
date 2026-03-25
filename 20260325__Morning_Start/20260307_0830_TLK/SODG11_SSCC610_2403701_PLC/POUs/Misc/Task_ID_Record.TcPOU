@@ -1,0 +1,247 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="Task_ID_Record" Id="{91bcf1cc-11c6-4787-9b3f-64b51925df0d}" SpecialFunc="None">
+    <Declaration><![CDATA[(*
+	Revisions
+	************
+	November 2014
+		- added TaskID for sweeping fixtures if they are turn tables
+*)
+
+PROGRAM Task_ID_Record
+VAR_INPUT
+	Enable_Prog: BOOL;
+
+END_VAR
+
+VAR
+
+END_VAR
+
+VAR_OUTPUT
+	Prog_Ok: BOOL;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[Prog_OK:= TRUE;
+
+(*--------------------------------------------------------------------------------------- Set Static Variables for Comparative Use In Program ------------------------------------------*)
+		(*All Task IDs*)
+		Dropoff_Fix01:=10;
+		Weld_Fix01:=11;						(*Changed to allow different types of robots to work with existing code*)
+		Pickup_Fix01:=12;
+		Seal_Fix01:=13;
+		Stud_Fix01:=14;
+		Sweep_Fix01 := 15;
+
+		Dropoff_Fix02:=20;
+		Weld_Fix02:=21;							(*Changed to allow different types of robots to work with existing code*)
+		Pickup_Fix02:=22;
+		Seal_Fix02:=23;
+		Stud_Fix02:=24;
+		Sweep_Fix02 := 25;
+
+		Dropoff_Fix03:=30;
+		Weld_Fix03:=31;
+		Pickup_Fix03:=32;
+		Seal_Fix03:=33;
+		Stud_Fix03:=34;
+		Sweep_Fix03 := 35;
+
+		Dropoff_FiX04:=40;
+		Weld_Fix04:=41;
+		Pickup_Fix04:=42;
+		Seal_Fix04:=43;
+		Stud_Fix04:=44;
+		Sweep_Fix04 := 45;
+
+		Dropoff_Fix05:=50;
+		Weld_Fix05:=51;
+		Pickup_Fix05:=52;
+		Seal_Fix05:=53;
+		Stud_Fix05:=54;
+		Sweep_Fix05 := 55;
+
+		Dropoff_Fix06:=60;
+		Weld_Fix06:=61;
+		Pickup_Fix06:=62;
+		Seal_Fix06:=63;
+		Stud_Fix06:=64;
+		Sweep_Fix06 := 65;
+
+		Dropoff_Fix07:=70;
+		Weld_Fix07:=71;
+		Pickup_Fix07:=72;
+		Seal_Fix07:=73;
+		Stud_Fix07:=74;
+		Sweep_Fix07 := 75;
+
+		Dropoff_Fix08:=80;
+		Weld_Fix08:=81;
+		Pickup_Fix08:=82;
+		Seal_Fix08:=83;
+		Stud_Fix08:=84;
+		Sweep_Fix08 := 85;
+
+		Dropoff_Fix09:=90;
+		Weld_Fix09:=91;
+		Pickup_Fix09:=92;
+		Seal_Fix09:=93;
+		Stud_Fix09:=94;
+		Sweep_Fix09 := 95;
+
+		Dropoff_Fix10:=100;
+		Weld_Fix10:=101;
+		Pickup_Fix10:=102;
+		Seal_Fix10:=103;
+		Stud_Fix10:=104;
+		Sweep_Fix10 := 105;
+
+		Dropoff_Fix11:=110;
+		Weld_Fix11:=111;
+		Pickup_Fix11:=112;
+		Seal_Fix11:=113;
+		Stud_Fix11:=114;
+		Sweep_Fix11 := 115;
+
+		Dropoff_Fix12:=120;
+		Weld_Fix12:=121;
+		Pickup_Fix12:=122;
+		Seal_Fix12:=123;
+		Stud_Fix12:=124;
+		Sweep_Fix15 := 125;
+
+		Dropoff_Fix13:=130;
+		Weld_Fix13:=131;
+		Pickup_Fix13:=132;
+		Seal_Fix13:=133;
+		Stud_Fix13:=134;
+		Sweep_Fix13 := 135;
+
+		Dropoff_Fix14:=140;
+		Weld_Fix14:=141;
+		Pickup_Fix14:=142;
+		Seal_Fix14:=143;
+		Stud_Fix14:=144;
+		Sweep_Fix14 := 145;
+
+		Dropoff_Fix15:=150;
+		Weld_Fix15:=151;
+		Pickup_Fix15:=152;
+		Seal_Fix15:=153;
+		Stud_Fix15:=154;
+		Sweep_Fix15 := 155;
+
+		Dropoff_Fix16:=160;
+		Weld_Fix16:=161;
+		Pickup_Fix16:=162;
+		Seal_Fix16:=163;
+		Stud_Fix16:=164;
+		Sweep_Fix16 := 165;
+
+		(*Tasks Associated with Entire Work Area*)
+		Dropoff_Fix101:=200;
+		Weld_Fix101:=201;
+		Pickup_Fix101:=202;
+		Sweep_Fix101:=203;
+
+		Dropoff_Fix102:=204;
+		Weld_Fix102:=205;
+		Pickup_Fix102:=206;
+		Sweep_Fix102:=207;
+
+		Dropoff_Fix103:=208;
+		Weld_Fix103:=209;
+		Pickup_Fix103:=210;
+
+		Dropoff_Fix104:=212;
+		Weld_Fix104:=213;
+		Pickup_Fix104:=214;
+
+		Dropoff_Fix105:=216;
+		Weld_Fix105:=217;
+		Pickup_Fix105:=218;
+
+		Dropoff_Fix106:=220;
+		Weld_Fix106:=221;
+		Pickup_Fix106:=222;
+
+		Dropoff_Fix107:=224;
+		Weld_Fix107:=225;
+		Pickup_Fix107:=226;
+
+		Dropoff_Fix108:=228;
+		Weld_Fix108:=229;
+		Pickup_Fix108:=230;
+
+		Dropoff_Fix109:=232;
+		Weld_Fix109:=233;
+		Pickup_Fix109:=234;
+
+		Work_Ped01:= 241;
+		Work_Ped02:= 242;
+		Work_Ped03:= 243;
+		Work_Ped04:= 244;
+		Work_Ped05:= 245;
+		Work_Ped06:= 246;
+		Work_Ped07:= 247;
+		Work_Ped08:= 248;
+		Work_Ped09:= 249;
+		Work_Ped10:= 250;
+		Work_Ped11:= 251;
+		Work_Ped12:= 252;
+		Work_Ped13:= 253;
+		Work_Ped14:= 254;
+		Work_Ped15:= 255;
+		Work_Ped16:= 256;
+		Work_Ped17:= 257;
+		Work_Ped18:= 258;
+		Work_Ped19:= 259;
+		Work_Ped20:= 260;
+		Work_Ped21:= 261;
+		Work_Ped22:= 262;
+		Work_Ped23:= 263;
+		Work_Ped24:= 264;
+		Work_Ped25:= 265;
+		Work_Ped26:= 266;
+		Work_Ped27:= 267;
+		Work_Ped28:= 268;
+		Work_Ped29:= 269;
+		Work_Ped30:= 270;
+
+		Master_Test:= 351;
+		Brake_Test:= 352;
+		Tip_Dress:=353;
+		Tip_Change_EXT:=354;
+		Tip_Change:=355;
+		Tracc_Tcp:=356;
+
+		(*Robot Types*)
+		MOTO_ERC:=1;
+		MOTO_MRC:=2;
+		MOTO_XRC:=10;
+		MOTO_NX100:=20;
+		MOTO_DX100:=30;
+		MOTO_DX100_Dual:=31;
+		MOTO_DX100_32:=40;
+
+		KUKA_KRC2:=51;
+
+		KUKA_KRC4:=60;
+		KUKA_KRC4_SAFEOP:=61;
+		KUKA_KRC4_SAFEOP_Small:=62;
+		KUKA_KRC4_SafeOP_ATI:=63;
+		KUKA_KRC4c_SAFEOP_AGILUS:=64;
+
+		KUKA_KRC4_SAFEOP_TurnTable:=69;]]></ST>
+    </Implementation>
+    <LineIds Name="Task_ID_Record">
+      <LineId Id="20" Count="119" />
+      <LineId Id="267" Count="0" />
+      <LineId Id="140" Count="3" />
+      <LineId Id="287" Count="0" />
+      <LineId Id="144" Count="64" />
+      <LineId Id="247" Count="0" />
+      <LineId Id="209" Count="18" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

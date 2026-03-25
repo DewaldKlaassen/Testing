@@ -1,0 +1,118 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FB_GTAC_Conveyor_20210303" Id="{c221b690-5e57-4510-8a20-bfb2bdaf65f4}" SpecialFunc="None">
+    <Declaration><![CDATA[(*FB for use with Conveyors
+
+	Original Author(s): Justin Vandongen of Sodecia GTAC.; 
+------------------------------------------------------------------------------------------
+REVISION NOTES:
+	Version 20201013
+		- intial concept, J.Vandongen
+	Version 20210303
+		- added timeout functionality, j.underhill
+------------------------------------------------------------------------------------------
+*)
+
+
+FUNCTION_BLOCK FB_GTAC_Conveyor_20210303
+	VAR_INPUT
+		Enable_Motion: BOOL;
+		Enable_Start_Latch: BOOL;
+		Reset_TimeOut: BOOL;
+
+		Start_Delay_Time: TIME;
+		Stop_Delay_Time: TIME;
+		TimeOut_Time: TIME;
+
+		Start_Conveyor: BOOL;
+		Pause_Conveyor: BOOL;
+		Stop_Conveyor: BOOL;
+	
+	
+	END_VAR
+
+
+	VAR
+		Start_Latch: SR;
+		Stop_Latch: SR;
+
+		Start_DelayTMR: TON;
+		Stop_DelayTMR: TON;
+		TimeOutTMR: TON;
+
+
+	END_VAR
+	
+
+	VAR_OUTPUT
+		FB_OK: BOOL;
+		Conveyor_On_CMD: BOOL;
+
+
+	END_VAR
+
+
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[	(*Set FB_OK to True*)
+	FB_OK:= TRUE;
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Internal Code $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+	(*Start Latch to keep conveyor on until stop signal is present*)
+	Start_Latch(
+			SET1:= Enable_Start_Latch AND Start_Conveyor
+					AND NOT Stop_Conveyor AND NOT Pause_Conveyor AND NOT TimeOutTMR.Q,
+			RESET:= Stop_Conveyor AND Stop_DelayTMR.Q,
+			Q1=> );
+
+	(*Capture Stop Conditions*)
+	Stop_Latch(
+			Set1:= Stop_Conveyor OR Pause_Conveyor,
+			RESET:= Stop_DelayTMR.Q,
+			Q1=> );
+
+	(*Timer used to timeout conveyor after running for X time*)
+	TimeOutTMR(
+				IN:= (Conveyor_On_CMD OR TimeOutTMR.Q) AND NOT Reset_TimeOut,
+				PT:= TimeOut_Time,
+				Q=> ,
+				ET=> );
+
+
+	(*Timer used to delay the start of the conveyor until it sees the Start_Conveyor signal for a duration of time first*)
+	Start_DelayTMR(
+			IN:= Enable_Motion AND (Start_Conveyor OR Start_Latch.Q1),
+			PT:= Start_Delay_Time,
+			Q=> ,
+			ET=> );
+
+
+	(*Timer used to keep the conveyor running after the stop signal has been turned on. Ideally used to control the stop position*)
+	Stop_DelayTMR(
+			IN:= Enable_Motion AND Stop_Latch.Q1,
+			PT:= Stop_Delay_Time,
+			Q=> ,
+			ET=> );
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Transfer Standard Outputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+
+	Conveyor_On_CMD:= Enable_Motion
+				AND ((Start_Conveyor OR Start_Latch.Q1) AND Start_DelayTMR.Q);
+
+
+
+
+(*end*)]]></ST>
+    </Implementation>
+    <LineIds Name="FB_GTAC_Conveyor_20210303">
+      <LineId Id="48" Count="5" />
+      <LineId Id="207" Count="42" />
+      <LineId Id="103" Count="3" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

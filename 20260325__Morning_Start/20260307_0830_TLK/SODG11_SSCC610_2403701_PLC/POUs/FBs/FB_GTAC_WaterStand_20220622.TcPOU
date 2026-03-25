@@ -1,0 +1,322 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <POU Name="FB_GTAC_WaterStand_20220622" Id="{d5b3bb47-c835-43ff-91a3-6d5c9e9ba49e}" SpecialFunc="None">
+    <Declaration><![CDATA[(*FB to handle robot water tower
+	Version: 20170801
+	- combined FB_GTAC_Robot_TempFlow and FB_GTAC_Fixture_Single into one FB, j.vandongen
+	- added option to choose between 1 output and 2 output (in the case of a fixture where only one is required), j.vandongen
+	Version 20171111
+	- changed Timeout reset to rising edge trigger, j.vandongen 
+	- added var out for coolig ok, j.vandongen
+	Version 20190726
+	- added outputs for the control of the water saver unit, j.vandongen
+	Version 20200710
+	- removed cards EP3174 and EP2028. changed to EP6224 IO-Link, j.vandongen
+	Version 20200917
+	- corrected error in fault code for DegreesC2, j.vandongen
+	Version 20201125
+	- corrected mapping issue causing incorrect flow to be shown, j.vandongen
+	Version 20220131
+	- added mapping for using the inport ports in the I/O Link cards, j. underhill
+	Version 20220622
+	- fixes for issues found with negative flow values (see 5.06 GH issues #2 notes), b.lekx-toniolo, j.underhill, d.esteves, c.drees
+		NOTE: (from brent) the issue is we take a signed value from the meter and shove it into a UINT bit by bit....I'm not sure why the original developer did this but it should be re-examined as a whole
+
+
+*)
+
+FUNCTION_BLOCK FB_GTAC_WaterStand_20220622
+
+VAR_INPUT
+
+	Enable_Timeout: BOOL; 	(*Enable Timeout to shut off valve if flow not achieved in time*)
+	Timeout_Reset: BOOL;		(*Reset (Retry) Timepout*)
+	Timeout_SetPoint: TIME;	(*TimeoutSetpoint Input, limited to 1-10S*)
+
+	TempHighLimit1: REAL;
+	TempHighLimit2: REAL;
+	FlowLowLimit1: REAL;
+	FlowLowLimit2: REAL;
+
+	Option_WaterCount: INT;
+
+	Valve1: BOOL;
+	Valve2: BOOL;
+	Valve3: BOOL;
+	Valve4: BOOL;
+
+
+END_VAR
+
+VAR
+
+(*Hardware Related Data Types*)
+	(*Develop "Beckhoff Nodes"*)
+	N01 AT %I*: udt_EP6224;
+	N01_I AT %I*: udt_EP6224_I;
+	N01_CMD AT %Q*: udt_EP6224_CMD;
+
+(* Nodes States*)
+	DiscreteNode_OK: BOOL;
+
+(*Cable Break States*)
+	ECatSlave_Cable_Breaks: UDINT;
+
+	Fault_Tmrs: ARRAY [0..10] OF TON;
+	Temperature1_Fault_Delay_TMR : BOOL;
+	Temperature2_Fault_Delay_TMR : BOOL;
+	Flow1_Fault_Delay_TMR : BOOL;
+	Flow2_Fault_Delay_TMR : BOOL;
+
+	RawTemp1: UINT;
+	RawTemp2: UINT;
+
+	RawFlow1: UINT;
+	RawFlow2: UINT;
+
+	TempReal1: REAL;
+	TempReal2: REAL;
+	FlowReal1: REAL;
+	FlowReal2: REAL;
+
+	DegreesC1: REAL;
+	DegreesC2: REAL;
+
+	Flow_lpm1: REAL;
+	Flow_lpm2: REAL;
+
+	WaterTempFlow_OK: BOOL;
+
+	Reset_Req: R_TRIG;
+
+
+END_VAR
+
+VAR_OUTPUT
+
+	Discrete_Image: udt_WaterStand_Image_20220131;
+
+	Temperature_Fault1: BOOL;
+	Temperature_Fault2: BOOL;
+	Flow_Fault1: BOOL;
+	Flow_Fault2: BOOL;
+
+	Cooling_OK: BOOL;
+
+END_VAR
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$Gather Status Of Hardware $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Discrete I/O Nodes*)
+	IF (N01.InfoData.State=8)
+
+		THEN DiscreteNode_OK:=TRUE;
+	ELSE DiscreteNode_OK:=FALSE;
+	END_IF;
+	(*Cable Break Detection*)
+	ECatSlave_Cable_Breaks:= FUN_GTAC_EcatSlaveConnState
+							(N01.InfoData.State,
+							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0); (*Function Returns Flags to warn of possible cable break*)
+
+
+
+
+(*----------------------------------------------------Temperature conversion and output----------------------------------------------------*)
+	RawTemp1.0:= N01.Port1_ProcessData[7].2;
+	RawTemp1.1:= N01.Port1_ProcessData[7].3;
+	RawTemp1.2:= N01.Port1_ProcessData[7].4;
+	RawTemp1.3:= N01.Port1_ProcessData[7].5;
+	RawTemp1.4:= N01.Port1_ProcessData[7].6;
+	RawTemp1.5:= N01.Port1_ProcessData[7].7;
+	RawTemp1.6:= N01.Port1_ProcessData[6].0;
+	RawTemp1.7:= N01.Port1_ProcessData[6].1;
+	RawTemp1.8:= N01.Port1_ProcessData[6].2;
+	RawTemp1.9:= N01.Port1_ProcessData[6].3;
+	RawTemp1.10:= N01.Port1_ProcessData[6].4;
+	RawTemp1.11:= N01.Port1_ProcessData[6].5;
+	RawTemp1.12:= N01.Port1_ProcessData[6].6;
+	RawTemp1.13:= N01.Port1_ProcessData[6].7;
+
+	TempReal1:= RawTemp1 * 0.1; (*gradient to shift decimal place*)
+
+	RawTemp2.0:= N01.Port2_ProcessData[7].2;
+	RawTemp2.1:= N01.Port2_ProcessData[7].3;
+	RawTemp2.2:= N01.Port2_ProcessData[7].4;
+	RawTemp2.3:= N01.Port2_ProcessData[7].5;
+	RawTemp2.4:= N01.Port2_ProcessData[7].6;
+	RawTemp2.5:= N01.Port2_ProcessData[7].7;
+	RawTemp2.6:= N01.Port2_ProcessData[6].0;
+	RawTemp2.7:= N01.Port2_ProcessData[6].1;
+	RawTemp2.8:= N01.Port2_ProcessData[6].2;
+	RawTemp2.9:= N01.Port2_ProcessData[6].3;
+	RawTemp2.10:= N01.Port2_ProcessData[6].4;
+	RawTemp2.11:= N01.Port2_ProcessData[6].5;
+	RawTemp2.12:= N01.Port2_ProcessData[6].6;
+	RawTemp2.13:= N01.Port2_ProcessData[6].7;
+
+	TempReal2:= RawTemp2 * 0.1; (*gradient to shift decimal place*)
+
+(*Set the scale of the input value to match the temperature switch*)
+	DegreesC1:= TempReal1;			(*Scale value determined at setup*)
+	DegreesC2:= TempReal2;			(*Scale value determined at setup*)
+
+
+
+(*----------------------------------------------------------Flow conversion and Output-------------------------------------------------------*)
+	RawFlow1.0:= N01.Port1_ProcessData[5].0;
+	RawFlow1.1:= N01.Port1_ProcessData[5].1;
+	RawFlow1.2:= N01.Port1_ProcessData[5].2;
+	RawFlow1.3:= N01.Port1_ProcessData[5].3;
+	RawFlow1.4:= N01.Port1_ProcessData[5].4;
+	RawFlow1.5:= N01.Port1_ProcessData[5].5;
+	RawFlow1.6:= N01.Port1_ProcessData[5].6;
+	RawFlow1.7:= N01.Port1_ProcessData[5].7;
+	RawFlow1.8:= N01.Port1_ProcessData[4].0;
+	RawFlow1.9:= N01.Port1_ProcessData[4].1;
+	RawFlow1.10:= N01.Port1_ProcessData[4].2;
+	RawFlow1.11:= N01.Port1_ProcessData[4].3;
+	RawFlow1.12:= N01.Port1_ProcessData[4].4;
+	RawFlow1.13:= N01.Port1_ProcessData[4].5;
+	RawFlow1.14:= N01.Port1_ProcessData[4].6;
+	(*RawFlow1.15:= N01.Port1_ProcessData[4].7;*)
+
+IF N01.Port1_ProcessData[4].7		(*Bool that indicates the negative part of the word DE*)
+	THEN
+	FlowReal1:= 0; (*gradient to shift decimal place*)
+ELSE
+	FlowReal1:= RawFlow1 * 0.01; (*gradient to shift decimal place*)
+END_IF
+
+	RawFlow2.0:=  N01.Port2_ProcessData[5].0;
+	RawFlow2.1:=  N01.Port2_ProcessData[5].1;
+	RawFlow2.2:=  N01.Port2_ProcessData[5].2;
+	RawFlow2.3:=  N01.Port2_ProcessData[5].3;
+	RawFlow2.4:=  N01.Port2_ProcessData[5].4;
+	RawFlow2.5:=  N01.Port2_ProcessData[5].5;
+	RawFlow2.6:=  N01.Port2_ProcessData[5].6;
+	RawFlow2.7:=  N01.Port2_ProcessData[5].7;
+	RawFlow2.8:=  N01.Port2_ProcessData[4].0;
+	RawFlow2.9:=  N01.Port2_ProcessData[4].1;
+	RawFlow2.10:= N01.Port2_ProcessData[4].2;
+	RawFlow2.11:= N01.Port2_ProcessData[4].3;
+	RawFlow2.12:= N01.Port2_ProcessData[4].4;
+	RawFlow2.13:= N01.Port2_ProcessData[4].5;
+	RawFlow2.14:= N01.Port2_ProcessData[4].6;
+	(*RawFlow2.15:= N01.Port2_ProcessData[4].7;*)
+
+IF N01.Port2_ProcessData[4].7		(*Bool that indicates the negative part of the word DE*)
+	THEN
+	FlowReal2:= 0; (*gradient to shift decimal place*)
+ELSE
+	FlowReal2:= RawFlow2 * 0.01; (*gradient to shift decimal place*)
+END_IF
+
+(*Set the scale of the input value to match the flow switch*)
+	Flow_lpm1:= FlowReal1;			(*Scale value determined at setup*)
+	Flow_lpm2:= FlowReal2;			(*Scale value determined at Setup*)
+
+(*Bottom at zero if flow values go negative as we're only interested in one direction of flow*)
+IF (Flow_lpm1 < 0)
+	THEN
+	Flow_lpm1:= 0;
+END_IF
+
+IF (Flow_lpm2 < 0)
+	THEN
+	Flow_lpm2:= 0;
+END_IF
+
+(*-------------------------------------------------------Temperature and Flow Fault Status--------------------------------------------------*)
+(*Determine if there is a Temperature fault*)
+
+(*Temperature1 Fault Delay Timer*)
+	Fault_Tmrs[1].PT:= T#2.0s;
+	Fault_Tmrs[1]();
+	Fault_Tmrs[1].IN:= (DegreesC1 > TempHighLimit1) OR (DegreesC1 < 2);
+	Temperature1_Fault_Delay_TMR :=Fault_Tmrs[1].Q;
+	Temperature_Fault1:=  ((DegreesC1 > TempHighLimit1) OR (DegreesC1 < 2)) AND Temperature1_Fault_Delay_TMR;
+
+(*Temperature2 Fault Delay Timer*)
+	Fault_Tmrs[2].PT:= T#2.0s;
+	Fault_Tmrs[2]();
+	Fault_Tmrs[2].IN:= (DegreesC2 > TempHighLimit2) OR (DegreesC2 < 2);
+	Temperature2_Fault_Delay_TMR :=Fault_Tmrs[2].Q;
+	Temperature_Fault2:= ((DegreesC2> TempHighLimit2) OR (DegreesC2 < 2)) AND Temperature2_Fault_Delay_TMR;
+
+
+(*-------------------- Determine if there is a flow fault --------------------------*)
+
+(*Place Boundries on Flow Setpoint Timeout input*)
+	IF (Timeout_SetPoint <T#1.0s) OR (Timeout_SetPoint >T#10.0S)
+		THEN
+		Timeout_SetPoint:= T#5.0s;
+	END_IF;
+
+	Reset_Req(
+			CLK:= Timeout_Reset,
+			Q=>
+			);
+
+
+(*Flow1 Fault Delay Timer*)
+	Fault_Tmrs[3].PT:= Timeout_Setpoint;
+	Fault_Tmrs[3]();
+	Fault_Tmrs[3].IN:= Flow_lpm1 < FlowLowLimit1 AND NOT Reset_Req.Q AND Valve1;
+	Flow1_Fault_Delay_TMR :=Fault_Tmrs[3].Q;
+
+	IF (Flow_lpm1 < FlowLowLimit1) AND Flow1_Fault_Delay_TMR
+		THEN
+			Flow_Fault1:= TRUE;
+		ELSE
+			Flow_Fault1:= FALSE;
+	END_IF;
+
+(*Flow2 Fault Delay Timer*)
+	Fault_Tmrs[4].PT:= Timeout_Setpoint;
+	Fault_Tmrs[4]();
+	Fault_Tmrs[4].IN:= (Flow_lpm2 < FlowLowLimit2) AND NOT Reset_Req.Q AND Valve1;
+	Flow2_Fault_Delay_TMR :=Fault_Tmrs[4].Q;
+
+	IF (Flow_lpm2 < FlowLowLimit2) AND Flow2_Fault_Delay_TMR
+		THEN
+			Flow_Fault2:= TRUE;
+		ELSE
+			Flow_Fault2:= FALSE;
+	END_IF;
+
+
+(*----------------------------------Transfer Data to Discrete Image------------------*)
+	Discrete_Image.N01:= N01;
+	Discrete_Image.N01_CMD:= N01_CMD;
+	Discrete_Image.Water_Flow_Gun:= Flow_Lpm1;
+	Discrete_Image.Water_Flow_Trans:= Flow_Lpm2;
+	Discrete_Image.Water_Temp_Gun:= DegreesC1;
+	Discrete_Image.Water_Temp_Trans:= DegreesC2;
+	Discrete_Image.ECatSlave_Cable_Breaks:= EcatSlave_Cable_Breaks;
+
+
+(*----------------------------------------Output Final State-----------------------------------------*)
+	WaterTempFlow_OK:= NOT Flow_Fault1 AND NOT Temperature_Fault1 AND ((NOT Flow_Fault2  AND NOT Temperature_Fault2) OR (Option_WaterCount=1));
+
+	Cooling_OK:= WaterTempFlow_OK AND Valve1
+			AND (Flow_lpm1 > FlowLowLimit1)
+			AND ((Flow_lpm2 > FlowLowLimit2) OR (Option_WaterCount=1));
+
+
+
+(*-----------------------------------------------------------------Valve Control-------------------------------------------------------------------*)
+(*Control the valve*)
+	N01_CMD.Port3_Q:= Valve1 AND NOT (( Flow_Fault1 OR  Flow_Fault2) AND Enable_Timeout);
+
+
+
+(*end*)
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_GTAC_WaterStand_20220622">
+      <LineId Id="3" Count="204" />
+      <LineId Id="2" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

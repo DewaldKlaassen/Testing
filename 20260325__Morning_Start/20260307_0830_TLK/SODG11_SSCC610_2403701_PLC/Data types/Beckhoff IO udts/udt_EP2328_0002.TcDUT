@@ -1,0 +1,23 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_EP2328_0002" Id="{88236f57-33e9-4268-afac-10bb393ad925}">
+    <Declaration><![CDATA[(*udt (user defined type) of Beckhoff EP2028-0002 - 8 Point IP67 Rated Digital Output Box:
+	auth. Brent Lekx-Toniolo of Toniolo Research & Development Inc.; 
+	July 2010;
+	Modified for tag reduction by R.Remillard
+	November 2012; version 2.0*)
+
+
+TYPE udt_EP2328_0002 :
+STRUCT
+	Q AT %Q*: BYTE;
+	I AT %I*: BYTE;
+	
+	(*Status bits*)
+	WC_State AT %I*:BOOL;
+	State AT %I*: UINT;
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

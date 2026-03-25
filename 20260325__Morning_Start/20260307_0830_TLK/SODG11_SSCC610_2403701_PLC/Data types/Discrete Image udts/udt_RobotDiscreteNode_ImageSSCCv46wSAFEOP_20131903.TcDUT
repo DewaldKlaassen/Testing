@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <DUT Name="udt_RobotDiscreteNode_ImageSSCCv46wSAFEOP_20131903" Id="{864f9546-b4da-4a99-bca8-9fdeedc2204c}">
+    <Declaration><![CDATA[(*udt (user defined type) for Visualization of Robot Discrete Image Conforming to SSCCv4.6 with SAFEOP (Kuka)
+	Author(S): Brent Lekx-Toniolo/Rob Remillard of Sodecia GTAC;
+	Version 20131903
+		- Initial Concept
+
+	Last Edit: March 19th, 2013, blt
+		- Updated per V4.6 hardware changes
+*)
+TYPE udt_RobotDiscreteNode_ImageSSCCv46wSAFEOP_20131903 :
+	STRUCT
+
+		T01: udt_EK1100;				(*Ecat Bus Coupler*)
+		T02_STAT: udt_EL6900_STAT_20160426;	(*EL Safety CPU*)
+		T02_CMD: udt_EL6900_CMD_20121204;
+		T03: udt_EL1904_v2;				(*EL Safety Inputs*)
+		T04: udt_EL1904_v2;				(*EL Safety Inputs*)
+		T05: udt_EL1904_v2;				(*EL Safety Inputs*)
+		T06: udt_EL1904_v2;				(*EL Safety Inputs*)
+		T07: udt_EL1904_v2;				(*EL Safety Inputs*)
+		T08: udt_EL2904RO_v2;			(*EL Safety Outputs, Set to "I" as this terminal is safety rated, therefore read only!*)
+		T09: udt_EL2904RO_v2; 			(*EL Safety Outputs, Set to "I" as this terminal is safety rated, therefore read only!*)
+		T10: udt_EL6692_20121204;			(*EL EtherCat Bridge*)
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

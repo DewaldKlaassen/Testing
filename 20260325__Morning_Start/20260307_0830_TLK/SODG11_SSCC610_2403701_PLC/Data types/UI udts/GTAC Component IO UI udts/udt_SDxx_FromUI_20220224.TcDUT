@@ -1,0 +1,44 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_SDxx_FromUI_20220224" Id="{11739117-9be1-4734-a0af-433ba2756aea}">
+    <Declaration><![CDATA[(*udt (user defined type) for interfacing to UI (User Interface)
+this udt represents data that is passed from EACH UI to PLC
+
+	Author(S): Brent Lekx-Toniolo of Sodecia GTAC;
+	Version 20160811
+		- Original Concept, b.lekx-toniolo
+	Version 20220224
+	- Overhaul during TcUI Migration project, b.lekx-toniolo / c.drees
+
+*)
+TYPE udt_SDxx_FromUI_20220224 :
+STRUCT
+		AxisLocalControl_IC_REQS: ARRAY[0..2] OF UINT;
+		Mode_Select: ARRAY[0..2] OF INT;
+		Error_Reset: ARRAY[0..2] OF BOOL;
+		Program_Reset: ARRAY[0..2] OF BOOL;
+
+		PlayBack_Speed_Percentage: ARRAY[0..2] OF REAL;
+		Explicit_Step_REQ: ARRAY[0..2] OF UINT;
+		Start_Explicit_StepCall: ARRAY[0..2] OF BOOL;
+		Start_PlayBack: ARRAY[0..2] OF BOOL;
+		Stop_PlayBack: ARRAY[0..2] OF BOOL;
+		PlayBack_StepPermit: ARRAY[0..2] OF BOOL;
+
+
+		Teach_Params: ARRAY[0..2] OF udt_SingleAxis_MoveData_20160908; (*Struct of Teach paramaeters*)
+		Teach_Servo_HomePos: ARRAY[0..2] OF BOOL;
+		Teach_JogFast_Plus: ARRAY[0..2] OF BOOL;
+		Teach_JogFast_Minus: ARRAY[0..2] OF BOOL;
+		Teach_JogSlow_Plus: ARRAY[0..2] OF BOOL;
+		Teach_JogSlow_Minus: ARRAY[0..2] OF BOOL;
+		Teach_Inch_Plus: ARRAY[0..2] OF BOOL;
+		Teach_Inch_Minus: ARRAY[0..2] OF BOOL;
+		Teach_MicroInch_Enable: ARRAY[0..2] OF BOOL;
+		Teach_Record_CurrentPos: ARRAY[0..2] OF BOOL;
+		Teach_ParamsOverwrite_Flag: ARRAY[0..2] OF BOOL;
+
+END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

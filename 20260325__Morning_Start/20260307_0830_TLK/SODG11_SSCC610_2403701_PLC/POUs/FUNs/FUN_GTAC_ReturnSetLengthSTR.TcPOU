@@ -1,0 +1,95 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FUN_GTAC_ReturnSetLengthSTR" Id="{23306fba-2439-45ee-9b62-6573590912c5}" SpecialFunc="None">
+    <Declaration><![CDATA[(*Function to return a portion of source string (from a provided string) based on return length specified (starting at element 0 of source)
+	author: Brent Lekx-Toniolo OF Sodecia GTAC
+	date: April 2016
+	version 1.0
+		- initial concept
+
+
+	Last Edit: 14-Oct-2021, BLT, added ability to return length of 22 (for a specific case)
+
+*)
+
+FUNCTION FUN_GTAC_ReturnSetLengthSTR : STRING
+VAR_INPUT
+	Source_String: STRING;
+	Return_Length: UINT;
+
+END_VAR
+VAR
+	String_Len1: STRING[1];
+	String_Len2: STRING[2];
+	String_Len3: STRING[3];
+	String_Len4: STRING[4];
+	String_Len5: STRING[5];
+	String_Len6: STRING[6];
+	String_Len7: STRING[7];
+	String_Len8: STRING[8];
+	String_Len9: STRING[9];
+	String_Len10: STRING[10];
+	String_Len21: STRING[21];
+	String_Len22: STRING[22];
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Return String Based on Length Requested*)
+
+	CASE Return_Length OF
+		1:
+			String_Len1:= Source_String;
+			FUN_GTAC_ReturnSetLengthSTR:= String_Len1;
+	 	2:
+			String_Len2:= Source_String;
+			FUN_GTAC_ReturnSetLengthSTR:= String_Len2;
+		3:
+			String_Len3:= Source_String;
+			FUN_GTAC_ReturnSetLengthSTR:= String_Len3;
+		4:
+			String_Len4:= Source_String;
+			FUN_GTAC_ReturnSetLengthSTR:= String_Len4;
+		5:
+			String_Len5:= Source_String;
+			FUN_GTAC_ReturnSetLengthSTR:= String_Len5;
+		6:
+			String_Len6:= Source_String;
+			FUN_GTAC_ReturnSetLengthSTR:= String_Len6;
+		7:
+			String_Len7:= Source_String;
+			FUN_GTAC_ReturnSetLengthSTR:= String_Len7;
+		8:
+			String_Len8:= Source_String;
+			FUN_GTAC_ReturnSetLengthSTR:= String_Len8;
+		9:
+			String_Len9:= Source_String;
+			FUN_GTAC_ReturnSetLengthSTR:= String_Len9;
+		10:
+			String_Len10:= Source_String;
+			FUN_GTAC_ReturnSetLengthSTR:= String_Len10;	
+		21:
+			(*Sepecific case created for returning Machine serial parsed from TC3 Appname data*)
+			String_Len21:= Source_String;
+			FUN_GTAC_ReturnSetLengthSTR:= String_Len21;
+		22:
+			(*Sepecific case created for returning Machine serial parsed from TC3 Appname data, after serial number -> eng project number changes*)
+			String_Len22:= Source_String;
+			FUN_GTAC_ReturnSetLengthSTR:= String_Len22;
+
+
+	 ELSE
+		(*default case, blank return*)
+			FUN_GTAC_ReturnSetLengthSTR:= '';
+
+	END_CASE;]]></ST>
+    </Implementation>
+    <LineIds Name="FUN_GTAC_ReturnSetLengthSTR">
+      <LineId Id="30" Count="32" />
+      <LineId Id="100" Count="0" />
+      <LineId Id="104" Count="0" />
+      <LineId Id="101" Count="1" />
+      <LineId Id="135" Count="3" />
+      <LineId Id="63" Count="6" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

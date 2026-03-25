@@ -1,0 +1,146 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_VertiGuard_20260310" Id="{400c1c06-5dfd-4d84-8f19-718a3f94851b}" SpecialFunc="None">
+    <Declaration><![CDATA[
+FUNCTION_BLOCK FB_VertiGuard_20260310
+
+VAR_INPUT
+	
+		Enable_FB: BOOL;
+		Enable_Motion: BOOL;
+		Enable_Latch: BOOL;
+
+		GateClose_REQ: BOOL;		(*Request to close the door*)
+		GateOpen_REQ: BOOL;			(*Request to open the door*)
+		
+		GateOpened_Time: TIME;		(*Door Open Fault Control Timer*)
+		GateClosed_Time: TIME;		(*Door Closed Fault Control Timer*)
+		
+		GateOpen_Precharge_Time: TIME;	(*Pre Charge Time For Opening Gate*)
+
+		GateClosed_Switches: BOOL;	(*Switches to detect Door Closed*)
+		GateOpened_Switches: BOOL;	(*Switches to detect Door opened*)
+
+		Fault_Time: TIME;
+		
+END_VAR
+
+VAR
+	
+		Gate_CloseSR: SR; 					(*Latch to Close the door*)
+		Gate_OpenSR: SR;					(*Latch to Open the door*)
+
+		GateOpen_Precharge_TMR: TON; 		(*Pre Charge Timer For Opening The Gate*)
+		GateOpened_TMR: TON;				(*Timer to say gate is open, no door open switches*)
+		GateClosed_TMR: TON;				(*Timer to say gate is closed*)
+
+		Fault_TMR: TON;
+
+END_VAR
+
+VAR_OUTPUT
+
+		FB_OK: BOOL;
+
+		GateClose_CMD: BOOL;	(*Command the door to close*)
+		GateOpen_CMD: BOOL;		(*Command the door to open*)
+		Gate_Closed: BOOL;		(*Door is closed*)
+		Gate_Opened: BOOL;		(*Door is open*)
+
+		Faulted: BOOL;	
+
+END_VAR
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Set FB_OK to True*)
+	FB_OK:= TRUE;
+
+	(*Set Gate to Close*)
+	Gate_CloseSR(
+			SET1:= Enable_Latch AND GateClose_REQ AND NOT GateOpen_REQ,
+			RESET:= NOT Enable_Latch OR (GateOpen_REQ AND Gate_Closed),
+			Q1=>
+			);
+
+	(*Set Gate to Open*)
+	Gate_OpenSR(
+			SET1:= Enable_Motion AND Enable_Latch AND GateOpen_REQ AND NOT GateClose_REQ,
+			RESET:= NOT Enable_Motion OR NOT Enable_Latch OR (GateClose_REQ OR Gate_Opened),
+			Q1=>
+			);
+
+	(*Pre Charge Timer For Opening Guard*)
+	GateOpen_Precharge_TMR(
+					In:= Enable_Motion AND ((Enable_Latch AND Gate_OpenSR.Q1) OR (NOT Enable_Latch AND GateOpen_REQ)),
+					PT:= GateOpen_Precharge_Time
+					);
+
+	(*Set Actual Outputs*)
+	(*Valve Outputs*)
+	(*Note ------> The closed state has a pin lock so at the moment the gate is closed, we cancel the latch*)
+	GateClose_CMD:= (((Enable_Latch AND Gate_CloseSR.Q1 (*AND NOT Gate_Closed*)) OR (NOT Enable_Latch AND GateClose_REQ)) AND NOT ((Enable_Latch AND Gate_OpenSR.Q1) OR (NOT Enable_Latch AND GateOpen_REQ)))
+					OR (((Enable_Latch AND Gate_OpenSR.Q1) OR (NOT Enable_Latch AND GateOpen_REQ)) AND NOT GateOpen_Precharge_TMR.Q);
+	GateOpen_CMD:= Enable_Motion AND GateOpen_Precharge_TMR.Q AND ((Enable_Latch AND Gate_OpenSR.Q1) OR (NOT Enable_Latch AND GateOpen_REQ)) AND NOT ((Enable_Latch AND Gate_CloseSR.Q1) OR (NOT Enable_Latch AND GateClose_REQ));
+					
+	(*Gate Opened Timer*)
+	GateOpened_TMR(
+			IN:= GateOpened_Switches AND GateOpen_CMD,
+			PT:= GateOpened_Time,
+			Q=> ,
+			ET=>
+			);
+
+	(*Gate Closed Timer*)
+	GateClosed_TMR(
+			IN:= GateClosed_Switches,
+			PT:= GateClosed_Time,
+			Q=> ,
+			ET=>
+			);
+
+	(*Capture Gate Status*)
+	IF GateClosed_Switches AND GateClosed_TMR.Q
+		THEN
+			Gate_Closed:= TRUE;
+			Gate_Opened:= FALSE;
+	ELSIF GateOpened_Switches AND GateOpened_TMR.Q
+		THEN
+			Gate_Closed:= FALSE;
+			Gate_Opened:= TRUE;
+	END_IF;
+	
+	(*Capture Gate Faults*)
+	Fault_TMR(
+			IN:= (GateClose_CMD AND NOT Gate_Closed) OR (GateOpen_CMD AND NOT Gate_Opened),
+			PT:= Fault_Time,
+			Q=> Faulted,
+			ET=> );
+
+
+(*end*)]]></ST>
+    </Implementation>
+    <LineIds Name="FB_VertiGuard_20260310">
+      <LineId Id="101" Count="1" />
+      <LineId Id="418" Count="0" />
+      <LineId Id="420" Count="11" />
+      <LineId Id="419" Count="0" />
+      <LineId Id="292" Count="5" />
+      <LineId Id="305" Count="2" />
+      <LineId Id="434" Count="0" />
+      <LineId Id="313" Count="0" />
+      <LineId Id="435" Count="0" />
+      <LineId Id="324" Count="0" />
+      <LineId Id="400" Count="0" />
+      <LineId Id="402" Count="13" />
+      <LineId Id="401" Count="0" />
+      <LineId Id="390" Count="9" />
+      <LineId Id="319" Count="0" />
+      <LineId Id="382" Count="0" />
+      <LineId Id="384" Count="5" />
+      <LineId Id="383" Count="0" />
+      <LineId Id="159" Count="0" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

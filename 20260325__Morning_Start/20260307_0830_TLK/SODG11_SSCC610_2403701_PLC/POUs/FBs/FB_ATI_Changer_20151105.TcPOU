@@ -1,0 +1,179 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FB_ATI_Changer_20151105" Id="{a4b28cab-6d1c-470a-8c1d-475b996b06a9}" SpecialFunc="None">
+    <Declaration><![CDATA[(*FB for use with ATI Tool changers
+
+	Original Author(s): Rob Remillard of Sodecia GTAC.; 
+------------------------------------------------------------------------------------------
+REVISION NOTES:
+	Version 20150203
+		- intial concept, r.remillard
+	Version 20151105
+		- added discrete_image to var_output to expose for visualization on UIs, b.lekx-toniolo
+		- added Not Comm_Error interlock to Locked and Unlocked Signals for redundancy, b.lekx-toniolo
+------------------------------------------------------------------------------------------
+*)
+
+
+
+FUNCTION_BLOCK FB_ATI_Changer_20151105
+
+VAR_INPUT
+
+	ATI_Lock_Requested:				BOOL;
+	ATI_Unlock_Requested:			BOOL;
+	Fault_Reset:						BOOL;
+
+END_VAR
+
+VAR
+
+	In_From_Hardware AT %I*: 			udt_ATI_Input_20150203;
+	Out_To_Hardware AT %Q*:			udt_ATI_Output_20150203;
+
+	Lock_ATI:						BOOL;
+	Unlock_ATI:						BOOL;
+
+	(*Input Signals From ATI*)
+	US1_Power_Present:				BOOL;
+	US2_Power_Present:				BOOL;
+	RTL1:							BOOL;
+	RTL2:							BOOL;
+	Tool_Present:					BOOL;
+	Tool_PWR_Present:				BOOL;
+
+	TSIV:							BOOL;
+	TSRV:							BOOL;
+	RTLV1:							BOOL;
+	RTLV2:							BOOL;
+
+	Tool_ID:							UDINT;
+
+	Error_On_Lock:					BOOL;
+	Error_On_Unlock:					BOOL;
+
+
+	DiscreteNode_OK: 				BOOL;
+	ECatSlave_Cable_Breaks:			UDINT;
+
+END_VAR
+
+VAR_OUTPUT
+
+	FB_OK:							BOOL;
+	Discrete_Image:					udt_ATIxx_Image_20151104;
+	ATI_Sensors_On:					BOOL;
+	ATI_Locked:						BOOL;
+	ATI_Unlocked:					BOOL;
+	ATI_Unlock_Enabled:				BOOL;
+	Tool_ID_Out0:					BOOL;
+	Tool_ID_Out1:					BOOL;
+	Tool_ID_Out2:					BOOL;
+	Tool_ID_Out3:					BOOL;
+	Tool_ID_Out4:					BOOL;
+	Tool_ID_Out5:					BOOL;
+	Tool_ID_Out6:					BOOL;
+	Tool_ID_Out7:					BOOL;
+	Unsafe_Unlock:					BOOL;
+	Sensor_Fault:						BOOL;
+	COMM_Error:						BOOL;
+
+END_VAR
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[	(*Set FB_OK to True*)
+	FB_OK:= TRUE;
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$Gather Status Of Hardware $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Discrete I/O Nodes*)
+	IF In_From_Hardware.InfoData.State=8
+
+		THEN
+			DiscreteNode_OK:=TRUE;
+
+	ELSE
+			DiscreteNode_OK:=FALSE;
+
+	END_IF;
+
+
+	(*Cable Break Detection*)
+	ECatSlave_Cable_Breaks:= FUN_GTAC_EcatSlaveConnState
+							(In_From_Hardware.InfoData.State,
+							0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0); (*Function Returns Flags to warn of possible cable break*)
+
+(*----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*)
+
+(*+++++++++++++++++++++++++++Input Byte Mapping+++++++++++++++++++++++++++*)
+
+	ATI_Locked:= In_From_Hardware.Byte0.0 AND NOT Comm_Error;				(*ATI Locked Status from VL1*)
+	ATI_Unlocked:= In_From_Hardware.Byte0.1 AND NOT Comm_Error;				(*ATI Unlocked Status from VL1*)
+	US1_Power_Present:= In_From_Hardware.Byte0.2;								(*ATI Main Power Present*)
+	US2_Power_Present:= In_From_Hardware.Byte0.3;								(*ATI Valve Power Present*)
+	RTL1:= In_From_Hardware.Byte0.4;											(*ATI Ready To Lock Prox 1*)
+	RTL2:= In_From_Hardware.Byte0.5;											(*ATI Ready To Lock Prox 2*)
+	Tool_Present:= In_From_Hardware.Byte0.6;									(*ATI Master and Tool are in Electrical Contact*)
+	Tool_PWR_Present:= In_From_Hardware.Byte0.7;								(*ATI Arc Prevention Circuit on and power to Tool*)
+
+	ATI_Unlock_Enabled:= In_From_Hardware.Byte1.0;								(*ATI Unlock Enabled*)
+	TSIV:= In_From_Hardware.Byte1.1;											(*ATI Tool Stand Interlock Switch Verify*)
+	TSRV:= In_From_Hardware.Byte1.2;											(*ATI Tool Stand Interlock Relay Verify*)
+	RTLV1:= In_From_Hardware.Byte1.4;											(*ATI Ready To Lock Relay1 Verify*)
+	RTLV2:= In_From_Hardware.Byte1.5;											(*ATI Ready To Lock Relay2 Verify*)
+
+	Error_On_Lock:= In_From_Hardware.Byte2.0;									(*ATI Overload or Short Circuit on Latch Output*)
+	Error_On_Unlock:= In_From_Hardware.Byte2.1;									(*ATI Overload or Short Circuit on Unlatch Output*)
+	Unsafe_Unlock:= In_From_Hardware.Byte2.3;									(*ATI Unlatch rejected due to unsafe condition present*)
+	Sensor_Fault:= In_From_Hardware.Byte2.4;									(*ATI Lock and Unlock inputs true at the same time*)
+	COMM_Error:= In_From_Hardware.Byte2.5;									(*ATI Tool ID Communication Timeout*)
+
+	Tool_ID:=  In_From_Hardware.Byte456;										(*ATI Tool ID*)
+
+	Tool_ID_Out0:= Tool_ID.0;
+	Tool_ID_Out1:= Tool_ID.1;
+	Tool_ID_Out2:= Tool_ID.2;
+	Tool_ID_Out3:= Tool_ID.3;
+	Tool_ID_Out4:= Tool_ID.4;
+	Tool_ID_Out5:= Tool_ID.5;
+	Tool_ID_Out6:= Tool_ID.6;
+	Tool_ID_Out7:= Tool_ID.7;
+
+
+
+(*+++++++++++++++++++++++++++++ATI Control Code++++++++++++++++++++++++++++*)
+
+	IF ATI_Lock_Requested
+		THEN
+			Lock_ATI:= TRUE;
+			Unlock_ATI:= FALSE;
+	ELSIF NOT Tool_Present AND NOT ATI_Lock_Requested
+		THEN
+			Lock_ATI:= FALSE;
+	END_IF;
+
+	IF ATI_Unlock_Requested AND TSIV AND TSRV AND ATI_Unlock_Enabled
+		THEN
+			Lock_ATI:= FALSE;
+			Unlock_ATI:= NOT Lock_ATI;
+	END_IF;
+
+	ATI_Sensors_On:= RTL1 AND RTL2;
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Transfer Standard Outputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Transfer I/O Images for Display On UI*)
+Discrete_Image.In_From_Hardware:= In_From_Hardware;
+Discrete_Image.Out_To_Hardware:= Out_To_Hardware;
+Discrete_Image.ECatSlave_Cable_Breaks:= ECatSlave_Cable_Breaks;
+
+(*+++++++++++++++++++++++++++Output Byte Mapping+++++++++++++++++++++++++++*)
+
+	Out_To_Hardware.Byte0.0:= Lock_ATI;					(*Request Lock*)
+	Out_To_Hardware.Byte0.1:= Unlock_ATI;					(*Request Unlock*)
+	Out_To_Hardware.Byte0.3:= Fault_Reset;					(*Reset Errors, allow affected I/O to be reactivated*)]]></ST>
+    </Implementation>
+    <LineIds Name="FB_ATI_Changer_20151105">
+      <LineId Id="80" Count="88" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

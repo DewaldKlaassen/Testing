@@ -1,0 +1,518 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FB_Emhart_20200113" Id="{88d20e8d-5afa-4bee-9964-8ef591b604ba}" SpecialFunc="None">
+    <Declaration><![CDATA[(*
+Emhart Stud Welder FB
+--------------------------------------------------------------------------
+REVISION NOTES
+	Version 20151208:
+		- Initial Concept, b.lekx-toniolo, j.underhill
+		- Initial concept was only developed to get STxx safety interface up and running, further development required!!!!!
+	Version 20180204
+		- changed udt references to newer types. j.vandongen
+	Version 20190924
+		- updated instance
+	Version 20200113
+		- updated instance for new Profibus Mapping (TE1500 controller), j.underhill
+
+--------------------------------------------------------------------------
+*)
+
+FUNCTION_BLOCK FB_Emhart_20200113
+
+	VAR_INPUT
+		Safety_RST					:BOOL;	(*Used to reset TwinSAFE Faults*)
+		Enable_Motion				:BOOL;
+		Prev_EcatNode_Present		:BOOL;
+
+		Schedule_Select				:UINT;
+		Mode_Select					:BYTE;
+		Tool_Change_Mode			:BOOL;
+
+		Restart						:BOOL;
+		Weld_On					:BOOL;
+		Force_WeldComp				:BOOL;
+		Motion_Release_REQ			:BOOL;	(*Used with LMR Heads Only*)
+
+		Head1_StartWeld				:BOOL;
+		Head2_StartWeld				:BOOL;
+		Head3_StartWeld				:BOOL;
+		Head4_StartWeld				:BOOL;
+		Head5_StartWeld				:BOOL;
+
+		Head1_StartFeed				:BOOL;
+		Head2_StartFeed				:BOOL;
+		Head3_StartFeed				:BOOL;
+		Head4_StartFeed				:BOOL;
+		Head5_StartFeed				:BOOL;
+
+		(*Used with LMR Heads Only*)
+		Head1_To_WeldPos			:BOOL;
+		Head2_To_WeldPos			:BOOL;
+		Head3_To_WeldPos			:BOOL;
+		Head4_To_WeldPos			:BOOL;
+		Head5_To_WeldPos			:BOOL;
+
+		(*Used with LMR Heads Only*)
+		Head1_To_PickPos			:BOOL;
+		Head2_To_PickPos			:BOOL;
+		Head3_To_PickPos			:BOOL;
+		Head4_To_PickPos			:BOOL;
+		Head5_To_PickPos			:BOOL;
+
+		Head1_WeldComplete_RST	:BOOL;	(*Reset Weld Complete*)
+		Head2_WeldComplete_RST	:BOOL;	(*Reset Weld Complete*)
+		Head3_WeldComplete_RST	:BOOL;	(*Reset Weld Complete*)
+		Head4_WeldComplete_RST	:BOOL;	(*Reset Weld Complete*)
+		Head5_WeldComplete_RST	:BOOL;	(*Reset Weld Complete*)
+
+	END_VAR
+
+	VAR
+(*Hardware Data Types*)
+		(*Develop Discrete Nodes*)
+		T01 AT %I*					:udt_EK1100;						(*Ecat Bus Coupler*)
+		T02_STAT AT %I*				:udt_EL6900_STAT_20160426;		(*EL Safety CPU status*)
+		T02_CMD AT %Q*				:udt_EL6900_CMD_20121204;		(*EL Safety CPU command*)
+		T03 AT %I*					:udt_EL1904_v2;					(*EL Safety Inputs*)
+		T04 AT %I*					:udt_EL2904RO_v2;				(*EL Safety Outputs, Set to "I" as this terminal is safety rated, therefore read only!*)
+		T05 AT %I*					:udt_EL6731;						(*EL ProfiBus Master*)
+
+		(*Develop Profibus Node*)
+		In_From_ProfiNode AT %I*		:udt_Emhart_TE1500_Input;
+		Out_To_ProfiNode AT %Q*		:udt_Emhart_TE1500_Output;
+
+		(* Nodes States*)
+		DiscreteNode_OK				:BOOL;
+		ProfiNode_OK				:BOOL;
+
+		(*Cable Break Warning Flags*)
+		ECatSlave_Cable_Breaks		:UDINT;
+		EK1100_NotPresent 			:BOOL;			(*Coupler is Not Present on Bus when expected*)
+		EK1100_PortC_MissingLink		:BOOL;  			(*Port C of EK1100 is OUT*)
+
+		(*Safety Internals*)
+		Estop_Relays_On				:BOOL;			(*Robot Estop Relays Are On, See Rxx Print Package, Page P05 and P08 *)
+		Estop_Relays_Off				:BOOL;			(*Robot Estop Relays Are Off*)
+
+		(*Standard Internals*)
+		Faulted						:BOOL;
+
+		Head1_CompleteDelay		:TON;			(*Capture Weld Complete*)
+		Head2_CompleteDelay		:TON;			(*Capture Weld Complete*)
+		Head3_CompleteDelay		:TON;			(*Capture Weld Complete*)
+		Head4_CompleteDelay		:TON;			(*Capture Weld Complete*)
+		Head5_CompleteDelay		:TON;			(*Capture Weld Complete*)
+
+
+	END_VAR
+
+	VAR_OUTPUT
+		FB_Ok						:BOOL;
+		(*Visualization Outputs*)
+		Input_Image					:udt_Emhart_TE1500_Input;
+		Output_Image					:udt_Emhart_TE1500_Output;
+		Discrete_Image				:udt_STxx_DiscreteNode_20200212;
+
+		Ready_Auto					:BOOL;
+		Ready_Weld					:BOOL;
+		Maint_Required				:BOOL;
+		Studs_Low					:BOOL;
+		Move_Clear_REQ				:BOOL;	(*Used with LMR Heads Only*)
+		Motion_Release_ACK			:BOOL;	(*Used with LMR Heads Only*)
+
+		Fault_Grp_Bit0				:BOOL;
+		Fault_Grp_Bit1				:BOOL;
+		Fault_Grp_Bit2				:BOOL;
+
+		Fault_Code_Bit0				:BOOL;
+		Fault_Code_Bit1				:BOOL;
+		Fault_Code_Bit2				:BOOL;
+		Fault_Code_Bit3				:BOOL;
+		Fault_Code_Bit4				:BOOL;
+		Fault_Code_Bit5				:BOOL;
+		Fault_Code_Bit6				:BOOL;
+		Fault_Code_Bit7				:BOOL;
+		Fault_Code_Bit8				:BOOL;
+
+		Head1_Faulted				:BOOL;
+		Head1_WeldComp			:BOOL;
+		Head1_Back					:BOOL;
+		Head1_SOW					:BOOL;	(*SOW = Stud On Workpiece*)
+		Head1_In_Tolerance			:BOOL;
+		Head1_LMR_Connected		:BOOL;	(*Used with LMR Heads Only*)
+		Head1_In_WeldPos			:BOOL;	(*Used with LMR Heads Only*)
+		Head1_In_PickPos			:BOOL;	(*Used with LMR Heads Only*)
+		Head1_Stud_Gripper			:BOOL;	(*Used with LMR Heads Only*)
+		Head1_Weld_Completed		:BOOL;
+
+		Head2_Faulted				:BOOL;
+		Head2_WeldComp			:BOOL;
+		Head2_Back					:BOOL;
+		Head2_SOW					:BOOL;	(*SOW = Stud On Workpiece*)
+		Head2_In_Tolerance			:BOOL;
+		Head2_LMR_Connected		:BOOL;	(*Used with LMR Heads Only*)
+		Head2_In_WeldPos			:BOOL;	(*Used with LMR Heads Only*)
+		Head2_In_PickPos			:BOOL;	(*Used with LMR Heads Only*)
+		Head2_Stud_Gripper			:BOOL;	(*Used with LMR Heads Only*)
+		Head2_Weld_Completed		:BOOL;
+
+		Head3_Faulted				:BOOL;
+		Head3_WeldComp			:BOOL;
+		Head3_Back					:BOOL;
+		Head3_SOW					:BOOL;	(*SOW = Stud On Workpiece*)
+		Head3_In_Tolerance			:BOOL;
+		Head3_LMR_Connected		:BOOL;	(*Used with LMR Heads Only*)
+		Head3_In_WeldPos			:BOOL;	(*Used with LMR Heads Only*)
+		Head3_In_PickPos			:BOOL;	(*Used with LMR Heads Only*)
+		Head3_Stud_Gripper			:BOOL;	(*Used with LMR Heads Only*)
+		Head3_Weld_Completed		:BOOL;
+
+		Head4_Faulted				:BOOL;
+		Head4_WeldComp			:BOOL;
+		Head4_Back					:BOOL;
+		Head4_SOW					:BOOL;	(*SOW = Stud On Workpiece*)
+		Head4_In_Tolerance			:BOOL;
+		Head4_LMR_Connected		:BOOL;	(*Used with LMR Heads Only*)
+		Head4_In_WeldPos			:BOOL;	(*Used with LMR Heads Only*)
+		Head4_In_PickPos			:BOOL;	(*Used with LMR Heads Only*)
+		Head4_Stud_Gripper			:BOOL;	(*Used with LMR Heads Only*)
+		Head4_Weld_Completed		:BOOL;
+
+		Head5_Faulted				:BOOL;
+		Head5_WeldComp			:BOOL;
+		Head5_Back					:BOOL;
+		Head5_SOW					:BOOL;	(*SOW = Stud On Workpiece*)
+		Head5_In_Tolerance			:BOOL;
+		Head5_LMR_Connected		:BOOL;	(*Used with LMR Heads Only*)
+		Head5_In_WeldPos			:BOOL;	(*Used with LMR Heads Only*)
+		Head5_In_PickPos			:BOOL;	(*Used with LMR Heads Only*)
+		Head5_Stud_Gripper			:BOOL;	(*Used with LMR Heads Only*)
+		Head5_Weld_Completed		:BOOL;
+
+	END_VAR
+
+
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[	(*Set FB_OK to True*)
+	FB_OK:= TRUE;
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$Gather Status Of Hardware $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Discrete I/O Node*)
+	IF (T01.InfoData.State=8) AND (T02_Stat.InfoData.State=8) AND (T03.InfoData.State=8) AND (T04.InfoData.State=8) AND (T05.InfoData.State=8)
+		THEN DiscreteNode_OK:=TRUE;
+	ELSE DiscreteNode_OK:=FALSE;
+	END_IF
+
+
+	(*Develop Port Connection Warning Flags*)
+	IF T01.InfoData.State=257 (*State Machine for Slave Not Present*)
+		THEN EK1100_NotPresent:= TRUE;
+	ELSE EK1100_NotPresent := FALSE;
+	END_IF
+
+	IF T01.InfoData.State=17416 (*State Machine for Link Missing at Port C*)
+		THEN EK1100_PortC_MissingLink:= TRUE; (*PortC is OUT Port*)
+	ELSE EK1100_PortC_MissingLink := FALSE;
+	END_IF
+
+
+	(*Profibus Node*)
+	IF In_From_ProfiNode.Inputs.DpState=0
+		THEN ProfiNode_OK:=TRUE;
+	ELSE ProfiNode_OK:=FALSE;
+	END_IF;
+
+	(*Wrap up break Flags to Variable for shipment to UI*)
+	ECatSlave_Cable_Breaks.0:= EK1100_NotPresent AND Prev_EcatNode_Present;
+	ECatSlave_Cable_Breaks.1:= EK1100_PortC_MissingLink;
+	ECatSlave_Cable_Breaks.16:= (In_From_Profinode.Inputs.DpState=2);		(*Cable Break Possible from EL6731 to Profibus Slave Care in Nelson Stud Controller*)
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Gather Safety Inputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+	Estop_Relays_On:= NOT T03.I.0 AND T04.Q.0 AND T04.Q.1;
+	Estop_Relays_Off:= T03.I.0;
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Gather Standard Inputs  (From Stud Controller Outputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+	(*-------- Profibus Inputs from Controller -----------*)
+
+	Head1_Faulted:= 			NOT In_From_ProfiNode.Byte0.0;	(*Signal from TE1500 is "No Fault"*)
+	Head1_WeldComp:=		In_From_ProfiNode.Byte0.1;
+	Head1_Back:= 			In_From_ProfiNode.Byte0.2;
+	Head1_SOW:=			In_From_ProfiNode.Byte0.3;
+	Head1_In_Tolerance:=		In_From_ProfiNode.Byte0.4;
+
+	Head2_Faulted:= 			NOT In_From_ProfiNode.Byte0.5;	(*Signal from TE1500 is "No Fault"*)
+	Head2_WeldComp:=		In_From_ProfiNode.Byte0.6;
+	Head2_Back:= 			In_From_ProfiNode.Byte0.7;
+	Head2_SOW:=			In_From_ProfiNode.Byte1.0;
+	Head2_In_Tolerance:=		In_From_ProfiNode.Byte1.1;
+
+	Head3_Faulted:= 			NOT In_From_ProfiNode.Byte1.2;	(*Signal from TE1500 is "No Fault"*)
+	Head3_WeldComp:=		In_From_ProfiNode.Byte1.3;
+	Head3_Back:= 			In_From_ProfiNode.Byte1.4;
+	Head3_SOW:=			In_From_ProfiNode.Byte1.5;
+	Head3_In_Tolerance:=		In_From_ProfiNode.Byte1.6;
+
+	Head4_Faulted:= 			NOT In_From_ProfiNode.Byte1.7;	(*Signal from TE1500 is "No Fault"*)
+	Head4_WeldComp:=		In_From_ProfiNode.Byte2.0;
+	Head4_Back:= 			In_From_ProfiNode.Byte2.1;
+	Head4_SOW:=			In_From_ProfiNode.Byte2.2;
+	Head4_In_Tolerance:=		In_From_ProfiNode.Byte2.3;
+
+	Head5_Faulted:= 			NOT In_From_ProfiNode.Byte2.4;	(*Signal from TE1500 is "No Fault"*)
+	Head5_WeldComp:=		In_From_ProfiNode.Byte2.5;
+	Head5_Back:= 			In_From_ProfiNode.Byte2.6;
+	Head5_SOW:=			In_From_ProfiNode.Byte2.7;
+	Head5_In_Tolerance:=		In_From_ProfiNode.Byte3.0;
+
+	Maint_Required:=			In_From_ProfiNode.Byte3.1;
+	Studs_Low:=				In_From_ProfiNode.Byte3.2;
+	Ready_Auto:=			In_From_ProfiNode.Byte3.3;
+	Ready_Weld:=			In_From_ProfiNode.Byte3.4;
+
+	Fault_Grp_Bit0:=			In_From_ProfiNode.Byte3.5;
+	Fault_Grp_Bit1:=			In_From_ProfiNode.Byte3.6;
+	Fault_Grp_Bit2:=			In_From_ProfiNode.Byte3.7;
+
+	Fault_Code_Bit0:=			In_From_ProfiNode.Byte4.0;
+	Fault_Code_Bit1:=			In_From_ProfiNode.Byte4.1;
+	Fault_Code_Bit2:=			In_From_ProfiNode.Byte4.2;
+	Fault_Code_Bit3:=			In_From_ProfiNode.Byte4.3;
+	Fault_Code_Bit4:=			In_From_ProfiNode.Byte4.4;
+	Fault_Code_Bit5:=			In_From_ProfiNode.Byte4.5;
+	Fault_Code_Bit6:=			In_From_ProfiNode.Byte4.6;
+	Fault_Code_Bit7:=			In_From_ProfiNode.Byte4.7;
+	Fault_Code_Bit8:=			In_From_ProfiNode.Byte5.0;
+											(*Byte5.1 - Reserved*)
+
+	(*NOTE - Below Inputs used with LMR Heads Only*)
+	Move_Clear_REQ:=		In_From_ProfiNode.Byte5.2;
+
+	Head1_LMR_Connected:=	In_From_ProfiNode.Byte5.3;
+	Head2_LMR_Connected:=	In_From_ProfiNode.Byte5.4;
+	Head3_LMR_Connected:=  	In_From_ProfiNode.Byte5.5;
+	Head4_LMR_Connected:=  	In_From_ProfiNode.Byte5.6;
+	Head5_LMR_Connected:=	In_From_ProfiNode.Byte5.7;
+
+	Head1_In_WeldPos:=		In_From_ProfiNode.Byte6.0;
+	Head2_In_WeldPos:=		In_From_ProfiNode.Byte6.1;
+	Head3_In_WeldPos:=		In_From_ProfiNode.Byte6.2;
+	Head4_In_WeldPos:=		In_From_ProfiNode.Byte6.3;
+	Head5_In_WeldPos:=		In_From_ProfiNode.Byte6.4;
+
+	Head1_In_PickPos:=		In_From_ProfiNode.Byte6.5;
+	Head2_In_PickPos:=		In_From_ProfiNode.Byte6.6;
+	Head3_In_PickPos:=		In_From_ProfiNode.Byte6.7;
+	Head4_In_PickPos:=		In_From_ProfiNode.Byte7.0;
+	Head5_In_PickPos:=		In_From_ProfiNode.Byte7.1;
+
+	Head1_Stud_Gripper:= 	In_From_ProfiNode.Byte7.2;
+	Head2_Stud_Gripper:= 	In_From_ProfiNode.Byte7.3;
+	Head3_Stud_Gripper:= 	In_From_ProfiNode.Byte7.4;
+	Head4_Stud_Gripper:= 	In_From_ProfiNode.Byte7.5;
+	Head5_Stud_Gripper:= 	In_From_ProfiNode.Byte7.6;
+
+	Motion_Release_ACK:=	In_From_ProfiNode.Byte7.7;
+
+
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Internal Code $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+	(*Capture Weld Complete - Head 1*)
+	Head1_CompleteDelay.PT:= T#500ms;
+	Head1_CompleteDelay.IN:= Head1_WeldComp AND Head1_Back AND Head1_In_Tolerance;
+	Head1_CompleteDelay();
+
+	IF Head1_CompleteDelay.Q
+		THEN Head1_Weld_Completed:= TRUE;
+	ELSIF Head1_WeldComplete_RST
+		THEN Head1_Weld_Completed:= FALSE;
+	END_IF;
+
+	(*Capture Weld Complete - Head 2*)
+	Head2_CompleteDelay.PT:= T#500ms;
+	Head2_CompleteDelay.IN:= Head2_WeldComp AND Head2_Back AND Head2_In_Tolerance;
+	Head2_CompleteDelay();
+
+	IF Head2_CompleteDelay.Q
+		THEN Head2_Weld_Completed:= TRUE;
+	ELSIF Head2_WeldComplete_RST
+		THEN Head2_Weld_Completed:= FALSE;
+	END_IF;
+
+	(*Capture Weld Complete - Head 3*)
+	Head3_CompleteDelay.PT:= T#500ms;
+	Head3_CompleteDelay.IN:= Head3_WeldComp AND Head3_Back AND Head3_In_Tolerance;
+	Head3_CompleteDelay();
+
+	IF Head3_CompleteDelay.Q
+		THEN Head3_Weld_Completed:= TRUE;
+	ELSIF Head3_WeldComplete_RST
+		THEN Head3_Weld_Completed:= FALSE;
+	END_IF;
+
+	(*Capture Weld Complete - Head 4*)
+	Head4_CompleteDelay.PT:= T#500ms;
+	Head4_CompleteDelay.IN:= Head4_WeldComp AND Head4_Back AND Head4_In_Tolerance;
+	Head4_CompleteDelay();
+
+	IF Head4_CompleteDelay.Q
+		THEN Head4_Weld_Completed:= TRUE;
+	ELSIF Head4_WeldComplete_RST
+		THEN Head4_Weld_Completed:= FALSE;
+	END_IF;
+
+	(*Capture Weld Complete - Head 5*)
+	Head5_CompleteDelay.PT:= T#500ms;
+	Head5_CompleteDelay.IN:= Head5_WeldComp AND Head5_Back AND Head5_In_Tolerance;
+	Head5_CompleteDelay();
+
+	IF Head5_CompleteDelay.Q
+		THEN Head5_Weld_Completed:= TRUE;
+	ELSIF Head5_WeldComplete_RST
+		THEN Head5_Weld_Completed:= FALSE;
+	END_IF;
+
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Faults $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+	Faulted := (Head1_Faulted OR
+				Head2_Faulted OR
+				Head3_Faulted OR
+				Head4_Faulted OR
+				Head5_Faulted OR
+				NOT Ready_Auto);
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Transfer Standard Outputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+	(*Transfer Profibus I/O Image*)
+	Input_Image.Inputs.DpState:= In_From_ProfiNode.Inputs.DpState;
+	Input_Image.Inputs.ExtDiagFlag:= In_From_ProfiNode.Inputs.ExtDiagFlag;
+
+	Input_Image.Byte0:= In_From_ProfiNode.Byte0;
+	Input_Image.Byte1:= In_From_ProfiNode.Byte1;
+	Input_Image.Byte2:= In_From_ProfiNode.Byte2;
+	Input_Image.Byte3:= In_From_ProfiNode.Byte3;
+	Input_Image.Byte4:= In_From_ProfiNode.Byte4;
+	Input_Image.Byte5:= In_From_ProfiNode.Byte5;
+	Input_Image.Byte6:= In_From_ProfiNode.Byte6;
+	Input_Image.Byte7:= In_From_ProfiNode.Byte7;
+
+	Output_Image.Byte0:= Out_To_ProfiNode.Byte0;
+	Output_Image.Byte1:= Out_To_ProfiNode.Byte1;
+	Output_Image.Byte2:= Out_To_ProfiNode.Byte2;
+	Output_Image.Byte3:= Out_To_ProfiNode.Byte3;
+	Output_Image.Byte4:= Out_To_ProfiNode.Byte4;
+	Output_Image.Byte5:= Out_To_ProfiNode.Byte5;
+	Output_Image.Byte6:= Out_To_ProfiNode.Byte6;
+	Output_Image.Byte7:= Out_To_ProfiNode.Byte7;
+
+	(*Transfer Discrete I/O Image*)
+	Discrete_Image.T01:=T01;
+	Discrete_Image.T02_STAT:=T02_STAT;
+	Discrete_Image.T03:=T03;
+	Discrete_Image.T04:=T04;
+	Discrete_Image.T05:=T05;
+	Discrete_Image.Profinode_Stat:=In_From_ProfiNode.Inputs;
+
+	(*-------- Profibus Outputs to Controller -----------*)
+
+	(*Out To Emhart Input Byte0*)
+	Out_To_ProfiNode.Byte0.0:= Enable_Motion AND Head1_StartWeld;		(*Head 1 Start Weld*)
+	Out_To_ProfiNode.Byte0.1:= Enable_Motion AND Head2_StartWeld;		(*Head 2 Start Weld*)
+	Out_To_ProfiNode.Byte0.2:= Enable_Motion AND Head3_StartWeld;		(*Head 3 Start Weld*)
+	Out_To_ProfiNode.Byte0.3:= Enable_Motion AND Head4_StartWeld;		(*Head 4 Start Weld*)
+	Out_To_ProfiNode.Byte0.4:= Enable_Motion AND Head5_StartWeld;		(*Head 5 Start Weld*)
+	Out_To_ProfiNode.Byte0.5:= Enable_Motion AND Head1_StartFeed;		(*Head 1 Start Feed*)
+	Out_To_ProfiNode.Byte0.6:= Enable_Motion AND Head2_StartFeed;		(*Head 2 Start Feed*)
+	Out_To_ProfiNode.Byte0.7:= Enable_Motion AND Head3_StartFeed;		(*Head 3 Start Feed*)
+
+	(*Out To Emhart Input Byte1*)
+	Out_To_ProfiNode.Byte1.0:= Enable_Motion AND Head4_StartFeed;		(*Head 4 Start Feed*)
+	Out_To_ProfiNode.Byte1.1:= Enable_Motion AND Head5_StartFeed;		(*Head 5 Start Feed*)
+	Out_To_ProfiNode.Byte1.2:= Schedule_Select.0;						(*Schedule Select Bit0*)
+	Out_To_ProfiNode.Byte1.3:= Schedule_Select.1;						(*Schedule Select Bit1*)
+	Out_To_ProfiNode.Byte1.4:= Schedule_Select.2;						(*Schedule Select Bit2*)
+	Out_To_ProfiNode.Byte1.5:= Schedule_Select.3;						(*Schedule Select Bit3*)
+	Out_To_ProfiNode.Byte1.6:= Schedule_Select.4;						(*Schedule Select Bit4*)
+	Out_To_ProfiNode.Byte1.7:= Schedule_Select.5;						(*Schedule Select Bit5*)
+
+	(*Out To Emhart Input Byte2*)
+	Out_To_ProfiNode.Byte2.0:= Schedule_Select.6;						(*Schedule Select Bit6*)
+	Out_To_ProfiNode.Byte2.1:= FALSE;									(*Reserved*)
+	Out_To_ProfiNode.Byte2.2:= Enable_Motion AND Restart;				(*Restart Weld*)
+	Out_To_ProfiNode.Byte2.3:= Force_WeldComp;						(*Force Weld Complete*)
+	Out_To_ProfiNode.Byte2.4:= Mode_Select.0;							(*Mode Select Bit0*)
+	Out_To_ProfiNode.Byte2.5:= Mode_Select.1;							(*Mode Select Bit1*)
+	Out_To_ProfiNode.Byte2.6:= Tool_Change_Mode;						(*Tool Change Mode*)
+	Out_To_ProfiNode.Byte2.7:= FALSE;									(*Reserved*)
+
+	(*Out To Emhart Input Byte3 - ALL RESERVED*)
+	Out_To_ProfiNode.Byte3.0:= FALSE;
+	Out_To_ProfiNode.Byte3.1:= FALSE;
+	Out_To_ProfiNode.Byte3.2:= FALSE;
+	Out_To_ProfiNode.Byte3.3:= FALSE;
+	Out_To_ProfiNode.Byte3.4:= FALSE;
+	Out_To_ProfiNode.Byte3.5:= FALSE;
+	Out_To_ProfiNode.Byte3.6:= FALSE;
+	Out_To_ProfiNode.Byte3.7:= FALSE;
+
+	(*Out To Emhart Input Byte4 - ALL RESERVED*)
+	Out_To_ProfiNode.Byte4.0:= FALSE;
+	Out_To_ProfiNode.Byte4.1:= FALSE;
+	Out_To_ProfiNode.Byte4.2:= FALSE;
+	Out_To_ProfiNode.Byte4.3:= FALSE;
+	Out_To_ProfiNode.Byte4.4:= FALSE;
+	Out_To_ProfiNode.Byte4.5:= FALSE;
+	Out_To_ProfiNode.Byte4.6:= FALSE;
+	Out_To_ProfiNode.Byte4.7:= FALSE;
+
+	(*Out To Emhart Input Byte5 - ALL RESERVED*)
+	Out_To_ProfiNode.Byte5.0:= FALSE;
+	Out_To_ProfiNode.Byte5.1:= FALSE;
+	Out_To_ProfiNode.Byte5.2:= FALSE;
+	Out_To_ProfiNode.Byte5.3:= FALSE;
+	Out_To_ProfiNode.Byte5.4:= FALSE;
+	Out_To_ProfiNode.Byte5.5:= FALSE;
+	Out_To_ProfiNode.Byte5.6:= FALSE;
+	Out_To_ProfiNode.Byte5.7:= FALSE;
+
+	(*Out To Emhart Input Byte6*)
+	Out_To_ProfiNode.Byte6.0:= Enable_Motion AND Head1_To_WeldPos;		(*Head 1 To Weld Position*)
+	Out_To_ProfiNode.Byte6.1:= Enable_Motion AND Head2_To_WeldPos;		(*Head 2 To Weld Position*)
+	Out_To_ProfiNode.Byte6.2:= Enable_Motion AND Head3_To_WeldPos;		(*Head 3 To Weld Position*)
+	Out_To_ProfiNode.Byte6.3:= Enable_Motion AND Head4_To_WeldPos;		(*Head 4 To Weld Position*)
+	Out_To_ProfiNode.Byte6.4:= Enable_Motion AND Head5_To_WeldPos;		(*Head 5 To Weld Position*)
+	Out_To_ProfiNode.Byte6.5:= Enable_Motion AND Head1_To_PickPos;		(*Head 1 To Pickup Position*)
+	Out_To_ProfiNode.Byte6.6:= Enable_Motion AND Head2_To_PickPos;		(*Head 2 To Pickup Position*)
+	Out_To_ProfiNode.Byte6.7:= Enable_Motion AND Head3_To_PickPos;		(*Head 3 To Pickup Position*)
+
+	(*Out To Emhart Input Byte7*)
+	Out_To_ProfiNode.Byte7.0:= Enable_Motion AND Head4_To_PickPos;		(*Head 4 To Pickup Position*)
+	Out_To_ProfiNode.Byte7.1:= Enable_Motion AND Head5_To_PickPos;		(*Head 5 To Pickup Position*)
+	Out_To_ProfiNode.Byte7.2:= FALSE;										(*Reserved*)
+	Out_To_ProfiNode.Byte7.3:= FALSE;										(*Reserved*)
+	Out_To_ProfiNode.Byte7.4:= FALSE;										(*Reserved*)
+	Out_To_ProfiNode.Byte7.5:= FALSE;										(*Reserved*)
+	Out_To_ProfiNode.Byte7.6:= FALSE;										(*Reserved*)
+	Out_To_ProfiNode.Byte7.7:= Motion_Release_REQ;						(*Motion Release*)
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Transfer Safety Outputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Set All Safety Groups to Run*)
+		T02_CMD.SGs_RUNSTOP:= TRUE;
+	(*Reset Of Safety Group Errors*)
+		T02_CMD.SGs_ERRAck:= Safety_RST;
+	(*Reset Only Used FBs With In Safety Group*)
+		(*Reset of Estop, Safety Gate and Misc FBs*)
+		T02_CMD.FBs_ControlPowerPB:= Safety_RST;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Emhart_20200113">
+      <LineId Id="193" Count="314" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_Robot_Out_To_SmartRay_IN_20260119" Id="{62534d7d-de63-489c-aa73-5f25ee15febe}">
+    <Declaration><![CDATA[TYPE udt_Robot_Out_To_SmartRay_IN_20260119 :
+	// udt : Robot > Smart Ray
+STRUCT
+	(*Byte 0*)
+	Reset_In : BOOL; (*Bit 0*)
+	Alive_In : BOOL; (*Bit 1*)
+	AutomaticMode_In : BOOL; (*Bit 2*)
+ 	SetupMode_In : BOOL; (*Bit 3*)
+	
+	(*Byte 1*)
+	LaserOn_In : BOOL; (*Bit 1*)
+	LaserOn2_In : BOOL; (*Bit 2*)
+	SensortestOn_In : BOOL; (*Bit 3*)
+	
+	(*Byte 2*)
+	InspectionCompleted_In : BOOL; (*Bit 2*)
+	ToolfinderOn_In : BOOL; (*Bit 4*)
+
+	(*Byte 3*)
+	RobotSelection_In : BYTE;
+	
+	(*Byte 4-5*)
+	JobID_In : UINT;
+	
+	(*Byte 6-7*)
+	TrackSpeed_In : UINT;
+	
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

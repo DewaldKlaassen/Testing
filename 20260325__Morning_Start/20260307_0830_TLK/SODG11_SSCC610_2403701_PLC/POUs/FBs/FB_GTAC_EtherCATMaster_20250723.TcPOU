@@ -1,0 +1,405 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_GTAC_EtherCATMaster_20250723" Id="{e8100e91-5de8-49ef-940f-8134f9bc5456}" SpecialFunc="None">
+    <Declaration><![CDATA[(*FB for use as Instance of EtherCat Master
+
+	Original Author(s): B.Lekx-Toniolo of Sodecia GTAC.; 
+------------------------------------------------------------------------------------------
+REVISION NOTES:
+	Version 20160407
+		- intial concept, b.lekx-toniolo
+	Version 20160803
+		- added SDxx (Servo Drive) component type for HW read, b.lekx-toniolo
+	Version 20161116
+		- Corrected bug to provide more room for overridables, b.lekx-toniolo
+	Version 20170309
+		- Increased largest readable slave count from 500 to 510, b.lekx-toniolo
+	Version 20190925
+		- Increased largest readable slave count from 510 to 800, b.lekx-toniolo
+		- Added Maximum_Permissable_Slaves variable to be able to staticly set max from one location, b.lekx-toniolo
+		- Add Config_SlaveCount_ExceedsMax_FLT variable as a fault flag for capturing maximum slave count exceeded, b.lekx-toniolo
+	Version 20191127
+		- Changed input of CoE_ReadConfFB_1.cbBufLen from static value to Sizeof value to provide compatibility with 
+		  TC build 2305 forward (previous builds didn't regard the value of this input), b.lekx-toniolo
+		- Moved Maximum_Permissable_Slaves to VAR CONSTANT area and also used as upper bounds while declaring of  CoE_ReadConfBuffer_1 array 
+			(to further automate configurability of the code)
+	Version 20220224
+		- Changes during TcUI migration project, b.lekx-toniolo / c.drees
+	Version 20250205
+		- Re-wrote Auto Fixture code and integrated into old standard code (for Fixtures, EOATs and PEDs), b.lekx-toniolo 
+		- See SSCC610 GH Issue #191 for more details, b.lekx-toniolo
+	Version 20250723
+		- Adeed in code to captue VFD type component, b.lekx-toniolo 
+
+------------------------------------------------------------------------------------------
+*)
+
+
+
+FUNCTION_BLOCK FB_GTAC_EtherCATMaster_20250723
+VAR_INPUT
+	Enable_FB: BOOL;
+	Blank_Config_Trigger: BOOL;
+	Read_Config_Trigger: BOOL;
+	Read_States_Trigger: BOOL;
+	Machine_Running: BOOL;
+	ComponentConfig_Overrides: ARRAY [0..100] OF STRING[5];								(*Storage Area for Configuration Overrides*)
+END_VAR
+
+
+
+VAR CONSTANT
+	(*Set Some System limits*)
+	(*USE CAUTION setting this value, if you're unsure what this value should and can be set to, do not touch, b.lekx-toniolo*)
+	Maximum_Permissable_Slaves: UINT := 800;				(*Set's COE slave count read limit*)
+
+END_VAR
+
+VAR
+(*Establish Data Area for EtherCAT Master Status Information*)
+		HW_Status AT %I*: udt_ECATMaster_Status_20141211;
+		AmsID_FB: FB_FormatString;	(*FB to assemble and output string from AMS Net ID Array*)
+(*CoE Read*)
+		CoE_ReadConfFB_1: FB_EcGetConfSlaves; 												(*FB to retrieve Configured Slave Data from ECAT Master*)
+		CoE_ReadConfBuffer_1: ARRAY[0..Maximum_Permissable_Slaves] OF ST_EcSlaveConfigData;	(*Buffer (size configured by constant above), for receiving data*)
+		CoE_ReadConfBuffer_LastRead: ARRAY[0..Maximum_Permissable_Slaves] OF ST_EcSlaveConfigData;	(*Buffer (size configured by constant above), for receiving data*)
+		CoE_ReadConfErr_1: BOOL;															(*CoE Read Error Flag*)
+		CoE_ReadConfErrID_1: UDINT;															(*CoE Read Error Identification*)
+		CoE_NumberOfSlaves: UINT;															(*CoE Read Number of Slaves found in config*)
+		ReadConf_DoneTRIG: R_TRIG;
+		CaptureConf_TRIG: R_TRIG;
+		
+	
+		CoE_ReadStatesFB_1: FB_EcGetAllSlaveStates; 												(*FB to retrieve Configured Slave Data from ECAT Master*)
+		CoE_ReadStatesBuffer_1: ARRAY[0..Maximum_Permissable_Slaves] OF ST_EcSlaveState;	(*Buffer (size configured by constant above), for receiving data*)
+		CoE_ReadStatesBuffer_LastRead: ARRAY[0..Maximum_Permissable_Slaves] OF ST_EcSlaveState;	(*Buffer (size configured by constant above), for receiving data*)
+		CoE_ReadStatesErr_1: BOOL;															(*CoE Read Error Flag*)
+		CoE_ReadStatesErrID_1: UDINT;															(*CoE Read Error Identification*)	
+		ReadStates_DoneTRIG: R_TRIG;
+
+
+		GTAC_ECAT_ComponentConfig: ARRAY [0..100] OF STRING[5];								(*Storage Area for Actual GTAC Component Based Config*)
+
+		Build_ComponentConfig_Index: UINT;
+		Blank_ComponentArray_Index: UINT;
+		ComponentConfigArray_Index: UINT;
+		Period_Position: INT;
+		Component_Num_AsString: STRING(10);
+		Component_Num_AsUINT: UINT;
+		Config_SlaveCount_ExceedsMax_FLT: BOOL;											(*Flag if Hardware Config Slave count exceeds maximum for this FB*)
+	
+(*Areas and vars for building I/O Node Layouts*)	
+		FixConfPointer :ARRAY[0..120] OF INT; 											(*Pointer for storing Fixture Data*)
+		EOATConfPointer :ARRAY[0..30] OF INT; 											(*Pointer for storing Fixture Data*)
+		PedConfPointer :ARRAY[0..30] OF INT; 											(*Pointer for storing Fixture Data*)
+
+		FixNodeLayout :ARRAY[0..120] OF udt_ECATNodeData_20221507;					(*Data Area for Ped as Ped is an FB*)
+		EOATNodeLayout :ARRAY[0..30] OF udt_ECATNodeData_20221507;					(*Data Area for Ped as Ped is an FB*)
+		PedNodeLayout :ARRAY[0..30] OF udt_ECATNodeData_20221507;					(*Data Area for Ped as Ped is an FB*)
+
+
+(*Node Model Setup*)
+	InputNode: STRING:= 'EP1008';
+	OutputNode: STRING:='EP2028';
+	ValveBank: STRING:= 'EX260-';
+	WSNode:STRING:= 'EP3172';
+	NodeType: INT;
+END_VAR
+
+VAR_OUTPUT
+		FB_OK: BOOL;
+		AmsID: STRING;
+		Discrete_Image: udt_ECATMaster_Image_20220224; 	(*Image Framework for EtherCAT Master Status*)
+		(*Discrete Data for Fixtures *)
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[	(*Set FB_OK to True*)
+	FB_OK:= TRUE;
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$Gather Status Of Hardware $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Gather Safety Inputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Gather Standard Inputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Internal Code $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+	(*Convert raw AMS Net ID data to a string*)
+	(*Inputs*)
+	AmsID_FB.sFormat:= '%u.%u.%u.%u.%u.%u';
+	AmsID_FB.arg1:= F_USINT(HW_Status.Infodata.AmsNetId[0]);
+	AmsID_FB.arg2:= F_USINT(HW_Status.Infodata.AmsNetId[1]);
+	AmsID_FB.arg3:= F_USINT(HW_Status.Infodata.AmsNetId[2]);
+	AmsID_FB.arg4:= F_USINT(HW_Status.Infodata.AmsNetId[3]);
+	AmsID_FB.arg5:= F_USINT(HW_Status.Infodata.AmsNetId[4]);
+	AmsID_FB.arg6:= F_USINT(HW_Status.Infodata.AmsNetId[5]);
+	(*Actual Call to FB*)
+	AmsID_FB();
+	(*Outputs*)
+	AmsID:= AmsID_FB.sOut;			(*Expose Output String*)
+
+
+	(*------------ CoE Read (Slave Configs) ------------*)
+
+	(*Read Through Slave Configuration data stored in EtherCAT Master*)
+
+	(*FB Inputs*)
+	CoE_ReadConfFB_1.bExecute:= (NOT Machine_Running AND Read_Config_Trigger) OR COE_ReadConfFB_1.bBusy;		(*Execute Upon Trigger*)
+	CoE_ReadConfFB_1.sNetId:= AmsID;													(*AMS Address to EtherCAT Master*)
+	CoE_ReadConfFB_1.cbBufLen:= SIZEOF(CoE_ReadConfBuffer_1);						(*Limit on Receive Length (bytes)*)
+	CoE_ReadConfFB_1.pArrEcConfSlaveInfo:= ADR(CoE_ReadConfBuffer_1);					(*Pointer to Receive Buffer*)
+	CoE_ReadConfFB_1.tTimeout:= T#3s;												(*TImeout for Read (used static value instead of standard ADS CONST to minimize external dependancies)*)
+
+	(*Execute FB*)
+	CoE_ReadConfFB_1();
+	
+	(*FB Outputs*)
+	CoE_ReadConfErr_1:= CoE_ReadConfFB_1.bError;										(*Error Flag of Read*)
+	CoE_ReadConfErrID_1:= CoE_ReadConfFB_1.nErrorId;									(*Error ID of Read (See ADS Return Codes)*)
+	CoE_NumberOFSlaves:= CoE_ReadConfFB_1.nSlaves;									(*General Count of Slaves In HW Configuration*)
+
+	(*Caputre Last Configuration Read*)
+	ReadConf_DoneTRIG.CLK:= NOT CoE_ReadConfFB_1.bExecute;
+	ReadConf_DoneTRIG();
+	IF ReadConf_DoneTRIG.Q
+		THEN
+		CoE_ReadConfBuffer_LastRead:= CoE_ReadConfBuffer_1;
+	END_IF
+	
+	(*------------ CoE Read (Slave States)------------*)
+
+	(*Read Through Slave State data stored in EtherCAT Master*)
+
+	(*FB Inputs*)
+	CoE_ReadStatesFB_1.bExecute:= Read_States_Trigger OR CoE_ReadStatesFB_1.bBusy;		(*Execute Upon Trigger*)
+	CoE_ReadStatesFB_1.sNetId:= AmsID;													(*AMS Address to EtherCAT Master*)
+	CoE_ReadStatesFB_1.cbBufLen:= SIZEOF(CoE_ReadStatesBuffer_1);						(*Limit on Receive Length (bytes)*)
+	CoE_ReadStatesFB_1.pStateBuf:= ADR(CoE_ReadStatesBuffer_1);						(*Pointer to Receive Buffer*)
+	CoE_ReadStatesFB_1.tTimeout:= T#3S;												(*TImeout for Read (used static value instead of standard ADS CONST to minimize external dependancies)*)
+
+	(*Execute FB*)
+	CoE_ReadStatesFB_1();
+
+	(*FB Outputs*)
+	CoE_ReadStatesErr_1:= CoE_ReadStatesFB_1.bError;										(*Error Flag of Read*)
+	CoE_ReadStatesErrID_1:= CoE_ReadStatesFB_1.nErrId;									(*Error ID of Read (See ADS Return Codes)*)
+
+	(*Caputre Last States Read*)
+	ReadStates_DoneTRIG.CLK:= NOT CoE_ReadConfFB_1.bExecute;
+	ReadStates_DoneTRIG();
+	IF ReadStates_DoneTRIG.Q
+		THEN
+		CoE_ReadStatesBuffer_LastRead:= CoE_ReadStatesBuffer_1;
+	END_IF
+
+(*-------------------------------------------------------------------------- Blank Config -----------------------------------------------------*)
+	IF Blank_Config_Trigger OR Config_SlaveCount_ExceedsMax_FLT
+		THEN
+		FOR Blank_ComponentArray_Index:= 1 TO 100 DO
+			GTAC_ECAT_ComponentConfig[Blank_ComponentArray_Index]:='';
+		END_FOR;
+	END_IF;
+
+(*----------------------------------- Loop through Last CoE Read Slaves Configured and find GTAC Components -----------------------------*)
+(*------------------------------------------------ Also parse out Associated State Values at same time ----------------------------------*)
+	CaptureConf_TRIG.CLK:= NOT Blank_Config_Trigger AND NOT Read_States_Trigger;
+	CaptureConf_TRIG();
+	
+	IF CaptureConf_TRIG.Q AND (CoE_NumberOfSlaves<=Maximum_Permissable_Slaves)
+		THEN
+		ComponentConfigArray_Index:= 1; 		(*Reset Config Array Index*)
+		Period_Position:=0;
+		Component_Num_AsString:= '';
+		Component_Num_AsUINT:= 0;
+		Config_SlaveCount_ExceedsMax_FLT:= FALSE;	(*Slave Count in Hardware Configuration is under Maximum Allowable by this FB so reset flag*)
+
+		(*----------------- Loop through each Slave and evaluate what it is ----------------------------*)
+		FOR Build_ComponentConfig_Index:= 0 TO CoE_NumberOfSlaves+1 DO
+			
+			(*------------------ First Check for Manual Configuration Overrdes ------------------------*)
+			IF ComponentConfig_Overrides[ComponentConfigArray_Index]<>''
+				THEN
+				GTAC_ECAT_ComponentConfig[ComponentConfigArray_Index]:= FUN_GTAC_ReturnSetLengthSTR(
+																			ComponentConfig_Overrides[ComponentConfigArray_Index], 5);
+				ComponentConfigArray_Index:= ComponentConfigArray_Index+1;			(*Index to next element in Config Array*)
+
+			(*---------- Caputre EK1100 Based Componenets ------------------------*)
+			ELSIF FUN_GTAC_ReturnSetLengthSTR(CoE_ReadConfBuffer_LastRead[Build_ComponentConfig_Index].sType,6) = 'EK1100'
+				THEN
+				Period_Position:= FIND(CoE_ReadConfBuffer_LastRead[Build_ComponentConfig_Index].sName, '.');
+				GTAC_ECAT_ComponentConfig[ComponentConfigArray_Index]:= FUN_GTAC_ReturnSetLengthSTR(
+																				CoE_ReadConfBuffer_LastRead[Build_ComponentConfig_Index].sName, (Period_Position-1));
+				ComponentConfigArray_Index:= ComponentConfigArray_Index+1;			(*Index to next element in Config Array*)
+
+			(*----------------- Caputre MDxx Componenets ------------------------*)
+			ELSIF FUN_GTAC_ReturnSetLengthSTR(CoE_ReadConfBuffer_LastRead[Build_ComponentConfig_Index].sType,6) = 'EP1918'
+				THEN
+				GTAC_ECAT_ComponentConfig[ComponentConfigArray_Index]:= FUN_GTAC_ReturnSetLengthSTR(
+																			CoE_ReadConfBuffer_LastRead[Build_ComponentConfig_Index].sName, 4);
+				ComponentConfigArray_Index:= ComponentConfigArray_Index+1;			(*Index to next element in Config Array*)
+
+			(*----------------- Caputre ESWxx Componenets ------------------------*)
+			ELSIF FUN_GTAC_ReturnSetLengthSTR(CoE_ReadConfBuffer_LastRead[Build_ComponentConfig_Index].sType,6) = 'EP1908'
+				THEN
+				GTAC_ECAT_ComponentConfig[ComponentConfigArray_Index]:= FUN_GTAC_ReturnSetLengthSTR(
+																			CoE_ReadConfBuffer_LastRead[Build_ComponentConfig_Index].sName, 5);
+				ComponentConfigArray_Index:= ComponentConfigArray_Index+1;			(*Index to next element in Config Array*)
+
+			(*------------------ Caputre SSxx Componenets ------------------------*)
+			ELSIF 	FUN_GTAC_ReturnSetLengthSTR(CoE_ReadConfBuffer_LastRead[Build_ComponentConfig_Index].sType,6) = 'EP9128'
+				AND FUN_GTAC_ReturnSetLengthSTR(CoE_ReadConfBuffer_LastRead[Build_ComponentConfig_Index].sName,1) = 'S'
+
+				THEN
+				GTAC_ECAT_ComponentConfig[ComponentConfigArray_Index]:= FUN_GTAC_ReturnSetLengthSTR(
+																			CoE_ReadConfBuffer_LastRead[Build_ComponentConfig_Index].sName, 4);
+				ComponentConfigArray_Index:= ComponentConfigArray_Index+1;			(*Index to next element in Config Array*)
+			(*---------- Caputre AX52xx Based Componenets ------------------------*)
+			ELSIF FUN_GTAC_ReturnSetLengthSTR(CoE_ReadConfBuffer_LastRead[Build_ComponentConfig_Index].sType,4) = 'AX52'
+				THEN
+				Period_Position:= FIND(CoE_ReadConfBuffer_LastRead[Build_ComponentConfig_Index].sName, ' '); (*Actually a space position*)
+				
+				GTAC_ECAT_ComponentConfig[ComponentConfigArray_Index]:= FUN_GTAC_ReturnSetLengthSTR(
+																				CoE_ReadConfBuffer_LastRead[Build_ComponentConfig_Index].sName, Period_Position -1);
+				ComponentConfigArray_Index:= ComponentConfigArray_Index+1;			(*Index to next element in Config Array*)
+
+			(*----------------- Caputre VFDxx Componenets ------------------------*)
+			ELSIF FUN_GTAC_ReturnSetLengthSTR(CoE_ReadConfBuffer_LastRead[Build_ComponentConfig_Index].sType,6) = 'ATV320'
+				THEN
+				GTAC_ECAT_ComponentConfig[ComponentConfigArray_Index]:= FUN_GTAC_ReturnSetLengthSTR(
+																			CoE_ReadConfBuffer_LastRead[Build_ComponentConfig_Index].sName, 5);
+				ComponentConfigArray_Index:= ComponentConfigArray_Index+1;			(*Index to next element in Config Array*)
+
+				
+			(*---------- Caputre Fixture Based Components and Build Node Layout------------------------*)
+			ELSIF FUN_GTAC_ReturnSetLengthSTR(CoE_ReadConfBuffer_LastRead[Build_ComponentConfig_Index].sName,3) = 'Fix'
+				THEN
+				Component_Num_AsString:= MID(CoE_ReadConfBuffer_LastRead[Build_ComponentConfig_Index].sName,3,4); (*Get Component Number*)
+				Component_Num_AsUINT:= STRING_TO_UINT(Component_Num_AsString);
+					FixNodeLayout[Component_Num_AsUINT].NodeType[FixConfPointer[Component_Num_AsUINT]]:= FUN_GTAC_ReturnSetLengthSTR(CoE_ReadConfBuffer_LastRead[Build_ComponentConfig_Index].sType,6);
+					FixNodeLayout[Component_Num_AsUINT].NodeName[FixConfPointer[Component_Num_AsUINT]]:= CoE_ReadConfBuffer_LastRead[Build_ComponentConfig_Index].sName;
+					FixNodeLayout[Component_Num_AsUINT].State[FixConfPointer[Component_Num_AsUINT]]:= INT_TO_UINT(FUN_GTAC_BYTEStoINT(CoE_ReadStatesBuffer_LastRead[Build_ComponentConfig_Index].deviceState,CoE_ReadStatesBuffer_LastRead[Build_ComponentConfig_Index].linkState));
+				FixConfPointer[Component_Num_AsUINT]:= FixConfPointer[Component_Num_AsUINT]+1;
+			(*---------- Caputre EOAT Based Components and Build Node Layout ------------------------*)
+			ELSIF FUN_GTAC_ReturnSetLengthSTR(CoE_ReadConfBuffer_LastRead[Build_ComponentConfig_Index].sName,4) = 'EOAT'
+				THEN
+				Component_Num_AsString:= MID(CoE_ReadConfBuffer_LastRead[Build_ComponentConfig_Index].sName,2,5); (*Get Component Number*)
+				Component_Num_AsUINT:= STRING_TO_UINT(Component_Num_AsString);
+					EOATNodeLayout[Component_Num_AsUINT].NodeType[EOATConfPointer[Component_Num_AsUINT]]:= FUN_GTAC_ReturnSetLengthSTR(CoE_ReadConfBuffer_LastRead[Build_ComponentConfig_Index].sType,6);
+					EOATNodeLayout[Component_Num_AsUINT].NodeName[EOATConfPointer[Component_Num_AsUINT]]:= CoE_ReadConfBuffer_LastRead[Build_ComponentConfig_Index].sName;
+					EOATNodeLayout[Component_Num_AsUINT].State[EOATConfPointer[Component_Num_AsUINT]]:= INT_TO_UINT(FUN_GTAC_BYTEStoINT(CoE_ReadStatesBuffer_LastRead[Build_ComponentConfig_Index].deviceState,CoE_ReadStatesBuffer_LastRead[Build_ComponentConfig_Index].linkState));
+				EOATConfPointer[Component_Num_AsUINT]:= EOATConfPointer[Component_Num_AsUINT]+1;
+			(*---------- Caputre Ped Based Components and Build Node Layout ------------------------*)
+			ELSIF FUN_GTAC_ReturnSetLengthSTR(CoE_ReadConfBuffer_LastRead[Build_ComponentConfig_Index].sName,3) = 'PED'
+				THEN
+				Component_Num_AsString:= MID(CoE_ReadConfBuffer_LastRead[Build_ComponentConfig_Index].sName,2,4); (*Get Component Number*)
+				Component_Num_AsUINT:= STRING_TO_UINT(Component_Num_AsString);
+					PedNodeLayout[Component_Num_AsUINT].NodeType[PedConfPointer[Component_Num_AsUINT]]:= FUN_GTAC_ReturnSetLengthSTR(CoE_ReadConfBuffer_LastRead[Build_ComponentConfig_Index].sType,6);
+					PedNodeLayout[Component_Num_AsUINT].NodeName[PedConfPointer[Component_Num_AsUINT]]:= CoE_ReadConfBuffer_LastRead[Build_ComponentConfig_Index].sName;
+					PedNodeLayout[Component_Num_AsUINT].State[PedConfPointer[Component_Num_AsUINT]]:= INT_TO_UINT(FUN_GTAC_BYTEStoINT(CoE_ReadStatesBuffer_LastRead[Build_ComponentConfig_Index].deviceState,CoE_ReadStatesBuffer_LastRead[Build_ComponentConfig_Index].linkState));
+				PedConfPointer[Component_Num_AsUINT]:= PedConfPointer[Component_Num_AsUINT]+1;
+			
+
+			(*------------------ Default, blank data ----------------*)
+			ELSE
+				GTAC_ECAT_ComponentConfig[ComponentConfigArray_Index]:='';
+			END_IF;
+
+			(*Bounding protection*)
+			IF ComponentConfigArray_Index>=100
+				THEN
+				ComponentConfigArray_Index:=100;
+			END_IF;
+
+
+		END_FOR; (*End Read Slave Config For loop*)
+		
+		(*Reset Node Layout Pointers at end of Slave evaluation to avoid continuous building of images*)
+			MEMSET(ADR(FixConfPointer), 0, SIZEOF(FixConfPointer));
+			MEMSET(ADR(EOATConfPointer), 0, SIZEOF(EOATConfPointer));
+			MEMSET(ADR(PedConfPointer), 0, SIZEOF(PedConfPointer));
+
+
+	ELSIF CoE_NumberOfSlaves>Maximum_Permissable_Slaves
+		THEN
+		Config_SlaveCount_ExceedsMax_FLT:= TRUE;	(*Slave Count in Hardware Configuration Exceeds Maximum Allowable by this FB, must consult b.lekx-toniolo if this happens*)
+	END_IF;
+
+	
+	
+(*????????????????????????????????????????????????????????????????????????????????????????????????????????????????*)
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Faults $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Transfer Standard Outputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Transfer Image for display on UI*)
+		Discrete_Image.HW:= HW_Status;
+		Discrete_Image.AMS_ID:= AMSID;
+		Discrete_Image.Config:=GTAC_ECAT_ComponentConfig;
+
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Transfer Safety Outputs $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)]]></ST>
+    </Implementation>
+    <LineIds Name="FB_GTAC_EtherCATMaster_20250723">
+      <LineId Id="472" Count="44" />
+      <LineId Id="1353" Count="0" />
+      <LineId Id="1346" Count="0" />
+      <LineId Id="1343" Count="0" />
+      <LineId Id="1348" Count="2" />
+      <LineId Id="1352" Count="0" />
+      <LineId Id="1351" Count="0" />
+      <LineId Id="1354" Count="0" />
+      <LineId Id="518" Count="16" />
+      <LineId Id="1369" Count="0" />
+      <LineId Id="1371" Count="6" />
+      <LineId Id="1370" Count="0" />
+      <LineId Id="535" Count="8" />
+      <LineId Id="1378" Count="0" />
+      <LineId Id="1359" Count="2" />
+      <LineId Id="545" Count="3" />
+      <LineId Id="1186" Count="1" />
+      <LineId Id="549" Count="0" />
+      <LineId Id="1188" Count="0" />
+      <LineId Id="550" Count="0" />
+      <LineId Id="552" Count="0" />
+      <LineId Id="1280" Count="0" />
+      <LineId Id="554" Count="12" />
+      <LineId Id="1727" Count="6" />
+      <LineId Id="567" Count="8" />
+      <LineId Id="1734" Count="1" />
+      <LineId Id="579" Count="13" />
+      <LineId Id="979" Count="0" />
+      <LineId Id="1608" Count="5" />
+      <LineId Id="1615" Count="0" />
+      <LineId Id="1614" Count="0" />
+      <LineId Id="956" Count="6" />
+      <LineId Id="1364" Count="0" />
+      <LineId Id="963" Count="1" />
+      <LineId Id="971" Count="5" />
+      <LineId Id="1365" Count="0" />
+      <LineId Id="977" Count="1" />
+      <LineId Id="940" Count="2" />
+      <LineId Id="953" Count="0" />
+      <LineId Id="949" Count="0" />
+      <LineId Id="943" Count="0" />
+      <LineId Id="1366" Count="0" />
+      <LineId Id="948" Count="0" />
+      <LineId Id="946" Count="0" />
+      <LineId Id="593" Count="10" />
+      <LineId Id="815" Count="0" />
+      <LineId Id="822" Count="0" />
+      <LineId Id="605" Count="0" />
+      <LineId Id="1185" Count="0" />
+      <LineId Id="838" Count="3" />
+      <LineId Id="837" Count="0" />
+      <LineId Id="608" Count="3" />
+      <LineId Id="613" Count="0" />
+      <LineId Id="1191" Count="0" />
+      <LineId Id="614" Count="0" />
+      <LineId Id="1281" Count="0" />
+      <LineId Id="616" Count="10" />
+      <LineId Id="200" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

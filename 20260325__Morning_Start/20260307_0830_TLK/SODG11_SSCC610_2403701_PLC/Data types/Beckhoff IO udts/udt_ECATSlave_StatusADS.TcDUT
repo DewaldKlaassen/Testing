@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_ECATSlave_StatusADS" Id="{a88e822c-ef13-4a78-9ed2-d0592cef5ac6}">
+    <Declaration><![CDATA[TYPE udt_ECATSlave_StatusADS :
+	STRUCT
+		State: INT;
+		(*
+		0x___1 = Slave in 'INIT' state
+		0x___2 = Slave in 'PREOP' state
+		0x___3 = Slave in 'BOOT' state
+		0x___4 = Slave in 'SAFEOP' state
+		0x___8 = Slave in 'OP' state
+		0x001_ = Slave signals error
+		0x002_ = Invalid vendorId, productCode... read
+		0x004_ = Initialization error occurred
+		0x008_ = Slave disabled
+		0x010_ = Slave NOT present
+		0x020_ = Slave signals link error
+		0x040_ = Slave signals missing link
+		0x080_ = Slave signals unexpected link
+		0x100_ = Communication port A
+		0x200_ = Communication port B
+		0x400_ = Communication port C
+		0x800_ = Communication port D
+		*)
+
+		AdsAddr_Port: UINT;
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,49 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FUN_GTAC_OTSTRUCTWrapper" Id="{365e9857-7aee-4194-a3a0-a31549886ad2}" SpecialFunc="None">
+    <Declaration><![CDATA[(*Copy Individual data elements into an OTSTRUCT TYPE
+	author: Brent Lekx-Toniolo Of Sodecia GTAC
+	date: May 2016
+	version 1.0
+		- initial concept
+
+
+	Last Edit: 19-May-2016, blt
+*)
+
+
+
+FUNCTION FUN_GTAC_OTSTRUCTWrapper : OTSTRUCT
+VAR_INPUT
+	(*NOTE: WEEK, DAY and MILLISEC not used in this wrapper*)
+	(*
+	Week: WORD;
+	Day: WORD;
+	*)
+	Hour: WORD;
+	Minute: WORD;
+	Second: WORD;
+			(*
+	Milliseconds: WORD;
+	*)
+
+END_VAR
+
+VAR
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Retrieve Data, Load to Return Type*)
+
+	FUN_GTAC_OTSTRUCTWrapper.wWeek:= 0;
+	FUN_GTAC_OTSTRUCTWrapper.wDay:= 0;
+	FUN_GTAC_OTSTRUCTWrapper.wHour:= Hour;
+	FUN_GTAC_OTSTRUCTWrapper.wMinute:= Minute;
+	FUN_GTAC_OTSTRUCTWrapper.wSecond:= Second;
+	FUN_GTAC_OTSTRUCTWrapper.wMilliseconds:= 0;
+]]></ST>
+    </Implementation>
+    <LineIds Name="FUN_GTAC_OTSTRUCTWrapper">
+      <LineId Id="30" Count="8" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

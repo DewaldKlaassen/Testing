@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_SmartRay_Out_To_PLC_IN_20260119" Id="{e7c9a626-ce22-4cc1-853c-26d073b0265a}">
+    <Declaration><![CDATA[(*udt of SmartRay profinet based
+   Smart Ray > PLC 
+  auth . Sodecia GTAC;
+  Jan 2026: Version 1.0*)
+TYPE udt_SmartRay_Out_To_PLC_IN_20260119 :
+STRUCT
+	(*Byte 0*)
+	Byte_0 : BYTE;
+	//PartType_Out : BYTE;
+	
+	(*Byte 2-21*)
+	Byte_2_21 : ARRAY[0..19] OF BYTE;
+	//PartID_Out : ARRAY[0..19] OF BYTE;
+	
+	(*Byte 22*)
+	Byte_22 : BYTE;
+	//QualityOK_Out_2 : BOOL; (*Bit 0*)
+	//QualityNOK_Out_2 : BOOL; (*Bit 1*)
+	//ResultValid_Out_2 : BOOL; (*Bit 2*)
+	//LastTelegramSent_Out : BOOL; (*Bit 7*)
+	
+	(*Byte 24-43*)
+	Byte_24_43 : ARRAY[0..19] OF BYTE;
+	//PartIDVisu1_Out : ARRAY[0..19] OF BYTE;
+	
+	(*Byte 44*)
+	Byte_44 : BYTE;
+	(*WorkerResultOK_Out : BOOL; (*Bit 0*)
+	WorkerResultNOK_Out : BOOL; (*Bit 1*)
+	ReworkOK_Out : BOOL; (*Bit 2*)
+	ReworkDone_Out : BOOL; (*Bit 3*)
+	Visu_NextPage_Out : BOOL; (*Bit 4*)
+	Visu_NextWeld_Out : BOOL; (*Bit 5*)
+	Visu_PreviousWeld_Out : BOOL; (*Bit 6*)*)
+	
+	(*Byte 45*)
+	Byte_45 : BYTE;
+	//Visu_WorkerButon_Out :BYTE; 
+	
+	(*Byte 48-67*)
+	Byte_48_67 : ARRAY[0..19] OF BYTE;
+	//PartIDVisu2_Out : ARRAY[0..19] OF BYTE;
+	
+	(*Byte 68*)
+	Byte_68 : BYTE;
+	(*WorkerResultOK2_Out : BOOL; (*Bit 0*)
+	WorkerResultNOK2_Out : BOOL; (*Bit 1*)
+	ReworkOK2_Out : BOOL; (*Bit 2*)
+	ReworkDone2_Out : BOOL; (*Bit 3*)
+	Visu_NextPage2_Out : BOOL; (*Bit 4*)
+	Visu_NextWeld2_Out : BOOL; (*Bit 5*)
+	Visu_PreviousWeld2_Out : BOOL; (*Bit 6*)*)
+	
+	(*Byte 69*)
+	Byte_69 : BYTE;
+	//Vis_WorkerButton2_Out : BYTE;
+	
+	(*Byte 80-179*)
+	Byte_80_179 : ARRAY[0..99] OF BYTE;
+	//WeldResult_Out : ARRAY[0..99] OF BYTE;
+
+END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

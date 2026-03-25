@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_MDxx_Image_20251008" Id="{d2bf00b3-4eba-464d-a3a8-456566e2115b}">
+    <Declaration><![CDATA[(*udt (user defined type) for all Rite Hite I-Comm Models
+
+------------------------------------------------------------------------
+REVISION NOTES:
+
+	Version 20230719:
+	- Original Concept, a. lopez
+	Version 20251008:
+	- Revamp per Hardware Design requests, b.lekx-toniolo
+	
+------------------------------------------------------------------------
+*)
+
+
+TYPE udt_MDxx_Image_20251008 :
+	STRUCT
+	
+	N01_STAT: udt_EP1918_STAT_20250213;					(*EP Twinsafe*)
+	N02: udt_EP1008_002_v2;								(*EP Inputs*)
+	N03: udt_EP2624;									(*EP 4ch Relay Output*)
+	N03_STAT: udt_EP2624_STAT;							(*EP 4ch Relay Output Card Status*)
+
+	END_STRUCT
+END_TYPE
+]]></Declaration>
+  </DUT>
+</TcPlcObject>

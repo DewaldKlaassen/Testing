@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.9">
+  <DUT Name="udt_ECATMaster_InfoData_20121206" Id="{e4e70e50-dd0a-4513-b370-7c3fecd54f25}">
+    <Declaration><![CDATA[(*udt (user defined type) of Infodata Portion of Beckhoff Type EtherCAT Master:
+	auth. Brent Lekx-Toniolo of Sodecia GTAC
+	Version 20121206
+		- Initial Concept
+
+	Last Edit: December 6th, 2012, blt
+
+*)
+TYPE udt_ECATMaster_InfoData_20121206 :
+	STRUCT
+	ChangeCount: UINT;
+	DevID: UINT;
+	AmsNetId: ARRAY [0..5] OF USINT;
+	CfgSlaveCount: UINT;
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

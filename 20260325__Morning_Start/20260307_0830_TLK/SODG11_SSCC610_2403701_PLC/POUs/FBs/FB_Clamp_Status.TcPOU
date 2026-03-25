@@ -1,0 +1,96 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FB_Clamp_Status" Id="{29b5d609-bd90-428f-bfa7-defed6432377}" SpecialFunc="None">
+    <Declaration><![CDATA[(*FB for replacement of typical clamp fault checking code":
+	Original Author(s): Brent Lekx-Toniolo of Toniolo Research & Development Inc.; 
+	August 2010; version 3.0
+
+------------------------------------------------------------------------------------------
+REVISION NOTES:
+	Version 20170608
+		-  Added disable fault input, b.lekx-toniolo / j.underhill
+
+------------------------------------------------------------------------------------------
+*)
+FUNCTION_BLOCK FB_Clamp_Status
+	VAR_INPUT
+		Enable_FB: BOOL;
+		Home_Sensor: BOOL;
+		Work_Sensor: BOOL;
+		Home_Solenoid: BOOL;
+		Work_Solenoid: BOOL;
+		Home_Delay: TIME;
+		Work_Delay: TIME;
+		Fault_Delay: TIME;
+		Disable_Fault: BOOL;
+	END_VAR
+
+	VAR
+		At_Home: BOOL;
+		At_Work: BOOL;
+		Home_Delay_TMR: TON;
+		Work_Delay_TMR: TON;
+		Sensor_FLT_TMR: TON;
+		GoingHome_FLT_TMR: TON;
+		GoingWork_FLT_TMR: TON;
+	END_VAR
+
+	VAR_OUTPUT
+		FB_OK: BOOL;
+		In_Home_Position: BOOL;
+		In_Work_Position: BOOL;
+		Faulted: BOOL;
+		Sensor_Fault: BOOL;
+		GoingToHome_Fault: BOOL;
+		GoingToWork_Fault: BOOL;
+	END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[	(*Set FB_OK to True*)
+	FB_OK:= TRUE;
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Internal Code $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Develop Home Position*)
+	At_Home:=Home_Sensor AND NOT Work_Sensor;
+
+	(*Develop Work Position*)
+	At_Work:=Work_Sensor AND NOT Home_Sensor;
+
+	(*Delay Home Position Output*)
+	Home_Delay_TMR.PT:= Home_Delay;
+	Home_Delay_TMR.IN:=At_Home;
+	Home_Delay_TMR();
+	In_Home_Position:=Home_Delay_TMR.Q;
+
+	(*Delay Work Position Output*)
+	Work_Delay_TMR.PT:= Work_Delay;
+	Work_Delay_TMR.IN:=At_Work;
+	Work_Delay_TMR();
+	In_Work_Position:=Work_Delay_TMR.Q;
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Fault Code $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Sensor Fault*)
+	Sensor_FLT_TMR.PT:=Fault_Delay;
+	Sensor_FLT_TMR.IN:=(NOT At_Home AND NOT At_Work) OR (At_Work AND At_Home);
+	Sensor_FLT_TMR();
+	Sensor_Fault:=Sensor_FLT_TMR.Q;
+
+	(*Going Home Fault*)
+	GoingHome_FLT_TMR.PT:=Fault_Delay;
+	GoingHome_FLT_TMR.IN:=Home_Solenoid AND NOT At_Home AND NOT Sensor_Fault;
+	GoingHome_FLT_TMR();
+	GoingToHome_Fault:=GoingHome_FLT_TMR.Q;
+
+	(*Going Home Fault*)
+	GoingWork_FLT_TMR.PT:=Fault_Delay;
+	GoingWork_FLT_TMR.IN:=Work_Solenoid AND NOT At_Work AND NOT Sensor_Fault;
+	GoingWork_FLT_TMR();
+	GoingToWork_Fault:=GoingWork_FLT_TMR.Q;
+
+	(*Develop Fault Output*)
+	Faulted:= NOT Disable_Fault AND (Sensor_Fault OR GoingToHome_Fault OR GoingToWork_Fault);]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Clamp_Status">
+      <LineId Id="44" Count="41" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

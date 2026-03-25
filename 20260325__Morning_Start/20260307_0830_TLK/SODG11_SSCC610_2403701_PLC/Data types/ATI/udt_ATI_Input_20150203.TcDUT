@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <DUT Name="udt_ATI_Input_20150203" Id="{c50de275-041e-43bb-a4a5-803fafb70afb}">
+    <Declaration><![CDATA[(*udt (user defined type) of ATI Input Data:
+	auth. Rob Remillard of Sodecia GTAC
+	Version 20150203
+		- Initial Concept
+
+	Last Edit: Feb 3, 2015, rr
+*)
+TYPE udt_ATI_Input_20150203 :
+
+	STRUCT
+
+		(*Status Of EtherCat Slave*)
+		InfoData: udt_ECATSlave_Status;
+		(*Input Bytes*)
+		Byte0: BYTE;
+		Byte1: BYTE;
+		Byte2: BYTE;
+		Byte3: BYTE;
+		Byte456: UDINT;
+		Byte7: BYTE;
+
+	END_STRUCT
+
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

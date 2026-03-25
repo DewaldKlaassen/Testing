@@ -1,0 +1,62 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <DUT Name="udt_Rxx_ToUI_20220224" Id="{1f8c4460-78ec-4efb-8a5d-51e79bd1e229}">
+    <Declaration><![CDATA[(*udt (user defined type) for interfacing to UI (User Interface)
+this udt represents data that is passed from PLC to EACH UI
+
+	Author(S): Rob Remillard/Brent Lekx-Toniolo of Sodecia GTAC;
+	Version 20121204
+		- Initial Concept
+		- For use with Generic Robot Image + ASSCV4.6, None SafeOP Discrete Image
+	Version 20141020
+		- Modified Name During Addition of more devices, b.lekx-toniolo
+	Version 20150622
+		- Added variables for passing of Interf Cycle Times, b.lekx-toniolo
+	Version 20151028
+		- Added discrete image type FSOE for V5.00 machine changes, b.lekx-toniolo
+		- Added discrete image area for water stands, b.lekx-toniolo
+	Version 20170531
+		- Fronius Updates, b.lekx-toniolo
+		- EOAT Instance Update, b.lekx-toniolo
+	Version 20180418
+		-EOAT instance removed, j.vandongen
+	Version 20220224
+	- Overhaul during TcUI Migration project, b.lekx-toniolo / c.drees
+
+*)
+
+TYPE udt_Rxx_ToUI_20220224 :
+	STRUCT
+	Robot_Type: UINT;
+	(*General Data*)
+	Status: UINT;
+	Axis_Data: ARRAY [0..8] OF REAL;
+ 
+	(*Input and Output Data Images*)
+	In_Image: udt_GenericRobot_AnyFieldbus_InputBytes_20220421;
+	Out_Image: udt_GenericRobot_AnyFieldbus_OutputBytes_20220421;
+	Discrete_ImageFSOE: udt_RobotDiscreteNode_ImageFSOE_20151028;
+	Discrete_ImageSSCCV46: udt_RobotDiscreteNode_ImageSSCCv46_20121204;
+	Discrete_ImageSSCCV46wSAFEOP: udt_RobotDiscreteNode_ImageSSCCv46wSAFEOP_20131903;
+
+
+	(*Option Configuration Inputs*)
+	Options: udt_Generic_Robot_Options_20170531;
+		(*Optional Equipment related to Robot*)
+		WS_Discrete_Image: ARRAY [0..2] OF udt_WaterStand_Image_20220131;
+		ATI_Discrete_Image: udt_ATIxx_Image_20151104;
+		Reamer_Discrete_Image: udt_Reamerxx_Image_20180405;
+		(*Robot Fronius Status Visualization*)
+		Fronius_Status: udt_Fronius_Status_20170531;
+
+	(*EtherCAT Cable Break Flags*)
+	ECAT_Cable_Breaks: UDINT;
+	(*Cycle Times*)
+	CT: udt_GenericRobot_CycleTimes_20170304;
+	(*Ped IO to be shown*)
+	Ped_IO_ToShow: ARRAY [0..3] OF UINT;
+
+	END_STRUCT
+END_TYPE]]></Declaration>
+  </DUT>
+</TcPlcObject>

@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FUN_GTAC_TODtoUDINT" Id="{3d811b51-976b-436f-829c-e85f660e15f5}" SpecialFunc="None">
+    <Declaration><![CDATA[(*Take Individual time elements of a GTAC Shift Struture TOD Type and create a UDINT type return
+	author: Brent Lekx-Toniolo Of Sodecia GTAC
+	date: May 2016
+	version 1.0
+		- initial concept
+
+
+	Last Edit: 31-May-2016, blt
+*)
+
+
+FUNCTION FUN_GTAC_TODtoUDINT : udt_Generic_ShiftConfigUDINT_20160531
+VAR_INPUT
+	Shift_Config: udt_Generic_ShiftConfigTOD_20160527;
+END_VAR
+VAR
+
+
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*Take TOD Elemements of Shift COnfig, type convert to UDIT then pass back in UDINT shift structure type*)
+
+	FUN_GTAC_TODtoUDINT.Shift_StartTime:= TOD_TO_UDINT(Shift_Config.Shift_StartTime);
+	FUN_GTAC_TODtoUDINT.Break1_StartTime:= TOD_TO_UDINT(Shift_Config.Break1_StartTime);
+	FUN_GTAC_TODtoUDINT.Break1_EndTime:= TOD_TO_UDINT(Shift_Config.Break1_EndTime);
+	FUN_GTAC_TODtoUDINT.Break2_StartTime:= TOD_TO_UDINT(Shift_Config.Break2_StartTime);
+	FUN_GTAC_TODtoUDINT.Break2_EndTime:= TOD_TO_UDINT(Shift_Config.Break2_EndTime);
+	FUN_GTAC_TODtoUDINT.Break3_StartTime:= TOD_TO_UDINT(Shift_Config.Break3_StartTime);
+	FUN_GTAC_TODtoUDINT.Break3_EndTime:= TOD_TO_UDINT(Shift_Config.Break3_EndTime);
+	FUN_GTAC_TODtoUDINT.Shift_EndTime:= TOD_TO_UDINT(Shift_Config.Shift_EndTime);
+
+]]></ST>
+    </Implementation>
+    <LineIds Name="FUN_GTAC_TODtoUDINT">
+      <LineId Id="20" Count="11" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

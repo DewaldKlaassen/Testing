@@ -1,0 +1,155 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FB_Ax5805_GetInfo_20200609" Id="{a94f75eb-cfab-421d-aed8-c0e61f77106f}" SpecialFunc="None">
+    <Declaration><![CDATA[(*Function Block to read the internal data and diagnostic Data of the AX5805 to assist with troubleshooting*)
+(*
+Authored By - Chris Timmermans of Edge Automation
+Rev 1.0 - Initial Setup
+------------------------------------------------------------------------------------------
+REVISION NOTES:
+	Version 20160803
+	- Changed data type to remove dependance on external resources, b.lekx-toniolo
+	- Change ADS Net Id input to match our standard Infodata type, b.lekx-toniolo
+
+	Version 20200609
+	- Added Var_Input to pass in axis count, various code changes to error handing based on this input, b.lekx-toniolo	
+------------------------------------------------------------------------------------------
+
+
+*)
+
+FUNCTION_BLOCK FB_Ax5805_GetInfo_20200609
+VAR_INPUT
+	Ecat_Master_AmsNetID: STRING;
+	AX5805_InfoData: udt_ECATSlave_StatusEXT;
+	Axis_Count: UINT;		(*Axis Count Value, only 1 or 2 is Valid*)
+
+END_VAR
+VAR_OUTPUT
+	bError:	BOOL;
+	bReadError: BOOL;
+	bAxisCountError: BOOL;
+	Data:	udt_AX5805_DiagData;
+END_VAR
+VAR
+	Timer:				TON;
+	fbCoERead_IntData1:				FB_EcCoESdoRead;
+	fbCoERead_IntData2:				FB_EcCoESdoRead;
+	fbCoERead_DiagData1:			FB_EcCoESdoRead;
+	fbCoERead_DiagData2:			FB_EcCoESdoRead;
+
+
+
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[(*CoE Read uses EtherCAT service Mail box, reading of objects is scheduled to prevent overload*)
+
+(*Pulse Timer setup - Pulse Stays true for one scan and then resets*)
+Timer.PT:=T#1s;
+Timer.IN:=TRUE;
+
+
+IF Timer.Q THEN
+	Timer.IN:=FALSE;
+END_IF
+Timer();
+
+(*Read of CoE Objects*)
+(*Read the internal data of the AX5805 to determine STO reason Code*)
+
+IF Axis_Count = 1 THEN
+	(*Single Axis Type Drive*)
+	fbCoERead_IntData1(
+		sNetId:= Ecat_Master_AmsNetID,
+		nSlaveAddr:= AX5805_InfoData.AdsAddr.port ,
+		nSubIndex:= 7,
+		nIndex:= 16#FA10,
+		pDstBuf:=ADR(Data.InternalDataA1) ,
+		cbBufLen:= SIZEOF(Data.InternalDataA1),
+		bExecute:= Timer.Q ,
+		tTimeout:= DEFAULT_ADS_TIMEOUT,
+		bBusy=> ,
+		bError=> ,
+		nErrId=> );
+
+	fbCoERead_DiagData1(
+		sNetId:= Ecat_Master_AmsNetID,
+		nSlaveAddr:= AX5805_InfoData.AdsAddr.port ,
+		nSubIndex:= 1,
+		nIndex:= 16#FA82,
+		pDstBuf:=ADR(Data.DiagDataA1) ,
+		cbBufLen:= SIZEOF(Data.DiagDataA1),
+		bExecute:= Timer.Q ,
+		tTimeout:= DEFAULT_ADS_TIMEOUT,
+		bBusy=> ,
+		bError=> ,
+		nErrId=> );
+
+ELSIF Axis_Count = 2 THEN
+	(*Dual Axis Type Drive*)
+	fbCoERead_IntData2(
+		sNetId:= Ecat_Master_AmsNetID,
+		nSlaveAddr:= AX5805_InfoData.AdsAddr.port ,
+		nSubIndex:= 8,
+		nIndex:= 16#FA10,
+		pDstBuf:=ADR(Data.InternalDataA2) ,
+		cbBufLen:= SIZEOF(Data.InternalDataA2),
+		bExecute:= Timer.Q ,
+		tTimeout:= DEFAULT_ADS_TIMEOUT,
+		bBusy=> ,
+		bError=> ,
+		nErrId=> );
+
+	fbCoERead_DiagData2(
+		sNetId:= Ecat_Master_AmsNetID,
+		nSlaveAddr:= AX5805_InfoData.AdsAddr.port ,
+		nSubIndex:= 2,
+		nIndex:= 16#FA82,
+		pDstBuf:=ADR(Data.DiagDataA2) ,
+		cbBufLen:= SIZEOF(Data.DiagDataA2),
+		bExecute:= Timer.Q ,
+		tTimeout:= DEFAULT_ADS_TIMEOUT,
+		bBusy=> ,
+		bError=> ,
+		nErrId=> );
+
+ELSE
+	(*Non-Valid Axis Count Value*)
+	bAxisCountError:= TRUE;
+
+END_IF;
+
+
+(*If valid Axis Count was passed to this FB then Evaluate the read data from above*)
+
+IF NOT bAxisCountError THEN
+	(*Evaluate Status of Read*)
+	IF 		fbCoERead_DiagData1.bError
+		OR	fbCoERead_DiagData2.bError
+		OR	fbCoERead_IntData1.bError
+		OR	fbCoERead_IntData2.bError		THEN
+
+			bReadError:=TRUE;
+	ELSE
+			bReadError:=FALSE;
+	END_IF;
+
+	(*Evaluate Status of Diag Data*)
+	IF 		(Data.DiagDataA1<>0)
+		OR	(Data.DiagDataA2<>0)
+		OR	(Data.InternalDataA1<>0)
+		OR	(Data.InternalDataA2<>0)
+	THEN
+
+			Data.bError:=TRUE;
+	ELSE
+			Data.bError:=FALSE;
+	END_IF;
+
+END_IF;]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Ax5805_GetInfo_20200609">
+      <LineId Id="40" Count="104" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

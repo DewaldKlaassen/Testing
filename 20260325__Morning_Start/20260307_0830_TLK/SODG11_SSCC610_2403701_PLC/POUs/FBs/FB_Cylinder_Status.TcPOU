@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FB_Cylinder_Status" Id="{a1a1c1b2-085f-4aa6-aa9a-fccf87a53e77}" SpecialFunc="None">
+    <Declaration><![CDATA[(*FB for replacement of typical clamp fault checking code":
+	Original Author(s): Brent Lekx-Toniolo of Toniolo Research & Development Inc.; 
+	August 2010; version 3.0
+
+
+------------------------------------------------------------------------------------------
+REVISION NOTES:
+	Version 20170615
+		-  Added disable fault input, b.lekx-toniolo / j.bysma
+
+------------------------------------------------------------------------------------------
+*)
+FUNCTION_BLOCK FB_Cylinder_Status
+
+	VAR_INPUT
+		Enable_FB: BOOL;
+		Advanced_Sensor: BOOL;
+		Retracted_Sensor: BOOL;
+		Advance_Solenoid: BOOL;
+		Retract_Solenoid: BOOL;
+		Adv_Delay: TIME;
+		Ret_Delay: TIME;
+		Fault_Delay: TIME;
+		Disable_Fault: BOOL;
+	END_VAR
+
+	VAR
+		At_Advanced: BOOL;
+		At_Retracted: BOOL;
+		Adv_Delay_TMR: TON;
+		Ret_Delay_TMR: TON;
+		Sensor_FLT_TMR: TON;
+		Advancing_FLT_TMR: TON;
+		Retracting_FLT_TMR: TON;
+	END_VAR
+
+	VAR_OUTPUT
+		FB_OK: BOOL;
+		In_Advanced_Position: BOOL;
+		In_Retracted_Position: BOOL;
+		Faulted: BOOL;
+		Sensor_Fault: BOOL;
+		Advancing_Fault: BOOL;
+		Retracting_Fault: BOOL;
+	END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[	(*Set FB_OK to True*)
+	FB_OK:= TRUE;
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Internal Code $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Develop Advanced Position*)
+	At_Advanced:=Advanced_Sensor AND NOT Retracted_Sensor;
+
+	(*Develop Retracted Position*)
+	At_Retracted:=Retracted_Sensor AND NOT Advanced_Sensor;
+
+	(*Delay Advanced Position Output*)
+	Adv_Delay_TMR.PT:=Adv_Delay;
+	Adv_Delay_TMR.IN:=At_Advanced;
+	Adv_Delay_TMR();
+	In_Advanced_Position:=Adv_Delay_TMR.Q;
+
+	(*Delay Retracted Position Output*)
+	Ret_Delay_TMR.PT:=Ret_Delay;
+	Ret_Delay_TMR.IN:=At_Retracted;
+	Ret_Delay_TMR();
+	In_Retracted_Position:=Ret_Delay_TMR.Q;
+
+(*$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Fault Code $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$*)
+	(*Sensor Fault*)
+	Sensor_FLT_TMR.PT:=Fault_Delay;
+	Sensor_FLT_TMR.IN:=(NOT At_Advanced AND NOT At_Retracted) OR (At_Advanced AND At_Retracted);
+	Sensor_FLT_TMR();
+	Sensor_Fault:=Sensor_FLT_TMR.Q;
+
+	(*Advancing Fault*)
+	Advancing_FLT_TMR.PT:=Fault_Delay;
+	Advancing_FLT_TMR.IN:=Advance_Solenoid AND NOT At_Advanced AND NOT Sensor_Fault;
+	Advancing_FLT_TMR();
+	Advancing_Fault:=Advancing_FLT_TMR.Q;
+
+	(*Retracting Fault*)
+	Retracting_FLT_TMR.PT:=Fault_Delay;
+	Retracting_FLT_TMR.IN:=Retract_Solenoid AND NOT At_Retracted AND NOT Sensor_Fault;
+	Retracting_FLT_TMR();
+	Retracting_Fault:=Retracting_FLT_TMR.Q;
+
+	(*Develop Fault Output*)
+	Faulted:= NOT Disable_Fault AND (Sensor_Fault OR Advancing_Fault OR Retracting_Fault);]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Cylinder_Status">
+      <LineId Id="46" Count="41" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

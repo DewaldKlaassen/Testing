@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.5">
+  <POU Name="FB_UDP_PortCreate20140120" Id="{70f4229d-6a8b-4817-abf5-7eab9c0ea7b2}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_UDP_PortCreate20140120
+VAR_INPUT
+
+	LocalNetID:						STRING(19);
+	Local_IP_Address:				STRING(15);
+	UDP_Port_Number:				UINT;
+	ConnectUdp:						BOOL;
+	CloseUdp:						BOOL;
+
+END_VAR
+VAR_OUTPUT
+
+	UdpSocketHandle:				T_HSocket;									(*Open Udp Socket Connection Information*)
+	Port_Closed:						BOOL;										(*Socket Close has been executed*)
+	UdpReceiveLength:				UDINT;
+	UdpReceived:					STRING;
+
+END_VAR
+VAR
+(*Required Udp variables*)
+	SocketUdpCreate:					FB_SocketUdpCreate;							(*Opens the Udp Socket in the Local Controller*)
+	SocketClose:						FB_SocketClose;								(*Closes the Udp Socket*)
+	SocketUdpReceiveFrom:			FB_SocketUdpReceiveFrom;					(*Gathers Received Data from all devices*)
+
+	pDest:							POINTER TO STRING;
+
+END_VAR
+
+VAR CONSTANT
+
+
+
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[pDest := ADR(UdpReceived);										(*Point to address of variable to store reply data*)
+
+
+
+
+
+
+(*---------------------------------------------------------FB Instances------------------------------------------------------*)
+
+
+(*UDP Socket creation for Config Data*)
+SocketUdpCreate(
+	sSrvNetId:= LocalNetID,
+	sLocalHost:=Local_IP_Address,
+	nLocalPort:= UDP_Port_Number,
+	bExecute:= ConnectUdp,
+	tTimeout:= T#50s,
+	bBusy=> ,
+	bError=> ,
+	nErrId=> ,
+	hSocket=> UdpSocketHandle);
+
+
+(*UDP Socket Close*)
+SocketClose(
+	sSrvNetId:= LocalNetID,
+	hSocket:= UdpSocketHandle,
+	bExecute:= CloseUdp,
+	tTimeout:= T#5s,
+	bBusy=> ,
+	bError=> ,
+	nErrId=> );
+
+IF CloseUdp
+	THEN
+		Port_Closed:=TRUE;
+ELSE
+		Port_Closed:= FALSE;
+END_IF;
+
+(*UDP Receive Function Block*)
+SocketUdpReceiveFrom(
+	sSrvNetId:= LocalNetID,
+	hSocket:= UdpSocketHandle,
+	cbLen:= 80,
+	pDest:= pDest,
+	bExecute:= Pulse_500ms,
+	tTimeout:= T#30s,
+	bBusy=> ,
+	bError=> ,
+	nErrId=> ,
+	sRemoteHost=> ,
+	nRemotePort=> ,
+	nRecBytes=> UdpReceiveLength);]]></ST>
+    </Implementation>
+    <LineIds Name="FB_UDP_PortCreate20140120">
+      <LineId Id="34" Count="53" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
