@@ -1,0 +1,2672 @@
+<div id="STCxx_-_Errors_1" data-tchmi-type="TcHmi.Controls.System.TcHmiContent" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="1024" data-tchmi-height="640" data-tchmi-is-enabled="true">
+
+
+<div id="STCxx_Container" data-tchmi-type="TcHmi.Controls.System.TcHmiContainer" data-tchmi-height="323" data-tchmi-height-unit="px" data-tchmi-left="115" data-tchmi-left-unit="px" data-tchmi-top="136" data-tchmi-top-unit="px" data-tchmi-width="787" data-tchmi-width-unit="px">
+<div id="STCxx_Title" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="45" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-text="%f%&quot;   STC0&quot;+%i%Component_Num%/i%+ &quot; &quot; +%l%Error_Messages%/l%%/f%" data-tchmi-top="0" data-tchmi-top-unit="px" data-tchmi-width="787" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-horizontal-alignment="Left" data-tchmi-text-font-size="25" data-tchmi-text-vertical-alignment="Center">
+
+<script data-tchmi-target-attribute="data-tchmi-border-width" type="application/json">
+{
+  "left": 2,
+  "right": 2,
+  "top": 2,
+  "bottom": 2,
+  "leftUnit": "px",
+  "rightUnit": "px",
+  "topUnit": "px",
+  "bottomUnit": "px"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-border-style" type="application/json">
+{
+  "left": "Solid",
+  "right": "Solid",
+  "top": "Solid",
+  "bottom": "Solid"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "color": "rgba(154, 136, 3, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-class-names" type="application/json">
+[
+  "Radius"
+]
+</script>
+</div>
+<div id="STCxx_Error_Code" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="45" data-tchmi-height-unit="px" data-tchmi-left="399" data-tchmi-left-unit="px" data-tchmi-top="55" data-tchmi-top-unit="px" data-tchmi-width="378" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-horizontal-alignment="Left" data-tchmi-text-font-size="20">
+
+
+
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-class-names" type="application/json">
+[
+  "Radius"
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "%i%Pulse_500ms%/i%",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%STCxx_Error_Code::Text%/ctrl%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%f%\"Current Error Code (dec):      \" + (TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::Stud[\"+%i%Component_Num%/i%+\"]::In_Image::Byte4\") +  ((TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::Stud[\"+%i%Component_Num%/i%+\"]::In_Image::Byte5\")<<8) & 256))%/f%"
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "color": "rgba(0, 138, 158, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-class-names" type="application/json">
+[
+  "Radius"
+]
+</script>
+<div id="STCxx_SmartMessage" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="198" data-tchmi-height-unit="px" data-tchmi-left="100" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/SmartMessages/uc_SmartMessage_v3.usercontrol" data-tchmi-tb_height="200" data-tchmi-tb_width="600" data-tchmi-top="110" data-tchmi-top-unit="px" data-tchmi-width="608" data-tchmi-width-unit="px" data-tchmi-width-mode="Value" data-tchmi-height-mode="Value" data-tchmi-text_height="25">
+<script data-tchmi-target-attribute="data-tchmi-text_color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-message_objects" type="application/json">
+    {
+
+      "message_obj_000": {
+        "color": {
+          "color": "rgba(0, 255, 0, 1)"
+        },
+        "flash": false,
+        "message": "No Faults",
+        "value": 0.0
+      },
+      "message_obj_001": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Unknown Group Fault: Unknown message, please check Emhart Pendant",
+        "value": 511.0
+      },
+      "message_obj_003": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 10005: Weld procedure sequence fault",
+        "value": 1005.0
+      },
+      "message_obj_004": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 10013: SMPS: Lift fault",
+        "value": 1013.0
+      },
+      "message_obj_005": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 10014: Short-circuit weld",
+        "value": 1014.0
+      },
+      "message_obj_006": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 10015: weld time timeout",
+        "value": 1015.0
+      },
+      "message_obj_007": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 10016: Open circuit, no arc",
+        "value": 1016.0
+      },
+      "message_obj_008": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 10017: Measurement line broken",
+        "value": 1017.0
+      },
+      "message_obj_009": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 10030: SMPS: Weld out of tolerance",
+        "value": 1030.0
+      },
+      "message_obj_010": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 10031: Weld aborted due to pilot arc voltage",
+        "value": 1031.0
+      },
+      "message_obj_011": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 10033: Common measurement line broken",
+        "value": 1033.0
+      },
+      "message_obj_012": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 10034: Safety circuit fault",
+        "value": 1034.0
+      },
+      "message_obj_013": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 10041: SMPS: Weld program parameters invalid",
+        "value": 1041.0
+      },
+      "message_obj_014": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 10202: SMPS: Temperature too high",
+        "value": 1202.0
+      },
+      "message_obj_015": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 10204: SMPS: Hardware fault",
+        "value": 1204.0
+      },
+      "message_obj_017": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "SMPS Group Fault: Unknown message, please check Emhart Pendant",
+        "value": 1511.0
+      },
+      "message_obj_018": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 13001: LMC: Error channel A of lift measurement signal",
+        "value": 2001.0
+      },
+      "message_obj_019": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 13002: LMC: Error channel B of lift measurement signal",
+        "value": 2002.0
+      },
+      "message_obj_020": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 13003: LMC: Lift height out of tolerance",
+        "value": 2003.0
+      },
+      "message_obj_021": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 13004: LMC: Temperature error of LM amplifier",
+        "value": 2004.0
+      },
+      "message_obj_022": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 13005: LMC: Voltage ling voltage to high (> 180V)",
+        "value": 2005.0
+      },
+      "message_obj_023": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 13006: LMC: Linear motor voltage is to low (< 90V)",
+        "value": 2006.0
+      },
+      "message_obj_024": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 13007: LMC: Linear motor lift timeout",
+        "value": 2007.0
+      },
+      "message_obj_025": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 13008: LMC: Penetration out of tolerance",
+        "value": 2008.0
+      },
+      "message_obj_026": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 13009: LMC: Stickout not enough for programmed penetration",
+        "value": 2009.0
+      },
+      "message_obj_027": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 13010: LMC: The linear motor reach the mechanical end stop",
+        "value": 2010.0
+      },
+      "message_obj_028": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 13011: LMC: No room for lift",
+        "value": 2011.0
+      },
+      "message_obj_029": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 13012: LMC: No +5V amplifiere driver voltage",
+        "value": 2012.0
+      },
+      "message_obj_030": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 13013: LMC: Error during stickout measurement",
+        "value": 2013.0
+      },
+      "message_obj_031": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 13014: LMC: LM Motor Overload",
+        "value": 2014.0
+      },
+      "message_obj_032": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 13015: LMC: LWL transmit buffer overflow",
+        "value": 2015.0
+      },
+      "message_obj_033": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 13016: LMC: Error of position at the end of lift",
+        "value": 2016.0
+      },
+      "message_obj_034": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 13017: LMC: position overshot",
+        "value": 2017.0
+      },
+      "message_obj_035": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 13018: LMC: Wrong software for board E606A",
+        "value": 2018.0
+      },
+      "message_obj_036": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 13019: LMC: Fault of linear motor amplifiere",
+        "value": 2019.0
+      },
+      "message_obj_037": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 13038: LMC: error CAN interface feeder",
+        "value": 2038.0
+      },
+      "message_obj_038": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 13039: LMC: error CAN interface weld tool",
+        "value": 2039.0
+      },
+      "message_obj_039": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 13041: LMC: CAN Bus - Bit Error",
+        "value": 2041.0
+      },
+      "message_obj_040": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 13050: LMC: supply voltage for linear motor not detect",
+        "value": 2050.0
+      },
+      "message_obj_041": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 13052: LMC: CAN Bus - Wrong Receiver Routing Information",
+        "value": 2052.0
+      },
+      "message_obj_042": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 13053: LMC: CAN Bus - Wrong CAN Address",
+        "value": 2053.0
+      },
+      "message_obj_043": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 13054: LMC: CAN Bus - Timeout Error",
+        "value": 2054.0
+      },
+      "message_obj_044": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 13056: LMC: CAN Bus - Wrong Data Length",
+        "value": 2056.0
+      },
+      "message_obj_045": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 13060: LMC: Error while reading EEProm data",
+        "value": 2060.0
+      },
+      "message_obj_046": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "LMC Group Fault: Unknown message, please check Emhart Pendant",
+        "value": 2511.0
+      },
+      "message_obj_047": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 14018: Feeder: Maintenance user counter required",
+        "value": 3401.0
+      },
+      "message_obj_048": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 14022: Feeder: Maintenance feeding tube required",
+        "value": 3402.0
+      },
+      "message_obj_049": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 14052: Feeder: unknown feeder type",
+        "value": 3403.0
+      },
+      "message_obj_050": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 14142: Feeder: Stud divider position not reached",
+        "value": 3404.0
+      },
+      "message_obj_055": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 14358: Feeder: Separation fault - stud has not left feeder",
+        "value": 3405.0
+      },
+      "message_obj_056": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 14746: Feeder: Maintenance feeder required",
+        "value": 3406.0
+      },
+      "message_obj_057": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 15000: Feeder: No hardware configuration exist",
+        "value": 3000.0
+      },
+     "message_obj_058": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 15001: Feeder: Fault during stud separation",
+        "value": 3001.0
+      },
+     "message_obj_059": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 15002: Feeder: Voltage supply for drum motor is missing",
+        "value": 3002.0
+      },
+     "message_obj_060": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 15003: Feeder: 24V external control voltage not available",
+        "value": 3003.0
+      },
+     "message_obj_061": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 15004: Feeder: Air pressure not sufficient",
+        "value": 3004.0
+      },
+     "message_obj_062": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 15005: Feeder: 24V internal control voltage not available",
+        "value": 3005.0
+      },
+     "message_obj_063": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 15006: Feeder: 5V CAN bus voltage not available",
+        "value": 3006.0
+      },
+     "message_obj_064": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 15007: Feeder: Maintenance feed rail required",
+        "value": 3007.0
+      },
+     "message_obj_065": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 15008: Feeder: Maintenance divider feeding tube required",
+        "value": 3008.0
+      },
+     "message_obj_066": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 15009: Feeder: Voltage supply for vibrating bowl is missing",
+        "value": 3009.0
+      },
+     "message_obj_067": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 15010: Feeder: drum motor overcurrent protection (drum blocked)",
+        "value": 3010.0
+      },
+     "message_obj_068": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 15011: Extern Pickup station: loading pin don't leave back position",
+        "value": 3011.0
+      },
+     "message_obj_069": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 15012: Extern Pickup station: loading pin don't leave front position",
+        "value": 3012.0
+      },
+     "message_obj_070": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 15013: Extern Pickup station: rotation segment don't leave feeding position",
+        "value": 3013.0
+      },
+     "message_obj_071": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 15014: Extern Pickup station: rotation segment don't leave pick up position",
+        "value": 3014.0
+      },
+     "message_obj_072": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 15015: Feeder: No fastener (stud) leave the feeder",
+        "value": 3015.0
+      },
+     "message_obj_073": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 15016: Extern Pickup station: Stud-arrival sensor permanently active",
+        "value": 3016.0
+      },
+     "message_obj_074": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 15017: Extern Pickup station: Maintenance Extern Pickup station required",
+        "value": 3017.0
+      },
+     "message_obj_075": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 15018: Feeder: Fastener (stud) fill level is to low, Please refill studs",
+        "value": 3018.0
+      },
+     "message_obj_076": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Feeder Group Fault: Unknown message, please check Emhart Pendant",
+        "value": 3511.0
+      },
+     "message_obj_077": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 16018: Weld Tool: Maintenance user counter (feedings) required",
+        "value": 4401.0
+      },
+     "message_obj_078": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 16019: Weld Tool: Maintenance collet/gripper required",
+        "value": 4402.0
+      },
+     "message_obj_079": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 16020: Weld Tool: Maintenance weld tool (feeds) required",
+        "value": 4403.0
+      },
+     "message_obj_080": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 16022: Weld Tool: Maintenance feeding tube required",
+        "value": 4404.0
+      },
+     "message_obj_081": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 16023: Weld Tool: Welding gun sequence not followed",
+        "value": 4405.0
+      },
+     "message_obj_082": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 16048: TR: no rotation movement allowed",
+        "value": 4406.0
+      },
+     "message_obj_083": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 16052: Weld tool: unknown weld tool type",
+        "value": 4407.0
+      },
+     "message_obj_084": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 16106: Weld tool: Feeding tube locking",
+        "value": 4408.0
+      },
+     "message_obj_085": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 16110: Weld tool: Gripper not closed",
+        "value": 4409.0
+      },
+
+     "message_obj_087": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 16179: Weld tool: Gripper teaching fault",
+        "value": 4410.0
+      },
+     "message_obj_088": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 16188: Weld tool: Gripper not opened",
+        "value": 4411.0
+      },
+     "message_obj_089": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 16300: TR: Overload rotation motor",
+        "value": 4412.0
+      },
+     "message_obj_090": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 16301: TR: Overvoltage rotation motor",
+        "value": 4413.0
+      },
+     "message_obj_091": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 16302: TR: Controller rotation motor over temperature",
+        "value": 4414.0
+      },
+     "message_obj_092": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 16303: TR: Maximum output power controller rotation motor achieved",
+        "value": 4415.0
+      },
+     "message_obj_093": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 16304: TR: Undervoltage rotation motor",
+        "value": 4416.0
+      },
+     "message_obj_094": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 16310: TR: Error with the encoder signals of the rotation motor",
+        "value": 4417.0
+      },
+     "message_obj_095": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 16311: TR: Position fault during rotation",
+        "value": 4418.0
+      },
+
+     "message_obj_097": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 16346: Weld tool: Wrong stud length (variable stud block)",
+        "value": 4419.0
+      },
+     "message_obj_098": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 16347: Weld tool: Wrong stud diameter",
+        "value": 4420.0
+      },
+     "message_obj_099": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 16349: TR: Pickup station 1: loading pin not in back position",
+        "value": 4421.0
+      },
+     "message_obj_100": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 16350: TR: Pickup station 1: loading pin not in front position",
+        "value": 4422.0
+      },
+     "message_obj_101": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 16351: TR: Pickup station 1: rotation segment not in feeding position",
+        "value": 4423.0
+      },
+     "message_obj_102": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 16352: TR: Pickup station 1: rotation segment not in loading position",
+        "value": 4424.0
+      },
+     "message_obj_103": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 16360: TR: Pickup station 2: loading pin not in back position",
+        "value": 4425.0
+      },
+     "message_obj_104": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 16361: TR: Pickup station 2: loading pin not in front position",
+        "value": 4426.0
+      },
+     "message_obj_105": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 16362: TR: Pickup station 2: rotation segment not in feeding position",
+        "value": 4427.0
+      },
+     "message_obj_106": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 16363: TR: Pickup station 2: rotation segment not in loading position",
+        "value": 4428.0
+      },
+
+     "message_obj_108": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17000: Weld tool: No hardware configuration exist",
+        "value": 4000.0
+      },
+     "message_obj_109": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17001: Weld tool: start feeding for an unknown feeder",
+        "value": 4001.0
+      },
+     "message_obj_110": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17002: Weld tool: feeder is not ready for a feeding process",
+        "value": 4002.0
+      },
+     "message_obj_111": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17003: Weld tool:24V external control voltage not available",
+        "value": 4003.0
+      },
+     "message_obj_112": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17004: Weld tool: Air pressure not sufficient",
+        "value": 4004.0
+      },
+     "message_obj_113": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17005: Weld tool: 24V internal control voltage not available",
+        "value": 4005.0
+      },
+     "message_obj_114": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17006: Weld tool: 5V voltage CAN bus is missing",
+        "value": 4006.0
+      },
+     "message_obj_115": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17007: Weld tool: Hardware configuration is not correct",
+        "value": 4007.0
+      },
+     "message_obj_116": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17008: Weld Tool: Weld tool remains in R position",
+        "value": 4008.0
+      },
+     "message_obj_117": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17009: Weld Tool: Weld tool not in R position",
+        "value": 4009.0
+      },
+     "message_obj_118": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17010: Weld Tool: Weld tool ID change between weld gun and weld head",
+        "value": 4010.0
+      },
+     "message_obj_119": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17011: TR: Feeding-cmd includes no pickup-station",
+        "value": 4011.0
+      },
+     "message_obj_120": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17012: TR: Stud Block Poti not In Zero-Position",
+        "value": 4012.0
+      },
+     "message_obj_121": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17013: TR: Error in the Controller of the rotation motor",
+        "value": 4013.0
+      },
+     "message_obj_122": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17014: TR: Communication Error to the controller of the rotation Motor",
+        "value": 4014.0
+      },
+     "message_obj_123": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17015: TR: Error during the reference run of the rotation motor",
+        "value": 4015.0
+      },
+     "message_obj_124": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17016: TR: Rotation error - the angle was not reached",
+        "value": 4016.0
+      },
+     "message_obj_125": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17017: Weld Tool: Maintenance weld tool (welds) required",
+        "value": 4017.0
+      },
+     "message_obj_126": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17018: Weld Tool: Maintenance slide rail required",
+        "value": 4018.0
+      },
+     "message_obj_127": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17019: Weld Tool: Maintenance loading pin required",
+        "value": 4019.0
+      },
+     "message_obj_128": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17020: TR: Maintenance pick up station 1 required",
+        "value": 4020.0
+      },
+     "message_obj_129": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17021: TR: Maintenance pick up station 2 required",
+        "value": 4021.0
+      },
+     "message_obj_130": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17022: TR: The actual angle is not admitted for a slide movement or a welding",
+        "value": 4022.0
+      },
+     "message_obj_131": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17023: TR: Stud block was pushed back during slide movement",
+        "value": 4023.0
+      },
+     "message_obj_132": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17024: TR: Maintenance feeding tube pick up station 2 required",
+        "value": 4024.0
+      },
+     "message_obj_133": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17025: TR: Move slide forward is not allowed, because the rotation is not referenced",
+        "value": 4025.0
+      },
+     "message_obj_134": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17026: TR: Slow motion controller detected a too fast rotation",
+        "value": 4026.0
+      },
+     "message_obj_135": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17027: TR: Slow motion controller has a system failure",
+        "value": 4027.0
+      },
+     "message_obj_136": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17028: TR: Rotation not possible, because slide is not in back-position",
+        "value": 4028.0
+      },
+     "message_obj_137": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17029: Weld tool: Gripper don't leave Closed Position",
+        "value": 4029.0
+      },
+     "message_obj_138": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17030: Weld tool: Gripper don't leave Open Position",
+        "value": 4030.0
+      },
+     "message_obj_139": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17031: Weld tool: Weld tool Don't Reach Front Position",
+        "value": 4031.0
+      },
+     "message_obj_140": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17032: Weld tool: extern üick up station is not ready for pick up process",
+        "value": 4032.0
+      },
+     "message_obj_141": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17033: Weld tool: No fastener (stud) loaded",
+        "value": 4033.0
+      },
+     "message_obj_142": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17034: Weld tool: No fastener (stud) leave the feeder",
+        "value": 4034.0
+      },
+     "message_obj_143": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17035: Weld tool: Stud-arrival sensor permanently active",
+        "value": 4035.0
+      },
+     "message_obj_144": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17036: Weld tool: Loading pin don't leave back position",
+        "value": 4036.0
+      },
+     "message_obj_145": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17037: Weld tool: Loading pin don't leave front position",
+        "value": 4037.0
+      },
+     "message_obj_146": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17038: Weld tool: The Stud in gripper senor is permanently active",
+        "value": 4038.0
+      },
+     "message_obj_147": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17039: TR: Pickup station 1: loading pin don't leave front position",
+        "value": 4039.0
+      },
+     "message_obj_148": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17040: TR: Pickup station 1: loading pin don't leave back position",
+        "value": 4040.0
+      },
+     "message_obj_149": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17041: TR: Pickup station 1: rotation segment don't leave pick up position",
+        "value": 4041.0
+      },
+     "message_obj_150": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17042: TR: Pickup station 1: rotation segment don't leave feed position",
+        "value": 4042.0
+      },
+     "message_obj_151": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17043: TR: Pickup station 1: Stud-arrival sensor permanently active",
+        "value": 4043.0
+      },
+     "message_obj_152": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17044: TR: Pickup station 2: loading pin don't leave front position",
+        "value": 4044.0
+      },
+     "message_obj_153": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17045: TR: Pickup station 2: loading pin don't leave back position",
+        "value": 4045.0
+      },
+     "message_obj_154": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17046: TR: Pickup station 2: rotation segment don't leave pick up position",
+        "value": 4046.0
+      },
+     "message_obj_155": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17047: TR: Pickup station 2: rotation segment don't leave feed position",
+        "value": 4047.0
+      },
+     "message_obj_156": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17048: TR: Pickup station 2: Stud-arrival sensor permanently active",
+        "value": 4048.0
+      },
+     "message_obj_157": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17049: Weld tool: No fastener (stud) in cage of the pick up station loaded and no stud arrival sensor was detected",
+        "value": 4049.0
+      },
+     "message_obj_158": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17050: Weld tool: No fastener (stud) in cage of the pick up station loaded",
+        "value": 4050.0
+      },
+     "message_obj_159": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17051: Weld tool: Absolute back pos. don't reached during move loading pin backward",
+        "value": 4051.0
+      },
+     "message_obj_160": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17052: Weld tool: Wrong stud length before the welding",
+        "value": 4052.0
+      },
+     "message_obj_161": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17053: Weld tool: Wrong stud diameter before the Welding",
+        "value": 4053.0
+      },
+     "message_obj_162": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17054: TR: rotation motor reached it limit during weld process",
+        "value": 4054.0
+      },
+     "message_obj_163": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17055: TR: Stud block was pushed back during weld process",
+        "value": 4055.0
+      },
+     "message_obj_164": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17056: TR: Pickup station 1: loading pin both sensors are active",
+        "value": 4056.0
+      },
+     "message_obj_165": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17057: TR: Pickup station 1: loading pin both sensors are active",
+        "value": 4057.0
+      },
+     "message_obj_166": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17058: TR: Pickup station 1: rotation segment both sensors are active",
+        "value": 4058.0
+      },
+     "message_obj_167": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17059: TR: Pickup station 1: rotation segment both sensors are active",
+        "value": 4059.0
+      },
+     "message_obj_168": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17060: TR: Pickup station 2: loading pin both sensors are active",
+        "value": 4060.0
+      },
+     "message_obj_169": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17061: TR: Pickup station 2: loading pin both sensors are active",
+        "value": 4061.0
+      },
+     "message_obj_170": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17062: TR: Pickup station 2: rotation segment both sensors are active",
+        "value": 4062.0
+      },
+     "message_obj_171": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17063: TR: Pickup station 2: rotation segment both sensors are active",
+        "value": 4063.0
+      },
+     "message_obj_172": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17064: TR: Angle is not valid for pick up a stud out of an external pickup-station",
+        "value": 4064.0
+      },
+     "message_obj_173": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17065: Weld tool: no feeding allowed",
+        "value": 4065.0
+      },
+     "message_obj_174": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17066: TR: Enable of the rotation motor controller failed",
+        "value": 4066.0
+      },
+     "message_obj_175": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17067: Weld tool: No fastener (stud) at the external pickup",
+        "value": 4067.0
+      },
+     "message_obj_176": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17068: Weld tool: Absolute front pos. Don't reached during move loading pin forward",
+        "value": 4068.0
+      },
+     "message_obj_177": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17069: Weld tool: Restriction front pos. don't reached during move loading pin forward",
+        "value": 4069.0
+      },
+     "message_obj_178": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17070: Weld tool: Stud-arrival and stud-departure sensor detected no stud",
+        "value": 4070.0
+      },
+     "message_obj_179": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 17071: Weld tool: protection gas flow rate not sufficient",
+        "value": 4071.0
+      },
+     "message_obj_180": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Weld Tool Group Fault: Unknown message, please check Emhart Pendant",
+        "value": 4511.0
+      },
+     "message_obj_181": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 20002: No SOW",
+        "value": 5401.0
+      },
+     "message_obj_182": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 20003: Weld tool not in R position",
+        "value": 5402.0
+      },
+     "message_obj_183": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 20004: SOW not reset",
+        "value": 5403.0
+      },
+     "message_obj_184": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 20006: DCPU-PM: Program not selected",
+        "value": 5404.0
+      },
+     "message_obj_185": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 20025: Wrong fastener (stud) loaded",
+        "value": 5405.0
+      },
+
+     "message_obj_188": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 20030: DCPU-PM: Weld out of tolerance",
+        "value": 5406.0
+      },
+     "message_obj_189": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 20038: Data connection feeder",
+        "value": 5407.0
+      },
+     "message_obj_190": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 20039: Internal connection customer interface",
+        "value": 5408.0
+      },
+     "message_obj_191": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 20040: Fiber optic connection SMPS",
+        "value": 5409.0
+      },
+     "message_obj_192": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 20041: SMPS: Weld program parameters invalid",
+        "value": 5410.0
+      },
+     "message_obj_193": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 20046: DCPU-PM: Feed cycle failed",
+        "value": 5411.0
+      },
+     "message_obj_194": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 20058: DCPU-PM: Weld start signal invalid during current operation state",
+        "value": 5413.0
+      },
+     "message_obj_195": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 20103: CPM: Air pressure not sufficient",
+        "value": 5414.0
+      },
+     "message_obj_196": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 20109: Feeder: Timeout feeding tube",
+        "value": 5415.0
+      },
+     "message_obj_197": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 20112: CPM: Pressure monitor protective gas",
+        "value": 5416.0
+      },
+     "message_obj_198": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 20160: DCPU-PM: Color marking not possible",
+        "value": 5417.0
+      },
+     "message_obj_199": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 20168: DCPU-PM: TR Angle position not achieved",
+        "value": 5418.0
+      },
+     "message_obj_200": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 20325: DCPU-PM: Timeout robot retreating to weld position",
+        "value": 5419.0
+      },
+     "message_obj_201": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 20345: DCPU-PM: Continuing weld cycle after e-stop/protection circuit not possible",
+        "value": 5420.0
+      },
+     "message_obj_202": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21000: CPM: Phase monitor",
+        "value": 5000.0
+      },
+     "message_obj_203": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21001: DCPU-PM: Changing of operation state not allowed",
+        "value": 5001.0
+      },
+     "message_obj_204": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21002: CPM: USB-Module not available",
+        "value": 5002.0
+      },
+     "message_obj_205": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21003: CPM: Faulty firmware configuration",
+        "value": 5003.0
+      },
+     "message_obj_206": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21004: CPM: Faulty hardware configuration",
+        "value": 5004.0
+      },
+     "message_obj_207": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21008: DCPU-PM: Weld tool number not assigned",
+        "value": 5008.0
+      },
+     "message_obj_208": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21009: UNUSED: DCPU-PM: Component type changed",
+        "value": 5009.0
+      },
+     "message_obj_209": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21010: DCPU-PM: Initialization failed - Unacknowledged exchange of component",
+        "value": 5010.0
+      },
+     "message_obj_210": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21011: DCPU-PM: Initialization failed - the data management component didn't react within the expected span of time",
+        "value": 5011.0
+      },
+     "message_obj_211": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21012: DCPU-PM: Initialization failed - component didn't sent the configuration parameter set",
+        "value": 5012.0
+      },
+     "message_obj_212": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21013: DCPU-PM: Initialization failed - Touchpad wasn't initialized",
+        "value": 5013.0
+      },
+     "message_obj_213": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21014: DCPU-PM: Initialization failed - programmable parameter set couldn't be saved",
+        "value": 5014.0
+      },
+     "message_obj_214": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21016: DCPU-PM: Initialization failed - schema set for configuration parameter set couldn't be saved",
+        "value": 5016.0
+      },
+     "message_obj_215": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21017: DCPU-PM: Initialization failed - schema set for programmable parameter set couldn't be saved",
+        "value": 5017.0
+      },
+     "message_obj_216": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21018: DCPU-PM: Initialization failed - configuration parameter set couldn't be saved",
+        "value": 5018.0
+      },
+     "message_obj_217": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21019: DCPU-PM: Initialization failed - component did not complete initialization",
+        "value": 5019.0
+      },
+     "message_obj_218": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21030: DCPU-PM: Missing Component",
+        "value": 5030.0
+      },
+     "message_obj_219": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21031: Data connection weld tool",
+        "value": 5031.0
+      },
+     "message_obj_220": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21032: DCPU-PM: Whole weld cycle cancelled due to missing LMC",
+        "value": 5032.0
+      },
+     "message_obj_221": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21033: DCPU-PM: Whole weld cycle cancelled due to missing feeder",
+        "value": 5033.0
+      },
+     "message_obj_222": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21034: DCPU-PM: Whole weld cycle cancelled due to missing weld tool",
+        "value": 5034.0
+      },
+     "message_obj_223": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21035: DCPU-PM: Timeout weld head rotation cycle",
+        "value": 5035.0
+      },
+     "message_obj_224": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21036: DCPU-PM: Weld head rotation cancelled",
+        "value": 5036.0
+      },
+     "message_obj_225": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21037: DCPU-PM: Weld head rotation cycle cancelled due to a start signal during a operation state that does not allow a rotation start",
+        "value": 5037.0
+      },
+     "message_obj_226": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21038: DCPU-PM: Timeout weld tool gripper move cycle",
+        "value": 5038.0
+      },
+     "message_obj_227": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21039: DCPU-PM: Weld tool gripper move cycle cancelled due to a start signal during a operation state that does not allow a gripper movement",
+        "value": 5039.0
+      },
+     "message_obj_228": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21040: DCPU-PM: Weld head couldn't be moved due to a timeout",
+        "value": 5040.0
+      },
+     "message_obj_229": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21041: DCPU-PM: weld head couldn't be moved due to a cancel request",
+        "value": 5041.0
+      },
+     "message_obj_230": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21042: DCPU-PM: Timeout move cycle wait for rotation",
+        "value": 5042.0
+      },
+     "message_obj_231": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21043: DCPU-PM: Request for weld start cancelled while weld cycle is running",
+        "value": 5043.0
+      },
+     "message_obj_232": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21044: DCPU-PM: Main weld cycle cancelled due to a timeout",
+        "value": 5044.0
+      },
+     "message_obj_233": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21045: DCPU-PM: Whole weld cycle cancelled due to a timeout",
+        "value": 5045.0
+      },
+     "message_obj_234": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21046: LMC: Lift program parameters invalid",
+        "value": 5046.0
+      },
+     "message_obj_235": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21047: DCPU-PM: Unknown weld mode",
+        "value": 5047.0
+      },
+     "message_obj_236": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21048: Fiber optic connection LMC",
+        "value": 5048.0
+      },
+     "message_obj_237": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21049: DCPU-DM: Measurement data could not be saved",
+        "value": 5049.0
+      },
+     "message_obj_238": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21050: DCPU-PM: Weld head move start signal invalid during current operation state",
+        "value": 5050.0
+      },
+     "message_obj_239": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21051: DCPU-PM: Wrong stud length (stickout)",
+        "value": 5051.0
+      },
+     "message_obj_240": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21053: DCPU-PM: Feeder not selected",
+        "value": 5053.0
+      },
+     "message_obj_241": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21054: DCPU-PM: Start weld not permitted",
+        "value": 5054.0
+      },
+     "message_obj_242": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21055: DCPU-PM: Component not ready for welding",
+        "value": 5055.0
+      },
+     "message_obj_243": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21056: DCPU-PM: Timeout stud length check",
+        "value": 5056.0
+      },
+     "message_obj_244": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21057: DCPU-PM: Timeout for acknowledge of process parameters",
+        "value": 5057.0
+      },
+     "message_obj_245": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21058: No fastener (stud) loaded",
+        "value": 5058.0
+      },
+     "message_obj_246": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21059: DCPU-PM: Rotation angle not valid for welding",
+        "value": 5059.0
+      },
+     "message_obj_247": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21060: SysUpdate: Corrupt update of SMPS",
+        "value": 5060.0
+      },
+     "message_obj_248": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21061: SysUpdate: Corrupt software update of feeder",
+        "value": 5061.0
+      },
+     "message_obj_249": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21062: SysUpdate: Corrupt software update of LMC",
+        "value": 5062.0
+      },
+     "message_obj_250": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21063: SysUpdate: Corrupt software update of weld tool",
+        "value": 5063.0
+      },
+     "message_obj_251": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21064: DCPU-PM: Whole weld cycle cancelled due to a missing component",
+        "value": 5064.0
+      },
+     "message_obj_252": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21065: DCPU-PM: Feed start signal invalid during current operation state",
+        "value": 5065.0
+      },
+     "message_obj_253": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21066: DCPU-PM: Self-resetting fault during weld process",
+        "value": 5066.0
+      },
+     "message_obj_254": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21067: SysUpdate: No valid software in control board of LMC",
+        "value": 5067.0
+      },
+     "message_obj_255": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21068: SysUpdate: No valid software in control board of SMPS",
+        "value": 5068.0
+      },
+     "message_obj_256": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21069: SysUpdate: No valid software in control board of weld tool",
+        "value": 5069.0
+      },
+     "message_obj_257": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21070: SysUpdate: No valid software in control board of feeder",
+        "value": 5070.0
+      },
+     "message_obj_258": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21071: SysUpdate: No valid software in control board of ICPU",
+        "value": 5071.0
+      },
+     "message_obj_259": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21082: DCPU-PM: Feed cycle cancelled due to missing LMC",
+        "value": 5082.0
+      },
+     "message_obj_260": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21083: DCPU-PM: Feed cycle cancelled due to missing feeder",
+        "value": 5083.0
+      },
+     "message_obj_261": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21084: DCPU-PM: Feed cycle cancelled due to missing weld tool",
+        "value": 5084.0
+      },
+     "message_obj_262": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21085: DCPU-PM: Timeout feed cycle wait for rotation",
+        "value": 5085.0
+      },
+     "message_obj_263": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21086: DCPU-DM: Database of statistical data damaged",
+        "value": 5086.0
+      },
+     "message_obj_264": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21087: DCPU-DM: Database of programmable data damaged",
+        "value": 5087.0
+      },
+     "message_obj_265": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21088: DCPU-DM: Database of statistical data has been automatically restored",
+        "value": 5088.0
+      },
+     "message_obj_266": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21089: DCPU-DM: Database of programmable data has been automatically restored",
+        "value": 5089.0
+      },
+     "message_obj_267": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21090: DCPU-DM: Fault storage cleared",
+        "value": 5090.0
+      },
+     "message_obj_268": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21091: DCPU-DM: Version of database ist newer than version of the installed CPM-software",
+        "value": 5091.0
+      },
+     "message_obj_269": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21092: DCPU-DM: database of programmable data has been recreated",
+        "value": 5092.0
+      },
+     "message_obj_270": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21093: DCPU-DM: database of quality data has been recreated",
+        "value": 5093.0
+      },
+     "message_obj_271": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21094: DCPU-DM: databases have been recreated",
+        "value": 5094.0
+      },
+     "message_obj_272": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21095: DCPU-DM: Damaged Database",
+        "value": 5095.0
+      },
+     "message_obj_273": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21096: DCPU-PM: Stud-ID difference weld and feed cycle",
+        "value": 5096.0
+      },
+     "message_obj_274": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21097: DCPU-PM: Stud-ID difference weld and rotation cycle",
+        "value": 5097.0
+      },
+     "message_obj_275": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21098: DCPU-PM: Wrong fastener (stud) loaded",
+        "value": 5098.0
+      },
+     "message_obj_276": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21100: DCPU-PM: Timeout rotation cycle wait for feeding",
+        "value": 5100.0
+      },
+     "message_obj_277": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21101: DCPU-PM: Timeout rotation cycle wait for weld head move",
+        "value": 5101.0
+      },
+     "message_obj_278": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21102: DCPU-PM: Weld head not ready for rotation",
+        "value": 5102.0
+      },
+     "message_obj_279": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21103: DCPU-PM: Reset of active faults failed",
+        "value": 5103.0
+      },
+     "message_obj_280": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21104: DCPU-PM: Timeout Automatic Teaching",
+        "value": 5104.0
+      },
+     "message_obj_281": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21105: DCPU-PM: Stick out measurement failed during automatic teaching",
+        "value": 5105.0
+      },
+     "message_obj_282": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21110: DCPU-PM: Following Stud-ID not selected",
+        "value": 5110.0
+      },
+     "message_obj_283": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21111: DCPU-PM: Following Stud-ID on different outlet",
+        "value": 5111.0
+      },
+     "message_obj_284": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21140: DCPU: UPS not charged",
+        "value": 5140.0
+      },
+     "message_obj_285": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21141: DCPU: UPS power supply error",
+        "value": 5141.0
+      },
+     "message_obj_286": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21150: DCPU-PM: Timeout tool check",
+        "value": 5150.0
+      },
+     "message_obj_287": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21151: DCPU-PM: Wrong weld tool docked",
+        "value": 5151.0
+      },
+     "message_obj_288": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21152: DCPU-PM: No weld tool docked",
+        "value": 5152.0
+      },
+     "message_obj_289": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21153: DCPU-PM: Tool check start signal invalid during current operation state",
+        "value": 5153.0
+      },
+     "message_obj_290": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21200: DCPU-PM: Timeout short circuit test SMPS",
+        "value": 5200.0
+      },
+     "message_obj_291": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21201: DCPU-PM: Timeout feeding test cycle",
+        "value": 5201.0
+      },
+     "message_obj_292": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21202: DCPU-PM: Start short circuit test invalid during current operation state",
+        "value": 5202.0
+      },
+     "message_obj_293": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21203: DCPU-PM: Start feeding test cycle invalid during current operation state",
+        "value": 5203.0
+      },
+     "message_obj_294": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21210: DCPU-PM: Mean value of slider movement time (forward) exceeds tolerated limits",
+        "value": 5210.0
+      },
+     "message_obj_295": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21211: DCPU-PM: Mean value of slider movement time (backward) exceeds tolerated limits",
+        "value": 5211.0
+      },
+     "message_obj_296": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21212: DCPU-PM: Mean value of feeding time exceeds tolerated limits",
+        "value": 5212.0
+      },
+     "message_obj_297": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21213: DCPU-PM: Wrong software version DCPU",
+        "value": 5213.0
+      },
+     "message_obj_298": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21214: DCPU-PM: Wrong software version feeder",
+        "value": 5214.0
+      },
+     "message_obj_299": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21215: DCPU-PM: Wrong software version LMC",
+        "value": 5215.0
+      },
+     "message_obj_300": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21216: DCPU-PM: Wrong software version weld tool",
+        "value": 5216.0
+      },
+     "message_obj_301": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21217: DCPU-PM: Wrong software version DCPU-OS",
+        "value": 5217.0
+      },
+     "message_obj_302": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21218: DCPU-PM: Wrong software version ICPU",
+        "value": 5218.0
+      },
+     "message_obj_303": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21219: DCPU-PM: Wrong software version SMPS",
+        "value": 5219.0
+      },
+     "message_obj_303": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 21219: DCPU-PM: Wrong software version SMPS",
+        "value": 5219.0
+      },
+     "message_obj_304": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "System Group Fault: Unknown message, please check Emhart Pendant",
+        "value": 5511.0
+      },
+     "message_obj_305": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 23000: DCPU-CI: Start weld signal from robot invalid during current operation mode",
+        "value": 6000.0
+      },
+     "message_obj_306": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 23001: DCPU-CI: Start feed signal from robot invalid during current operation mode",
+        "value": 6001.0
+      },
+     "message_obj_307": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 23002: DCPU-CI: Restart signal from robot invalid during current operation mode",
+        "value": 6002.0
+      },
+     "message_obj_308": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 23003: DCPU-CI: Forced WC signal from robot invalid during current operation mode",
+        "value": 6003.0
+      },
+     "message_obj_309": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 23004: DCPU-CI: Activate protective gas signal from robot invalid during current operation mode",
+        "value": 6004.0
+      },
+     "message_obj_310": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 23005: DCPU-CI: Set color mark signal from robot invalid during current operation mode",
+        "value": 6005.0
+      },
+     "message_obj_311": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 23006: DCPU-CI: Move weld tool signal from robot invalid during current operation mode",
+        "value": 6006.0
+      },
+     "message_obj_312": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 23007: DCPU-CI: Communication failure with customer interface",
+        "value": 6007.0
+      },
+     "message_obj_313": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 23008: DCPU-CI: Customer Interface Protocol Type not selected",
+        "value": 6008.0
+      },
+     "message_obj_314": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 23009: DCPU-CI: Customer Interface parameter are incorrect",
+        "value": 6009.0
+      },
+     "message_obj_315": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 23010: DCPU-CI: Customer Interface Protocol Type is incompatible",
+        "value": 6010.0
+      },
+     "message_obj_316": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 23011: DCPU-CI: Customer interface configuration failure",
+        "value": 6011.0
+      },
+     "message_obj_317": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 23012: DCPU-CI: Weld start handshake error",
+        "value": 6012.0
+      },
+     "message_obj_318": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 23045: DCPU-CI: Start weld cycle not reset",
+        "value": 6045.0
+      },
+     "message_obj_319": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 23046: DCPU-CI: Weld without current",
+        "value": 6046.0
+      },
+     "message_obj_320": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 23047: DCPU-CI: Parity Error in Stud-ID",
+        "value": 6047.0
+      },
+     "message_obj_321": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 23048: DCPU-CI: Parity Error in Action Code",
+        "value": 6048.0
+      },
+     "message_obj_322": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Fault 23050: DCPU-CI: Weld start initiated while the signal Stud ID valid was not active",
+        "value": 6050.0
+      },
+      "message_obj_323": {
+        "color": {
+          "color": "rgba(255, 0, 0, 1)"
+        },
+        "flash": true,
+        "message": "Customer I/F Group Fault: Unknown message, please check Emhart Pendant",
+        "value": 6511.0
+      }
+
+
+
+    }
+</script>
+<script data-tchmi-target-attribute="data-tchmi-bgcolour" type="application/json">
+
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "%i%Pulse_500ms%/i%",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%STCxx_SmartMessage::input_value%/ctrl%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%f% TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::Stud[\"+%i%Component_Num%/i%+\"]::In_Image::Byte4\") +  ((TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::Stud[\"+%i%Component_Num%/i%+\"]::In_Image::Byte5\")<<8) & 256)+((TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::Stud[\"+%i%Component_Num%/i%+\"]::In_Image::Byte3\")>>5) * 1000)%/f%"
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="STCxx_Error_Group" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="45" data-tchmi-height-unit="px" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-top="55" data-tchmi-top-unit="px" data-tchmi-width="379" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-horizontal-alignment="Left" data-tchmi-text-font-size="20">
+<script data-tchmi-target-attribute="data-tchmi-class-names" type="application/json">
+[
+  "Radius"
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "%i%Pulse_500ms%/i%",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%STCxx_Error_Group::Text%/ctrl%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%f%\"Current Error Group (dec):      \" + (TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::Stud[\"+%i%Component_Num%/i%+\"]::In_Image::Byte3\") >>5)%/f%"
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+</div>
+</div>

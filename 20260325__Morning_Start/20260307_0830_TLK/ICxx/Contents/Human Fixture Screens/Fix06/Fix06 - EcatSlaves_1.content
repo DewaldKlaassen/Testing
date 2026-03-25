@@ -1,0 +1,3630 @@
+<div id="Fix06_-_EcatSlaves_1" data-tchmi-type="TcHmi.Controls.System.TcHmiContent" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="1024" data-tchmi-height="2525">
+
+<div id="Fix06_N00" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-idvalue="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N00::ID%/s%" data-tchmi-left="36" data-tchmi-left-unit="px" data-tchmi-nodeid="N00" data-tchmi-nodetype="EP1111" data-tchmi-state="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N00::InfoData::State%/s%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EP1111.usercontrol" data-tchmi-top="10" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+</div>
+<div id="Fix06_N01" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N01::I%/s%" data-tchmi-left="364" data-tchmi-left-unit="px" data-tchmi-nodeid="N01" data-tchmi-nodetype="EP1008" data-tchmi-state="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N01::InfoData::State%/s%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="10" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N01.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 1
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N01::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N01::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N02" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N02::I%/s%" data-tchmi-left="693" data-tchmi-left-unit="px" data-tchmi-nodeid="N02" data-tchmi-nodetype="EP1008" data-tchmi-state="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N02::InfoData::State%/s%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="10" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N02.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 2
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N02::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N02::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N03" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N03::I%/s%" data-tchmi-left="36" data-tchmi-left-unit="px" data-tchmi-nodeid="N03" data-tchmi-nodetype="EP1008" data-tchmi-state="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N03::InfoData::State%/s%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="157" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N03.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 3
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N03::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N03::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N04" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N04::I%/s%" data-tchmi-left="364" data-tchmi-left-unit="px" data-tchmi-nodeid="N04" data-tchmi-nodetype="EP1008" data-tchmi-state="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N04::InfoData::State%/s%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="157" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N04.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 4
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N04::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N04::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N05" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N05::I%/s%" data-tchmi-left="693" data-tchmi-left-unit="px" data-tchmi-nodeid="N05" data-tchmi-nodetype="EP1008" data-tchmi-state="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N05::InfoData::State%/s%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="157" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N05.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 5
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N05::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N05::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N06" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N06::I%/s%" data-tchmi-left="36" data-tchmi-left-unit="px" data-tchmi-nodeid="N06" data-tchmi-nodetype="EP1008" data-tchmi-state="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N06::InfoData::State%/s%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="304" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N06.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 6
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N06::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N06::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N07" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N07::I%/s%" data-tchmi-left="364" data-tchmi-left-unit="px" data-tchmi-nodeid="N07" data-tchmi-nodetype="EP1008" data-tchmi-state="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N07::InfoData::State%/s%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="304" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N07.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 7
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N07::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N07::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N08" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N08::I%/s%" data-tchmi-left="693" data-tchmi-left-unit="px" data-tchmi-nodeid="N08" data-tchmi-nodetype="EP1008" data-tchmi-state="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N08::InfoData::State%/s%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="304" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N08.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 8
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N08::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N08::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N09" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N09::I%/s%" data-tchmi-left="36" data-tchmi-left-unit="px" data-tchmi-nodeid="N09" data-tchmi-nodetype="EP1008" data-tchmi-state="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N09::InfoData::State%/s%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="451" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N09.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 9
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N09::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N09::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N10" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N10::I%/s%" data-tchmi-left="364" data-tchmi-left-unit="px" data-tchmi-nodeid="N10" data-tchmi-nodetype="EP1008" data-tchmi-state="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N10::InfoData::State%/s%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="451" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N10.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 10
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N10::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N10::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N11" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N11::I%/s%" data-tchmi-left="693" data-tchmi-left-unit="px" data-tchmi-nodeid="N11" data-tchmi-nodetype="EP1008" data-tchmi-state="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N11::InfoData::State%/s%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="451" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N11.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 11
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N11::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N11::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N12" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N12::I%/s%" data-tchmi-left="36" data-tchmi-left-unit="px" data-tchmi-nodeid="N12" data-tchmi-nodetype="EP1008" data-tchmi-state="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N12::InfoData::State%/s%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="598" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N12.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 12
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N12::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N12::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N13" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N13::I%/s%" data-tchmi-left="364" data-tchmi-left-unit="px" data-tchmi-nodeid="N13" data-tchmi-nodetype="EP1008" data-tchmi-state="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N13::InfoData::State%/s%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="598" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N13.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 13
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N13::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N13::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N14" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N14::I%/s%" data-tchmi-left="693" data-tchmi-left-unit="px" data-tchmi-nodeid="N14" data-tchmi-nodetype="EP1008" data-tchmi-state="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N14::InfoData::State%/s%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="598" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N14.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 14
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N14::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N14::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N15" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N15::I%/s%" data-tchmi-left="36" data-tchmi-left-unit="px" data-tchmi-nodeid="N15" data-tchmi-nodetype="EP1008" data-tchmi-state="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N15::InfoData::State%/s%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="745" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N15.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 15
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N15::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N15::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N16" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N16::I%/s%" data-tchmi-left="364" data-tchmi-left-unit="px" data-tchmi-nodeid="N16" data-tchmi-nodetype="EP1008" data-tchmi-state="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N16::InfoData::State%/s%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="744" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N16.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 16
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N16::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N16::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N17" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N17::I%/s%" data-tchmi-left="693" data-tchmi-left-unit="px" data-tchmi-nodeid="N17" data-tchmi-nodetype="EP1008" data-tchmi-state="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N17::InfoData::State%/s%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="744" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N17.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 17
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N17::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N17::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N18" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N18::I%/s%" data-tchmi-left="36" data-tchmi-left-unit="px" data-tchmi-nodeid="N18" data-tchmi-nodetype="EP1008" data-tchmi-state="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N18::InfoData::State%/s%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="892" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N18.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 18
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N18::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N18::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N19" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N19::I%/s%" data-tchmi-left="364" data-tchmi-left-unit="px" data-tchmi-nodeid="N19" data-tchmi-nodetype="EP1008" data-tchmi-state="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N19::InfoData::State%/s%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="892" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N19.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 19
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N19::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N19::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N20" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N20::I%/s%" data-tchmi-left="693" data-tchmi-left-unit="px" data-tchmi-nodeid="N20" data-tchmi-nodetype="EP1008" data-tchmi-state="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N20::InfoData::State%/s%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="892" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N20.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 20
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N20::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N20::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N21" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N21::I%/s%" data-tchmi-left="36" data-tchmi-left-unit="px" data-tchmi-nodeid="N21" data-tchmi-nodetype="EP1008" data-tchmi-state="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N21::InfoData::State%/s%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="1039" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N21.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 21
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N21::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N21::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N22" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N22::I%/s%" data-tchmi-left="364" data-tchmi-left-unit="px" data-tchmi-nodeid="N22" data-tchmi-nodetype="EP1008" data-tchmi-state="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N22::InfoData::State%/s%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="1039" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N22.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 22
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N22::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N22::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N23" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="0" data-tchmi-left="693" data-tchmi-left-unit="px" data-tchmi-nodeid="N23" data-tchmi-nodetype="EP1008" data-tchmi-state="0" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="1039" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N23.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 23
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N23::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N23::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N24" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="0" data-tchmi-left="36" data-tchmi-left-unit="px" data-tchmi-nodeid="N24" data-tchmi-nodetype="EP1008" data-tchmi-state="0" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="1186" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N24.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 24
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N24::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N24::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N25" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="0" data-tchmi-left="364" data-tchmi-left-unit="px" data-tchmi-nodeid="N25" data-tchmi-nodetype="EP1008" data-tchmi-state="0" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="1186" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N25.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 25
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N25::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N25::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N26" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="0" data-tchmi-left="693" data-tchmi-left-unit="px" data-tchmi-nodeid="N26" data-tchmi-nodetype="EP1008" data-tchmi-state="0" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="1186" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N26.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 26
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N26::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N26::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N27" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="0" data-tchmi-left="36" data-tchmi-left-unit="px" data-tchmi-nodeid="N27" data-tchmi-nodetype="EP1008" data-tchmi-state="0" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="1333" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N27.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 27
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N27::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N27::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N28" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="0" data-tchmi-left="364" data-tchmi-left-unit="px" data-tchmi-nodeid="N28" data-tchmi-nodetype="EP1008" data-tchmi-state="0" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="1333" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N28.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 28
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N28::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N28::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N29" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="0" data-tchmi-left="693" data-tchmi-left-unit="px" data-tchmi-nodeid="N29" data-tchmi-nodetype="EP1008" data-tchmi-state="0" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="1333" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N29.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 29
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N29::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N29::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N30" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N30::Q%/s%" data-tchmi-left="36" data-tchmi-left-unit="px" data-tchmi-nodeid="N30" data-tchmi-nodetype="EP2028" data-tchmi-state="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N30_STAT::InfoData::State%/s%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="1480" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N30.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Output_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 1
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N30::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N30::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 24
+                },
+                "compareOperator": ">=",
+                "logic": null
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 26
+                },
+                "compareOperator": "<=",
+                "logic": "AND"
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N30::Top%/ctrl%",
+                "value": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "%ctrl%Fix06_N27::Top%/ctrl%+147"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 21
+                },
+                "compareOperator": ">=",
+                "logic": null
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 23
+                },
+                "compareOperator": "<=",
+                "logic": "AND"
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N30::Top%/ctrl%",
+                "value": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "%ctrl%Fix06_N21::Top%/ctrl%+147"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 18
+                },
+                "compareOperator": ">=",
+                "logic": null
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 20
+                },
+                "compareOperator": "<=",
+                "logic": "AND"
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N30::Top%/ctrl%",
+                "value": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "%ctrl%Fix06_N18::Top%/ctrl%+147"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 15
+                },
+                "compareOperator": ">=",
+                "logic": null
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 17
+                },
+                "compareOperator": "<=",
+                "logic": "AND"
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N30::Top%/ctrl%",
+                "value": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "%ctrl%Fix06_N15::Top%/ctrl%+147"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 12
+                },
+                "compareOperator": ">=",
+                "logic": null
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 14
+                },
+                "compareOperator": "<=",
+                "logic": "AND"
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N30::Top%/ctrl%",
+                "value": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "%ctrl%Fix06_N12::Top%/ctrl%+147"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 9
+                },
+                "compareOperator": ">=",
+                "logic": null
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 11
+                },
+                "compareOperator": "<=",
+                "logic": "AND"
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N30::Top%/ctrl%",
+                "value": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "%ctrl%Fix06_N09::Top%/ctrl%+147"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 6
+                },
+                "compareOperator": ">=",
+                "logic": null
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 8
+                },
+                "compareOperator": "<=",
+                "logic": "AND"
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N30::Top%/ctrl%",
+                "value": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "%ctrl%Fix06_N06::Top%/ctrl%+147"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 3
+                },
+                "compareOperator": ">=",
+                "logic": null
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 5
+                },
+                "compareOperator": "<=",
+                "logic": "AND"
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N30::Top%/ctrl%",
+                "value": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "%ctrl%Fix06_N03::Top%/ctrl%+147"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Input_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 2
+                },
+                "compareOperator": "<=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N30::Top%/ctrl%",
+                "value": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "%ctrl%Fix06_N01::Top%/ctrl%+147"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N31" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="0" data-tchmi-left="364" data-tchmi-left-unit="px" data-tchmi-nodeid="N31" data-tchmi-nodetype="EP2028" data-tchmi-state="0" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="%f%%ctrl%Fix06_N30::Top%/ctrl%%/f%" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N31.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Output_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 2
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N31::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N31::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N32" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="0" data-tchmi-left="693" data-tchmi-left-unit="px" data-tchmi-nodeid="N32" data-tchmi-nodetype="EP2028" data-tchmi-state="0" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="%f%%ctrl%Fix06_N30::Top%/ctrl%%/f%" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N32.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Output_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 3
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N32::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N32::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N33" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="0" data-tchmi-left="36" data-tchmi-left-unit="px" data-tchmi-nodeid="N33" data-tchmi-nodetype="EP2028" data-tchmi-state="0" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="%f%%ctrl%Fix06_N30::Top%/ctrl%+147%/f%" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N33.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Output_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 4
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N33::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N33::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N34" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="100" data-tchmi-height-unit="px" data-tchmi-iobyte="0" data-tchmi-left="364" data-tchmi-left-unit="px" data-tchmi-nodeid="N34" data-tchmi-nodetype="EP2028" data-tchmi-state="0" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EPxx08.usercontrol" data-tchmi-top="%f%%ctrl%Fix06_N33::Top%/ctrl%%/f%" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N34.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Output_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 5
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N34::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N34::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N70" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="98" data-tchmi-height-unit="px" data-tchmi-left="36" data-tchmi-left-unit="px" data-tchmi-nodeid="N70" data-tchmi-nodetype="EP3174" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EP3174.usercontrol" data-tchmi-top="1774" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true" data-tchmi-udt_ep3174_0002="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N70%/s%">
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N70.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Analog_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 1
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N70::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N70::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "symbolExpression": "%ctrl%Fix06_N30::Visibility%/ctrl%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "compareOperator": "==",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "Condition",
+                "active": true,
+                "parts": [
+                  {
+                    "if": [
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:framework#/definitions/Visibility",
+                          "symbolExpression": "%ctrl%Fix06_N33::Visibility%/ctrl%"
+                        },
+                        "compare2": {
+                          "objectType": "StaticValue",
+                          "valueType": "tchmi:framework#/definitions/Visibility",
+                          "value": "Hidden"
+                        },
+                        "compareOperator": "==",
+                        "logic": null
+                      }
+                    ],
+                    "then": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%ctrl%Fix06_N70::Top%/ctrl%",
+                        "value": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "%ctrl%Fix06_N30::Top%/ctrl%+147"
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  },
+                  {
+                    "else": []
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N70::Top%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%ctrl%Fix06_N30::Top%/ctrl%"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  },
+  {
+    "event": "%i%Pulse_500ms%/i%",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%ctrl%Fix06_N30::Visibility%/ctrl%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "compareOperator": "==",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "Condition",
+                "active": true,
+                "parts": [
+                  {
+                    "if": [
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%ctrl%Fix06_N33::Visibility%/ctrl%"
+                        },
+                        "compare2": {
+                          "objectType": "StaticValue",
+                          "valueType": "tchmi:framework#/definitions/Visibility",
+                          "value": "Hidden"
+                        },
+                        "compareOperator": "==",
+                        "logic": null
+                      }
+                    ],
+                    "then": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%ctrl%Fix06_N70::Top%/ctrl%",
+                        "value": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "%ctrl%Fix06_N30::Top%/ctrl% +147"
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  },
+                  {
+                    "else": []
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N70::Top%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%ctrl%Fix06_N30::Top%/ctrl%"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N71" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="98" data-tchmi-height-unit="px" data-tchmi-left="364" data-tchmi-left-unit="px" data-tchmi-nodeid="N71" data-tchmi-nodetype="EP3174" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EP3174.usercontrol" data-tchmi-top="%f%%ctrl%Fix06_N70::Top%/ctrl%%/f%" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+<script data-tchmi-target-attribute="data-tchmi-udt_ep3174_0002" type="application/json">
+{
+  "CH1": 0,
+  "CH2": 0,
+  "CH3": 0,
+  "CH4": 0,
+  "InfoData": {
+    "State": 0
+  }
+}
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N71.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Analog_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 2
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N71::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N71::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N72" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="98" data-tchmi-height-unit="px" data-tchmi-left="693" data-tchmi-left-unit="px" data-tchmi-nodeid="N72" data-tchmi-nodetype="EP3174" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EP3174.usercontrol" data-tchmi-top="%f%%ctrl%Fix06_N70::Top%/ctrl%%/f%" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+<script data-tchmi-target-attribute="data-tchmi-udt_ep3174_0002" type="application/json">
+{
+  "CH1": 0,
+  "CH2": 0,
+  "CH3": 0,
+  "CH4": 0,
+  "InfoData": {
+    "State": 0
+  }
+}
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N72.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Analog_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 3
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N72::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N72::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N73" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="98" data-tchmi-height-unit="px" data-tchmi-left="36" data-tchmi-left-unit="px" data-tchmi-nodeid="N73" data-tchmi-nodetype="EP3174" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EP3174.usercontrol" data-tchmi-top="%f%%ctrl%Fix06_N70::Top%/ctrl%+147%/f%" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+<script data-tchmi-target-attribute="data-tchmi-udt_ep3174_0002" type="application/json">
+{
+  "CH1": 0,
+  "CH2": 0,
+  "CH3": 0,
+  "CH4": 0,
+  "InfoData": {
+    "State": 0
+  }
+}
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N73.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Output_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 4
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N73::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N73::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N74" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="98" data-tchmi-height-unit="px" data-tchmi-left="364" data-tchmi-left-unit="px" data-tchmi-nodeid="N74" data-tchmi-nodetype="EP3174" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_EP3174.usercontrol" data-tchmi-top="%ctrl%Fix06_N73::Top%/ctrl%" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+<script data-tchmi-target-attribute="data-tchmi-udt_ep3174_0002" type="application/json">
+{
+  "CH1": 0,
+  "CH2": 0,
+  "CH3": 0,
+  "CH4": 0,
+  "InfoData": {
+    "State": 0
+  }
+}
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N74.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::Analog_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 5
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N74::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N74::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N100" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="116" data-tchmi-height-unit="px" data-tchmi-iodint="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N100::Q%/s%" data-tchmi-left="36" data-tchmi-left-unit="px" data-tchmi-nodeid="N100" data-tchmi-state="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N100_STAT::InfoData::State%/s%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_SMCValveBank.usercontrol" data-tchmi-top="2068" data-tchmi-top-unit="px" data-tchmi-width="464" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N100.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::VB_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 1
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N100::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N100::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  },
+  {
+    "event": "%i%Pulse_500ms%/i%",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "symbolExpression": "%ctrl%Fix06_N70::Visibility%/ctrl%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "compareOperator": "==",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "Condition",
+                "active": true,
+                "parts": [
+                  {
+                    "if": [
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:framework#/definitions/Visibility",
+                          "symbolExpression": "%ctrl%Fix06_N73::Visibility%/ctrl%"
+                        },
+                        "compare2": {
+                          "objectType": "StaticValue",
+                          "valueType": "tchmi:framework#/definitions/Visibility",
+                          "value": "Hidden"
+                        },
+                        "compareOperator": "==",
+                        "logic": null
+                      }
+                    ],
+                    "then": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%ctrl%Fix06_N100::Top%/ctrl%",
+                        "value": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "%ctrl%Fix06_N70::Top%/ctrl% +147"
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  },
+                  {
+                    "else": []
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N100::Top%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%ctrl%Fix06_N70::Top%/ctrl%"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N101" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="116" data-tchmi-height-unit="px" data-tchmi-iodint="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N101::Q%/s%" data-tchmi-left="36" data-tchmi-left-unit="px" data-tchmi-nodeid="N101" data-tchmi-state="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N101_STAT::InfoData::State%/s%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_SMCValveBank.usercontrol" data-tchmi-top="%f%%ctrl%Fix06_N100::Top%/ctrl%+ 163%/f%" data-tchmi-top-unit="px" data-tchmi-width="464" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N101.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::VB_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 2
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N101::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N101::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fix06_N102" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="Fix06" data-tchmi-height="116" data-tchmi-height-unit="px" data-tchmi-iodint="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N102::Q%/s%" data-tchmi-left="36" data-tchmi-left-unit="px" data-tchmi-nodeid="N102" data-tchmi-state="%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::N102_STAT::InfoData::State%/s%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_SMCValveBank.usercontrol" data-tchmi-top="%f%%ctrl%Fix06_N100::Top%/ctrl%+ 326%/f%" data-tchmi-top-unit="px" data-tchmi-width="464" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix06_N102.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::VB_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 3
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N102::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N102::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  },
+  {
+    "event": "Fix06_N102.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "symbolExpression": "%s%PLC1..Out_To_ICxx::Fix06_Discrete_Image::VB_Node_Count%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/UDINT",
+                  "value": 3
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N102::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_N102::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "%i%Pulse_500ms%/i%",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "%ctrl%Fix06_N102::Top%/ctrl%+%ctrl%Fix06_N102::Height%/ctrl%+25"
+                },
+                "compare2": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "640"
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_-_EcatSlaves_1::Height%/ctrl%",
+                "value": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "%ctrl%Fix06_N102::Top%/ctrl%+%ctrl%Fix06_N102::Height%/ctrl%+25"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fix06_-_EcatSlaves_1::Height%/ctrl%",
+                "value": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "640"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>

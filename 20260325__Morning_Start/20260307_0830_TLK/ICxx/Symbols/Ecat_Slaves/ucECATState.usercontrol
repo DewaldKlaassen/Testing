@@ -1,0 +1,1245 @@
+<div id="ucECATState" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControl" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="52" data-tchmi-height="150" data-tchmi-width-unit="px" data-tchmi-height-unit="px" data-tchmi-creator-viewport-width="500" data-tchmi-creator-viewport-height="500" data-tchmi-is-enabled="true" data-tchmi-width-mode="Content" data-tchmi-height-mode="Value" data-tchmi-visibility="%f%if (%pp%Node%/pp% != &quot;&quot;){&quot;Visible&quot;}  else  {&quot;Collapsed&quot;}%/f%" data-tchmi-creator-visibility="Visible">
+<div id="NodeImage" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiImage" data-tchmi-height="120" data-tchmi-height-unit="px" data-tchmi-left="%f%%ctrl%TcHmiPolyline::RenderedLeft%/ctrl% + %ctrl%TcHmiPolyline::RenderedWidth%/ctrl% -17%/f%" data-tchmi-left-unit="px" data-tchmi-top="25" data-tchmi-top-unit="px" data-tchmi-width="35" data-tchmi-width-unit="px" data-tchmi-is-enabled="true" data-tchmi-width-mode="Content" data-tchmi-creator-visibility="Visible" data-tchmi-src="%f%TcHmi.Functions.ICxx.GTAC_ReturnEPImage(%pp%NodeModel%/pp%)%/f%">
+
+
+</div>
+<div id="TcHmiPolyline_1" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiPolyline" data-tchmi-height="111" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-scale-mode="None" data-tchmi-top="34" data-tchmi-top-unit="px" data-tchmi-is-enabled="true" data-tchmi-fill-mode="NonZero" data-tchmi-right="169" data-tchmi-stroke-thickness="2" data-tchmi-width="%f%%ctrl%ucECATState::RenderedWidth%/ctrl%%/f%" data-tchmi-visibility="%f%if ((%ctrl%NodeImage::Src%/ctrl%== &quot;Images/GTAC/Icons/EX260.png&quot;) && (%pp%NextNode%/pp%!=&quot;&quot;)){&quot;Visible&quot;} else {&quot;Collapsed&quot;}%/f%" data-tchmi-zindex="3" data-tchmi-creator-visibility="Visible">
+<script data-tchmi-target-attribute="data-tchmi-stroke-color" type="application/json">
+{
+  "color": "rgba(0, 255, 0, 1)"
+}
+</script>
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "%i%Pulse_500ms%/i%",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/BOOL",
+                  "symbolExpression": "%pp%NextCableBreak%/pp%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/BOOL",
+                  "value": true
+                },
+                "compareOperator": "==",
+                "logic": null
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/Boolean",
+                  "symbolExpression": "%i%Pulse_500ms%/i%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/Boolean",
+                  "value": true
+                },
+                "compareOperator": "==",
+                "logic": "AND"
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%TcHmiPolyline_1::StrokeColor%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/SolidColor",
+                  "value": {
+                    "color": "rgba(255, 0, 0, 1)"
+                  }
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%TcHmiPolyline_1::StrokeColor%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/SolidColor",
+                  "value": {
+                    "color": "rgba(0, 255, 0, 1)"
+                  }
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  },
+  {
+    "event": "TcHmiPolyline_1.onAttached",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%TcHmiPolyline_1::Points%/ctrl%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%f%\"30,104 30,108, \"+%ctrl%ucECATState::RenderedWidth%/ctrl%+\",108\"%/f%"
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="TcHmiPolyline_3" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiPolyline" data-tchmi-height="111" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-scale-mode="None" data-tchmi-top="34" data-tchmi-top-unit="px" data-tchmi-is-enabled="true" data-tchmi-fill-mode="NonZero" data-tchmi-right="169" data-tchmi-stroke-thickness="4" data-tchmi-width="%f%%ctrl%ucECATState::RenderedWidth%/ctrl%%/f%" data-tchmi-visibility="%ctrl%TcHmiPolyline_1::Visibility%/ctrl%" data-tchmi-creator-visibility="Visible">
+<script data-tchmi-target-attribute="data-tchmi-stroke-color" type="application/json">
+{
+  "color": "rgba(0, 118, 0, 1)"
+}
+</script>
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "TcHmiPolyline_3.onAttached",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%TcHmiPolyline_3::Points%/ctrl%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%f%\"30,104 30,108, \"+%ctrl%ucECATState::RenderedWidth%/ctrl%+\",108\"%/f%"
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+
+
+<div id="TcHmiPolyline" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiPolyline" data-tchmi-height="111" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-points="%pp%CablePath%/pp%" data-tchmi-scale-mode="None" data-tchmi-top="34" data-tchmi-top-unit="px" data-tchmi-width="30" data-tchmi-width-unit="px" data-tchmi-is-enabled="true" data-tchmi-fill-mode="NonZero" data-tchmi-right="159" data-tchmi-stroke-thickness="2" data-tchmi-zindex="2" data-tchmi-creator-visibility="Visible">
+
+<script data-tchmi-target-attribute="data-tchmi-stroke-color" type="application/json">
+{
+  "color": "rgba(0, 255, 0, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "%i%Pulse_500ms%/i%",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/BOOL",
+                  "symbolExpression": "%pp%CableBreak%/pp%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/BOOL",
+                  "value": true
+                },
+                "compareOperator": "==",
+                "logic": null
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/Boolean",
+                  "symbolExpression": "%i%Pulse_500ms%/i%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/Boolean",
+                  "value": true
+                },
+                "compareOperator": "==",
+                "logic": "AND"
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%TcHmiPolyline::StrokeColor%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/SolidColor",
+                  "value": {
+                    "color": "rgba(255, 0, 0, 1)"
+                  }
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%TcHmiPolyline::StrokeColor%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/SolidColor",
+                  "value": {
+                    "color": "rgba(0, 255, 0, 1)"
+                  }
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  },
+  {
+    "event": "TcHmiPolyline.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%NodeModel%/pp%"
+                },
+                "compare2": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "\"EP1008\""
+                },
+                "compareOperator": "==",
+                "logic": null
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%NodeModel%/pp%"
+                },
+                "compare2": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "\"EP2008\""
+                },
+                "compareOperator": "==",
+                "logic": "OR"
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%NodeModel%/pp%"
+                },
+                "compare2": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "\"EP1111\""
+                },
+                "compareOperator": "==",
+                "logic": "OR"
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%NodeModel%/pp%"
+                },
+                "compare2": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "\"EP6224\""
+                },
+                "compareOperator": "==",
+                "logic": "OR"
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%NodeModel%/pp%"
+                },
+                "compare2": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%\"EP2028\"%/f%"
+                },
+                "compareOperator": "==",
+                "logic": "OR"
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%NodeModel%/pp%"
+                },
+                "compare2": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%\"EP3174\"%/f%"
+                },
+                "compareOperator": "==",
+                "logic": "OR"
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%NodeModel%/pp%"
+                },
+                "compare2": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%\"EP9224\"%/f%"
+                },
+                "compareOperator": "==",
+                "logic": "OR"
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%NodeModel%/pp%"
+                },
+                "compare2": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%\"EP2338\"%/f%"
+                },
+                "compareOperator": "==",
+                "logic": "OR"
+              }
+            ],
+            "then": [
+              {
+                "objectType": "Condition",
+                "active": true,
+                "parts": [
+                  {
+                    "if": [
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "\"EP1008\""
+                        },
+                        "compareOperator": "==",
+                        "logic": null
+                      },
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "\"EP2008\""
+                        },
+                        "compareOperator": "==",
+                        "logic": "OR"
+                      },
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "\"EP6224\""
+                        },
+                        "compareOperator": "==",
+                        "logic": "OR"
+                      },
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "\"EP1111\""
+                        },
+                        "compareOperator": "==",
+                        "logic": "OR"
+                      },
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%f%\"EP2028\"%/f%"
+                        },
+                        "compareOperator": "==",
+                        "logic": "OR"
+                      },
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%f%\"EP3174\"%/f%"
+                        },
+                        "compareOperator": "==",
+                        "logic": "OR"
+                      },
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%f%\"EP9224\"%/f%"
+                        },
+                        "compareOperator": "==",
+                        "logic": "OR"
+                      },
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%f%\"EP2338\"%/f%"
+                        },
+                        "compareOperator": "==",
+                        "logic": "OR"
+                      }
+                    ],
+                    "then": [
+                      {
+                        "objectType": "Condition",
+                        "active": true,
+                        "parts": [
+                          {
+                            "if": [
+                              {
+                                "compare1": {
+                                  "objectType": "Symbol",
+                                  "valueType": "tchmi:general#/definitions/String",
+                                  "symbolExpression": "%pp%NodeModel%/pp%"
+                                },
+                                "compare2": {
+                                  "objectType": "FunctionExpression",
+                                  "functionExpression": "\"EP6224\""
+                                },
+                                "compareOperator": "==",
+                                "logic": null
+                              }
+                            ],
+                            "then": [
+                              {
+                                "objectType": "WriteToSymbol",
+                                "active": true,
+                                "symbolExpression": "%pp%CablePath%/pp%",
+                                "value": {
+                                  "objectType": "FunctionExpression",
+                                  "functionExpression": "\"0,2.5 40,2.5\""
+                                },
+                                "asyncWait": true
+                              }
+                            ]
+                          },
+                          {
+                            "else": [
+                              {
+                                "objectType": "WriteToSymbol",
+                                "active": true,
+                                "symbolExpression": "%pp%CablePath%/pp%",
+                                "value": {
+                                  "objectType": "FunctionExpression",
+                                  "functionExpression": "\"0,2.5 20,2.5\""
+                                },
+                                "asyncWait": true
+                              }
+                            ]
+                          }
+                        ],
+                        "asyncWait": true
+                      }
+                    ]
+                  },
+                  {
+                    "else": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%pp%CablePath%/pp%",
+                        "value": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "\"-100,108 10,108 10,2.5 20,2.5\""
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "elseif": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%NodeModel%/pp%"
+                },
+                "compare2": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "\"EX260-\""
+                },
+                "compareOperator": "==",
+                "logic": null
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%NodeModel%/pp%"
+                },
+                "compare2": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "\"CTEU-E\""
+                },
+                "compareOperator": "==",
+                "logic": "OR"
+              }
+            ],
+            "then": [
+              {
+                "objectType": "Condition",
+                "active": true,
+                "parts": [
+                  {
+                    "if": [
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "\"EP1008\""
+                        },
+                        "compareOperator": "==",
+                        "logic": null
+                      },
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "\"EP2008\""
+                        },
+                        "compareOperator": "==",
+                        "logic": "OR"
+                      },
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "\"EP6224\""
+                        },
+                        "compareOperator": "==",
+                        "logic": "OR"
+                      },
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "\"EP1111\""
+                        },
+                        "compareOperator": "==",
+                        "logic": "OR"
+                      },
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%f%\"EP2028\"%/f%"
+                        },
+                        "compareOperator": "==",
+                        "logic": "OR"
+                      },
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%f%\"EP3174\"%/f%"
+                        },
+                        "compareOperator": "==",
+                        "logic": "OR"
+                      },
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%f%\"EP9224\"%/f%"
+                        },
+                        "compareOperator": "==",
+                        "logic": "OR"
+                      },
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%f%\"EP2338\"%/f%"
+                        },
+                        "compareOperator": "==",
+                        "logic": "OR"
+                      }
+                    ],
+                    "then": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%pp%CablePath%/pp%",
+                        "value": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "\"0,2.5 11,2.5 11,108 20,108 20,104\""
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  },
+                  {
+                    "else": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%pp%CablePath%/pp%",
+                        "value": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "\"0,108 20,108 20,104\""
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  },
+  {
+    "event": "%pp%NodeModel%/pp%",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%NodeModel%/pp%"
+                },
+                "compare2": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "\"EP1008\""
+                },
+                "compareOperator": "==",
+                "logic": null
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%NodeModel%/pp%"
+                },
+                "compare2": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "\"EP2008\""
+                },
+                "compareOperator": "==",
+                "logic": "OR"
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%NodeModel%/pp%"
+                },
+                "compare2": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "\"EP1111\""
+                },
+                "compareOperator": "==",
+                "logic": "OR"
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%NodeModel%/pp%"
+                },
+                "compare2": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "\"EP6224\""
+                },
+                "compareOperator": "==",
+                "logic": "OR"
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%NodeModel%/pp%"
+                },
+                "compare2": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%\"EP2028\"%/f%"
+                },
+                "compareOperator": "==",
+                "logic": "OR"
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%NodeModel%/pp%"
+                },
+                "compare2": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%\"EP3174\"%/f%"
+                },
+                "compareOperator": "==",
+                "logic": "OR"
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%NodeModel%/pp%"
+                },
+                "compare2": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%\"EP9224\"%/f%"
+                },
+                "compareOperator": "==",
+                "logic": "OR"
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%NodeModel%/pp%"
+                },
+                "compare2": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%\"EP2338\"%/f%"
+                },
+                "compareOperator": "==",
+                "logic": "OR"
+              }
+            ],
+            "then": [
+              {
+                "objectType": "Condition",
+                "active": true,
+                "parts": [
+                  {
+                    "if": [
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "\"EP1008\""
+                        },
+                        "compareOperator": "==",
+                        "logic": null
+                      },
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "\"EP2008\""
+                        },
+                        "compareOperator": "==",
+                        "logic": "OR"
+                      },
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "\"EP6224\""
+                        },
+                        "compareOperator": "==",
+                        "logic": "OR"
+                      },
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "\"EP1111\""
+                        },
+                        "compareOperator": "==",
+                        "logic": "OR"
+                      },
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%f%\"EP2028\"%/f%"
+                        },
+                        "compareOperator": "==",
+                        "logic": "OR"
+                      },
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%f%\"EP3174\"%/f%"
+                        },
+                        "compareOperator": "==",
+                        "logic": "OR"
+                      },
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%f%\"EP9224\"%/f%"
+                        },
+                        "compareOperator": "==",
+                        "logic": "OR"
+                      },
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%f%\"EP2338\"%/f%"
+                        },
+                        "compareOperator": "==",
+                        "logic": "OR"
+                      }
+                    ],
+                    "then": [
+                      {
+                        "objectType": "Condition",
+                        "active": true,
+                        "parts": [
+                          {
+                            "if": [
+                              {
+                                "compare1": {
+                                  "objectType": "Symbol",
+                                  "valueType": "tchmi:general#/definitions/String",
+                                  "symbolExpression": "%pp%NodeModel%/pp%"
+                                },
+                                "compare2": {
+                                  "objectType": "FunctionExpression",
+                                  "functionExpression": "\"EP6224\""
+                                },
+                                "compareOperator": "==",
+                                "logic": null
+                              }
+                            ],
+                            "then": [
+                              {
+                                "objectType": "WriteToSymbol",
+                                "active": true,
+                                "symbolExpression": "%pp%CablePath%/pp%",
+                                "value": {
+                                  "objectType": "FunctionExpression",
+                                  "functionExpression": "\"0,2.5 40,2.5\""
+                                },
+                                "asyncWait": true
+                              }
+                            ]
+                          },
+                          {
+                            "else": [
+                              {
+                                "objectType": "WriteToSymbol",
+                                "active": true,
+                                "symbolExpression": "%pp%CablePath%/pp%",
+                                "value": {
+                                  "objectType": "FunctionExpression",
+                                  "functionExpression": "\"0,2.5 20,2.5\""
+                                },
+                                "asyncWait": true
+                              }
+                            ]
+                          }
+                        ],
+                        "asyncWait": true
+                      }
+                    ]
+                  },
+                  {
+                    "else": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%pp%CablePath%/pp%",
+                        "value": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "\"-100,108 10,108 10,2.5 20,2.5\""
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "elseif": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%NodeModel%/pp%"
+                },
+                "compare2": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "\"EX260-\""
+                },
+                "compareOperator": "==",
+                "logic": null
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%NodeModel%/pp%"
+                },
+                "compare2": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "\"CTEU-E\""
+                },
+                "compareOperator": "==",
+                "logic": "OR"
+              }
+            ],
+            "then": [
+              {
+                "objectType": "Condition",
+                "active": true,
+                "parts": [
+                  {
+                    "if": [
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "\"EP1008\""
+                        },
+                        "compareOperator": "==",
+                        "logic": null
+                      },
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "\"EP2008\""
+                        },
+                        "compareOperator": "==",
+                        "logic": "OR"
+                      },
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "\"EP6224\""
+                        },
+                        "compareOperator": "==",
+                        "logic": "OR"
+                      },
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "\"EP1111\""
+                        },
+                        "compareOperator": "==",
+                        "logic": "OR"
+                      },
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%f%\"EP2028\"%/f%"
+                        },
+                        "compareOperator": "==",
+                        "logic": "OR"
+                      },
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%f%\"EP3174\"%/f%"
+                        },
+                        "compareOperator": "==",
+                        "logic": "OR"
+                      },
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%f%\"EP9224\"%/f%"
+                        },
+                        "compareOperator": "==",
+                        "logic": "OR"
+                      },
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%PreviousNodeModel%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%f%\"EP2338\"%/f%"
+                        },
+                        "compareOperator": "==",
+                        "logic": "OR"
+                      }
+                    ],
+                    "then": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%pp%CablePath%/pp%",
+                        "value": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "\"0,2.5 11,2.5 11,108 20,108 20,104\""
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  },
+                  {
+                    "else": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%pp%CablePath%/pp%",
+                        "value": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "\"0,108 20,108 20,104\""
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="TcHmiPolyline_2" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiPolyline" data-tchmi-height="111" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-points="%pp%CablePath%/pp%" data-tchmi-scale-mode="None" data-tchmi-top="34" data-tchmi-top-unit="px" data-tchmi-width="30" data-tchmi-width-unit="px" data-tchmi-is-enabled="true" data-tchmi-fill-mode="NonZero" data-tchmi-right="169" data-tchmi-stroke-thickness="4">
+<script data-tchmi-target-attribute="data-tchmi-stroke-color" type="application/json">
+{
+  "color": "rgba(0, 118, 0, 1)"
+}
+</script>
+
+
+</div>
+<div id="IndStatus" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="20" data-tchmi-height-unit="px" data-tchmi-ind_height="22" data-tchmi-ind_width="14" data-tchmi-left="%f%%ctrl%NodeImage::RenderedLeft%/ctrl%+ (%ctrl%NodeImage::RenderedWidth%/ctrl%)/2 - %ctrl%IndStatus::RenderedWidth%/ctrl%/2%/f%" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Indicator/uc_GTAC_Indicator.usercontrol" data-tchmi-top="0" data-tchmi-top-unit="px" data-tchmi-width="19" data-tchmi-width-unit="px" data-tchmi-is-enabled="true" data-tchmi-width-mode="Content" data-tchmi-height-mode="Content" data-tchmi-input="%pp%Status%/pp%">
+<script data-tchmi-target-attribute="data-tchmi-on_color" type="application/json">
+{
+  "color": "rgba(0, 255, 0, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-off_color" type="application/json">
+{
+  "color": "rgba(255, 0, 0, 1)"
+}
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-compare" type="application/json">
+8
+</script>
+
+
+
+
+</div>
+</div>

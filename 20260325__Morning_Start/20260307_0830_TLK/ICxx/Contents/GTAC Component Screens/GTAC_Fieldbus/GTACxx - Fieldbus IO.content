@@ -1,0 +1,2245 @@
+<div id="GTACxx_FieldbusIO_Content" data-tchmi-type="TcHmi.Controls.System.TcHmiContent" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="1024" data-tchmi-height="640" data-tchmi-zindex="2">
+
+<div id="Fieldbus_PrevArrow" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-text="<" data-tchmi-top="10" data-tchmi-top-unit="px" data-tchmi-width="50" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-text-font-size="58" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center" data-tchmi-creator-locked="True" data-tchmi-zindex="3" data-tchmi-ignore-escape-sequences="false">
+" data-tchmi-top="333" data-tchmi-top-unit="px" data-tchmi-width="50" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-text-font-size="58" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center">
+" data-tchmi-top="333" data-tchmi-top-unit="px" data-tchmi-width="50" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-text-font-size="58" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center">
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-class-names" type="application/json">
+[
+  "TextColour"
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fieldbus_PrevArrow.onPressed",
+    "actions": [
+      {
+        "objectType": "SwitchCase",
+        "active": true,
+        "compare": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%i%Component_Type%/i%"
+        },
+        "cases": [
+          {
+            "caseValue": {
+              "objectType": "StaticValue",
+              "valueType": "tchmi:general#/definitions/String",
+              "value": "R"
+            },
+            "actions": [
+              {
+                "objectType": "Condition",
+                "active": true,
+                "parts": [
+                  {
+                    "if": [
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/INT32",
+                          "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%"
+                        },
+                        "compare2": {
+                          "objectType": "StaticValue",
+                          "valueType": "tchmi:general#/definitions/INT16",
+                          "value": 0
+                        },
+                        "compareOperator": ">",
+                        "logic": null
+                      }
+                    ],
+                    "then": [
+                      {
+                        "objectType": "Condition",
+                        "active": true,
+                        "parts": [
+                          {
+                            "if": [
+                              {
+                                "compare1": {
+                                  "objectType": "Symbol",
+                                  "valueType": "tchmi:general#/definitions/INT32",
+                                  "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%"
+                                },
+                                "compare2": {
+                                  "objectType": "StaticValue",
+                                  "valueType": "tchmi:general#/definitions/INT32",
+                                  "value": 21
+                                },
+                                "compareOperator": "!=",
+                                "logic": null
+                              }
+                            ],
+                            "then": [
+                              {
+                                "objectType": "WriteToSymbol",
+                                "active": true,
+                                "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%",
+                                "value": {
+                                  "objectType": "FunctionExpression",
+                                  "functionExpression": "%i%GTACxx_FieldbusByteOffset%/i% - 4"
+                                },
+                                "asyncWait": true
+                              }
+                            ]
+                          },
+                          {
+                            "else": [
+                              {
+                                "objectType": "WriteToSymbol",
+                                "active": true,
+                                "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%",
+                                "value": {
+                                  "objectType": "FunctionExpression",
+                                  "functionExpression": "%i%GTACxx_FieldbusByteOffset%/i% - 1"
+                                },
+                                "asyncWait": true
+                              }
+                            ]
+                          }
+                        ],
+                        "asyncWait": true
+                      },
+                      {
+                        "objectType": "Condition",
+                        "active": true,
+                        "parts": [
+                          {
+                            "if": [
+                              {
+                                "compare1": {
+                                  "objectType": "Symbol",
+                                  "valueType": "tchmi:general#/definitions/INT32",
+                                  "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%"
+                                },
+                                "compare2": {
+                                  "objectType": "StaticValue",
+                                  "valueType": "tchmi:general#/definitions/INT32",
+                                  "value": 20
+                                },
+                                "compareOperator": "!=",
+                                "logic": null
+                              }
+                            ],
+                            "then": [
+                              {
+                                "objectType": "WriteToSymbol",
+                                "active": true,
+                                "symbolExpression": "%ctrl%TcHmiContainer_4::Visibility%/ctrl%",
+                                "value": {
+                                  "objectType": "StaticValue",
+                                  "valueType": "tchmi:framework#/definitions/Visibility",
+                                  "value": "Visible"
+                                },
+                                "asyncWait": true
+                              },
+                              {
+                                "objectType": "WriteToSymbol",
+                                "active": true,
+                                "symbolExpression": "%ctrl%TcHmiContainer_5::Visibility%/ctrl%",
+                                "value": {
+                                  "objectType": "StaticValue",
+                                  "valueType": "tchmi:framework#/definitions/Visibility",
+                                  "value": "Visible"
+                                },
+                                "asyncWait": true
+                              }
+                            ]
+                          },
+                          {
+                            "else": [
+                              {
+                                "objectType": "WriteToSymbol",
+                                "active": true,
+                                "symbolExpression": "%ctrl%TcHmiContainer_4::Visibility%/ctrl%",
+                                "value": {
+                                  "objectType": "StaticValue",
+                                  "valueType": "tchmi:framework#/definitions/Visibility",
+                                  "value": "Hidden"
+                                },
+                                "asyncWait": true
+                              },
+                              {
+                                "objectType": "WriteToSymbol",
+                                "active": true,
+                                "symbolExpression": "%ctrl%TcHmiContainer_5::Visibility%/ctrl%",
+                                "value": {
+                                  "objectType": "StaticValue",
+                                  "valueType": "tchmi:framework#/definitions/Visibility",
+                                  "value": "Hidden"
+                                },
+                                "asyncWait": true
+                              }
+                            ]
+                          }
+                        ],
+                        "asyncWait": true
+                      },
+                      {
+                        "objectType": "Condition",
+                        "active": true,
+                        "parts": [
+                          {
+                            "if": [
+                              {
+                                "compare1": {
+                                  "objectType": "Symbol",
+                                  "valueType": "tchmi:general#/definitions/INT32",
+                                  "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%"
+                                },
+                                "compare2": {
+                                  "objectType": "StaticValue",
+                                  "valueType": "tchmi:general#/definitions/INT32",
+                                  "value": 60
+                                },
+                                "compareOperator": "<",
+                                "logic": null
+                              }
+                            ],
+                            "then": [
+                              {
+                                "objectType": "WriteToSymbol",
+                                "active": true,
+                                "symbolExpression": "%ctrl%TcHmiContainer_6::Visibility%/ctrl%",
+                                "value": {
+                                  "objectType": "StaticValue",
+                                  "valueType": "tchmi:framework#/definitions/Visibility",
+                                  "value": "Visible"
+                                },
+                                "asyncWait": true
+                              }
+                            ]
+                          },
+                          {
+                            "else": [
+                              {
+                                "objectType": "WriteToSymbol",
+                                "active": true,
+                                "symbolExpression": "%ctrl%TcHmiContainer_6::Visibility%/ctrl%",
+                                "value": {
+                                  "objectType": "StaticValue",
+                                  "valueType": "tchmi:framework#/definitions/Visibility",
+                                  "value": "Hidden"
+                                },
+                                "asyncWait": true
+                              }
+                            ]
+                          }
+                        ],
+                        "asyncWait": true
+                      }
+                    ]
+                  },
+                  {
+                    "else": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%",
+                        "value": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%f%%i%GTACxx_FieldbusByteOffsetMax%/i%%/f%"
+                        },
+                        "asyncWait": true
+                      },
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%ctrl%TcHmiContainer_6::Visibility%/ctrl%",
+                        "value": {
+                          "objectType": "StaticValue",
+                          "valueType": "tchmi:framework#/definitions/Visibility",
+                          "value": "Hidden"
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "caseValue": {
+              "objectType": "StaticValue",
+              "valueType": "tchmi:general#/definitions/String",
+              "value": "ST"
+            },
+            "actions": [
+              {
+                "objectType": "Condition",
+                "active": true,
+                "parts": [
+                  {
+                    "if": [
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/INT32",
+                          "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%"
+                        },
+                        "compare2": {
+                          "objectType": "StaticValue",
+                          "valueType": "tchmi:general#/definitions/INT32",
+                          "value": 4
+                        },
+                        "compareOperator": "<",
+                        "logic": null
+                      }
+                    ],
+                    "then": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%",
+                        "value": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%f%%i%GTACxx_FieldbusByteOffsetMax%/i%%/f%"
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  },
+                  {
+                    "else": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%",
+                        "value": {
+                          "objectType": "StaticValue",
+                          "valueType": "tchmi:general#/definitions/INT32",
+                          "value": 0
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "caseValue": {
+              "objectType": "StaticValue",
+              "valueType": "tchmi:general#/definitions/String",
+              "value": "SL"
+            },
+            "actions": [
+              {
+                "objectType": "Condition",
+                "active": true,
+                "parts": [
+                  {
+                    "if": [
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/INT32",
+                          "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%"
+                        },
+                        "compare2": {
+                          "objectType": "StaticValue",
+                          "valueType": "tchmi:general#/definitions/INT32",
+                          "value": 0
+                        },
+                        "compareOperator": "==",
+                        "logic": null
+                      }
+                    ],
+                    "then": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%",
+                        "value": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%f%%i%GTACxx_FieldbusByteOffsetMax%/i%%/f%"
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  },
+                  {
+                    "else": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%",
+                        "value": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "%i%GTACxx_FieldbusByteOffset%/i% - 4"
+                        },
+                        "asyncWait": true
+                      },
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%ctrl%TcHmiContainer_4::Visibility%/ctrl%",
+                        "value": {
+                          "objectType": "StaticValue",
+                          "valueType": "tchmi:framework#/definitions/Visibility",
+                          "value": "Visible"
+                        },
+                        "asyncWait": true
+                      },
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%ctrl%TcHmiContainer_6::Visibility%/ctrl%",
+                        "value": {
+                          "objectType": "StaticValue",
+                          "valueType": "tchmi:framework#/definitions/Visibility",
+                          "value": "Visible"
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "caseValue": {
+              "objectType": "StaticValue",
+              "valueType": "tchmi:general#/definitions/String",
+              "value": "LSR"
+            },
+            "actions": [
+              {
+                "objectType": "Condition",
+                "active": true,
+                "parts": [
+                  {
+                    "if": [
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/INT32",
+                          "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%"
+                        },
+                        "compare2": {
+                          "objectType": "StaticValue",
+                          "valueType": "tchmi:general#/definitions/INT32",
+                          "value": 4
+                        },
+                        "compareOperator": "<",
+                        "logic": null
+                      }
+                    ],
+                    "then": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%",
+                        "value": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%f%%i%GTACxx_FieldbusByteOffsetMax%/i%%/f%"
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  },
+                  {
+                    "else": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%",
+                        "value": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%f%%i%GTACxx_FieldbusByteOffset%/i%- 4%/f%"
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "//Update all screen messages, see GTAC_FieldbusScreenHandler JS file",
+          "update_screen_messages();"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fieldbus_RxxFlowMeter_1" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="97" data-tchmi-height-unit="px" data-tchmi-left="70" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Rxx/Rxx_FlowMeter.usercontrol" data-tchmi-top="17" data-tchmi-top-unit="px" data-tchmi-width="174" data-tchmi-width-unit="px" data-tchmi-wsnumber="1" data-tchmi-robot_num="%i%RxxNumber%/i%" data-tchmi-zindex="2">
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "%i%Pulse_500ms%/i%",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%i%Component_Type%/i%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "R"
+                },
+                "compareOperator": "==",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "SwitchCase",
+                "active": true,
+                "compare": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::Robot[\"+%i%Component_Num%/i%+\"]::Options::WaterStand_Amount\")%/f%"
+                },
+                "cases": [
+                  {
+                    "caseValue": {
+                      "objectType": "StaticValue",
+                      "valueType": "tchmi:general#/definitions/String",
+                      "value": "0"
+                    },
+                    "actions": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%ctrl%Fieldbus_RxxFlowMeter_1::Visibility%/ctrl%",
+                        "value": {
+                          "objectType": "StaticValue",
+                          "valueType": "tchmi:framework#/definitions/Visibility",
+                          "value": "Collapsed"
+                        },
+                        "asyncWait": true
+                      },
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%ctrl%Fieldbus_RxxFlowMeter_2::Visibility%/ctrl%",
+                        "value": {
+                          "objectType": "StaticValue",
+                          "valueType": "tchmi:framework#/definitions/Visibility",
+                          "value": "Collapsed"
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  },
+                  {
+                    "caseValue": {
+                      "objectType": "StaticValue",
+                      "valueType": "tchmi:general#/definitions/String",
+                      "value": "1"
+                    },
+                    "actions": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%ctrl%Fieldbus_RxxFlowMeter_1::Visibility%/ctrl%",
+                        "value": {
+                          "objectType": "StaticValue",
+                          "valueType": "tchmi:framework#/definitions/Visibility",
+                          "value": "Visible"
+                        },
+                        "asyncWait": true
+                      },
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%ctrl%Fieldbus_RxxFlowMeter_2::Visibility%/ctrl%",
+                        "value": {
+                          "objectType": "StaticValue",
+                          "valueType": "tchmi:framework#/definitions/Visibility",
+                          "value": "Collapsed"
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  },
+                  {
+                    "caseValue": {
+                      "objectType": "StaticValue",
+                      "valueType": "tchmi:general#/definitions/String",
+                      "value": "2"
+                    },
+                    "actions": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%ctrl%Fieldbus_RxxFlowMeter_1::Visibility%/ctrl%",
+                        "value": {
+                          "objectType": "StaticValue",
+                          "valueType": "tchmi:framework#/definitions/Visibility",
+                          "value": "Visible"
+                        },
+                        "asyncWait": true
+                      },
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%ctrl%Fieldbus_RxxFlowMeter_2::Visibility%/ctrl%",
+                        "value": {
+                          "objectType": "StaticValue",
+                          "valueType": "tchmi:framework#/definitions/Visibility",
+                          "value": "Visible"
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fieldbus_RxxFlowMeter_1::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Collapsed"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fieldbus_RxxFlowMeter_2::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Collapsed"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fieldbus_RxxFlowMeter_2" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="97" data-tchmi-height-unit="px" data-tchmi-left="247" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Rxx/Rxx_FlowMeter.usercontrol" data-tchmi-top="17" data-tchmi-top-unit="px" data-tchmi-width="174" data-tchmi-width-unit="px" data-tchmi-wsnumber="2" data-tchmi-robot_num="%i%RxxNumber%/i%" data-tchmi-zindex="2">
+
+
+</div>
+<div id="Fieldbus_RobotType_Banner" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="30" data-tchmi-height-unit="px" data-tchmi-left="436" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/SmartMessages/uc_SmartMessage_v2.usercontrol" data-tchmi-tb_height="28" data-tchmi-tb_width="200" data-tchmi-top="17" data-tchmi-top-unit="px" data-tchmi-width="208" data-tchmi-width-unit="px" data-tchmi-zindex="3">
+<script data-tchmi-target-attribute="data-tchmi-text_color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-message_objects" type="application/json">
+{
+  "message_obj_000": {},
+  "message_obj_001": {
+    "flash": false,
+    "message": "SPARE"
+  },
+  "message_obj_002": {
+    "flash": false,
+    "message": "SPARE"
+  },
+  "message_obj_010": {
+    "flash": false,
+    "message": "SPARE"
+  },
+  "message_obj_020": {
+    "flash": false,
+    "message": "MOTOMAN"
+  },
+  "message_obj_030": {
+    "flash": false,
+    "message": "MOTOMAN DX"
+  },
+  "message_obj_031": {
+    "flash": false,
+    "message": "MOTOMAN DX"
+  },
+  "message_obj_040": {
+    "flash": false,
+    "message": "MOTOMAN"
+  },
+  "message_obj_051": {
+    "flash": false,
+    "message": "KUKA (non KRC4)"
+  },
+  "message_obj_060": {
+    "flash": false,
+    "message": "KUKA KRC4"
+  },
+  "message_obj_061": {
+    "flash": false,
+    "message": "KUKA KRC4"
+  },
+  "message_obj_062": {
+    "flash": false,
+    "message": "KUKA KRC4 Small"
+  },
+  "message_obj_063": {
+    "flash": false,
+    "message": "KUKA KRC4 Tool Change"
+  },
+  "message_obj_064": {
+    "flash": false,
+    "message": "KUKA KRC4 AGILUS"
+  },
+  "message_obj_065": {
+    "flash": false,
+    "message": "KUKA KRC4"
+  },
+  "message_obj_066": {
+    "flash": false,
+    "message": "KUKA KRC4"
+  },
+  "message_obj_067": {
+    "flash": false,
+    "message": "KUKA KRC4"
+  },
+  "message_obj_068": {
+    "flash": false,
+    "message": "KUKA KRC4"
+  },
+  "message_obj_069": {
+    "flash": false,
+    "message": "KUKA KRC4 Turn Table"
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fieldbus_RobotType_Banner.onAttached",
+    "actions": [
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Bind",
+        "fnParams": [
+          {
+            "objectType": "FunctionExpression",
+            "functionExpression": "\"PLC1..Out_To_ICxx::Robot[\"+%i%Component_Num%/i%+\"]::Robot_Type\""
+          },
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:framework#/definitions/Control",
+            "symbolExpression": "%ctrl%Fieldbus_RobotType_Banner%/ctrl%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": "input_value"
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%i%Component_Name%/i%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "R"
+                },
+                "compareOperator": "==",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fieldbus_RobotType_Banner::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Fieldbus_RobotType_Banner::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fieldbus_NextArrow" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="980" data-tchmi-left-unit="px" data-tchmi-text=">" data-tchmi-top="10" data-tchmi-top-unit="px" data-tchmi-width="50" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-text-font-size="58" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center" data-tchmi-creator-locked="True" data-tchmi-zindex="3">
+" data-tchmi-top="10" data-tchmi-top-unit="px" data-tchmi-width="50" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-text-font-size="58" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center" data-tchmi-creator-locked="True" data-tchmi-zindex="1">
+" data-tchmi-top="320" data-tchmi-top-unit="px" data-tchmi-width="50" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-text-font-size="58" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center" data-tchmi-creator-locked="True">
+" data-tchmi-top="333" data-tchmi-top-unit="px" data-tchmi-width="50" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-text-font-size="58" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center">
+" data-tchmi-top="333" data-tchmi-top-unit="px" data-tchmi-width="50" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-text-font-size="58" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center">
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-class-names" type="application/json">
+[
+  "TextColour"
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fieldbus_NextArrow.onPressed",
+    "actions": [
+      {
+        "objectType": "SwitchCase",
+        "active": true,
+        "compare": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%i%Component_Type%/i%"
+        },
+        "cases": [
+          {
+            "caseValue": {
+              "objectType": "StaticValue",
+              "valueType": "tchmi:general#/definitions/String",
+              "value": "R"
+            },
+            "actions": [
+              {
+                "objectType": "Condition",
+                "active": true,
+                "parts": [
+                  {
+                    "if": [
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/INT32",
+                          "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%"
+                        },
+                        "compare2": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/INT16",
+                          "symbolExpression": "%i%GTACxx_FieldbusByteOffsetMax%/i%"
+                        },
+                        "compareOperator": "<",
+                        "logic": null
+                      }
+                    ],
+                    "then": [
+                      {
+                        "objectType": "Condition",
+                        "active": true,
+                        "parts": [
+                          {
+                            "if": [
+                              {
+                                "compare1": {
+                                  "objectType": "Symbol",
+                                  "valueType": "tchmi:general#/definitions/INT32",
+                                  "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%"
+                                },
+                                "compare2": {
+                                  "objectType": "StaticValue",
+                                  "valueType": "tchmi:general#/definitions/INT32",
+                                  "value": 20
+                                },
+                                "compareOperator": "!=",
+                                "logic": null
+                              }
+                            ],
+                            "then": [
+                              {
+                                "objectType": "WriteToSymbol",
+                                "active": true,
+                                "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%",
+                                "value": {
+                                  "objectType": "FunctionExpression",
+                                  "functionExpression": "%i%GTACxx_FieldbusByteOffset%/i% + 4"
+                                },
+                                "asyncWait": true
+                              }
+                            ]
+                          },
+                          {
+                            "else": [
+                              {
+                                "objectType": "WriteToSymbol",
+                                "active": true,
+                                "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%",
+                                "value": {
+                                  "objectType": "FunctionExpression",
+                                  "functionExpression": "%i%GTACxx_FieldbusByteOffset%/i% + 1"
+                                },
+                                "asyncWait": true
+                              }
+                            ]
+                          }
+                        ],
+                        "asyncWait": true
+                      },
+                      {
+                        "objectType": "Condition",
+                        "active": true,
+                        "parts": [
+                          {
+                            "if": [
+                              {
+                                "compare1": {
+                                  "objectType": "Symbol",
+                                  "valueType": "tchmi:general#/definitions/INT32",
+                                  "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%"
+                                },
+                                "compare2": {
+                                  "objectType": "StaticValue",
+                                  "valueType": "tchmi:general#/definitions/INT32",
+                                  "value": 20
+                                },
+                                "compareOperator": "!=",
+                                "logic": null
+                              }
+                            ],
+                            "then": [
+                              {
+                                "objectType": "WriteToSymbol",
+                                "active": true,
+                                "symbolExpression": "%ctrl%TcHmiContainer_4::Visibility%/ctrl%",
+                                "value": {
+                                  "objectType": "StaticValue",
+                                  "valueType": "tchmi:framework#/definitions/Visibility",
+                                  "value": "Visible"
+                                },
+                                "asyncWait": true
+                              },
+                              {
+                                "objectType": "WriteToSymbol",
+                                "active": true,
+                                "symbolExpression": "%ctrl%TcHmiContainer_5::Visibility%/ctrl%",
+                                "value": {
+                                  "objectType": "StaticValue",
+                                  "valueType": "tchmi:framework#/definitions/Visibility",
+                                  "value": "Visible"
+                                },
+                                "asyncWait": true
+                              }
+                            ]
+                          },
+                          {
+                            "else": [
+                              {
+                                "objectType": "WriteToSymbol",
+                                "active": true,
+                                "symbolExpression": "%ctrl%TcHmiContainer_4::Visibility%/ctrl%",
+                                "value": {
+                                  "objectType": "StaticValue",
+                                  "valueType": "tchmi:framework#/definitions/Visibility",
+                                  "value": "Hidden"
+                                },
+                                "asyncWait": true
+                              },
+                              {
+                                "objectType": "WriteToSymbol",
+                                "active": true,
+                                "symbolExpression": "%ctrl%TcHmiContainer_5::Visibility%/ctrl%",
+                                "value": {
+                                  "objectType": "StaticValue",
+                                  "valueType": "tchmi:framework#/definitions/Visibility",
+                                  "value": "Hidden"
+                                },
+                                "asyncWait": true
+                              }
+                            ]
+                          }
+                        ],
+                        "asyncWait": true
+                      },
+                      {
+                        "objectType": "Condition",
+                        "active": true,
+                        "parts": [
+                          {
+                            "if": [
+                              {
+                                "compare1": {
+                                  "objectType": "Symbol",
+                                  "valueType": "tchmi:general#/definitions/INT32",
+                                  "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%"
+                                },
+                                "compare2": {
+                                  "objectType": "StaticValue",
+                                  "valueType": "tchmi:general#/definitions/INT32",
+                                  "value": 60
+                                },
+                                "compareOperator": "<",
+                                "logic": null
+                              }
+                            ],
+                            "then": [
+                              {
+                                "objectType": "WriteToSymbol",
+                                "active": true,
+                                "symbolExpression": "%ctrl%TcHmiContainer_6::Visibility%/ctrl%",
+                                "value": {
+                                  "objectType": "StaticValue",
+                                  "valueType": "tchmi:framework#/definitions/Visibility",
+                                  "value": "Visible"
+                                },
+                                "asyncWait": true
+                              }
+                            ]
+                          },
+                          {
+                            "else": [
+                              {
+                                "objectType": "WriteToSymbol",
+                                "active": true,
+                                "symbolExpression": "%ctrl%TcHmiContainer_6::Visibility%/ctrl%",
+                                "value": {
+                                  "objectType": "StaticValue",
+                                  "valueType": "tchmi:framework#/definitions/Visibility",
+                                  "value": "Hidden"
+                                },
+                                "asyncWait": true
+                              }
+                            ]
+                          }
+                        ],
+                        "asyncWait": true
+                      }
+                    ]
+                  },
+                  {
+                    "else": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%",
+                        "value": {
+                          "objectType": "StaticValue",
+                          "valueType": "tchmi:general#/definitions/INT32",
+                          "value": 0
+                        },
+                        "asyncWait": true
+                      },
+                      {
+                        "objectType": "Condition",
+                        "active": true,
+                        "parts": [
+                          {
+                            "if": [
+                              {
+                                "compare1": {
+                                  "objectType": "Symbol",
+                                  "valueType": "tchmi:general#/definitions/INT32",
+                                  "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%"
+                                },
+                                "compare2": {
+                                  "objectType": "StaticValue",
+                                  "valueType": "tchmi:general#/definitions/INT32",
+                                  "value": 60
+                                },
+                                "compareOperator": "<",
+                                "logic": null
+                              }
+                            ],
+                            "then": [
+                              {
+                                "objectType": "WriteToSymbol",
+                                "active": true,
+                                "symbolExpression": "%ctrl%TcHmiContainer_6::Visibility%/ctrl%",
+                                "value": {
+                                  "objectType": "StaticValue",
+                                  "valueType": "tchmi:framework#/definitions/Visibility",
+                                  "value": "Visible"
+                                },
+                                "asyncWait": true
+                              }
+                            ]
+                          },
+                          {
+                            "else": [
+                              {
+                                "objectType": "WriteToSymbol",
+                                "active": true,
+                                "symbolExpression": "%ctrl%TcHmiContainer_6::Visibility%/ctrl%",
+                                "value": {
+                                  "objectType": "StaticValue",
+                                  "valueType": "tchmi:framework#/definitions/Visibility",
+                                  "value": "Hidden"
+                                },
+                                "asyncWait": true
+                              }
+                            ]
+                          }
+                        ],
+                        "asyncWait": true
+                      }
+                    ]
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "caseValue": {
+              "objectType": "StaticValue",
+              "valueType": "tchmi:general#/definitions/String",
+              "value": "ST"
+            },
+            "actions": [
+              {
+                "objectType": "Condition",
+                "active": true,
+                "parts": [
+                  {
+                    "if": [
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/INT32",
+                          "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%"
+                        },
+                        "compare2": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/INT16",
+                          "symbolExpression": "%i%GTACxx_FieldbusByteOffsetMax%/i%"
+                        },
+                        "compareOperator": "<",
+                        "logic": null
+                      }
+                    ],
+                    "then": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%",
+                        "value": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "%i%GTACxx_FieldbusByteOffset%/i% +4"
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  },
+                  {
+                    "else": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%",
+                        "value": {
+                          "objectType": "StaticValue",
+                          "valueType": "tchmi:general#/definitions/INT32",
+                          "value": 0
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "caseValue": {
+              "objectType": "StaticValue",
+              "valueType": "tchmi:general#/definitions/String",
+              "value": "SL"
+            },
+            "actions": [
+              {
+                "objectType": "Condition",
+                "active": true,
+                "parts": [
+                  {
+                    "if": [
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/INT32",
+                          "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%"
+                        },
+                        "compare2": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/INT16",
+                          "symbolExpression": "%i%GTACxx_FieldbusByteOffsetMax%/i%"
+                        },
+                        "compareOperator": "<=",
+                        "logic": null
+                      }
+                    ],
+                    "then": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%",
+                        "value": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "%i%GTACxx_FieldbusByteOffset%/i% +4"
+                        },
+                        "asyncWait": true
+                      },
+                      {
+                        "objectType": "Condition",
+                        "active": true,
+                        "parts": [
+                          {
+                            "if": [
+                              {
+                                "compare1": {
+                                  "objectType": "Symbol",
+                                  "valueType": "tchmi:general#/definitions/INT32",
+                                  "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%"
+                                },
+                                "compare2": {
+                                  "objectType": "StaticValue",
+                                  "valueType": "tchmi:general#/definitions/INT32",
+                                  "value": 72
+                                },
+                                "compareOperator": ">",
+                                "logic": null
+                              }
+                            ],
+                            "then": [
+                              {
+                                "objectType": "WriteToSymbol",
+                                "active": true,
+                                "symbolExpression": "%ctrl%TcHmiContainer_4::Visibility%/ctrl%",
+                                "value": {
+                                  "objectType": "StaticValue",
+                                  "valueType": "tchmi:framework#/definitions/Visibility",
+                                  "value": "Hidden"
+                                },
+                                "asyncWait": true
+                              },
+                              {
+                                "objectType": "WriteToSymbol",
+                                "active": true,
+                                "symbolExpression": "%ctrl%TcHmiContainer_6::Visibility%/ctrl%",
+                                "value": {
+                                  "objectType": "StaticValue",
+                                  "valueType": "tchmi:framework#/definitions/Visibility",
+                                  "value": "Hidden"
+                                },
+                                "asyncWait": true
+                              }
+                            ]
+                          },
+                          {
+                            "else": [
+                              {
+                                "objectType": "WriteToSymbol",
+                                "active": true,
+                                "symbolExpression": "%ctrl%TcHmiContainer_4::Visibility%/ctrl%",
+                                "value": {
+                                  "objectType": "StaticValue",
+                                  "valueType": "tchmi:framework#/definitions/Visibility",
+                                  "value": "Visible"
+                                },
+                                "asyncWait": true
+                              },
+                              {
+                                "objectType": "WriteToSymbol",
+                                "active": true,
+                                "symbolExpression": "%ctrl%TcHmiContainer_6::Visibility%/ctrl%",
+                                "value": {
+                                  "objectType": "StaticValue",
+                                  "valueType": "tchmi:framework#/definitions/Visibility",
+                                  "value": "Visible"
+                                },
+                                "asyncWait": true
+                              }
+                            ]
+                          }
+                        ],
+                        "asyncWait": true
+                      }
+                    ]
+                  },
+                  {
+                    "else": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%",
+                        "value": {
+                          "objectType": "StaticValue",
+                          "valueType": "tchmi:general#/definitions/INT32",
+                          "value": 0
+                        },
+                        "asyncWait": true
+                      },
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%ctrl%TcHmiContainer_4::Visibility%/ctrl%",
+                        "value": {
+                          "objectType": "StaticValue",
+                          "valueType": "tchmi:framework#/definitions/Visibility",
+                          "value": "Visible"
+                        },
+                        "asyncWait": true
+                      },
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%ctrl%TcHmiContainer_6::Visibility%/ctrl%",
+                        "value": {
+                          "objectType": "StaticValue",
+                          "valueType": "tchmi:framework#/definitions/Visibility",
+                          "value": "Visible"
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "caseValue": {
+              "objectType": "StaticValue",
+              "valueType": "tchmi:general#/definitions/String",
+              "value": "LSR"
+            },
+            "actions": [
+              {
+                "objectType": "Condition",
+                "active": true,
+                "parts": [
+                  {
+                    "if": [
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/INT32",
+                          "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%"
+                        },
+                        "compare2": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/INT16",
+                          "symbolExpression": "%i%GTACxx_FieldbusByteOffsetMax%/i%"
+                        },
+                        "compareOperator": "<",
+                        "logic": null
+                      }
+                    ],
+                    "then": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%",
+                        "value": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "%i%GTACxx_FieldbusByteOffset%/i% +4"
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  },
+                  {
+                    "else": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%i%GTACxx_FieldbusByteOffset%/i%",
+                        "value": {
+                          "objectType": "StaticValue",
+                          "valueType": "tchmi:general#/definitions/INT32",
+                          "value": 0
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "//Update all screen messages, see GTAC_FieldbusScreenHandler JS file",
+          "update_screen_messages();"
+        ],
+        "injectContextObject": false,
+        "asyncWait": false,
+        "waitMode": "Synchronous"
+      }
+    ]
+  }
+]
+</script>
+</div>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "GTACxx_FieldbusIO_Content.onAttached",
+    "actions": [
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "//Initializes screen config data, see GTAC_FieldbusScreenHandler JS file",
+          "fieldbus_screen_init();"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      },
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "//Update all screen messages, see GTAC_FieldbusScreenHandler JS file",
+          "update_screen_messages();"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      }
+    ]
+  },
+  {
+    "event": "%i%Pulse_500ms%/i%",
+    "actions": [
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "update_fieldbus_io()"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      }
+    ]
+  }
+]
+</script>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="Fieldbus_Title_1" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="27" data-tchmi-height-unit="px" data-tchmi-left="20" data-tchmi-left-unit="px" data-tchmi-top="124" data-tchmi-top-unit="px" data-tchmi-width="233" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-font-size="14" data-tchmi-zindex="6" data-tchmi-text-font-size-unit="px" data-tchmi-text-font-weight="Bold" data-tchmi-text-font-style="Auto">
+<script data-tchmi-target-attribute="data-tchmi-border-color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-border-width" type="application/json">
+{
+  "left": 1,
+  "right": 1,
+  "top": 1,
+  "bottom": 1,
+  "leftUnit": "px",
+  "rightUnit": "px",
+  "topUnit": "px",
+  "bottomUnit": "px"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-class-names" type="application/json">
+[
+  "Radius"
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-border-style" type="application/json">
+{
+  "left": "Solid",
+  "right": "Solid",
+  "top": "Solid",
+  "bottom": "Solid"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="Fieldbus_Title_2" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="27" data-tchmi-height-unit="px" data-tchmi-left="275" data-tchmi-left-unit="px" data-tchmi-top="124" data-tchmi-top-unit="px" data-tchmi-width="233" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-font-size="14" data-tchmi-zindex="6" data-tchmi-text-font-size-unit="px" data-tchmi-text-font-weight="Bold" data-tchmi-text-font-style="Auto">
+<script data-tchmi-target-attribute="data-tchmi-border-color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-border-width" type="application/json">
+{
+  "left": 1,
+  "right": 1,
+  "top": 1,
+  "bottom": 1,
+  "leftUnit": "px",
+  "rightUnit": "px",
+  "topUnit": "px",
+  "bottomUnit": "px"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-class-names" type="application/json">
+[
+  "Radius"
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-border-style" type="application/json">
+{
+  "left": "Solid",
+  "right": "Solid",
+  "top": "Solid",
+  "bottom": "Solid"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+</div>
+<div id="GTACxx_Fieldbus_InByte1" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="232" data-tchmi-height-unit="px" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Indicator/Generic_Inds_Byte.usercontrol" data-tchmi-top="161" data-tchmi-top-unit="px" data-tchmi-width="245" data-tchmi-width-unit="px" data-tchmi-zindex="3" data-tchmi-is-enabled="true">
+</div>
+<div id="GTACxx_Fieldbus_OutByte1" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="232" data-tchmi-height-unit="px" data-tchmi-left="265" data-tchmi-left-unit="px" data-tchmi-offset="0" data-tchmi-target-user-control="Symbols/Indicator/Generic_Inds_Byte.usercontrol" data-tchmi-top="161" data-tchmi-top-unit="px" data-tchmi-width="245" data-tchmi-width-unit="px" data-tchmi-zindex="3">
+</div>
+<div id="TcHmiContainer_5" data-tchmi-type="TcHmi.Controls.System.TcHmiContainer" data-tchmi-height="247" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-top="393" data-tchmi-top-unit="px" data-tchmi-width="518" data-tchmi-width-unit="px" data-tchmi-zindex="2">
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="GTACxx_Fieldbus_InByte2" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="232" data-tchmi-height-unit="px" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Indicator/Generic_Inds_Byte.usercontrol" data-tchmi-top="10" data-tchmi-top-unit="px" data-tchmi-width="245" data-tchmi-width-unit="px" data-tchmi-zindex="3">
+
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="GTACxx_Fieldbus_OutByte2" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="232" data-tchmi-height-unit="px" data-tchmi-left="265" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Indicator/Generic_Inds_Byte.usercontrol" data-tchmi-top="10" data-tchmi-top-unit="px" data-tchmi-width="245" data-tchmi-width-unit="px" data-tchmi-offset="%ctrl%GTACxx_Fieldbus_InByte2::Offset%/ctrl%" data-tchmi-zindex="3">
+</div>
+</div>
+<div id="TcHmiContainer_4" data-tchmi-type="TcHmi.Controls.System.TcHmiContainer" data-tchmi-height="536" data-tchmi-height-unit="px" data-tchmi-left="511" data-tchmi-left-unit="px" data-tchmi-top="104" data-tchmi-top-unit="px" data-tchmi-width="521" data-tchmi-width-unit="px" data-tchmi-zindex="2">
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="GTACxx_Fieldbus_InByte3" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="232" data-tchmi-height-unit="px" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-offset="0" data-tchmi-target-user-control="Symbols/Indicator/Generic_Inds_Byte.usercontrol" data-tchmi-top="57" data-tchmi-top-unit="px" data-tchmi-width="245" data-tchmi-width-unit="px" data-tchmi-zindex="3">
+
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="Fieldbus_Title_3" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="27" data-tchmi-height-unit="px" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-top="20" data-tchmi-top-unit="px" data-tchmi-width="233" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-font-size="14" data-tchmi-zindex="6" data-tchmi-text-font-size-unit="px" data-tchmi-text-font-weight="Bold" data-tchmi-text-font-style="Auto">
+<script data-tchmi-target-attribute="data-tchmi-border-color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-border-width" type="application/json">
+{
+  "left": 1,
+  "right": 1,
+  "top": 1,
+  "bottom": 1,
+  "leftUnit": "px",
+  "rightUnit": "px",
+  "topUnit": "px",
+  "bottomUnit": "px"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-class-names" type="application/json">
+[
+  "Radius"
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-border-style" type="application/json">
+{
+  "left": "Solid",
+  "right": "Solid",
+  "top": "Solid",
+  "bottom": "Solid"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="TcHmiContainer_6" data-tchmi-type="TcHmi.Controls.System.TcHmiContainer" data-tchmi-height="247" data-tchmi-height-unit="px" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-top="295" data-tchmi-top-unit="px" data-tchmi-width="509" data-tchmi-width-unit="px" data-tchmi-zindex="2">
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="GTACxx_Fieldbus_InByte4" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="232" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-offset="%ctrl%GTACxx_Fieldbus_InByte2::Offset%/ctrl%" data-tchmi-target-user-control="Symbols/Indicator/Generic_Inds_Byte.usercontrol" data-tchmi-top="4" data-tchmi-top-unit="px" data-tchmi-width="245" data-tchmi-width-unit="px" data-tchmi-zindex="3">
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="GTACxx_Fieldbus_OutByte4" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="232" data-tchmi-height-unit="px" data-tchmi-left="251" data-tchmi-left-unit="px" data-tchmi-offset="%ctrl%GTACxx_Fieldbus_InByte2::Offset%/ctrl%" data-tchmi-target-user-control="Symbols/Indicator/Generic_Inds_Byte.usercontrol" data-tchmi-top="4" data-tchmi-top-unit="px" data-tchmi-width="245" data-tchmi-width-unit="px" data-tchmi-zindex="3">
+</div>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="GTACxx_Fieldbus_OutByte3" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="232" data-tchmi-height-unit="px" data-tchmi-left="261" data-tchmi-left-unit="px" data-tchmi-offset="0" data-tchmi-target-user-control="Symbols/Indicator/Generic_Inds_Byte.usercontrol" data-tchmi-top="57" data-tchmi-top-unit="px" data-tchmi-width="245" data-tchmi-width-unit="px" data-tchmi-zindex="3">
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="Fieldbus_Title_4" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="27" data-tchmi-height-unit="px" data-tchmi-left="261" data-tchmi-left-unit="px" data-tchmi-top="20" data-tchmi-top-unit="px" data-tchmi-width="233" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-font-size="14" data-tchmi-zindex="6" data-tchmi-text-font-size-unit="px" data-tchmi-text-font-weight="Bold" data-tchmi-text-font-style="Auto">
+<script data-tchmi-target-attribute="data-tchmi-border-color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-border-width" type="application/json">
+{
+  "left": 1,
+  "right": 1,
+  "top": 1,
+  "bottom": 1,
+  "leftUnit": "px",
+  "rightUnit": "px",
+  "topUnit": "px",
+  "bottomUnit": "px"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-class-names" type="application/json">
+[
+  "Radius"
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-border-style" type="application/json">
+{
+  "left": "Solid",
+  "right": "Solid",
+  "top": "Solid",
+  "bottom": "Solid"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+</div>
+</div>
+<div id="No_Weld_PB" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiToggleButton" data-tchmi-height="55" data-tchmi-height-unit="px" data-tchmi-left="849" data-tchmi-left-unit="px" data-tchmi-text="%l%pb_NoWeldMode%/l%" data-tchmi-top="17" data-tchmi-top-unit="px" data-tchmi-width="75" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-state-symbol="%s%PLC1..In_From_ICxx::Rxx_Weld_Inhibit%/s%" data-tchmi-text-font-weight="Bold" data-tchmi-text-font-size="14" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-horizontal-alignment="Center" data-tchmi-zindex="2">
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "color": "rgba(170, 109, 237, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "No_Weld_PB.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%i%Component_Name%/i%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "R"
+                },
+                "compareOperator": "==",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%No_Weld_PB::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%No_Weld_PB::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  },
+  {
+    "event": "%s%PLC1..In_From_ICxx::Rxx_Weld_Inhibit%/s%",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/BOOL",
+                  "symbolExpression": "%s%PLC1..In_From_ICxx::Rxx_Weld_Inhibit%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/BOOL",
+                  "value": true
+                },
+                "compareOperator": "==",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%No_Weld_PB::Text%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%l%pb_NoWeldModeOn%/l%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "Function",
+                "active": true,
+                "fn": "TcHmi.Functions.ICxx.GTAC_Add_Flash",
+                "fnParams": [
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:general#/definitions/String",
+                    "value": "No_Weld_PB"
+                  },
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:framework#/definitions/Color",
+                    "value": {
+                      "color": "rgba(255, 0, 0, 1)"
+                    }
+                  },
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:framework#/definitions/Color",
+                    "value": {
+                      "color": "rgba(170, 109, 237, 1)"
+                    }
+                  },
+                  {
+                    "objectType": "Symbol",
+                    "valueType": "tchmi:general#/definitions/Boolean",
+                    "symbolExpression": "%i%Pulse_500ms%/i%"
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%No_Weld_PB::Text%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%l%pb_NoWeldMode%/l%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%No_Weld_PB::BackgroundColor%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Color",
+                  "value": {
+                    "color": "rgba(170, 109, 237, 1)"
+                  }
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Cycle_Hold_PB" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiToggleButton" data-tchmi-height="55" data-tchmi-height-unit="px" data-tchmi-left="764" data-tchmi-left-unit="px" data-tchmi-text="%l%pb_CycleHold%/l%" data-tchmi-top="17" data-tchmi-top-unit="px" data-tchmi-width="75" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-text-font-weight="Bold" data-tchmi-text-font-size="14" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-horizontal-alignment="Center" data-tchmi-state-symbol="%s%PLC1..In_From_ICxx::Cycle_Hold%/s%" data-tchmi-zindex="2">
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "color": "rgba(170, 109, 237, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Cycle_Hold_PB.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%i%Component_Name%/i%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "R"
+                },
+                "compareOperator": "==",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Cycle_Hold_PB::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Cycle_Hold_PB::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  },
+  {
+    "event": "%s%PLC1..In_From_ICxx::Cycle_Hold%/s%",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/BOOL",
+                  "symbolExpression": "%s%PLC1..In_From_ICxx::Cycle_Hold%/s%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/BOOL",
+                  "value": true
+                },
+                "compareOperator": "==",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "Function",
+                "active": true,
+                "fn": "TcHmi.Functions.ICxx.GTAC_Add_Flash",
+                "fnParams": [
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:general#/definitions/String",
+                    "value": "Cycle_Hold_PB"
+                  },
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:framework#/definitions/Color",
+                    "value": {
+                      "color": "rgba(255, 0, 0, 1)"
+                    }
+                  },
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:framework#/definitions/Color",
+                    "value": {
+                      "color": "rgba(170, 109, 237, 1)"
+                    }
+                  },
+                  {
+                    "objectType": "Symbol",
+                    "valueType": "tchmi:general#/definitions/Boolean",
+                    "symbolExpression": "%i%Pulse_500ms%/i%"
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Cycle_Hold_PB::BackgroundColor%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Color",
+                  "value": {
+                    "color": "rgba(170, 109, 237, 1)"
+                  }
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="All_Robots_BG" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiRectangle" data-tchmi-height="92" data-tchmi-height-unit="px" data-tchmi-left="747" data-tchmi-left-unit="px" data-tchmi-top="12" data-tchmi-top-unit="px" data-tchmi-width="190" data-tchmi-width-unit="px" data-tchmi-is-enabled="true" data-tchmi-zindex="0">
+
+
+
+
+
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-class-names" type="application/json">
+[
+  "BorderPopout",
+  "Radius"
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-fill-color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "All_Robots_BG.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%i%Component_Name%/i%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "R"
+                },
+                "compareOperator": "==",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%All_Robots_BG::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%All_Robots_BG::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-border-color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-border-width" type="application/json">
+{
+  "left": 1,
+  "right": 1,
+  "top": 1,
+  "bottom": 1,
+  "leftUnit": "px",
+  "rightUnit": "px",
+  "topUnit": "px",
+  "bottomUnit": "px"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-border-style" type="application/json">
+{
+  "left": "Solid",
+  "right": "Solid",
+  "top": "Solid",
+  "bottom": "Solid"
+}
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="All_Robots_Title" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="19" data-tchmi-height-unit="px" data-tchmi-left="782" data-tchmi-left-unit="px" data-tchmi-top="80" data-tchmi-top-unit="px" data-tchmi-width="127" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="false" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-horizontal-alignment="Center" data-tchmi-zindex="2" data-tchmi-text="%l%title_AllRobots%/l%" data-tchmi-text-font-size="14">
+
+
+
+
+
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "All_Robots_Title.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%i%Component_Name%/i%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "R"
+                },
+                "compareOperator": "==",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%All_Robots_Title::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%All_Robots_Title::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Hidden"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+</div>

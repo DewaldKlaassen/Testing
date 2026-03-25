@@ -1,0 +1,527 @@
+<div id="ICxx_Content_3" data-tchmi-type="TcHmi.Controls.System.TcHmiContent" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="850" data-tchmi-height="595" data-tchmi-zindex="5">
+<div id="ICxx_EcatSlaveTitle_18" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="%i%Component_Name%/i%" data-tchmi-height="53" data-tchmi-height-unit="px" data-tchmi-left="33" data-tchmi-left-unit="px" data-tchmi-nodeid="T02" data-tchmi-nodetype="EL6900" data-tchmi-state="%f%TcHmi.Functions.Beckhoff.GetElementByIndex(%s%PLC1..Out_To_ICxx::IC%/s%, %i%Component_Num%/i%).Discrete_Image.T02_STAT.InfoData.State%/f%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_TitleStatus.usercontrol" data-tchmi-top="140" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-zindex="5">
+</div>
+<div id="ICxx_TSAFEDiags_Inds_1" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="114" data-tchmi-height-unit="px" data-tchmi-left="440" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Indicator/Generic_Inds_Nibble.usercontrol" data-tchmi-top="62" data-tchmi-top-unit="px" data-tchmi-width="392" data-tchmi-width-unit="px" data-tchmi-text_ind_0="%f%&quot;IC0&quot;+%i%Component_Num%/i%+&quot;.T02_STAT.FBs_FB_ERR.0 (Internal Estop FB Error)&quot;%/f%" data-tchmi-text_ind_1="%f%&quot;IC0&quot;+%i%Component_Num%/i%+&quot;.T02_STAT.FBs_FB_ERR.1 (ESWxx Estops FB Error)&quot;%/f%" data-tchmi-text_ind_2="%f%&quot;IC0&quot;+%i%Component_Num%/i%+&quot;.T02_STAT.FBs_FB_ERR.2 (ESWxx Disable Keys FB Error)&quot;%/f%" data-tchmi-text_ind_3="%f%&quot;IC0&quot;+%i%Component_Num%/i%+&quot;.T02_STAT.FBs_FB_ERR.3 (spare)&quot;%/f%" data-tchmi-zindex="18">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "ICxx_TSAFEDiags_Inds_1.onAttached",
+    "actions": [
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Bind",
+        "fnParams": [
+          {
+            "objectType": "FunctionExpression",
+            "functionExpression": "\"PLC1..Out_To_ICxx::IC[\"+%i%Component_Num%/i%+\"]::Discrete_Image::T02_STAT::FBs_FB_ERR\""
+          },
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:framework#/definitions/Control",
+            "symbolExpression": "%ctrl%ICxx_TSAFEDiags_Inds_1%/ctrl%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": "Data"
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Uc_ICxx_6900Info_Tsafe" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="284" data-tchmi-height-unit="px" data-tchmi-left="33" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/uc_GTAC_6900Info.usercontrol" data-tchmi-top="203" data-tchmi-top-unit="px" data-tchmi-width="283" data-tchmi-width-unit="px" data-tchmi-component_type="IC" data-tchmi-component_num="%i%Component_Num%/i%" data-tchmi-zindex="14">
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Uc_ICxx_6900Info_Tsafe.onAttached",
+    "actions": [
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Bind",
+        "fnParams": [
+          {
+            "objectType": "FunctionExpression",
+            "functionExpression": "\"PLC1..Out_To_ICxx::IC[\"+%i%Component_Num%/i%+\"]::Discrete_Image::T02_STAT::SGs_COM_ERR\""
+          },
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:general#/definitions/String",
+            "symbolExpression": "%ctrl%Uc_ICxx_6900Info_Tsafe%/ctrl%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": "Comm_Flts"
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Bind",
+        "fnParams": [
+          {
+            "objectType": "FunctionExpression",
+            "functionExpression": "\"PLC1..Out_To_ICxx::IC[\"+%i%Component_Num%/i%+\"]::Discrete_Image::T02_STAT::SGs_FB_ERR\""
+          },
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:general#/definitions/String",
+            "symbolExpression": "%ctrl%Uc_ICxx_6900Info_Tsafe%/ctrl%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": "Fb_Flts"
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Bind",
+        "fnParams": [
+          {
+            "objectType": "FunctionExpression",
+            "functionExpression": "\"PLC1..Out_To_ICxx::IC[\"+%i%Component_Num%/i%+\"]::Discrete_Image::T02_STAT::SGs_OUT_ERR\""
+          },
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:general#/definitions/String",
+            "symbolExpression": "%ctrl%Uc_ICxx_6900Info_Tsafe%/ctrl%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": "Out_Flts"
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Bind",
+        "fnParams": [
+          {
+            "objectType": "FunctionExpression",
+            "functionExpression": "\"PLC1..Out_To_ICxx::IC[\"+%i%Component_Num%/i%+\"]::Discrete_Image::T02_STAT::FBs_FB_ERR\""
+          },
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:general#/definitions/String",
+            "symbolExpression": "%ctrl%Uc_ICxx_6900Info_Tsafe%/ctrl%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": "Fb_Flt_Msg"
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="ICxx_TsafeDiag_Close" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="29" data-tchmi-height-unit="px" data-tchmi-left="803" data-tchmi-left-unit="px" data-tchmi-text="X" data-tchmi-top="5" data-tchmi-top-unit="px" data-tchmi-width="37" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-zindex="5">
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "color": "rgba(197, 3, 33, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-access-config" type="application/json">
+[
+  {
+    "accessright": "operate",
+    "group": "Guest",
+    "permission": "Allow"
+  },
+  {
+    "accessright": "operate",
+    "group": "maint",
+    "permission": "Allow"
+  },
+  {
+    "accessright": "operate",
+    "group": "qa",
+    "permission": "Allow"
+  }
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "ICxx_TsafeDiag_Close.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%PopupRegion::TargetContent%/ctrl%",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:framework#/definitions/ContentPath",
+          "value": null
+        },
+        "asyncWait": true
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%PopupRegion::Visibility%/ctrl%",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:framework#/definitions/Visibility",
+          "value": "Collapsed"
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+
+<script data-tchmi-target-attribute="data-tchmi-border-color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "color": "rgba(255, 251, 240, 1)"
+}
+</script>
+<div id="ICxx_TSAFEDiags_Inds_4" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="114" data-tchmi-height-unit="px" data-tchmi-left="440" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Indicator/Generic_Inds_Nibble.usercontrol" data-tchmi-top="457" data-tchmi-top-unit="px" data-tchmi-width="392" data-tchmi-width-unit="px" data-tchmi-text_ind_0="%f%&quot;IC0&quot;+%i%Component_Num%/i%+&quot;.T02_STAT.FBs_FB_ERR.24 (ESW01 DSW FB Error)&quot;%/f%" data-tchmi-text_ind_1="%f%&quot;IC0&quot;+%i%Component_Num%/i%+&quot;.T02_STAT.FBs_FB_ERR.25 (ESW02 DSW FB Error)&quot;%/f%" data-tchmi-text_ind_2="%f%&quot;IC0&quot;+%i%Component_Num%/i%+&quot;.T02_STAT.FBs_FB_ERR.26 (ESW03 DSW FB Error)&quot;%/f%" data-tchmi-text_ind_3="%f%&quot;IC0&quot;+%i%Component_Num%/i%+&quot;.T02_STAT.FBs_FB_ERR.27 (ESW04 DSW FB Error)&quot;%/f%" data-tchmi-zindex="17" data-tchmi-offset="24">
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "ICxx_TSAFEDiags_Inds_4.onAttached",
+    "actions": [
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Bind",
+        "fnParams": [
+          {
+            "objectType": "FunctionExpression",
+            "functionExpression": "\"PLC1..Out_To_ICxx::IC[\"+%i%Component_Num%/i%+\"]::Discrete_Image::T02_STAT::FBs_FB_ERR\""
+          },
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:general#/definitions/String",
+            "symbolExpression": "%ctrl%ICxx_TSAFEDiags_Inds_4%/ctrl%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": "Data"
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+
+<script data-tchmi-target-attribute="data-tchmi-border-style" type="application/json">
+{
+  "left": "Solid",
+  "right": "Solid",
+  "top": "Solid",
+  "bottom": "Solid"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-border-width" type="application/json">
+{
+  "left": 2,
+  "right": 2,
+  "top": 2,
+  "bottom": 2,
+  "leftUnit": "px",
+  "rightUnit": "px",
+  "topUnit": "px",
+  "bottomUnit": "px"
+}
+</script>
+<div id="ICxx_Tsafe_TitleBar" data-tchmi-type="TcHmi.Controls.System.TcHmiContent" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="850" data-tchmi-height="42" data-tchmi-background-color="{
+  &quot;angle&quot;: 0.0,
+  &quot;stopPoints&quot;: [
+    {
+      &quot;color&quot;: &quot;rgba(0, 0, 0, 1)&quot;,
+      &quot;stop&quot;: &quot;0%&quot;
+    },
+    {
+      &quot;color&quot;: &quot;rgba(85, 117, 138, 1)&quot;,
+      &quot;stop&quot;: &quot;50%&quot;
+    },
+    {
+      &quot;color&quot;: &quot;rgba(0, 0, 0, 1)&quot;,
+      &quot;stop&quot;: &quot;100%&quot;
+    }
+  ]
+}" data-tchmi-zindex="0">
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+"{
+  &quot;angle&quot;: 0.0,
+  &quot;stopPoints&quot;: [
+    {
+      &quot;color&quot;: &quot;rgba(0, 0, 0, 1)&quot;,
+      &quot;stop&quot;: &quot;0%&quot;
+    },
+    {
+      &quot;color&quot;: &quot;rgba(85, 117, 138, 1)&quot;,
+      &quot;stop&quot;: &quot;50%&quot;
+    },
+    {
+      &quot;color&quot;: &quot;rgba(0, 0, 0, 1)&quot;,
+      &quot;stop&quot;: &quot;100%&quot;
+    }
+  ]
+}"
+</script>
+</div>
+<div id="ICxx_TSAFEDiags_Inds_2" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="114" data-tchmi-height-unit="px" data-tchmi-left="440" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Indicator/Generic_Inds_Nibble.usercontrol" data-tchmi-top="194" data-tchmi-top-unit="px" data-tchmi-width="392" data-tchmi-width-unit="px" data-tchmi-text_ind_0="%f%&quot;IC0&quot;+%i%Component_Num%/i%+&quot;.T02_STAT.FBs_FB_ERR.8 (Safety Gates FB Error)&quot;%/f%" data-tchmi-text_ind_1="%f%&quot;IC0&quot;+%i%Component_Num%/i%+&quot;.T02_STAT.FBs_FB_ERR.9 (spare)&quot;%/f%" data-tchmi-text_ind_2="%f%&quot;IC0&quot;+%i%Component_Num%/i%+&quot;.T02_STAT.FBs_FB_ERR.10 (spare)&quot;%/f%" data-tchmi-text_ind_3="%f%&quot;IC0&quot;+%i%Component_Num%/i%+&quot;.T02_STAT.FBs_FB_ERR.11 (spare)&quot;%/f%" data-tchmi-zindex="15" data-tchmi-offset="8">
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "ICxx_TSAFEDiags_Inds_2.onAttached",
+    "actions": [
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Bind",
+        "fnParams": [
+          {
+            "objectType": "FunctionExpression",
+            "functionExpression": "\"PLC1..Out_To_ICxx::IC[\"+%i%Component_Num%/i%+\"]::Discrete_Image::T02_STAT::FBs_FB_ERR\""
+          },
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:general#/definitions/String",
+            "symbolExpression": "%ctrl%ICxx_TSAFEDiags_Inds_2%/ctrl%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": "Data"
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="ICxx_TSAFEDiags_Inds_5" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="114" data-tchmi-height-unit="px" data-tchmi-left="440" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Indicator/Generic_Inds_Nibble.usercontrol" data-tchmi-top="326" data-tchmi-top-unit="px" data-tchmi-width="392" data-tchmi-width-unit="px" data-tchmi-text_ind_0="%f%&quot;IC0&quot;+%i%Component_Num%/i%+&quot;.T02_STAT.FBs_FB_ERR.16 (OP1 Human LCs FB Error)&quot;%/f%" data-tchmi-text_ind_1="%f%&quot;IC0&quot;+%i%Component_Num%/i%+&quot;.T02_STAT.FBs_FB_ERR.17 (OP2 Human LCs FB Error)&quot;%/f%" data-tchmi-text_ind_2="%f%&quot;IC0&quot;+%i%Component_Num%/i%+&quot;.T02_STAT.FBs_FB_ERR.18 (spare)&quot;%/f%" data-tchmi-text_ind_3="%f%&quot;IC0&quot;+%i%Component_Num%/i%+&quot;.T02_STAT.FBs_FB_ERR.19 (spare)&quot;%/f%" data-tchmi-zindex="16" data-tchmi-offset="16">
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "ICxx_TSAFEDiags_Inds_5.onAttached",
+    "actions": [
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Bind",
+        "fnParams": [
+          {
+            "objectType": "FunctionExpression",
+            "functionExpression": "\"PLC1..Out_To_ICxx::IC[\"+%i%Component_Num%/i%+\"]::Discrete_Image::T02_STAT::FBs_FB_ERR\""
+          },
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:general#/definitions/String",
+            "symbolExpression": "%ctrl%ICxx_TSAFEDiags_Inds_2%/ctrl%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": "Data"
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="ICxx_TsafeBG_1" data-tchmi-type="TcHmi.Controls.System.TcHmiContent" data-tchmi-top="122" data-tchmi-left="9" data-tchmi-width="331" data-tchmi-height="382" data-tchmi-background-color="{
+  &quot;angle&quot;: 0.0,
+  &quot;stopPoints&quot;: [
+    {
+      &quot;color&quot;: &quot;rgba(0, 0, 0, 1)&quot;,
+      &quot;stop&quot;: &quot;0%&quot;
+    },
+    {
+      &quot;color&quot;: &quot;rgba(85, 117, 138, 1)&quot;,
+      &quot;stop&quot;: &quot;50%&quot;
+    },
+    {
+      &quot;color&quot;: &quot;rgba(0, 0, 0, 1)&quot;,
+      &quot;stop&quot;: &quot;100%&quot;
+    }
+  ]
+}" data-tchmi-opacity="0.6" data-tchmi-zindex="1" data-tchmi-left-unit="px" data-tchmi-top-unit="px" data-tchmi-width-unit="px" data-tchmi-height-unit="px">
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+"{
+  &quot;angle&quot;: 0.0,
+  &quot;stopPoints&quot;: [
+    {
+      &quot;color&quot;: &quot;rgba(0, 0, 0, 1)&quot;,
+      &quot;stop&quot;: &quot;0%&quot;
+    },
+    {
+      &quot;color&quot;: &quot;rgba(85, 117, 138, 1)&quot;,
+      &quot;stop&quot;: &quot;50%&quot;
+    },
+    {
+      &quot;color&quot;: &quot;rgba(0, 0, 0, 1)&quot;,
+      &quot;stop&quot;: &quot;100%&quot;
+    }
+  ]
+}"
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="ICxx_TsafeBG_2" data-tchmi-type="TcHmi.Controls.System.TcHmiContent" data-tchmi-top="57" data-tchmi-left="430" data-tchmi-width="408" data-tchmi-height="519" data-tchmi-background-color="{
+  &quot;angle&quot;: 0.0,
+  &quot;stopPoints&quot;: [
+    {
+      &quot;color&quot;: &quot;rgba(0, 0, 0, 1)&quot;,
+      &quot;stop&quot;: &quot;0%&quot;
+    },
+    {
+      &quot;color&quot;: &quot;rgba(85, 117, 138, 1)&quot;,
+      &quot;stop&quot;: &quot;50%&quot;
+    },
+    {
+      &quot;color&quot;: &quot;rgba(0, 0, 0, 1)&quot;,
+      &quot;stop&quot;: &quot;100%&quot;
+    }
+  ]
+}" data-tchmi-opacity="0.6" data-tchmi-left-unit="px" data-tchmi-top-unit="px" data-tchmi-width-unit="px" data-tchmi-height-unit="px" data-tchmi-zindex="4">
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="TcHmiButton_CloseAll_29" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="29" data-tchmi-height-unit="px" data-tchmi-left="977" data-tchmi-left-unit="px" data-tchmi-text="X" data-tchmi-top="10" data-tchmi-top-unit="px" data-tchmi-width="37" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-zindex="4">
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "color": "rgba(197, 3, 33, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-access-config" type="application/json">
+[
+  {
+    "accessright": "operate",
+    "group": "Guest",
+    "permission": "Allow"
+  },
+  {
+    "accessright": "operate",
+    "group": "maint",
+    "permission": "Allow"
+  },
+  {
+    "accessright": "operate",
+    "group": "qa",
+    "permission": "Allow"
+  }
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "TcHmiButton_CloseAll_29.onPressed",
+    "actions": [
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "window.close()"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      }
+    ]
+  }
+]
+</script>
+</div>
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+"{
+  &quot;angle&quot;: 0.0,
+  &quot;stopPoints&quot;: [
+    {
+      &quot;color&quot;: &quot;rgba(0, 0, 0, 1)&quot;,
+      &quot;stop&quot;: &quot;0%&quot;
+    },
+    {
+      &quot;color&quot;: &quot;rgba(85, 117, 138, 1)&quot;,
+      &quot;stop&quot;: &quot;50%&quot;
+    },
+    {
+      &quot;color&quot;: &quot;rgba(0, 0, 0, 1)&quot;,
+      &quot;stop&quot;: &quot;100%&quot;
+    }
+  ]
+}"
+</script>
+</div>
+<div id="ICxx_Tsafe_Line_1" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiLine" data-tchmi-height="197" data-tchmi-height-unit="px" data-tchmi-left="315" data-tchmi-left-unit="px" data-tchmi-top="379" data-tchmi-top-unit="px" data-tchmi-width="115" data-tchmi-width-unit="px" data-tchmi-x2="%ctrl%ICxx_Tsafe_Line_1::Width%/ctrl%" data-tchmi-y2="%ctrl%ICxx_Tsafe_Line_1::Height%/ctrl%" data-tchmi-stroke-thickness="3" data-tchmi-zindex="2">
+</div>
+<div id="ICxx_Tsafe_Line_2" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiLine" data-tchmi-height="301" data-tchmi-height-unit="px" data-tchmi-left="315" data-tchmi-left-unit="px" data-tchmi-top="57" data-tchmi-top-unit="px" data-tchmi-width="115" data-tchmi-width-unit="px" data-tchmi-stroke-thickness="3" data-tchmi-x2="%ctrl%ICxx_Tsafe_Line_2::Width%/ctrl%" data-tchmi-y1="%ctrl%ICxx_Tsafe_Line_2::Height%/ctrl%" data-tchmi-zindex="3">
+</div>
+<div id="ICxx_Tsafe_Title" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="29" data-tchmi-height-unit="px" data-tchmi-left="19" data-tchmi-left-unit="px" data-tchmi-text="%f%%i%Component_Name%/i%+&quot; TwinSAFE &quot;+ %l%Title_Diagnostics%/l%%/f%" data-tchmi-top="5" data-tchmi-top-unit="px" data-tchmi-width="302" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-text-font-size="18" data-tchmi-text-horizontal-alignment="Left" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-font-style="Normal" data-tchmi-text-font-weight="Bold" data-tchmi-zindex="1">
+" data-tchmi-top="343" data-tchmi-top-unit="px" data-tchmi-width="50" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-text-font-size="58" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center">
+" data-tchmi-top="343" data-tchmi-top-unit="px" data-tchmi-width="50" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-text-font-size="58" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center">
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-class-names" type="application/json">
+[
+  "TextColour"
+]
+</script>
+</div>
+</div>

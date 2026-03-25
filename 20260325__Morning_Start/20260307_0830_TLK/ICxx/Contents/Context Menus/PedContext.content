@@ -1,0 +1,419 @@
+<div id="PedContextMenu_Content" data-tchmi-type="TcHmi.Controls.System.TcHmiContent" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="1024" data-tchmi-height="49" data-tchmi-is-enabled="true">
+<div id="TcHmiButton_CloseAll1_63" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="29" data-tchmi-height-unit="px" data-tchmi-left="977" data-tchmi-left-unit="px" data-tchmi-text="X" data-tchmi-top="10" data-tchmi-top-unit="px" data-tchmi-width="37" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true">
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "color": "rgba(197, 3, 33, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-access-config" type="application/json">
+[
+  {
+    "accessright": "operate",
+    "group": "Guest",
+    "permission": "Deny"
+  },
+  {
+    "accessright": "operate",
+    "group": "maint",
+    "permission": "Allow"
+  },
+  {
+    "accessright": "operate",
+    "group": "qa",
+    "permission": "Allow"
+  },
+  {
+    "accessright": "operate",
+    "group": "Eng",
+    "permission": "Allow"
+  },
+  {
+    "accessright": "operate",
+    "group": "Maint",
+    "permission": "Allow"
+  },
+  {
+    "accessright": "operate",
+    "group": "QA",
+    "permission": "Allow"
+  }
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "TcHmiButton_CloseAll1_63.onPressed",
+    "actions": [
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "//Call our function",
+          "close_the_ui();"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="PedContext_Title_1" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="29" data-tchmi-height-unit="px" data-tchmi-left="810" data-tchmi-left-unit="px" data-tchmi-text="%f%if(%i%Component_Num%/i%<10){'Ped0'+%i%Component_Num%/i%}else{'Ped'+%i%Component_Num%/i%}%/f%" data-tchmi-top="10" data-tchmi-top-unit="px" data-tchmi-width="157" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-font-size="20" data-tchmi-text-font-weight="Bold">
+
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+</div>
+
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "angle": 0.0,
+  "stopPoints": [
+    {
+      "color": "rgba(0, 0, 0, 1)",
+      "stop": "0%"
+    },
+    {
+      "color": "rgba(0, 0, 0, 1)",
+      "stop": "0%"
+    },
+    {
+      "color": "rgba(127, 127, 127, 1)",
+      "stop": "45%"
+    },
+    {
+      "color": "rgba(127, 127, 127, 1)",
+      "stop": "55%"
+    },
+    {
+      "color": "rgba(0, 0, 0, 1)",
+      "stop": "100%"
+    }
+  ]
+}
+</script>
+<div id="HomePB_6" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="42" data-tchmi-height-unit="px" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-top="4" data-tchmi-top-unit="px" data-tchmi-width="90" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-icon="Images/GTAC/Icons/ico_home.jpg" data-tchmi-icon-width="40" data-tchmi-icon-height="40">
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "HomePB_6.onPressed",
+    "actions": [
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "$('#WhatScreenRegion').animate({",
+          "                          \tleft: '13px',",
+          "                          \ttop: '7px',",
+          " \t\t\t\t\t\t\topacity: '1'",
+          "                               });"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%ContextRegion::TargetContent%/ctrl%",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:framework#/definitions/ContentPath",
+          "value": "Contents/Context Menus/OverviewContext.content"
+        },
+        "asyncWait": true
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%FixScreenNumber%/i%",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:general#/definitions/INT16",
+          "value": "0"
+        },
+        "asyncWait": true
+      },
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Change_Screen",
+        "fnParams": [
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:general#/definitions/String",
+            "symbolExpression": "%f%'Contents/Line Overview Screens/Line Overview_'+%i%ICxx_Value%/i%+'.content'%/f%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": ""
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+</div>
+<div id="PEDContextMenu_Call_IO_PB" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="42" data-tchmi-height-unit="px" data-tchmi-left="210" data-tchmi-left-unit="px" data-tchmi-top="4" data-tchmi-top-unit="px" data-tchmi-width="90" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-background-image-width="60" data-tchmi-background-image-height="60" data-tchmi-icon-width="70" data-tchmi-icon-height="40" data-tchmi-icon="Images/GTAC/Icons/ico_discrete_IO.png">
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PEDContextMenu_Call_IO_PB.onPressed",
+    "actions": [
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "$('#WhatScreenRegion').animate({",
+          "                          \tleft: '213px',",
+          "                          \ttop: '7px',",
+          " \t\t\t\t\t\t\topacity: '1'",
+          "                               });"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      },
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Change_Screen",
+        "fnParams": [
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:framework#/definitions/ContentPath",
+            "value": "Contents/GTAC Component Screens/Pedxx/Pedxx - Discrete IO_1.content"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": ""
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+</div>
+<div id="PEDContextMenu_CylSens_PB" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="42" data-tchmi-height-unit="px" data-tchmi-left="110" data-tchmi-left-unit="px" data-tchmi-top="4" data-tchmi-top-unit="px" data-tchmi-width="90" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-icon="Images/GTAC/Icons/ico_cylinder.png" data-tchmi-icon-width="85" data-tchmi-icon-height="85">
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PEDContextMenu_CylSens_PB.onPressed",
+    "actions": [
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "$('#WhatScreenRegion').animate({",
+          "                          \tleft: '113px',",
+          "                          \ttop: '7px',",
+          " \t\t\t\t\t\t\topacity: '1'",
+          "                               });"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      },
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%parseInt(%i%Component_Num%/i%)%/f%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "10"
+                },
+                "compareOperator": "<",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%i%temp_content_path%/i%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%\"Contents/GTAC Component Screens/Pedxx/Ped0\"+%i%Component_Num%/i%+\" - CylSens_1.content\"%/f%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "Function",
+                "active": true,
+                "fn": "TcHmi.Functions.ICxx.GTAC_Change_Screen",
+                "fnParams": [
+                  {
+                    "objectType": "Symbol",
+                    "valueType": "tchmi:general#/definitions/String",
+                    "symbolExpression": "%i%temp_content_path%/i%"
+                  },
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:general#/definitions/String",
+                    "value": ""
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "elseif": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%parseInt(%i%Component_Num%/i%)%/f%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "10"
+                },
+                "compareOperator": ">=",
+                "logic": null
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%parseInt(%i%Component_Num%/i%)%/f%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "30"
+                },
+                "compareOperator": "<=",
+                "logic": "AND"
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%i%temp_content_path%/i%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%\"Contents/GTAC Component Screens/Pedxx/Ped\"+%i%Component_Num%/i%+\" - CylSens_1.content\"%/f%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "Function",
+                "active": true,
+                "fn": "TcHmi.Functions.ICxx.GTAC_Change_Screen",
+                "fnParams": [
+                  {
+                    "objectType": "Symbol",
+                    "valueType": "tchmi:general#/definitions/String",
+                    "symbolExpression": "%i%temp_content_path%/i%"
+                  },
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:general#/definitions/String",
+                    "value": ""
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+</div>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PedContextMenu_Content.onDetached",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%Component_Num%/i%",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:general#/definitions/String",
+          "value": "0"
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>

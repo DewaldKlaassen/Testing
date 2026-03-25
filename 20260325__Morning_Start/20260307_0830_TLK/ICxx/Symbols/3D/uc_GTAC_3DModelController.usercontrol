@@ -1,0 +1,357 @@
+
+	
+	<div id="3DModelController_Content" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControl" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="1024" data-tchmi-height="670" data-tchmi-width-unit="%" data-tchmi-height-unit="%" data-tchmi-creator-viewport-width="500" data-tchmi-creator-viewport-height="500" data-tchmi-is-enabled="true" data-tchmi-width-mode="Value" data-tchmi-height-mode="Value" >
+
+		<div id="3DController_HTMLHost" data-tchmi-type="TcHmi.Controls.System.TcHmiHtmlHost" data-tchmi-height="670" data-tchmi-height-unit="px" data-tchmi-left="1" data-tchmi-left-unit="px" data-tchmi-top="0" data-tchmi-top-unit="px" data-tchmi-width="1024" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+			<!--------------------------------------------------------------------------------------------------------------------------------------->
+			<!--------------------------------------------------------------------------------------------------------------------------------------->
+
+			<link rel="stylesheet" href="/Imports/CSS/pushy-buttons.min.css">
+
+			<br />
+			<button class="btn btn--md btn--blue" id="btn_hide_extras">Hide Extras</button>
+			<button id="btn_close_clamps">Close Clamps</button>
+			<button id="btn_open_clamps">Open Clamps</button>
+			<button id="btn_clamps_red">Clamp Red</button>
+			<button id="btn_rotateX_plus">Rotate X+</button>
+			<button id="btn_rotateX_minus">Rotate X-</button>
+			<button id="btn_rotateY_plus">Rotate Y+</button>
+			<button id="btn_rotateY_minus">Rotate Y-</button>
+			<button id="btn_rotateZ_plus">Rotate Z+</button>
+			<button id="btn_rotateZ_minus">Rotate Z-</button>
+
+
+			<!--blank p element for indicating model load status-->
+			<p id="model_status"></p>
+			<p id="temp1"></p>
+
+			<!--blank p element for dispalying model tree-->
+			<p id="model_tree"></p>
+			<!-- blank canvas for model view -->
+			<canvas id="model_canvas"></canvas>
+
+
+			<script type="module">
+				/*-----------------------------------------------------------------------------
+				Using three.js framework, to embed 3D models into an HTML webpage
+				Author: b.lekx-toniolo
+
+				DEBUG DEBUG DEBUG, all still under development, blt
+				---------------------------------------------------------------------------------*/
+
+				//----------- Module Imports ---------------
+				import * as THREE from '/Scripts/three/build/three.module.js';
+				import { GLTFLoader } from '/Scripts/three/examples/jsm/loaders/GLTFLoader.js';
+				import { OrbitControls } from '/Scripts/three/examples/jsm/controls/OrbitControls.js';
+
+				//---------- Definitions ---------------
+				let scene, camera, renderer, sceneBgColor, cameraController;
+
+				let ambientLight, ambientColor, ambientIntensity;
+				let hemiLight, hemiSkyColor, hemiGroundColor, hemiIntensity;
+				let dirLight, dirColor, dirIntensity, dirTargetX, dirTargetY, dirTargetZ;
+
+				let modelLoader, model, model_tree_structure = [];
+
+				//Some constants
+				const model_path = TcHmi.Symbol.readEx("%pp%Model_Path%/pp%");
+				const show_tree = TcHmi.Symbol.readEx("%pp%Show_Tree%/pp%");;
+				const expected_model_size = TcHmi.Symbol.readEx("%pp%Model_Size%/pp%");;
+				const current_bgcolor = window.getComputedStyle(document.body, null).getPropertyValue('background-color');
+
+
+				let extras_phrases = ['Part_CAD_DATA', 'Weld_guns', 'turntable', 'stuff'];
+				let open_phrases = ['Open', 'open', 'OPEN'];
+				let close_phrases = ['Close', 'close', 'CLOSE'];
+                let test_color_phrases = ['CKZT40-A045RS'];
+				let hide_extras_req = false;
+				let clamps_red_req = false;
+				let HIDE = false;
+				let SHOW = true;
+
+				//Set initial camera position
+				let camera_x_position = 3;
+				let camera_y_position = 1;
+				let camera_z_position = 6;
+
+
+				//---------- Event handlers -------------
+				let hide_extras = document.getElementById("btn_hide_extras");
+				hide_extras.addEventListener('click', event => {
+					if (hide_extras_req == false) {
+						hide_extras_req = true;
+					} else if (hide_extras_req == true) {
+						hide_extras_req = false;
+					}
+					update_model_vis(model, extras_phrases, !hide_extras_req);
+				});
+				let close_clamps = document.getElementById("btn_close_clamps");
+				close_clamps.addEventListener('click', event => {
+					update_model_vis(model, close_phrases, SHOW);
+                    update_model_vis(model, open_phrases, HIDE);
+				});
+				let open_clamps = document.getElementById("btn_open_clamps");
+				open_clamps.addEventListener('click', event => {
+					update_model_vis(model, open_phrases, SHOW);
+                    update_model_vis(model, close_phrases, HIDE);
+				});
+
+				let clamps_red = document.getElementById("btn_clamps_red");
+				clamps_red.addEventListener('click', event => {
+					if (clamps_red_req == false) {
+						clamps_red_req = true;
+                        update_target_color(model, test_color_phrases, 0xff0000);
+					} else if (clamps_red_req == true) {
+						clamps_red_req = false;
+                        update_target_color(model, test_color_phrases, 0xffffff);
+					}
+				});
+
+				let rotateX_plus = document.getElementById("btn_rotateX_plus");
+				rotateX_plus.addEventListener('click', event => {
+					model.rotation.x += 0.02;
+				});
+				let rotateX_minus = document.getElementById("btn_rotateX_minus");
+				rotateX_minus.addEventListener('click', event => {
+					model.rotation.x -= 0.02;
+				});
+				let rotateY_plus = document.getElementById("btn_rotateY_plus");
+				rotateY_plus.addEventListener('click', event => {
+					model.rotation.y += 0.02;
+				});
+				let rotateY_minus = document.getElementById("btn_rotateY_minus");
+				rotateY_minus.addEventListener('click', event => {
+					model.rotation.y -= 0.02;
+				});
+				let rotateZ_plus = document.getElementById("btn_rotateZ_plus");
+				rotateZ_plus.addEventListener('click', event => {
+					model.rotation.z += 0.02;
+				});
+				let rotateZ_minus = document.getElementById("btn_rotateZ_minus");
+				rotateZ_minus.addEventListener('click', event => {
+					model.rotation.z -= 0.02;
+				});
+
+
+
+
+				//---------- Three.js requires three items to embed a 3D model into a webpage -----------
+				//1. Scene
+				//2. Camera
+				//3. Renderer
+				//So let's create these with three.js framework
+
+
+				//Create Scene
+				scene = new THREE.Scene();
+				scene.background = new THREE.Color(current_bgcolor);
+
+				//Create Camera and set initial position
+				camera = new THREE.PerspectiveCamera(75, 1024 / 670, 0.1, 1000);
+				camera.position.x = camera_x_position;
+				camera.position.y = camera_y_position;
+				camera.position.z = camera_z_position;
+
+				//Create Renderer and bind to canvas
+				const canvas = document.querySelector('#model_canvas');
+				renderer = new THREE.WebGLRenderer({ canvas });
+				renderer.setSize(1024, 670);
+
+				//Add Renderer HTML Element to Body of HTML
+				//let rendererElement = document.body.appendChild(renderer.domElement);
+				//rendererElement.setAttribute("id", "GTAC_3D_View");
+
+				//------------- Add in some initial lighting -----------------
+
+				//Set all default lighting information
+				ambientColor = 0x616161;
+				ambientIntensity = 0.8;
+
+				hemiSkyColor = 0x000000;
+				hemiGroundColor = sceneBgColor;
+				hemiIntensity = 0.9;
+
+				dirColor = 0x000000;
+				dirIntensity = 0.8;
+				dirTargetX = 2;
+				dirTargetY = -2;
+				dirTargetZ = 0;
+
+				//Create ambient lighting and add to scene
+
+				ambientLight = new THREE.AmbientLight(ambientColor, ambientIntensity);
+				scene.add(ambientLight);
+
+				//Create Hemisphere lighting
+				hemiLight = new THREE.HemisphereLight(hemiSkyColor, hemiGroundColor, hemiIntensity);
+				scene.add(hemiLight);
+
+				//Create directional lighting
+				dirLight = new THREE.DirectionalLight(dirColor, dirIntensity);
+				dirLight.position.set(0, 10, 0);
+				dirLight.target.position.set(dirTargetX, dirTargetY, dirTargetZ);
+				dirLight.castShadow = true;
+				scene.add(dirLight);
+				scene.add(dirLight.target);
+
+				//Create new cameraController from OrbitControls Class (for future use)
+				cameraController = new OrbitControls(camera, renderer.domElement);
+
+
+				//---------------- Load 3D model (subject) ----------------------------
+				function load_model(path, message_handler, model_file_size) {
+
+					//Create a new loader
+					modelLoader = new GLTFLoader();
+
+					//Loading a .glb (binary form of glTF type file) 3D model
+					modelLoader.load(path,
+
+						//Called once resource is loaded
+						function (gltf) {
+							model = gltf.scene;
+							scene.add(model);
+
+							//Finalize messaging
+							if (show_tree == true) {
+								//Log model tree structure to console
+								model_tree_structure = build_model_tree(model)
+								console.log(model_tree_structure.join('\n'));
+								message_handler.innerHTML = "Model tree logged to console";
+							} else {
+                                //Blank message
+                                message_handler.innerHTML = "";
+                            }
+
+
+						},
+
+						//Called while loading is in progress
+						function (xhr) {
+							let progress = (xhr.loaded / model_file_size);
+							progress = Math.ceil(progress);
+							if (progress > 100) {
+								progress = 100;
+							}
+							message_handler.innerHTML = "Loading " + path + ": " + progress + " %";
+						},
+
+						//Called in event of a load error
+						function (error) {
+							//Display error message
+							message_handler.innerHTML = "Failed to load: " + path + "!!!";
+						}
+					);
+				};
+
+
+
+				//--------------------- Function Definitions ----------------------------
+				function update_model_vis(target_model, target_phrases, target_state) {
+					//Update the subject
+
+					target_phrases.forEach((phrase) => {
+						//Ensure object was actualy found with phrase (ignore invalid phrases), then update
+                        if (target_model.getObjectByName(phrase) != null) {
+							target_model.getObjectByName(phrase).visible = target_state;
+						}
+					});
+
+	
+				};
+
+				//---------- Update subject colors upon changes -----------------
+				function update_target_color(target_model, target_phrases, target_color) {
+
+					target_phrases.forEach((phrase) => {
+						//Traverse the model, look for child matching target)name, then update (arrow function method)
+						target_model.traverse((child) => {
+							if (child.name == phrase) {
+								//Call recursive function to navigate full depth of all childs children
+								full_depth(child, target_color);
+							}
+						});
+                    });
+				};
+
+				//---------- Seach thru full depth of model tree object to find meshes ----------------------------
+				function full_depth(object, color) {
+					//If target is mesh, update directly
+					if (object.isMesh) {
+						document.getElementById("temp1").innerHTML += object.name +" ";
+						object.material.color.setHex(color);
+					}
+					//If target is Object3D, recursivelly call to find sub meshes
+					else if (object.isObject3D) {
+						object.children.forEach((child) => {
+							full_depth(child, color);
+						});
+
+                    }
+				};
+                
+				//---------- Get all parent / child information from model and build a tree-----------
+				function build_model_tree(target_model, lines = [], isLast = true, prefix = '') {
+
+					if (target_model != undefined) {
+						const localPrefix = isLast ? '└─' : '├─';
+						lines.push(`${prefix}${prefix ? localPrefix : ''}${target_model.name || model_path} [${target_model.type}]`);
+						const newPrefix = prefix + (isLast ? '  ' : '│ ');
+						const lastNdx = target_model.children.length - 1;
+						target_model.children.forEach((child, ndx) => {
+							const isLast = ndx === lastNdx;
+							build_model_tree(child, lines, isLast, newPrefix); //Recursive call to grab full children depth
+						});
+						return lines;
+					} else {
+						return 'Model is undefined, can not read information';
+					}
+				};
+
+
+
+				//------------------------ Recursive animation loop --------------------
+				function animate() {
+					requestAnimationFrame(animate);
+					renderer.render(scene, camera);
+					cameraController.update();
+
+				};
+
+				//------------------------ End Functions Definitions-------------------------------
+
+				//------------- Call functions --------------------------
+				//Load 3D Model
+				load_model(model_path, document.getElementById("model_status"), expected_model_size);
+
+				//Call animation loop
+				animate();
+
+			</script>
+
+
+
+			<!--------------------------------------------------------------------------------------------------------------------------------------->
+			<!--------------------------------------------------------------------------------------------------------------------------------------->
+
+
+
+
+
+
+
+
+
+
+
+
+		</div>
+	
+
+
+
+
+
+
+
+</div>

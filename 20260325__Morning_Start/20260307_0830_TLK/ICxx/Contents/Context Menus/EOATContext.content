@@ -1,0 +1,645 @@
+<div id="Content1_27" data-tchmi-type="TcHmi.Controls.System.TcHmiContent" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="1024" data-tchmi-height="49" data-tchmi-is-enabled="true">
+<div id="TcHmiButton_CloseAll1_26" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="29" data-tchmi-height-unit="px" data-tchmi-left="977" data-tchmi-left-unit="px" data-tchmi-text="X" data-tchmi-top="10" data-tchmi-top-unit="px" data-tchmi-width="37" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true">
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "color": "rgba(197, 3, 33, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-access-config" type="application/json">
+[
+  {
+    "accessright": "operate",
+    "group": "Guest",
+    "permission": "Deny"
+  },
+  {
+    "accessright": "operate",
+    "group": "maint",
+    "permission": "Allow"
+  },
+  {
+    "accessright": "operate",
+    "group": "qa",
+    "permission": "Allow"
+  },
+  {
+    "accessright": "operate",
+    "group": "Eng",
+    "permission": "Allow"
+  },
+  {
+    "accessright": "operate",
+    "group": "Maint",
+    "permission": "Allow"
+  },
+  {
+    "accessright": "operate",
+    "group": "QA",
+    "permission": "Allow"
+  }
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "TcHmiButton_CloseAll1_26.onPressed",
+    "actions": [
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "//Call our function",
+          "close_the_ui();"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="EOAT_Title_1" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="42" data-tchmi-height-unit="px" data-tchmi-left="787" data-tchmi-left-unit="px" data-tchmi-top="4" data-tchmi-top-unit="px" data-tchmi-width="180" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-font-size="20" data-tchmi-text-font-weight="Bold" data-tchmi-text="%f%if(%i%EOATNumber%/i%<10){'EOAT0'+%i%EOATNumber%/i%}else{'EOAT'+%i%EOATNumber%/i%}%/f%">
+
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+</div>
+
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "angle": 0.0,
+  "stopPoints": [
+    {
+      "color": "rgba(0, 0, 0, 1)",
+      "stop": "0%"
+    },
+    {
+      "color": "rgba(127, 127, 127, 1)",
+      "stop": "45%"
+    },
+    {
+      "color": "rgba(127, 127, 127, 1)",
+      "stop": "55%"
+    },
+    {
+      "color": "rgba(0, 0, 0, 1)",
+      "stop": "100%"
+    }
+  ]
+}
+</script>
+<div id="HomePB_3" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="42" data-tchmi-height-unit="px" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-top="4" data-tchmi-top-unit="px" data-tchmi-width="90" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-icon="Images/GTAC/Icons/ico_home.jpg" data-tchmi-icon-width="40" data-tchmi-icon-height="40">
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "HomePB_3.onPressed",
+    "actions": [
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "$('#WhatScreenRegion').animate({",
+          "                          \tleft: '13px',",
+          "                          \ttop: '7px',",
+          " \t\t\t\t\t\t\topacity: '1'",
+          "                               });"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%ContextRegion::TargetContent%/ctrl%",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:framework#/definitions/ContentPath",
+          "value": "Contents/Context Menus/OverviewContext.content"
+        },
+        "asyncWait": true
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%EOATNumber%/i%",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:general#/definitions/String",
+          "value": "0"
+        },
+        "asyncWait": true
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%RxxNumber%/i%",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:general#/definitions/Integer",
+          "value": "0"
+        },
+        "asyncWait": true
+      },
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Change_Screen",
+        "fnParams": [
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:general#/definitions/String",
+            "symbolExpression": "%f%'Contents/Line Overview Screens/Line Overview_'+%i%ICxx_Value%/i%+'.content'%/f%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": ""
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+</div>
+<div id="Origin_PB_3" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="42" data-tchmi-height-unit="px" data-tchmi-left="110" data-tchmi-left-unit="px" data-tchmi-top="4" data-tchmi-top-unit="px" data-tchmi-width="90" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-icon="Images/GTAC/Icons/ico_origin.png" data-tchmi-icon-width="30" data-tchmi-icon-height="30">
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Origin_PB_3.onPressed",
+    "actions": [
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "//Move WhatScreenRegion icon (ball) to corner of control",
+          "$('#WhatScreenRegion').animate({",
+          "                          \tleft: '113px',",
+          "                          \ttop: '7px',",
+          " \t\t\t\t\t\t\topacity: '1'",
+          "                               });"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%ContextRegion::TargetContent%/ctrl%",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:framework#/definitions/ContentPath",
+          "value": "Contents/Context Menus/Rxx_FieldbusContext.content"
+        },
+        "asyncWait": true
+      },
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Change_Screen",
+        "fnParams": [
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:framework#/definitions/ContentPath",
+            "value": "Contents/GTAC Component Screens/GTAC_Fieldbus/GTACxx - Fieldbus IO.content"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": ""
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%EOATNumber%/i%",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:general#/definitions/String",
+          "value": "0"
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+</div>
+<div id="EOAT_ECATSlave_PB_1" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="42" data-tchmi-height-unit="px" data-tchmi-left="310" data-tchmi-left-unit="px" data-tchmi-top="4" data-tchmi-top-unit="px" data-tchmi-width="90" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-background-image-width="60" data-tchmi-background-image-height="60" data-tchmi-icon-width="70" data-tchmi-icon-height="40" data-tchmi-icon="Images/GTAC/Icons/ico_discrete_IO.png">
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "EOAT_ECATSlave_PB_1.onPressed",
+    "actions": [
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "//Move WhatScreenRegion icon (ball) to corner of control",
+          "$('#WhatScreenRegion').animate({",
+          "                          \tleft: '313px',",
+          "                          \ttop: '7px',",
+          " \t\t\t\t\t\t\topacity: '1'",
+          "                               });"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      },
+      {
+        "objectType": "SwitchCase",
+        "active": true,
+        "compare": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%i%EOATNumber%/i%"
+        },
+        "cases": [
+          {
+            "caseValue": {
+              "objectType": "StaticValue",
+              "valueType": "tchmi:general#/definitions/String",
+              "value": "1"
+            },
+            "actions": [
+              {
+                "objectType": "Function",
+                "active": true,
+                "fn": "TcHmi.Functions.ICxx.GTAC_Change_Screen",
+                "fnParams": [
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:framework#/definitions/ContentPath",
+                    "value": "Contents/EOAT Screens/EOAT01/EOAT01-EcatSlaves.content"
+                  },
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:general#/definitions/String",
+                    "value": ""
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "caseValue": {
+              "objectType": "StaticValue",
+              "valueType": "tchmi:general#/definitions/String",
+              "value": "2"
+            },
+            "actions": [
+              {
+                "objectType": "Function",
+                "active": true,
+                "fn": "TcHmi.Functions.ICxx.GTAC_Change_Screen",
+                "fnParams": [
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:framework#/definitions/ContentPath",
+                    "value": "Contents/EOAT Screens/EOAT02/EOAT02-EcatSlaves.content"
+                  },
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:general#/definitions/String",
+                    "value": ""
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "caseValue": {
+              "objectType": "StaticValue",
+              "valueType": "tchmi:general#/definitions/String",
+              "value": "3"
+            },
+            "actions": [
+              {
+                "objectType": "Function",
+                "active": true,
+                "fn": "TcHmi.Functions.ICxx.GTAC_Change_Screen",
+                "fnParams": [
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:framework#/definitions/ContentPath",
+                    "value": "Contents/EOAT Screens/EOAT03/EOAT03-EcatSlaves.content"
+                  },
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:general#/definitions/String",
+                    "value": ""
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "caseValue": {
+              "objectType": "StaticValue",
+              "valueType": "tchmi:general#/definitions/String",
+              "value": "4"
+            },
+            "actions": [
+              {
+                "objectType": "Function",
+                "active": true,
+                "fn": "TcHmi.Functions.ICxx.GTAC_Change_Screen",
+                "fnParams": [
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:framework#/definitions/ContentPath",
+                    "value": "Contents/EOAT Screens/EOAT04/EOAT04-EcatSlaves.content"
+                  },
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:general#/definitions/String",
+                    "value": ""
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "caseValue": {
+              "objectType": "StaticValue",
+              "valueType": "tchmi:general#/definitions/String",
+              "value": "5"
+            },
+            "actions": [
+              {
+                "objectType": "Function",
+                "active": true,
+                "fn": "TcHmi.Functions.ICxx.GTAC_Change_Screen",
+                "fnParams": [
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:framework#/definitions/ContentPath",
+                    "value": "Contents/EOAT Screens/EOAT05/EOAT05-EcatSlaves.content"
+                  },
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:general#/definitions/String",
+                    "value": ""
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "caseValue": {
+              "objectType": "StaticValue",
+              "valueType": "tchmi:general#/definitions/String",
+              "value": "6"
+            },
+            "actions": [
+              {
+                "objectType": "Function",
+                "active": true,
+                "fn": "TcHmi.Functions.ICxx.GTAC_Change_Screen",
+                "fnParams": [
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:framework#/definitions/ContentPath",
+                    "value": "Contents/EOAT Screens/EOAT06/EOAT06-EcatSlaves.content"
+                  },
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:general#/definitions/String",
+                    "value": ""
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "caseValue": {
+              "objectType": "StaticValue",
+              "valueType": "tchmi:general#/definitions/String",
+              "value": "7"
+            },
+            "actions": [
+              {
+                "objectType": "Function",
+                "active": true,
+                "fn": "TcHmi.Functions.ICxx.GTAC_Change_Screen",
+                "fnParams": [
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:framework#/definitions/ContentPath",
+                    "value": "Contents/EOAT Screens/EOAT07/EOAT07-EcatSlaves.content"
+                  },
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:general#/definitions/String",
+                    "value": ""
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "caseValue": {
+              "objectType": "StaticValue",
+              "valueType": "tchmi:general#/definitions/String",
+              "value": "8"
+            },
+            "actions": [
+              {
+                "objectType": "Function",
+                "active": true,
+                "fn": "TcHmi.Functions.ICxx.GTAC_Change_Screen",
+                "fnParams": [
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:framework#/definitions/ContentPath",
+                    "value": "Contents/EOAT Screens/EOAT08/EOAT08-EcatSlaves.content"
+                  },
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:general#/definitions/String",
+                    "value": ""
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "caseValue": {
+              "objectType": "StaticValue",
+              "valueType": "tchmi:general#/definitions/String",
+              "value": "9"
+            },
+            "actions": [
+              {
+                "objectType": "Function",
+                "active": true,
+                "fn": "TcHmi.Functions.ICxx.GTAC_Change_Screen",
+                "fnParams": [
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:framework#/definitions/ContentPath",
+                    "value": "Contents/EOAT Screens/EOAT09/EOAT09-EcatSlaves.content"
+                  },
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:general#/definitions/String",
+                    "value": ""
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "caseValue": {
+              "objectType": "StaticValue",
+              "valueType": "tchmi:general#/definitions/String",
+              "value": "10"
+            },
+            "actions": [
+              {
+                "objectType": "Function",
+                "active": true,
+                "fn": "TcHmi.Functions.ICxx.GTAC_Change_Screen",
+                "fnParams": [
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:framework#/definitions/ContentPath",
+                    "value": "Contents/EOAT Screens/EOAT10/EOAT10-EcatSlaves.content"
+                  },
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:general#/definitions/String",
+                    "value": ""
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+</div>
+<div id="EOATContextMenu_CylSens_PB" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="42" data-tchmi-height-unit="px" data-tchmi-left="210" data-tchmi-left-unit="px" data-tchmi-top="4" data-tchmi-top-unit="px" data-tchmi-width="90" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-icon="Images/GTAC/Icons/ico_cylinder.png" data-tchmi-icon-width="85" data-tchmi-icon-height="85">
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "EOATContextMenu_CylSens_PB.onPressed",
+    "actions": [
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "//Move WhatScreenRegion icon (ball) to corner of control",
+          "$('#WhatScreenRegion').animate({",
+          "                          \tleft: '213px',",
+          "                          \ttop: '7px',",
+          " \t\t\t\t\t\t\topacity: '1'",
+          "                               });"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      },
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Change_Screen",
+        "fnParams": [
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:general#/definitions/String",
+            "symbolExpression": "%f%'Contents/EOAT Screens/EOAT0'+%i%EOATNumber%/i%+'/EOAT0'+%i%EOATNumber%/i%+'-Cylinders and Sensors.content'%/f%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": ""
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+</div>
+</div>

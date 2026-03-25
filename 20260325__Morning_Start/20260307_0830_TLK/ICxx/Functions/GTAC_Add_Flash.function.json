@@ -1,0 +1,81 @@
+{
+  "function": {
+    "name": "GTAC_Add_Flash",
+    "namespace": "TcHmi.Functions.ICxx",
+    "displayName": "GTAC_Add_Flash",
+    "description": "",
+    "waitMode": "Synchronous",
+    "category": "",
+    "returnValue": {
+      "type": "tchmi:general#/definitions/VOID"
+    },
+    "visible": true,
+    "injectContextObject": false,
+    "arguments": [
+      {
+        "name": "object",
+        "displayName": "object",
+        "type": "tchmi:general#/definitions/String",
+        "description": "Reference to Object",
+        "defaultValue": "",
+        "required": true,
+        "bindable": true,
+        "restParameter": false,
+        "asReference": false,
+        "allowControlAttributeBindingOptions": false
+      },
+      {
+        "name": "flash_on_color",
+        "displayName": "flash_on_color",
+        "type": "tchmi:framework#/definitions/Color",
+        "description": "",
+        "defaultValue": "{\r\n  \"color\": \"rgba(255, 0, 0, 1)\"\r\n}",
+        "required": true,
+        "bindable": true,
+        "restParameter": false,
+        "asReference": false,
+        "allowControlAttributeBindingOptions": false
+      },
+      {
+        "name": "flash_off_color",
+        "displayName": "flash_off_color",
+        "type": "tchmi:framework#/definitions/Color",
+        "description": "",
+        "defaultValue": "",
+        "required": true,
+        "bindable": true,
+        "restParameter": false,
+        "asReference": false,
+        "allowControlAttributeBindingOptions": false
+      },
+      {
+        "name": "flash_pulse",
+        "displayName": "flash_pulse",
+        "type": "tchmi:general#/definitions/Boolean",
+        "description": "",
+        "defaultValue": "",
+        "required": true,
+        "bindable": true,
+        "restParameter": false,
+        "asReference": false,
+        "allowControlAttributeBindingOptions": false
+      }
+    ]
+  },
+  "$schema": "./../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.758.8/runtimes/native1.12-tchmi/Schema/FunctionDescription.Schema.json",
+  "apiVersion": 1,
+  "version": {
+    "full": "0.0.0.0",
+    "major": 0,
+    "minor": 0,
+    "revision": 0,
+    "build": 0
+  },
+  "dependencyFiles": [
+    {
+      "name": "FunctionJS1.js",
+      "type": "JavaScript",
+      "description": ""
+    }
+  ]
+}

@@ -1,0 +1,882 @@
+<div id="UC_GTAC_Components_Content" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControl" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="120" data-tchmi-height="150" data-tchmi-width-unit="px" data-tchmi-height-unit="px" data-tchmi-creator-viewport-width="500" data-tchmi-creator-viewport-height="500" data-tchmi-zindex="0" data-tchmi-max-width="120" data-tchmi-max-height="120" data-tchmi-min-width="50" data-tchmi-min-height="50" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "%pp%Component_Name%/pp%",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "TcHmi.Functions.ICxx.GTAC_StrLeft(%pp%Component_Name%/pp%, 3)"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "ESW"
+                },
+                "compareOperator": "==",
+                "logic": null
+              },
+              {
+                "compare1": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "TcHmi.Functions.ICxx.GTAC_StrLeft(%pp%Component_Name%/pp%, 3)"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "LSR"
+                },
+                "compareOperator": "==",
+                "logic": "OR"
+              },
+              {
+                "compare1": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "TcHmi.Functions.ICxx.GTAC_StrLeft(%pp%Component_Name%/pp%, 3)"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "VFD"
+                },
+                "compareOperator": "==",
+                "logic": "OR"
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%pp%Component_ID%/pp%",
+                "value": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "TcHmi.Functions.ICxx.GTAC_StrLeft(%pp%Component_Name%/pp%, 3)"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%pp%Component_Num%/pp%",
+                "value": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "TcHmi.Functions.ICxx.GTAC_StrRight(%pp%Component_Name%/pp%, 1)"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "SwitchCase",
+                "active": true,
+                "compare": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%Component_ID%/pp%"
+                },
+                "cases": [
+                  {
+                    "caseValue": {
+                      "objectType": "StaticValue",
+                      "valueType": "tchmi:general#/definitions/String",
+                      "value": "ESW"
+                    },
+                    "actions": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%pp%Component_Offsett%/pp%",
+                        "value": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "\"1\"+%pp%Component_Num%/pp%"
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  },
+                  {
+                    "caseValue": {
+                      "objectType": "StaticValue",
+                      "valueType": "tchmi:general#/definitions/String",
+                      "value": "LSR"
+                    },
+                    "actions": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%pp%Component_Offsett%/pp%",
+                        "value": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "\"2\"+%pp%Component_Num%/pp%"
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  },
+                  {
+                    "caseValue": {
+                      "objectType": "StaticValue",
+                      "valueType": "tchmi:general#/definitions/String",
+                      "value": "VFD"
+                    },
+                    "actions": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%pp%Component_Offsett%/pp%",
+                        "value": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "\"1\"+%pp%Component_Num%/pp%"
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  }
+                ],
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%UC_GTAC_Components_Content::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "elseif": [
+              {
+                "compare1": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "TcHmi.Functions.ICxx.GTAC_StrLeft(%pp%Component_Name%/pp%, 2)"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "IC"
+                },
+                "compareOperator": "==",
+                "logic": null
+              },
+              {
+                "compare1": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "TcHmi.Functions.ICxx.GTAC_StrLeft(%pp%Component_Name%/pp%, 2)"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "IS"
+                },
+                "compareOperator": "==",
+                "logic": "OR"
+              },
+              {
+                "compare1": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "TcHmi.Functions.ICxx.GTAC_StrLeft(%pp%Component_Name%/pp%, 2)"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "SD"
+                },
+                "compareOperator": "==",
+                "logic": "OR"
+              },
+              {
+                "compare1": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "TcHmi.Functions.ICxx.GTAC_StrLeft(%pp%Component_Name%/pp%, 2)"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "ST"
+                },
+                "compareOperator": "==",
+                "logic": "OR"
+              },
+              {
+                "compare1": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "TcHmi.Functions.ICxx.GTAC_StrLeft(%pp%Component_Name%/pp%, 2)"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "SS"
+                },
+                "compareOperator": "==",
+                "logic": "OR"
+              },
+              {
+                "compare1": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "TcHmi.Functions.ICxx.GTAC_StrLeft(%pp%Component_Name%/pp%, 2)"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "SL"
+                },
+                "compareOperator": "==",
+                "logic": "OR"
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_StrLeft(%pp%Component_Name%/pp%, 2)%/f%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "MD"
+                },
+                "compareOperator": "==",
+                "logic": "OR"
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%pp%Component_ID%/pp%",
+                "value": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "TcHmi.Functions.ICxx.GTAC_StrLeft(%pp%Component_Name%/pp%, 2)"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "Condition",
+                "active": true,
+                "parts": [
+                  {
+                    "if": [
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%pp%Component_ID%/pp%"
+                        },
+                        "compare2": {
+                          "objectType": "StaticValue",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "value": "SD"
+                        },
+                        "compareOperator": "==",
+                        "logic": null
+                      }
+                    ],
+                    "then": [
+                      {
+                        "objectType": "Condition",
+                        "active": true,
+                        "parts": [
+                          {
+                            "if": [
+                              {
+                                "compare1": {
+                                  "objectType": "FunctionExpression",
+                                  "functionExpression": "TcHmi.Functions.ICxx.GTAC_ReturnStringLen(%pp%Component_Name%/pp%)"
+                                },
+                                "compare2": {
+                                  "objectType": "StaticValue",
+                                  "valueType": "tchmi:general#/definitions/String",
+                                  "value": "4"
+                                },
+                                "compareOperator": "==",
+                                "logic": null
+                              }
+                            ],
+                            "then": [
+                              {
+                                "objectType": "WriteToSymbol",
+                                "active": true,
+                                "symbolExpression": "%pp%Component_Num%/pp%",
+                                "value": {
+                                  "objectType": "FunctionExpression",
+                                  "functionExpression": "TcHmi.Functions.ICxx.GTAC_StrRight(%pp%Component_Name%/pp%, 2)"
+                                },
+                                "asyncWait": true
+                              }
+                            ]
+                          },
+                          {
+                            "else": [
+                              {
+                                "objectType": "WriteToSymbol",
+                                "active": true,
+                                "symbolExpression": "%pp%Component_Num%/pp%",
+                                "value": {
+                                  "objectType": "FunctionExpression",
+                                  "functionExpression": "TcHmi.Functions.ICxx.GTAC_StrRight(%pp%Component_Name%/pp%, 1)"
+                                },
+                                "asyncWait": true
+                              }
+                            ]
+                          }
+                        ],
+                        "asyncWait": true
+                      }
+                    ]
+                  },
+                  {
+                    "else": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%pp%Component_Num%/pp%",
+                        "value": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "TcHmi.Functions.ICxx.GTAC_StrRight(%pp%Component_Name%/pp%, 1)"
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  }
+                ],
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%UC_GTAC_Components_Content::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "elseif": [
+              {
+                "compare1": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "TcHmi.Functions.ICxx.GTAC_StrLeft(%pp%Component_Name%/pp%, 1)"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "R"
+                },
+                "compareOperator": "==",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%pp%Component_ID%/pp%",
+                "value": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "TcHmi.Functions.ICxx.GTAC_StrLeft(%pp%Component_Name%/pp%, 1)"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "Condition",
+                "active": true,
+                "parts": [
+                  {
+                    "if": [
+                      {
+                        "compare1": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "TcHmi.Functions.ICxx.GTAC_ReturnStringLen(%pp%Component_Name%/pp%)"
+                        },
+                        "compare2": {
+                          "objectType": "StaticValue",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "value": "3"
+                        },
+                        "compareOperator": "==",
+                        "logic": null
+                      }
+                    ],
+                    "then": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%pp%Component_Num%/pp%",
+                        "value": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "TcHmi.Functions.ICxx.GTAC_StrRight(%pp%Component_Name%/pp%, 2)"
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  },
+                  {
+                    "else": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%pp%Component_Num%/pp%",
+                        "value": {
+                          "objectType": "FunctionExpression",
+                          "functionExpression": "TcHmi.Functions.ICxx.GTAC_StrRight(%pp%Component_Name%/pp%, 1)"
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  }
+                ],
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%UC_GTAC_Components_Content::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "elseif": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%Component_Name%/pp%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "Blank"
+                },
+                "compareOperator": "==",
+                "logic": null
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%Component_Name%/pp%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": ""
+                },
+                "compareOperator": "==",
+                "logic": "OR"
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%UC_GTAC_Components_Content::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Collapsed"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%UC_GTAC_Components_Content::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%GTAC_Components_Image::Src%/ctrl%",
+        "value": {
+          "objectType": "FunctionExpression",
+          "functionExpression": "TcHmi.Functions.ICxx.GTAC_ReturnControlsOverviewImage(%pp%Component_ID%/pp%)"
+        },
+        "asyncWait": true
+      }
+    ]
+  },
+  {
+    "event": "UC_GTAC_Components_Content.onAttached",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%pp%Component_Name%/pp%",
+        "value": {
+          "objectType": "FunctionExpression",
+          "functionExpression": "TcHmi.Functions.Beckhoff.GetElementByIndex(%s%PLC1..Out_To_ICxx::EtherCat_Master_Image::Config%/s%, %pp%Component_Position%/pp%)"
+        },
+        "asyncWait": true
+      }
+    ]
+  },
+  {
+    "event": "UC_GTAC_Components_Content.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%Component_Name%/i%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%pp%Component_Name%/pp%"
+        },
+        "asyncWait": true
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%Component_Num%/i%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%pp%Component_Num%/pp%"
+        },
+        "asyncWait": true
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%ControlsScreenNavNumber%/i%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%pp%Component_Position%/pp%"
+        },
+        "asyncWait": true
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": false,
+        "symbolExpression": "%i%NextTarget%/i%",
+        "value": {
+          "objectType": "FunctionExpression",
+          "functionExpression": "TcHmi.Functions.ICxx.GTAC_ReturnControlsOverviewPath(%pp%Component_Name%/pp%, %pp%Component_ID%/pp%)"
+        },
+        "asyncWait": true
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": false,
+        "symbolExpression": "%i%AnimateFade%/i%",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:general#/definitions/Boolean",
+          "value": true
+        },
+        "asyncWait": true
+      },
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Change_Screen",
+        "fnParams": [
+          {
+            "objectType": "FunctionExpression",
+            "functionExpression": "TcHmi.Functions.ICxx.GTAC_ReturnControlsOverviewPath(%pp%Component_Name%/pp%, %pp%Component_ID%/pp%)"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": ""
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  },
+  {
+    "event": "%s%PLC1..Pulse_500ms%/s%",
+    "actions": [
+      {
+        "objectType": "SwitchCase",
+        "active": true,
+        "compare": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%pp%Component_ID%/pp%"
+        },
+        "cases": [
+          {
+            "caseValue": {
+              "objectType": "StaticValue",
+              "valueType": "tchmi:general#/definitions/String",
+              "value": "IC"
+            },
+            "actions": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%pp%Flash_Flag%/pp%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_ReturnBinary_Bit(%s%PLC1..Out_To_ICxx::ICxx_UI_FaultPrompts%/s%, %pp%Component_Num%/pp%)%/f%"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "caseValue": {
+              "objectType": "StaticValue",
+              "valueType": "tchmi:general#/definitions/String",
+              "value": "IS"
+            },
+            "actions": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%pp%Flash_Flag%/pp%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_ReturnBinary_Bit(%s%PLC1..Out_To_ICxx::ISxx_UI_FaultPrompts%/s%, %pp%Component_Num%/pp%)%/f%"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "caseValue": {
+              "objectType": "StaticValue",
+              "valueType": "tchmi:general#/definitions/String",
+              "value": "R"
+            },
+            "actions": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%pp%Flash_Flag%/pp%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_ReturnBinary_Bit(%s%PLC1..Out_To_ICxx::Rxx_UI_FaultPrompts%/s%, %pp%Component_Num%/pp%)%/f%"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "caseValue": {
+              "objectType": "StaticValue",
+              "valueType": "tchmi:general#/definitions/String",
+              "value": "ST"
+            },
+            "actions": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%pp%Flash_Flag%/pp%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_ReturnBinary_Bit(%s%PLC1..Out_To_ICxx::STxx_UI_FaultPrompts%/s%, %pp%Component_Num%/pp%)%/f%"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "caseValue": {
+              "objectType": "StaticValue",
+              "valueType": "tchmi:general#/definitions/String",
+              "value": "SL"
+            },
+            "actions": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%pp%Flash_Flag%/pp%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_ReturnBinary_Bit(%s%PLC1..Out_To_ICxx::SLxx_UI_FaultPrompts%/s%, %pp%Component_Num%/pp%)%/f%"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "caseValue": {
+              "objectType": "StaticValue",
+              "valueType": "tchmi:general#/definitions/String",
+              "value": "SS"
+            },
+            "actions": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%pp%Flash_Flag%/pp%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_ReturnBinary_Bit(%s%PLC1..Out_To_ICxx::MISCxx_UI_FaultPrompts%/s%, %pp%Component_Num%/pp%)%/f%"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "caseValue": {
+              "objectType": "StaticValue",
+              "valueType": "tchmi:general#/definitions/String",
+              "value": "ESW"
+            },
+            "actions": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%pp%Flash_Flag%/pp%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_ReturnBinary_Bit(%s%PLC1..Out_To_ICxx::MISCxx_UI_FaultPrompts%/s%, %pp%Component_Offsett%/pp%)%/f%"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "caseValue": {
+              "objectType": "StaticValue",
+              "valueType": "tchmi:general#/definitions/String",
+              "value": "LSR"
+            },
+            "actions": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%pp%Flash_Flag%/pp%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_ReturnBinary_Bit(%s%PLC1..Out_To_ICxx::MISCxx_UI_FaultPrompts%/s%, %pp%Component_Offsett%/pp%)%/f%"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "caseValue": {
+              "objectType": "StaticValue",
+              "valueType": "tchmi:general#/definitions/String",
+              "value": "SD"
+            },
+            "actions": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%pp%Flash_Flag%/pp%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_ReturnBinary_Bit(%s%PLC1..Out_To_ICxx::SDxx_UI_FaultPrompts%/s%, %pp%Component_Num%/pp%)%/f%"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "caseValue": {
+              "objectType": "StaticValue",
+              "valueType": "tchmi:general#/definitions/String",
+              "value": "MD"
+            },
+            "actions": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%pp%Flash_Flag%/pp%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_ReturnBinary_Bit(%s%PLC1..Out_To_ICxx::MDxx_UI_FaultPrompts%/s%, %pp%Component_Num%/pp%)%/f%"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "caseValue": {
+              "objectType": "StaticValue",
+              "valueType": "tchmi:general#/definitions/String",
+              "value": "VFD"
+            },
+            "actions": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%pp%Flash_Flag%/pp%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_ReturnBinary_Bit(%s%PLC1..Out_To_ICxx::VFDxx_UI_FaultPrompts%/s%, %pp%Component_Num%/pp%)%/f%"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+<div id="GTAC_Components_Image" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiImage" data-tchmi-height="90" data-tchmi-height-unit="px" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-top="30" data-tchmi-top-unit="px" data-tchmi-width="120" data-tchmi-width-unit="px" data-tchmi-is-enabled="true" data-tchmi-max-width="80" data-tchmi-max-height="90" data-tchmi-min-width="50" data-tchmi-min-height="50" data-tchmi-width-mode="Content" data-tchmi-height-mode="Content" data-tchmi-src="%f%TcHmi.Functions.ICxx.GTAC_ReturnControlsOverviewImage(%pp%Component_ID%/pp%)%/f%">
+</div>
+<div id="Uc_FlashTypeBanner_View" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="30" data-tchmi-height-unit="px" data-tchmi-left="%f%%ctrl%GTAC_Components_Image::RenderedLeft%/ctrl%+(%ctrl%GTAC_Components_Image::RenderedWidth%/ctrl%-75)/2%/f%" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/uc_FlashTypeTextBanner.usercontrol" data-tchmi-tb_height="28" data-tchmi-tb_width="75" data-tchmi-top="0" data-tchmi-top-unit="px" data-tchmi-width="75" data-tchmi-width-unit="px" data-tchmi-text="%pp%Component_Name%/pp%" data-tchmi-is-enabled="true" data-tchmi-flash_enable="%pp%Flash_Flag%/pp%" data-tchmi-hide_on_recover="false">
+<script data-tchmi-target-attribute="data-tchmi-flash_bg_color" type="application/json">
+{
+  "color": "rgba(255, 0, 0, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-bg_color" type="application/json">
+{
+  "color": "rgba(255, 251, 240, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-text_color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+
+</div>
+</div>

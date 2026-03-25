@@ -1,0 +1,64 @@
+<div id="Current_Faults_Content" data-tchmi-type="TcHmi.Controls.System.TcHmiContent" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="1200" data-tchmi-height="670" data-tchmi-creator-viewport-width="1024" data-tchmi-creator-viewport-height="670" data-tchmi-is-enabled="true" data-tchmi-height-mode="Content">
+<div id="TcHmiHtmlHost" data-tchmi-type="TcHmi.Controls.System.TcHmiHtmlHost" data-tchmi-height="4951" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-top="0" data-tchmi-top-unit="px" data-tchmi-width="1200" data-tchmi-width-unit="px" data-tchmi-is-enabled="true">
+    <table id="fault_displayer_container" style="width: 100%;">
+        <tr>
+            <th style="width: 17%; height: 18px; background-color: lightslategrey; border: 1px solid grey; text-align: left; padding-left: 3px"></th> <!--Event Date / Time Header-->
+            <th style="width: 53%; height: 18px; background-color: lightslategrey; border: 1px solid grey; text-align: left; padding-left: 3px"></th> <!--Message Header-->
+            <th style="width: 11%; height: 18px; background-color: lightslategrey; border: 1px solid grey; text-align: left; padding-left: 3px"></th> <!--User Header-->
+            <th style="width: 19%; height: 18px; background-color: lightslategrey; border: 1px solid grey; text-align: left; padding-left: 3px"></th> <!--PLC Var Header-->
+        </tr>
+    </table>
+
+</div>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Current_Faults_Content.onAttached",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%Current_Screen%/i%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%l%CurrentFaults%/l%"
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="Event_DateTime_TB" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="20" data-tchmi-height-unit="px" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-top="3" data-tchmi-top-unit="px" data-tchmi-width="184" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-font-size="14" data-tchmi-text-horizontal-alignment="Left" data-tchmi-text-vertical-alignment="Center" data-tchmi-zindex="1" data-tchmi-text-font-weight="Bold" data-tchmi-text="%l%title_EventDateTime%/l%">
+
+
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="Event_DateTime_TB_1" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="20" data-tchmi-height-unit="px" data-tchmi-left="214" data-tchmi-left-unit="px" data-tchmi-top="3" data-tchmi-top-unit="px" data-tchmi-width="272" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-font-size="14" data-tchmi-text-horizontal-alignment="Left" data-tchmi-text-vertical-alignment="Center" data-tchmi-zindex="1" data-tchmi-text-font-weight="Bold" data-tchmi-text="%l%title_Message%/l%">
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="Event_User" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="20" data-tchmi-height-unit="px" data-tchmi-left="846" data-tchmi-left-unit="px" data-tchmi-top="3" data-tchmi-top-unit="px" data-tchmi-width="113" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-font-size="14" data-tchmi-text-horizontal-alignment="Left" data-tchmi-text-vertical-alignment="Center" data-tchmi-zindex="1" data-tchmi-text-font-weight="Bold" data-tchmi-text="%l%title_User%/l%">
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="Event_PLCVar" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="20" data-tchmi-height-unit="px" data-tchmi-left="978" data-tchmi-left-unit="px" data-tchmi-top="3" data-tchmi-top-unit="px" data-tchmi-width="202" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-font-size="14" data-tchmi-text-horizontal-alignment="Left" data-tchmi-text-vertical-alignment="Center" data-tchmi-zindex="1" data-tchmi-text-font-weight="Bold" data-tchmi-text="%l%title_PLCVariable%/l%">
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+</div>
+</div>

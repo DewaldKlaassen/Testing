@@ -1,0 +1,29 @@
+<div id="ESWxx_Content_1" data-tchmi-type="TcHmi.Controls.System.TcHmiContent" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="1024" data-tchmi-height="640">
+
+
+<div id="ESWxx_EcatSlaveTitle_1" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="%i%Component_Name%/i%" data-tchmi-height="53" data-tchmi-height-unit="px" data-tchmi-left="375" data-tchmi-left-unit="px" data-tchmi-nodeid="N01" data-tchmi-nodetype="EP1908" data-tchmi-state="%f%TcHmi.Functions.Beckhoff.GetElementByIndex(%s%PLC1..Out_To_ICxx::ESW%/s%, %i%Component_Num%/i%).Discrete_Image.N01.InfoData.State%/f%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_TitleStatus.usercontrol" data-tchmi-top="158" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px">
+</div>
+<div id="ESWxx_N01_I" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="232" data-tchmi-height-unit="px" data-tchmi-left="375" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Indicator/Generic_Inds_Byte.usercontrol" data-tchmi-top="221" data-tchmi-top-unit="px" data-tchmi-width="387" data-tchmi-width-unit="px" data-tchmi-data="%f%TcHmi.Functions.Beckhoff.GetElementByIndex(%s%PLC1..Out_To_ICxx::ESW%/s%, %i%Component_Num%/i%).Discrete_Image.N01.I%/f%" data-tchmi-text_ind_0="%f%&quot;ESW0&quot;+%i%Component_Num%/i%+&quot;.N01.I.0 (ESW Estop CH1)&quot;%/f%" data-tchmi-text_ind_1="%f%&quot;ESW0&quot;+%i%Component_Num%/i%+&quot;.N01.I.1 (ESW Estop CH2)&quot;%/f%" data-tchmi-text_ind_2="%f%&quot;ESW0&quot;+%i%Component_Num%/i%+&quot;.N01.I.2 (ESW DSW CH1)&quot;%/f%" data-tchmi-text_ind_3="%f%&quot;ESW0&quot;+%i%Component_Num%/i%+&quot;.N01.I.3 (ESW DSW CH2)&quot;%/f%" data-tchmi-text_ind_4="%f%&quot;ESW0&quot;+%i%Component_Num%/i%+&quot;.N01.I.4 (Disabling Key CH1)&quot;%/f%" data-tchmi-text_ind_5="%f%&quot;ESW0&quot;+%i%Component_Num%/i%+&quot;.N01.I.5 (Disabling Key CH2)&quot;%/f%" data-tchmi-text_ind_6="%f%&quot;ESW0&quot;+%i%Component_Num%/i%+&quot;.N01.I.6 (DSW Nest CH1)&quot;%/f%" data-tchmi-text_ind_7="%f%&quot;ESW0&quot;+%i%Component_Num%/i%+&quot;.N01.I.7 (DSW Nest CH2)&quot;%/f%">
+</div>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "ESWxx_Content_1.onAttached",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%Current_Screen%/i%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%f%%l%ESW%/l% +%i%Component_Num%/i% + \" - \" + %l%Discrete_IO%/l%%/f%"
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>

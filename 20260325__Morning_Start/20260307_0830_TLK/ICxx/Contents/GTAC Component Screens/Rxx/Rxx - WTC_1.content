@@ -1,0 +1,656 @@
+<div id="Rxx_-_WTC_1" data-tchmi-type="TcHmi.Controls.System.TcHmiContent" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="1024" data-tchmi-height="640">
+
+<div id="WTC_Container" data-tchmi-type="TcHmi.Controls.System.TcHmiContainer" data-tchmi-height="323" data-tchmi-height-unit="px" data-tchmi-left="115" data-tchmi-left-unit="px" data-tchmi-top="136" data-tchmi-top-unit="px" data-tchmi-width="787" data-tchmi-width-unit="px" data-tchmi-creator-visibility="Visible">
+<div id="WTC_Title" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="45" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-text="%f%&quot;   R&quot;+%i%Component_Num%/i%+ &quot;- WTC &quot;+%l%Error_Messages%/l%+&quot; (&quot; +%l%also_see%/l% +&quot; RAFT or DEP)&quot;%/f%" data-tchmi-top="0" data-tchmi-top-unit="px" data-tchmi-width="787" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-horizontal-alignment="Left" data-tchmi-text-font-size="25" data-tchmi-creator-visibility="Visible">
+
+<script data-tchmi-target-attribute="data-tchmi-border-width" type="application/json">
+{
+  "left": 2,
+  "right": 2,
+  "top": 2,
+  "bottom": 2,
+  "leftUnit": "px",
+  "rightUnit": "px",
+  "topUnit": "px",
+  "bottomUnit": "px"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-border-style" type="application/json">
+{
+  "left": "Solid",
+  "right": "Solid",
+  "top": "Solid",
+  "bottom": "Solid"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "color": "rgba(154, 136, 3, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-class-names" type="application/json">
+[
+  "Radius"
+]
+</script>
+</div>
+<div id="WTC_Error_Code" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="45" data-tchmi-height-unit="px" data-tchmi-left="425" data-tchmi-left-unit="px" data-tchmi-top="55" data-tchmi-top-unit="px" data-tchmi-width="317" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-horizontal-alignment="Left" data-tchmi-text-font-size="25" data-tchmi-creator-visibility="Visible">
+
+
+
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-class-names" type="application/json">
+[
+  "Radius"
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "%i%Pulse_500ms%/i%",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%WTC_Error_Code::Text%/ctrl%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%f%%l%WTC_Current_Error_Code%/l%+(TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::Robot[\"+%i%Component_Num%/i%+\"]::In_Image::BYTE_[23]\")>>3)%/f%"
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+
+
+</div>
+
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "color": "rgba(0, 138, 158, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-class-names" type="application/json">
+[
+  "Radius"
+]
+</script>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="WTCSmartMessage" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="206" data-tchmi-height-unit="px" data-tchmi-left="101" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/SmartMessages/uc_SmartMessage_v3.usercontrol" data-tchmi-tb_height="200" data-tchmi-tb_width="600" data-tchmi-top="110" data-tchmi-top-unit="px" data-tchmi-width="608" data-tchmi-width-unit="px" data-tchmi-width-mode="Value" data-tchmi-height-mode="Value" data-tchmi-text_height="25">
+<script data-tchmi-target-attribute="data-tchmi-text_color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-bgcolour" type="application/json">
+
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "%i%Pulse_500ms%/i%",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%WTCSmartMessage::input_value%/ctrl%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::Robot[\"+%i%Component_Num%/i%+\"]::In_Image::BYTE_[23]\")>>3%/f%"
+        },
+        "asyncWait": true
+      }
+    ]
+  },
+  {
+    "event": "WTCSmartMessage.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "TcHmi.Locale.get();"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "\"en-US\""
+                },
+                "compareOperator": "!=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%WTCSmartMessage::message_objects::message_obj_000::message%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%l%WtcError_01%/l%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%WTCSmartMessage::message_objects::message_obj_001::message%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%l%WtcError_02%/l%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%WTCSmartMessage::message_objects::message_obj_002::message%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%l%WtcError_03%/l%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%WTCSmartMessage::message_objects::message_obj_003::message%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%l%WtcError_04%/l%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%WTCSmartMessage::message_objects::message_obj_004::message%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%l%WtcError_05%/l%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%WTCSmartMessage::message_objects::message_obj_005::message%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%l%WtcError_06%/l%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%WTCSmartMessage::message_objects::message_obj_006::message%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%l%WtcError_07%/l%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%WTCSmartMessage::message_objects::message_obj_007::message%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%l%WtcError_08%/l%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%WTCSmartMessage::message_objects::message_obj_008::message%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%l%WtcError_09%/l%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%WTCSmartMessage::message_objects::message_obj_009::message%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%l%WtcError_10%/l%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%WTCSmartMessage::message_objects::message_obj_010::message%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%l%WtcError_11%/l%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%WTCSmartMessage::message_objects::message_obj_011::message%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%l%WtcError_12%/l%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%WTCSmartMessage::message_objects::message_obj_012::message%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%l%WtcError_13%/l%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%WTCSmartMessage::message_objects::message_obj_013::message%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%l%WtcError_14%/l%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%WTCSmartMessage::message_objects::message_obj_014::message%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%l%WtcError_15%/l%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%WTCSmartMessage::message_objects::message_obj_015::message%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%l%WtcError_16%/l%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%WTCSmartMessage::message_objects::message_obj_016::message%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%l%WtcError_17%/l%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%WTCSmartMessage::message_objects::message_obj_017::message%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%l%WtcError_18%/l%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%WTCSmartMessage::message_objects::message_obj_018::message%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%l%WtcError_19%/l%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%WTCSmartMessage::message_objects::message_obj_019::message%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%l%WtcError_20%/l%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%WTCSmartMessage::message_objects::message_obj_020::message%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%l%WtcError_21%/l%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%WTCSmartMessage::message_objects::message_obj_021::message%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%l%WtcError_22%/l%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%WTCSmartMessage::message_objects::message_obj_022::message%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%l%WtcError_23%/l%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%WTCSmartMessage::message_objects::message_obj_023::message%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%l%WtcError_24%/l%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%WTCSmartMessage::message_objects::message_obj_024::message%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%l%WtcError_25%/l%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%WTCSmartMessage::message_objects::message_obj_025::message%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%l%WtcError_26%/l%"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-message_objects" type="application/json">
+{
+  "message_obj_000": {
+    "color": {
+      "color": "rgba(0, 255, 0, 1)"
+    },
+    "flash": false,
+    "message": "No Fault",
+    "value": 0.0
+  },
+  "message_obj_001": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "Input / Output Error - See RAFT / DEP for more detail",
+    "value": 1.0
+  },
+  "message_obj_002": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "Input / Output Alarm - See RAFT / DEP for more detail",
+    "value": 2.0
+  },
+  "message_obj_003": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "Incomplete Weld / Control Stop",
+    "value": 3.0
+  },
+  "message_obj_004": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "Stepper Approaching Max",
+    "value": 4.0
+  },
+  "message_obj_005": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "End of Stepper",
+    "value": 5.0
+  },
+  "message_obj_006": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "spare message",
+    "value": 6.0
+  },
+  "message_obj_007": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "High / Low Current Limit",
+    "value": 7.0
+  },
+  "message_obj_008": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "spare message",
+    "value": 8.0
+  },
+  "message_obj_009": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "spare message",
+    "value": 9.0
+  },
+  "message_obj_010": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "spare message",
+    "value": 10.0
+  },
+  "message_obj_011": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "spare message",
+    "value": 11.0
+  },
+  "message_obj_012": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "Compensation Error",
+    "value": 12.0
+  },
+  "message_obj_013": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "Insufficient Line Voltage",
+    "value": 13.0
+  },
+  "message_obj_014": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "Extended Weld",
+    "value": 14.0
+  },
+  "message_obj_015": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "Isolation Contactor Error",
+    "value": 15.0
+  },
+  "message_obj_016": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "spare message",
+    "value": 16.0
+  },
+  "message_obj_017": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "spare message",
+    "value": 17.0
+  },
+  "message_obj_018": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "Pressure Not Achieved",
+    "value": 18.0
+  },
+  "message_obj_019": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "C-Factor Limit",
+    "value": 19.0
+  },
+  "message_obj_020": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "External Sensor Error",
+    "value": 20.0
+  },
+  "message_obj_021": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "Check Weld Transformer and Diode",
+    "value": 21.0
+  },
+  "message_obj_022": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "System Cooling Error",
+    "value": 22.0
+  },
+  "message_obj_023": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "spare message",
+    "value": 23.0
+  },
+  "message_obj_024": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "spare message",
+    "value": 24.0
+  },
+  "message_obj_025": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "Inverter Pack Fault",
+    "value": 25.0
+  }
+}
+</script>
+</div>
+</div>
+</div>

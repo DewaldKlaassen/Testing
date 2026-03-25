@@ -1,0 +1,666 @@
+<div id="PDxx_Content_1" data-tchmi-type="TcHmi.Controls.System.TcHmiContent" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="1024" data-tchmi-height="640" data-tchmi-zindex="1">
+
+
+<div id="ISxx_EcatSlaveTitle_1" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="%i%Component_Name%/i%" data-tchmi-height="53" data-tchmi-height-unit="px" data-tchmi-left="162" data-tchmi-left-unit="px" data-tchmi-nodeid="T01" data-tchmi-nodetype="EK1100" data-tchmi-state="%f%TcHmi.Functions.Beckhoff.GetElementByIndex(%s%PLC1..Out_To_ICxx::IS%/s%, %i%Component_Num%/i%).Discrete_Image.T01.InfoData.State%/f%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_TitleStatus.usercontrol" data-tchmi-top="17" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-zindex="1">
+</div>
+<div id="ISxx_EcatSlaveTitle_2" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="%i%Component_Name%/i%" data-tchmi-height="53" data-tchmi-height-unit="px" data-tchmi-left="162" data-tchmi-left-unit="px" data-tchmi-nodeid="T02" data-tchmi-nodetype="EL6900" data-tchmi-state="%f%TcHmi.Functions.Beckhoff.GetElementByIndex(%s%PLC1..Out_To_ICxx::IS%/s%, %i%Component_Num%/i%).Discrete_Image.T02_STAT.InfoData.State%/f%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_TitleStatus.usercontrol" data-tchmi-top="80" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-zindex="1">
+</div>
+<div id="ISxx_EcatSlaveTitle_3" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="%i%Component_Name%/i%" data-tchmi-height="53" data-tchmi-height-unit="px" data-tchmi-left="162" data-tchmi-left-unit="px" data-tchmi-nodeid="T03" data-tchmi-nodetype="EL1904" data-tchmi-state="%f%TcHmi.Functions.Beckhoff.GetElementByIndex(%s%PLC1..Out_To_ICxx::IS%/s%, %i%Component_Num%/i%).Discrete_Image.T03.InfoData.State%/f%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_TitleStatus.usercontrol" data-tchmi-top="437" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-zindex="1">
+</div>
+<div id="ISxx_EcatSlaveTitle_4" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="%i%Component_Name%/i%" data-tchmi-height="53" data-tchmi-height-unit="px" data-tchmi-left="547" data-tchmi-left-unit="px" data-tchmi-nodeid="T04" data-tchmi-nodetype="EL2904" data-tchmi-state="%f%TcHmi.Functions.Beckhoff.GetElementByIndex(%s%PLC1..Out_To_ICxx::IS%/s%, %i%Component_Num%/i%).Discrete_Image.T04.InfoData.State%/f%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_TitleStatus.usercontrol" data-tchmi-top="80" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-zindex="1">
+</div>
+<div id="ISxx_EcatSlaveTitle_5" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="%i%Component_Name%/i%" data-tchmi-height="53" data-tchmi-height-unit="px" data-tchmi-left="547" data-tchmi-left-unit="px" data-tchmi-nodeid="T05" data-tchmi-nodetype="EL6731" data-tchmi-state="%f%TcHmi.Functions.Beckhoff.GetElementByIndex(%s%PLC1..Out_To_ICxx::IS%/s%, %i%Component_Num%/i%).Discrete_Image.T05.InfoData.State%/f%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_TitleStatus.usercontrol" data-tchmi-top="281" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-zindex="1">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "ISxx_EcatSlaveTitle_5.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "TcHmi.Functions.Beckhoff.GetElementByIndex(%s%PLC1..Out_To_ICxx::IS%/s%, %i%Component_Num%/i%).Discrete_Image.Option_Enable_Pbus"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "True"
+                },
+                "compareOperator": "==",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%ISxx_EcatSlaveTitle_5::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%ISxx_EcatSlaveTitle_5::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Collapsed"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  },
+  {
+    "event": "ISxx_EcatSlaveTitle_5.onInitialized",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%ISxx_EcatSlaveTitle_5::Visibility%/ctrl%",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:framework#/definitions/Visibility",
+          "value": "Collapsed"
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="ISxx_EcatSlaveTitle_6" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="%i%Component_Name%/i%" data-tchmi-height="53" data-tchmi-height-unit="px" data-tchmi-left="547" data-tchmi-left-unit="px" data-tchmi-nodeid="T06" data-tchmi-nodetype="EL1110" data-tchmi-state="%f%TcHmi.Functions.Beckhoff.GetElementByIndex(%s%PLC1..Out_To_ICxx::IS%/s%, %i%Component_Num%/i%).Discrete_Image.T06.InfoData.State%/f%" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_TitleStatus.usercontrol" data-tchmi-top="437" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-zindex="1">
+
+
+</div>
+<div id="ISxx_T03_I" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="114" data-tchmi-height-unit="px" data-tchmi-left="162" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Indicator/Generic_Inds_Nibble.usercontrol" data-tchmi-top="500" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-data="%f%TcHmi.Functions.Beckhoff.GetElementByIndex(%s%PLC1..Out_To_ICxx::IS%/s%, %i%Component_Num%/i%).Discrete_Image.T03.I%/f%" data-tchmi-text_ind_0="%f%&quot;IS0&quot;+%i%Component_Num%/i%+&quot;.T03.I.0 (Power Relays EDM)&quot;%/f%" data-tchmi-text_ind_1="%f%&quot;IS0&quot;+%i%Component_Num%/i%+&quot;.T03.I.1 (Spare)&quot;%/f%" data-tchmi-text_ind_2="%f%&quot;IS0&quot;+%i%Component_Num%/i%+&quot;.T03.I.2 (Spare)&quot;%/f%" data-tchmi-text_ind_3="%f%&quot;IS0&quot;+%i%Component_Num%/i%+&quot;.T03.I.3 (Spare)&quot;%/f%" data-tchmi-zindex="1">
+
+
+</div>
+<div id="ISxx_T03_I_SplitRelays" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="114" data-tchmi-height-unit="px" data-tchmi-left="162" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Indicator/Generic_Inds_Nibble.usercontrol" data-tchmi-top="500" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-data="%f%TcHmi.Functions.Beckhoff.GetElementByIndex(%s%PLC1..Out_To_ICxx::IS%/s%, %i%Component_Num%/i%).Discrete_Image.T03.I%/f%" data-tchmi-text_ind_0="%f%&quot;IS0&quot;+%i%Component_Num%/i%+&quot;.T03.I.0 (Estop Relays EDM)&quot;%/f%" data-tchmi-text_ind_1="%f%&quot;IS0&quot;+%i%Component_Num%/i%+&quot;.T03.I.1 (Gate Relays EDM)&quot;%/f%" data-tchmi-text_ind_2="%f%&quot;IS0&quot;+%i%Component_Num%/i%+&quot;.T03.I.2 (Spare)&quot;%/f%" data-tchmi-text_ind_3="%f%&quot;IS0&quot;+%i%Component_Num%/i%+&quot;.T03.I.3 (Spare)&quot;%/f%" data-tchmi-zindex="1">
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "%s%PLC1..Pulse_500ms%/s%",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "TcHmi.Functions.Beckhoff.GetElementByIndex(%s%PLC1..Out_To_ICxx::IS%/s%, %i%Component_Num%/i%).Discrete_Image.Option_Enable_SplitRelays"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "True"
+                },
+                "compareOperator": "==",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%ISxx_T03_I_SplitRelays::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%ISxx_T03_I::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Collapsed"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "elseif": [
+              {
+                "compare1": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "TcHmi.Functions.Beckhoff.GetElementByIndex(%s%PLC1..Out_To_ICxx::IS%/s%, %i%Component_Num%/i%).Discrete_Image.Option_Enable_SplitRelays"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "False"
+                },
+                "compareOperator": "==",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%ISxx_T03_I_SplitRelays::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Collapsed"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%ISxx_T03_I::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="ISxx_T04_I_SplitRelays" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="114" data-tchmi-height-unit="px" data-tchmi-left="547" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Indicator/Generic_Inds_Nibble.usercontrol" data-tchmi-top="143" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-data="%f%TcHmi.Functions.Beckhoff.GetElementByIndex(%s%PLC1..Out_To_ICxx::IS%/s%, %i%Component_Num%/i%).Discrete_Image.T04.Q%/f%" data-tchmi-text_ind_0="%f%&quot;IS0&quot;+%i%Component_Num%/i%+&quot;.T04.Q.0 (Estop Relay 1)&quot;%/f%" data-tchmi-text_ind_1="%f%&quot;IS0&quot;+%i%Component_Num%/i%+&quot;.T04.Q.1 (Estop Relay 2)&quot;%/f%" data-tchmi-text_ind_2="%f%&quot;IS0&quot;+%i%Component_Num%/i%+&quot;.T04.Q.2 (Gate Relay 1)&quot;%/f%" data-tchmi-text_ind_3="%f%&quot;IS0&quot;+%i%Component_Num%/i%+&quot;.T04.Q.3 (Gate Relay 2)&quot;%/f%" data-tchmi-zindex="2">
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "%s%PLC1..Pulse_500ms%/s%",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "TcHmi.Functions.Beckhoff.GetElementByIndex(%s%PLC1..Out_To_ICxx::IS%/s%, %i%Component_Num%/i%).Discrete_Image.Option_Enable_SplitRelays"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "True"
+                },
+                "compareOperator": "==",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%ISxx_T04_I_SplitRelays::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%ISxx_T04_I::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Collapsed"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "elseif": [
+              {
+                "compare1": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "TcHmi.Functions.Beckhoff.GetElementByIndex(%s%PLC1..Out_To_ICxx::IS%/s%, %i%Component_Num%/i%).Discrete_Image.Option_Enable_SplitRelays"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "False"
+                },
+                "compareOperator": "==",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%ISxx_T04_I_SplitRelays::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Collapsed"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%ISxx_T04_I::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="ISxx_T04_I" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="114" data-tchmi-height-unit="px" data-tchmi-left="547" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Indicator/Generic_Inds_Nibble.usercontrol" data-tchmi-top="143" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-data="%f%TcHmi.Functions.Beckhoff.GetElementByIndex(%s%PLC1..Out_To_ICxx::IS%/s%, %i%Component_Num%/i%).Discrete_Image.T04.Q%/f%" data-tchmi-text_ind_0="%f%&quot;IS0&quot;+%i%Component_Num%/i%+&quot;.T04.Q.0 (Power Relay 1)&quot;%/f%" data-tchmi-text_ind_1="%f%&quot;IS0&quot;+%i%Component_Num%/i%+&quot;.T04.Q.1 (Power Relay 2)&quot;%/f%" data-tchmi-text_ind_2="%f%&quot;IS0&quot;+%i%Component_Num%/i%+&quot;.T04.Q.2 (Spare)&quot;%/f%" data-tchmi-text_ind_3="%f%&quot;IS0&quot;+%i%Component_Num%/i%+&quot;.T04.Q.3 (Spare)&quot;%/f%" data-tchmi-zindex="1">
+</div>
+<div id="ISxx_ProfiMaster_Msg" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="30" data-tchmi-height-unit="px" data-tchmi-left="547" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/SmartMessages/uc_SmartMessage_v2.usercontrol" data-tchmi-tb_height="28" data-tchmi-tb_width="282" data-tchmi-top="344" data-tchmi-top-unit="px" data-tchmi-width="307" data-tchmi-width-unit="px" data-tchmi-input_value="%f%TcHmi.Functions.Beckhoff.GetElementByIndex(%s%PLC1..Out_To_ICxx::IS%/s%, %i%Component_Num%/i%).Discrete_Image.T05.Error%/f%" data-tchmi-zindex="1">
+<script data-tchmi-target-attribute="data-tchmi-bg_color" type="application/json">
+{
+  "color": "rgba(255, 251, 240, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-message_objects" type="application/json">
+{
+  "message_obj_000": {
+    "color": {
+      "color": "rgba(0, 255, 0, 1)"
+    },
+    "message": "Profibus Master Reports No Error"
+  },
+  "message_obj_001": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "Profibus Master Reports 1 Slave Error"
+  },
+  "message_obj_002": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "Profibus Master Reports 2 Slave Errors"
+  },
+  "message_obj_003": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "Profibus Master Reports 3 Slave Errors"
+  },
+  "message_obj_004": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "Profibus Master Reports 4 Slave Errors"
+  },
+  "message_obj_005": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "Profibus Master Reports 5 Slave Errors"
+  },
+  "message_obj_006": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "Profibus Master Reports 6 Slave Errors"
+  },
+  "message_obj_007": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "Profibus Master Reports 7 Slave Errors"
+  },
+  "message_obj_008": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "Profibus Master Reports 8 Slave Errors"
+  },
+  "message_obj_009": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "Profibus Master Reports 9 Slave Errors"
+  },
+  "message_obj_010": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "Profibus Master Reports 10 Slave Errors"
+  },
+  "message_obj_011": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "Profibus Master Reports 11 Slave Errors"
+  },
+  "message_obj_012": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "Profibus Master Reports 12 Slave Errors"
+  },
+  "message_obj_013": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "Profibus Master Reports 13 Slave Errors"
+  },
+  "message_obj_014": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "Profibus Master Reports 14 Slave Errors"
+  },
+  "message_obj_015": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "Profibus Master Reports 15 Slave Errors"
+  },
+  "message_obj_016": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "Profibus Master Reports 16 Slave Errors"
+  },
+  "message_obj_017": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "Profibus Master Reports 17 Slave Errors"
+  },
+  "message_obj_018": {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "flash": true,
+    "message": "Profibus Master Reports 18 Slave Errors"
+  },
+  "message_obj_469": {
+    "color": {
+      "color": "rgba(255, 0, 255, 1)"
+    },
+    "message": "testmsg469"
+  }
+}
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-text_color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "ISxx_ProfiMaster_Msg.onInitialized",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%ISxx_ProfiMaster_Msg::Visibility%/ctrl%",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:framework#/definitions/Visibility",
+          "value": "Collapsed"
+        },
+        "asyncWait": true
+      }
+    ]
+  },
+  {
+    "event": "ISxx_ProfiMaster_Msg.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "TcHmi.Functions.Beckhoff.GetElementByIndex(%s%PLC1..Out_To_ICxx::IS%/s%, %i%Component_Num%/i%).Discrete_Image.Option_Enable_Pbus"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "True"
+                },
+                "compareOperator": "==",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%ISxx_ProfiMaster_Msg::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%ISxx_ProfiMaster_Msg::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Collapsed"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Uc_ISxx_6900Info" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="284" data-tchmi-height-unit="px" data-tchmi-left="162" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/uc_GTAC_6900Info.usercontrol" data-tchmi-top="143" data-tchmi-top-unit="px" data-tchmi-width="283" data-tchmi-width-unit="px" data-tchmi-component_type="IS" data-tchmi-component_num="%i%Component_Num%/i%" data-tchmi-zindex="1">
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Uc_ISxx_6900Info.onAttached",
+    "actions": [
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Bind",
+        "fnParams": [
+          {
+            "objectType": "FunctionExpression",
+            "functionExpression": "\"PLC1..Out_To_ICxx::IS[\"+%i%Component_Num%/i%+\"]::Discrete_Image::T02_STAT::SGs_COM_ERR\""
+          },
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:framework#/definitions/Control",
+            "symbolExpression": "%ctrl%Uc_ISxx_6900Info%/ctrl%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": "Comm_Flts"
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Bind",
+        "fnParams": [
+          {
+            "objectType": "FunctionExpression",
+            "functionExpression": "\"PLC1..Out_To_ICxx::IS[\"+%i%Component_Num%/i%+\"]::Discrete_Image::T02_STAT::SGs_FB_ERR\""
+          },
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:framework#/definitions/Control",
+            "symbolExpression": "%ctrl%Uc_ISxx_6900Info%/ctrl%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": "Fb_Flts"
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Bind",
+        "fnParams": [
+          {
+            "objectType": "FunctionExpression",
+            "functionExpression": "\"PLC1..Out_To_ICxx::IS[\"+%i%Component_Num%/i%+\"]::Discrete_Image::T02_STAT::SGs_OUT_ERR\""
+          },
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:framework#/definitions/Control",
+            "symbolExpression": "%ctrl%Uc_ISxx_6900Info%/ctrl%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": "Out_Flts"
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Bind",
+        "fnParams": [
+          {
+            "objectType": "FunctionExpression",
+            "functionExpression": "\"PLC1..Out_To_ICxx::IS[\"+%i%Component_Num%/i%+\"]::Discrete_Image::T02_STAT::FBs_FB_ERR\""
+          },
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:framework#/definitions/Control",
+            "symbolExpression": "%ctrl%Uc_ISxx_6900Info%/ctrl%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": "Fb_Flt_Msg"
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PDxx_Content_1.onAttached",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%Current_Screen%/i%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%f%%l%PD%/l% +%i%Component_Num%/i% + \" - \" + %l%Discrete_IO%/l%%/f%"
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>

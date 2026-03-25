@@ -1,0 +1,3801 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" DefaultTargets="Clean;Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\Microsoft.TypeScript.MSBuild.4.8.4\build\Microsoft.TypeScript.MSBuild.props" Condition="Exists('..\packages\Microsoft.TypeScript.MSBuild.4.8.4\build\Microsoft.TypeScript.MSBuild.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">15.0</VisualStudioVersion>
+    <AvailablePlatforms>TwinCAT HMI</AvailablePlatforms>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+    <TcHmiCreatorVersion>[1.12,]</TcHmiCreatorVersion>
+    <HmiTitle>Sodecia GTAC - The new UI</HmiTitle>
+    <HmiVerboseLevel>2</HmiVerboseLevel>
+    <HmiVersion>20250506_release</HmiVersion>
+    <HmiCommunicationServerPort>3018</HmiCommunicationServerPort>
+    <HmiLogTcHmiServerMessages>false</HmiLogTcHmiServerMessages>
+    <HmiLogDesignerModeComMessages>false</HmiLogDesignerModeComMessages>
+    <HmiServerVersion>Latest</HmiServerVersion>
+    <HmiUseX64>True</HmiUseX64>
+    <HmiDefaultLanguage>client</HmiDefaultLanguage>
+    <TargetFrameworkMoniker>native,Version=v1.12.0,Profile=tchmi</TargetFrameworkMoniker>
+    <TargetFramework>native1.12-tchmi</TargetFramework>
+    <AzureFunctionsVersion>v2</AzureFunctionsVersion>
+    <Name>ICxx</Name>
+    <HmiCommunicationRouterPort>10301</HmiCommunicationRouterPort>
+    <HmiCommunicationServerAuthPort>13015</HmiCommunicationServerAuthPort>
+    <HmiInitial>1.12.752.0</HmiInitial>
+    <HmiRecent>1.12.762.53</HmiRecent>
+    <HmiServerNodeAdvancedView>False</HmiServerNodeAdvancedView>
+    <HmiCompanyName>Sodecia GTAC</HmiCompanyName>
+    <TcHmiDirectory>$(registry:HKEY_CURRENT_USER\Software\Beckhoff\TwinCAT3\3.1@InstallDir)\..\Functions\TE2000-HMI-Engineering</TcHmiDirectory>
+    <TcHmiDirectory Condition="'$(TcHmiDirectory)'==''">$(registry:HKEY_LOCAL_MACHINE\Software\Beckhoff\TwinCAT3\3.1@InstallDir)\..\Functions\TE2000-HMI-Engineering</TcHmiDirectory>
+    <TcHmiDirectory Condition="'$(TcHmiDirectory)'==''">$(registry:HKEY_LOCAL_MACHINE\Software\Wow6432Node\Beckhoff\TwinCAT3\3.1@InstallDir)\..\Functions\TE2000-HMI-Engineering</TcHmiDirectory>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <HmiTmcFiles>[]</HmiTmcFiles>
+    <HmiCfgWindowBringIntoViewAutomatically>True</HmiCfgWindowBringIntoViewAutomatically>
+    <PinVersion>True (Version 1.12.762.53)</PinVersion>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TwinCATHmi_Tasks>$(TcHmiDirectory)\MSBuild\Beckhoff.TwinCAT.HMI.tasks</TwinCATHmi_Tasks>
+    <TwinCATHmi_Targets>$(TcHmiDirectory)\MSBuild\Beckhoff.TwinCAT.HMI.targets</TwinCATHmi_Targets>
+  </PropertyGroup>
+  <Import Project="$(TwinCATHmi_Tasks)" />
+  <Import Project="$(TwinCATHmi_Targets)" />
+  <PropertyGroup>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>cb824df7-4b97-4c90-b965-db2474083a0a</ProjectGuid>
+    <RootNamespace>TwinCAT3HmiProject</RootNamespace>
+    <AssemblyName>TwinCAT3HmiProject</AssemblyName>
+    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">TwinCAT HMI</Platform>
+  </PropertyGroup>
+  <!-- Any CPU -->
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|TwinCAT HMI' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>TwinCAT HMI</PlatformTarget>
+    <DefaultNamespace>ICxx</DefaultNamespace>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|TwinCAT HMI' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>TwinCAT HMI</PlatformTarget>
+    <DefaultNamespace>ICxx</DefaultNamespace>
+  </PropertyGroup>
+  <PropertyGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" Condition="'$(RestoreProjectStyle)' == 'PackageReference'" />
+  <PropertyGroup>
+    <PreBuildEventDependsOn />
+  </PropertyGroup>
+  <Target Name="PreBuildEvent" Condition="'$(PreBuildEvent)'!=''" DependsOnTargets="$(PreBuildEventDependsOn)">
+    <Exec WorkingDirectory="$(OutDir)" Command="$(PreBuildEvent)" />
+  </Target>
+  <PropertyGroup>
+    <PostBuildEventDependsOn />
+  </PropertyGroup>
+  <Target Name="PostBuildEvent" Condition="'$(PostBuildEvent)' != '' and ('$(RunPostBuildEvent)'=='Always' or '$(RunPostBuildEvent)'=='OnOutputUpdated')" DependsOnTargets="$(PostBuildEventDependsOn)">
+    <Exec WorkingDirectory="$(OutDir)" Command="$(PostBuildEvent)" />
+  </Target>
+  <Target Name="GetFrameworkPaths" />
+  <PropertyGroup>
+    <BuiltProjectOutputGroupDependsOn>
+      PreBuildEvent;
+      CoreBuild;
+      PostBuildEvent
+    </BuiltProjectOutputGroupDependsOn>
+    <CleanDependsOn>
+		BaseClean
+	</CleanDependsOn>
+  </PropertyGroup>
+  <Target Name="Build" DependsOnTargets="$(BuiltProjectOutputGroupDependsOn)" />
+  <PropertyGroup>
+    <TcHmi_ProjectDirectory Condition="'$(TcHmi_ProjectDirectory)' == ''">$(MSBuildProjectDirectory)</TcHmi_ProjectDirectory>
+    <TcHmi_ServerAddress Condition="'$(TcHmi_ServerAddress)' == ''">127.0.0.1</TcHmi_ServerAddress>
+    <TcHmi_ServerPort Condition="'$(TcHmi_ServerPort)' == ''">1010</TcHmi_ServerPort>
+  </PropertyGroup>
+  <Target Name="CoreBuild">
+    <TcHmiMSBuild.Publish.TcHmiBuild TaskAction="Clean" ProjectDirectory="$(TcHmi_ProjectDirectory)" OutputPath="$(OutputPath)" />
+    <TcHmiMSBuild.Publish.TcHmiBuild TaskAction="Build" ProjectDirectory="$(TcHmi_ProjectDirectory)" OutputPath="$(OutputPath)" ProjectFiles="@(Content)" VirtualMappings="$(TcHmi_VirtualMappings)" />
+    <TcHmiMSBuild.Publish.TcHmiGenerator TaskAction="EntryPage" ProjectDirectory="$(TcHmi_ProjectDirectory)" OutputPath="$(OutputPath)" TcHmiServerAddress="$(TcHmi_ServerAddress)" TcHmiServerPort="$(TcHmi_ServerPort)">
+      <Output TaskParameter="Result" PropertyName="TaskResult0" />
+    </TcHmiMSBuild.Publish.TcHmiGenerator>
+    <Message Text="Generating the Default.html within OutputPath('$(OutputPath)'): $(TaskResult0)" />
+  </Target>
+  <Target Name="ReBuild" DependsOnTargets="Clean; Build" />
+  <Target Name="Clean" DependsOnTargets="$(CleanDependsOn)" />
+  <ItemGroup>
+    <Folder Include="Contents\EOAT Screens\EOAT01" />
+    <Folder Include="Contents\EOAT Screens\EOAT02" />
+    <Folder Include="Contents\EOAT Screens\EOAT03" />
+    <Folder Include="Contents\EOAT Screens\EOAT04" />
+    <Folder Include="Contents\EOAT Screens\EOAT05" />
+    <Folder Include="Contents\EOAT Screens\EOAT06" />
+    <Folder Include="Contents\EOAT Screens\EOAT07" />
+    <Folder Include="Contents\EOAT Screens\EOAT08" />
+    <Folder Include="Contents\EOAT Screens\EOAT09" />
+    <Folder Include="Contents\EOAT Screens\EOAT10" />
+    <Folder Include="Contents\GTAC Component Screens\ESWxx" />
+    <Folder Include="Contents\GTAC Component Screens\ICxx" />
+    <Folder Include="Contents\GTAC Component Screens\LSRxx" />
+    <Folder Include="Contents\GTAC Component Screens\GTAC_Fieldbus" />
+    <Folder Include="Contents\GTAC Component Screens\MDxx" />
+    <Folder Include="Contents\GTAC Component Screens\ISxx" />
+    <Folder Include="Contents\GTAC Component Screens\IVxx" />
+    <Folder Include="Contents\GTAC Component Screens\SRxx" />
+    <Folder Include="Contents\GTAC Component Screens\VFDxx" />
+    <Folder Include="Contents\GTAC Component Screens\STxx" />
+    <Folder Include="Contents\GTAC Component Screens\SSxx" />
+    <Folder Include="Contents\GTAC Component Screens\SLxx" />
+    <Folder Include="Contents\GTAC Component Screens\SDxx" />
+    <Folder Include="Contents\GTAC Component Screens\Rxx" />
+    <Folder Include="Contents\GTAC Component Screens\Pedxx" />
+    <Folder Include="Contents\Human Fixture Screens\Fix01" />
+    <Folder Include="Contents\Human Fixture Screens\Fix02" />
+    <Folder Include="Contents\Human Fixture Screens\Fix03" />
+    <Folder Include="Contents\Human Fixture Screens\Fix04" />
+    <Folder Include="Contents\Human Fixture Screens\Fix05" />
+    <Folder Include="Contents\Human Fixture Screens\Fix06" />
+    <Folder Include="Contents\Human Fixture Screens\Fix07" />
+    <Folder Include="Contents\Human Fixture Screens\Fix08" />
+    <Folder Include="Contents\Human Fixture Screens\Fix09" />
+    <Folder Include="Contents\Human Fixture Screens\Fix10" />
+    <Folder Include="Contents\Human Fixture Screens\Fix11" />
+    <Folder Include="Contents\Human Fixture Screens\Fix12" />
+    <Folder Include="Contents\Human Fixture Screens\Fix13" />
+    <Folder Include="Contents\Human Fixture Screens\Fix14" />
+    <Folder Include="Contents\Human Fixture Screens\Fix15" />
+    <Folder Include="Contents\Human Fixture Screens\Fix16" />
+    <Folder Include="Contents\Internal Fixture Screens\Fix101" />
+    <Folder Include="Contents\Internal Fixture Screens\Fix102" />
+    <Folder Include="Contents\Internal Fixture Screens\Fix103" />
+    <Folder Include="Contents\Internal Fixture Screens\Fix104" />
+    <Folder Include="Contents\Internal Fixture Screens\Fix105" />
+    <Folder Include="Contents\Internal Fixture Screens\Fix106" />
+    <Folder Include="Contents\Internal Fixture Screens\Fix107" />
+    <Folder Include="Contents\Internal Fixture Screens\Fix108" />
+    <Folder Include="Contents\Internal Fixture Screens\Fix109" />
+    <Folder Include="Contents\Internal Fixture Screens\Fix110" />
+    <Folder Include="Contents\Internal Fixture Screens\Fix111" />
+    <Folder Include="Contents\Internal Fixture Screens\Fix112" />
+    <Folder Include="Contents\Misc Screens" />
+    <Folder Include="Contents\Line Overview Screens" />
+    <Folder Include="Contents\Controls Overview Screens" />
+    <Folder Include="Contents\EOAT Screens" />
+    <Folder Include="Contents\Fault Screens" />
+    <Folder Include="Contents\GTAC Config Screens" />
+    <Folder Include="Contents\GTAC Component Screens" />
+    <Folder Include="Contents\Human Fixture Screens" />
+    <Folder Include="Contents\Internal Fixture Screens" />
+    <Folder Include="Contents\Misc Screens\Diag Screens" />
+    <Folder Include="Contents\Misc Screens\Doc Screens" />
+    <Folder Include="Contents\Misc Screens\Doc Screens\PDFs" />
+    <Folder Include="Contents\Misc Screens\TipDress" />
+    <Folder Include="Contents\Misc Screens\TipChange" />
+    <Folder Include="Contents\Misc Screens\Rev Log Screens" />
+    <Folder Include="Contents\Context Menus" />
+    <Folder Include="Contents\Product Data Screens" />
+    <Folder Include="Contents\SIM Control" />
+    <Folder Include="Contents\Production Screens" />
+    <Folder Include="Fonts\" />
+    <Folder Include="Functions\Beckhoff" />
+    <Folder Include="Images" />
+    <Folder Include="Images\GTAC\CellImages\Fixture Images" />
+    <Folder Include="Images\GTAC\CellImages\Fixture Images\Internal Fixtures" />
+    <Folder Include="Images\GTAC\CellImages\Fixture Images\Human Fixtures" />
+    <Folder Include="Images\GTAC\CellImages\BackgroundImages" />
+    <Folder Include="Images\GTAC\CellImages\Ped Images" />
+    <Folder Include="Images\GTAC\Icons" />
+    <Folder Include="Images\GTAC\Dev_Team" />
+    <Folder Include="Images\GTAC\Components" />
+    <Folder Include="Images\GTAC\CellImages" />
+    <Folder Include="Images\GTAC\Icons\UI_Conf_Icons" />
+    <Folder Include="Images\GTAC\AssyImages" />
+    <Folder Include="Images\GTAC\Robot Config Data Base" />
+    <Folder Include="Images\GTAC\Robot Config Data Base\EOATs" />
+    <Folder Include="Images\GTAC\Robot Config Data Base\EOATs\Common" />
+    <Folder Include="Images\GTAC\Robot Config Data Base\Types" />
+    <Folder Include="Images\Manifest" />
+    <Folder Include="Images\GTAC" />
+    <Folder Include="Imports" />
+    <Folder Include="Imports\Images" />
+    <Folder Include="Imports\CSS" />
+    <Folder Include="Imports\temp" />
+    <Folder Include="Imports\Videos" />
+    <Folder Include="KeyboardLayouts\" />
+    <Folder Include="Localization" />
+    <Folder Include="Contents" />
+    <Folder Include="Functions" />
+    <Folder Include="Models" />
+    <Folder Include="Models\Fixtures" />
+    <Folder Include="Scripts" />
+    <Folder Include="Scripts\GTAC" />
+    <Folder Include="Server\GTAC_TcUI_PostgreSQL" />
+    <Folder Include="Server\TcHmiEcDiagnostics" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiLua" />
+    <Folder Include="Server\TcHmiSqliteHistorize" />
+    <Folder Include="Server\TcHmiSqliteLogger" />
+    <Folder Include="Server\TcHmiSqliteLogger" />
+    <Folder Include="Server\TcHmiUserManagement" />
+    <Folder Include="Server\TcHmiUserManagement" />
+    <Folder Include="Server\TcHmiUserManagement" />
+    <Folder Include="Symbols" />
+    <Folder Include="Symbols\GTAC Components" />
+    <Folder Include="Symbols\Ecat_Slaves" />
+    <Folder Include="Symbols\Misc" />
+    <Folder Include="Symbols\3D" />
+    <Folder Include="Symbols\Alarms" />
+    <Folder Include="Symbols\Cylinders" />
+    <Folder Include="Symbols\EP9224" />
+    <Folder Include="Symbols\Indicator" />
+    <Folder Include="Symbols\GeneralStatus" />
+    <Folder Include="Symbols\GTAC Standard UI Controls" />
+    <Folder Include="Symbols\9214" />
+    <Folder Include="Symbols\IVxx" />
+    <Folder Include="Symbols\Custom" />
+    <Folder Include="Symbols\SRxx" />
+    <Folder Include="Symbols\Product Data" />
+    <Folder Include="Symbols\Rxx\Linear_Rxx" />
+    <Folder Include="Symbols\VFD" />
+    <Folder Include="Symbols\Rxx" />
+    <Folder Include="Symbols\SmartMessages" />
+    <Folder Include="Symbols\SDxx" />
+    <Folder Include="Themes" />
+    <Folder Include="Server">
+      <WorkingDirectory>ICxx</WorkingDirectory>
+    </Folder>
+    <Folder Include="Properties" />
+    <Content Include=".eslintrc.json">
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="Contents\Context Menus\EOATContext.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Context Menus\PedContext.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Context Menus\FixtureContext.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Context Menus\ControlsOverviewContext.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Context Menus\GTACxx_FieldBusContext.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Context Menus\OverviewContext.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Context Menus\Rxx_FieldbusContext.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Controls Overview Screens\Controls - Overview_CU1128.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Controls Overview Screens\Controls - Overview_EP9128.content">
+      <SubType>Content</SubType>
+      <Cache>True</Cache>
+    </Content>
+    <Content Include="Contents\Controls Overview Screens\Controls - Overview_Menu.content">
+      <SubType>Content</SubType>
+      <Cache>True</Cache>
+    </Content>
+    <Content Include="Contents\Controls Overview Screens\Controls - Overview_Blank.content">
+      <SubType>Content</SubType>
+      <Cache>True</Cache>
+    </Content>
+    <Content Include="Contents\Controls Overview Screens\Controls - Overview_MDxx.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Controls Overview Screens\Controls - Overview_SLxx.content">
+      <SubType>Content</SubType>
+      <Cache>True</Cache>
+    </Content>
+    <Content Include="Contents\Controls Overview Screens\Controls - Overview_EP9214.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Controls Overview Screens\Controls - Overview_SSxx_EP9214.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Controls Overview Screens\Controls - Overview_STxx.content">
+      <SubType>Content</SubType>
+      <Cache>True</Cache>
+    </Content>
+    <Content Include="Contents\Controls Overview Screens\Controls - Overview_SSxx.content">
+      <SubType>Content</SubType>
+      <Cache>True</Cache>
+    </Content>
+    <Content Include="Contents\Controls Overview Screens\Controls - Overview_SDxx.content">
+      <SubType>Content</SubType>
+      <Cache>True</Cache>
+    </Content>
+    <Content Include="Contents\Controls Overview Screens\Controls - Overview_Rxx.content">
+      <SubType>Content</SubType>
+      <Cache>True</Cache>
+    </Content>
+    <Content Include="Contents\Controls Overview Screens\Controls - Overview_ISxx.content">
+      <SubType>Content</SubType>
+      <Cache>True</Cache>
+    </Content>
+    <Content Include="Contents\Controls Overview Screens\Controls - Overview_LSRxx.content">
+      <SubType>Content</SubType>
+      <Cache>True</Cache>
+    </Content>
+    <Content Include="Contents\Controls Overview Screens\Controls - Overview_IC01 - System.content">
+      <SubType>Content</SubType>
+      <Cache>True</Cache>
+    </Content>
+    <Content Include="Contents\Controls Overview Screens\Controls - Overview_IC08.content">
+      <SubType>Content</SubType>
+      <Cache>True</Cache>
+    </Content>
+    <Content Include="Contents\Controls Overview Screens\Controls - Overview_IC07.content">
+      <SubType>Content</SubType>
+      <Cache>True</Cache>
+    </Content>
+    <Content Include="Contents\Controls Overview Screens\Controls - Overview_IC06.content">
+      <SubType>Content</SubType>
+      <Cache>True</Cache>
+    </Content>
+    <Content Include="Contents\Controls Overview Screens\Controls - Overview_IC05.content">
+      <SubType>Content</SubType>
+      <Cache>True</Cache>
+    </Content>
+    <Content Include="Contents\Controls Overview Screens\Controls - Overview_IC04.content">
+      <SubType>Content</SubType>
+      <Cache>True</Cache>
+    </Content>
+    <Content Include="Contents\Controls Overview Screens\Controls - Overview_IC03.content">
+      <SubType>Content</SubType>
+      <Cache>True</Cache>
+    </Content>
+    <Content Include="Contents\Controls Overview Screens\Controls - Overview_IC02.content">
+      <SubType>Content</SubType>
+      <Cache>True</Cache>
+    </Content>
+    <Content Include="Contents\Controls Overview Screens\Controls - Overview_IC01.content">
+      <SubType>Content</SubType>
+      <Cache>True</Cache>
+    </Content>
+    <Content Include="Contents\Controls Overview Screens\Controls - Overview_ESWxx.content">
+      <SubType>Content</SubType>
+      <Cache>True</Cache>
+    </Content>
+    <Content Include="Contents\Controls Overview Screens\Controls - Overview_VFDxx.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\EOAT Screens\EOAT01\EOAT01-Cylinders and Sensors.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\EOAT Screens\EOAT01\EOAT01-EcatSlaves.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\EOAT Screens\EOAT02\EOAT02-Cylinders and Sensors.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\EOAT Screens\EOAT02\EOAT02-EcatSlaves.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\EOAT Screens\EOAT03\EOAT03-Cylinders and Sensors.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\EOAT Screens\EOAT03\EOAT03-EcatSlaves.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\EOAT Screens\EOAT04\EOAT04-Cylinders and Sensors.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\EOAT Screens\EOAT04\EOAT04-EcatSlaves.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\EOAT Screens\EOAT05\EOAT05-Cylinders and Sensors.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\EOAT Screens\EOAT05\EOAT05-EcatSlaves.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\EOAT Screens\EOAT06\EOAT06-Cylinders and Sensors.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\EOAT Screens\EOAT06\EOAT06-EcatSlaves.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\EOAT Screens\EOAT07\EOAT07-Cylinders and Sensors.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\EOAT Screens\EOAT07\EOAT07-EcatSlaves.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\EOAT Screens\EOAT08\EOAT08-Cylinders and Sensors.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\EOAT Screens\EOAT08\EOAT08-EcatSlaves.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\EOAT Screens\EOAT09\EOAT09-Cylinders and Sensors.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\EOAT Screens\EOAT09\EOAT09-EcatSlaves.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\EOAT Screens\EOAT10\EOAT10-Cylinders and Sensors.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\EOAT Screens\EOAT10\EOAT10-EcatSlaves.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Fault Screens\Fault_CurrentHistory_Swapper.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Fault Screens\Faults_History.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Fault Screens\Faults_Current.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\ESWxx\ESWxx - Discrete_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\GTAC_Fieldbus\GTACxx - Fieldbus IO.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\ICxx\ICxx - TsafeDiags_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\ICxx\ICxx - Discrete_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\ICxx\ICxx - Discrete_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\IVxx\IV3 - ErrorACK_Release_Camxx.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\IVxx\IVxx - Discrete_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\LSRxx\LSRxx - Overview_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\MDxx\MDxx - Discrete_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\ISxx\ISxx - Discrete_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Ped02 - CylSens_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Ped03 - CylSens_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Ped04 - CylSens_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Ped05 - CylSens_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Ped06 - CylSens_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Ped07 - CylSens_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Ped08 - CylSens_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Ped09 - CylSens_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Ped10 - CylSens_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Ped11 - CylSens_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Ped12 - CylSens_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Ped13 - CylSens_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Ped14 - CylSens_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Ped15 - CylSens_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Ped16 - CylSens_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Ped17 - CylSens_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Ped18 - CylSens_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Ped19 - CylSens_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Ped20 - CylSens_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Ped21 - CylSens_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Ped22 - CylSens_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Ped23 - CylSens_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Ped24 - CylSens_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Ped25 - CylSens_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Ped26 - CylSens_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Ped27 - CylSens_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Ped28 - CylSens_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Ped29 - CylSens_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Ped30 - CylSens_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Pedxx - Discrete IO_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Pedxx\Ped01 - CylSens_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Rxx\Rxx - Cycle Times_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Rxx\Rxx - Fronius.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Rxx\Rxx - Reamer_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Rxx\Rxx - Tool_Change.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Rxx\Rxx - TsafeDiags_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Rxx\Rxx - Discrete_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Rxx\Rxx - Discrete_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Rxx\Rxx - Waterstand.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\Rxx\Rxx - WTC_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\SDxx\SDxx - Discrete IO_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\SDxx\SDxx - Discrete IO_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\SDxx\SDxx_AxisControl.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\SLxx\SLxx - Menu.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\SRxx\SRxx - Discrete_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\SSxx\SSxx - Discrete_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\STxx\STCxx - Errors_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\STxx\STxx - Discrete_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Component Screens\VFDxx\VFDxx - Discrete_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Config Screens\eGTAC.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Config Screens\QA_NutWeldLVDT_Config.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Config Screens\RobotConfig.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Config Screens\ShiftConfig.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Config Screens\PLC_Config.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\GTAC Config Screens\UI_Config.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix01\Fix01 - Cylinders_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix01\Fix01 - Cylinders_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix01\Fix01 - Cylinders_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix01\Fix01 - EcatSlaves_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix01\Fix01 - Manual_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix01\Fix01 - Manual_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix01\Fix01 - Manual_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix01\Fix01 - QA_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix01\Fix01 - Sensors_47.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix01\Fix01 - Sensors_46.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix01\Fix01 - Sensors_45.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix01\Fix01 - Sensors_44.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix01\Fix01 - Sensors_43.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix01\Fix01 - Sensors_42.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix01\Fix01 - Sensors_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix02\Fix02 - Cylinders_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix02\Fix02 - Cylinders_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix02\Fix02 - Cylinders_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix02\Fix02 - EcatSlaves_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix02\Fix02 - Manual_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix02\Fix02 - Manual_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix02\Fix02 - Manual_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix02\Fix02 - QA_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix02\Fix02 - Sensors_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix02\Fix02 - Sensors_42.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix02\Fix02 - Sensors_43.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix02\Fix02 - Sensors_44.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix02\Fix02 - Sensors_45.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix02\Fix02 - Sensors_46.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix02\Fix02 - Sensors_47.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix03\Fix03 - Cylinders_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix03\Fix03 - Cylinders_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix03\Fix03 - Cylinders_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix03\Fix03 - EcatSlaves_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix03\Fix03 - Manual_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix03\Fix03 - Manual_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix03\Fix03 - Manual_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix03\Fix03 - QA_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix03\Fix03 - Sensors_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix04\Fix04 - Cylinders_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix04\Fix04 - Cylinders_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix04\Fix04 - Cylinders_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix04\Fix04 - EcatSlaves_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix04\Fix04 - Manual_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix04\Fix04 - Manual_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix04\Fix04 - Manual_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix04\Fix04 - QA_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix04\Fix04 - Sensors_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix05\Fix05 - Cylinders_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix05\Fix05 - EcatSlaves_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix05\Fix05 - Manual_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix05\Fix05 - Manual_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix05\Fix05 - Manual_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix05\Fix05 - QA_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix05\Fix05 - Sensors_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix06\Fix06 - Cylinders_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix06\Fix06 - EcatSlaves_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix06\Fix06 - Manual_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix06\Fix06 - Manual_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix06\Fix06 - Manual_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix06\Fix06 - QA_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix06\Fix06 - Sensors_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix07\Fix07 - Cylinders_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix07\Fix07 - EcatSlaves_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix07\Fix07 - Manual_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix07\Fix07 - Manual_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix07\Fix07 - Manual_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix07\Fix07 - QA_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix07\Fix07 - Sensors_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix08\Fix08 - Cylinders_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix08\Fix08 - EcatSlaves_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix08\Fix08 - Manual_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix08\Fix08 - Manual_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix08\Fix08 - Manual_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix08\Fix08 - QA_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix08\Fix08 - Sensors_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix09\Fix09 - Cylinders_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix09\Fix09 - EcatSlaves_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix09\Fix09 - Manual_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix09\Fix09 - Manual_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix09\Fix09 - Manual_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix09\Fix09 - QA_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix09\Fix09 - Sensors_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix10\Fix10 - Cylinders_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix10\Fix10 - EcatSlaves_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix10\Fix10 - Manual_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix10\Fix10 - Manual_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix10\Fix10 - Manual_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix10\Fix10 - QA_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix10\Fix10 - Sensors_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix11\Fix11 - Cylinders_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix11\Fix11 - EcatSlaves_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix11\Fix11 - Manual_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix11\Fix11 - Manual_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix11\Fix11 - Manual_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix11\Fix11 - QA_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix11\Fix11 - Sensors_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix12\Fix12 - Cylinders_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix12\Fix12 - EcatSlaves_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix12\Fix12 - Manual_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix12\Fix12 - Manual_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix12\Fix12 - Manual_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix12\Fix12 - QA_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix12\Fix12 - Sensors_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix13\Fix13 - Cylinders_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix13\Fix13 - EcatSlaves_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix13\Fix13 - Manual_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix13\Fix13 - Manual_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix13\Fix13 - Manual_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix13\Fix13 - QA_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix13\Fix13 - Sensors_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix14\Fix14 - Cylinders_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix14\Fix14 - EcatSlaves_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix14\Fix14 - Manual_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix14\Fix14 - Manual_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix14\Fix14 - Manual_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix14\Fix14 - QA_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix14\Fix14 - Sensors_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix15\Fix15 - Cylinders_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix15\Fix15 - EcatSlaves_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix15\Fix15 - Manual_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix15\Fix15 - Manual_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix15\Fix15 - Manual_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix15\Fix15 - QA_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix15\Fix15 - Sensors_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix16\Fix16 - Cylinders_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix16\Fix16 - EcatSlaves_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix16\Fix16 - Manual_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix16\Fix16 - Manual_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix16\Fix16 - Manual_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix16\Fix16 - QA_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Human Fixture Screens\Fix16\Fix16 - Sensors_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix101\Fix101 - Cylinders_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix101\Fix101 - EcatSlaves_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix101\Fix101 - Manual_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix101\Fix101 - Manual_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix101\Fix101 - Manual_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix101\Fix101 - QA_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix101\Fix101 - Sensors_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix102\Fix102 - Cylinders_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix102\Fix102 - EcatSlaves_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix102\Fix102 - Manual_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix102\Fix102 - Manual_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix102\Fix102 - Manual_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix102\Fix102 - QA_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix102\Fix102 - Sensors_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix103\Fix103 - Cylinders_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix103\Fix103 - EcatSlaves_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix103\Fix103 - Manual_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix103\Fix103 - Manual_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix103\Fix103 - Manual_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix103\Fix103 - QA_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix103\Fix103 - QA_Error_Reset_ACK.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix103\Fix103 - QA_Manual_Reset_ACK.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix103\Fix103 - Sensors_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix104\Fix104 - Cylinders_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix104\Fix104 - EcatSlaves_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix104\Fix104 - Manual_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix104\Fix104 - Manual_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix104\Fix104 - Manual_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix104\Fix104 - QA_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix104\Fix104 - Sensors_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix105\Fix105 - Cylinders_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix105\Fix105 - EcatSlaves_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix105\Fix105 - Manual_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix105\Fix105 - Manual_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix105\Fix105 - Manual_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix105\Fix105 - QA_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix105\Fix105 - Sensors_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix106\Fix106 - Cylinders_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix106\Fix106 - EcatSlaves_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix106\Fix106 - Manual_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix106\Fix106 - Manual_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix106\Fix106 - Manual_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix106\Fix106 - QA_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix106\Fix106 - Sensors_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix107\Fix107 - Cylinders_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix107\Fix107 - EcatSlaves_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix107\Fix107 - Manual_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix107\Fix107 - Manual_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix107\Fix107 - Manual_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix107\Fix107 - QA_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix107\Fix107 - Sensors_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix108\Fix108 - Cylinders_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix108\Fix108 - EcatSlaves_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix108\Fix108 - Manual_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix108\Fix108 - Manual_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix108\Fix108 - Manual_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix108\Fix108 - QA_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix108\Fix108 - Sensors_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix109\Fix109 - Cylinders_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix109\Fix109 - EcatSlaves_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix109\Fix109 - Manual_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix109\Fix109 - Manual_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix109\Fix109 - Manual_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix109\Fix109 - QA_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix109\Fix109 - Sensors_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix110\Fix110 - Cylinders_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix110\Fix110 - EcatSlaves_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix110\Fix110 - Manual_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix110\Fix110 - Manual_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix110\Fix110 - Manual_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix110\Fix110 - QA_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix110\Fix110 - Sensors_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix111\Fix111 - Cylinders_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix111\Fix111 - EcatSlaves_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix111\Fix111 - Manual_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix111\Fix111 - Manual_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix111\Fix111 - Manual_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix111\Fix111 - QA_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix111\Fix111 - Sensors_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix112\Fix112 - Cylinders_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix112\Fix112 - EcatSlaves_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix112\Fix112 - Manual_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix112\Fix112 - Manual_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix112\Fix112 - Manual_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix112\Fix112 - QA_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Internal Fixture Screens\Fix112\Fix112 - Sensors_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Line Overview Screens\Line Overview_8.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Line Overview Screens\Line Overview_7.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Line Overview Screens\Line Overview_6.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Line Overview Screens\Line Overview_5.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Line Overview Screens\Line Overview_4.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Line Overview Screens\Line Overview_3.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Line Overview Screens\Line Overview_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Line Overview Screens\Line Overview_Safeties.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Line Overview Screens\Line Overview_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Line Overview Screens\Line Overview_Icons.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Misc Screens\Diag Screens\TC_Topo.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Misc Screens\Diag Screens\Comm_Stat.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Misc Screens\Diag Screens\DB_Stat.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Misc Screens\Doc Screens\Docs_ EP9224.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Misc Screens\Doc Screens\PDF_Reader.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Misc Screens\LoginConfirm.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Misc Screens\Login_Screen.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Misc Screens\QAScreen.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Misc Screens\Rev Log Screens\License_Notices_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Misc Screens\Rev Log Screens\RevLog_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Misc Screens\The_Dump.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Misc Screens\Rev Log Screens\CodeDev - Logo_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Misc Screens\TipChange\pTipChangeConfirm.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Misc Screens\TipChange\Tip_Change.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Misc Screens\TipDress\Tip_Dress.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Product Data Screens\Product_Data_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Production Screens\ProdReport_Current.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Production Screens\ProdGraph.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Production Screens\ProdReport_History.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\Production Screens\Production_1.content">
+      <SubType>Content</SubType>
+      <Cache>True</Cache>
+    </Content>
+    <Content Include="Contents\Production Screens\Production_2.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\SIM Control\GTAC_SimControlPanel.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\SIM Control\GTAC_SimControlPanel_1.content">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\SIM Control\SimControlPanelButton.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\SIM Control\SimControlPanelButton.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Contents\SIM Control\SimControlPanelButton.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Contents\SIM Control\SimFixControl.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Contents\SIM Control\SimFixControl.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Contents\SIM Control\SimFixControl.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Functions\Beckhoff\TrendLineXValue.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\Beckhoff\TrendLineXValue.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\Beckhoff\TrendLineXValue.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_Animate_Height.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_Animate_Height.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_Animate_Height.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_Get_SetArrayObject.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_Get_SetArrayObject.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_Get_SetArrayObject.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_SetSymValue.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_SetSymValue.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_SetSymValue.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_Add_Flash.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_Add_Flash.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_Add_Flash.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_Change_Screen.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_Change_Screen.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_Change_Screen.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_HorizontalScroll.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_HorizontalScroll.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_HorizontalScroll.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_DetermineLastNodeType.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_DetermineLastNodeType.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_DetermineLastNodeType.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_Model_IDUPdater.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_Model_IDUPdater.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_Model_IDUPdater.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_StringToNumber.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_StringToNumber.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_StringToNumber.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_BakeCookie.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_BakeCookie.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_BakeCookie.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_EatCookie.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_EatCookie.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_EatCookie.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_LineAngle.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_LineAngle.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_LineAngle.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_ReturnEPImage.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_ReturnEPImage.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_ReturnEPImage.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_TimeToClock.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_TimeToClock.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_TimeToClock.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_TruncIDs.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_TruncIDs.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_TruncIDs.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_BindFieldbus.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_BindFieldbus.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_BindFieldbus.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_IF.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_IF.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_IF.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_ms_to_TimeComponents.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_ms_to_TimeComponents.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_ms_to_TimeComponents.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_ms_To_TimeString.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_ms_To_TimeString.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_ms_To_TimeString.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_OverBind.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_OverBind.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_OverBind.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_ReturnBinary_Value.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_ReturnBinary_Value.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_ReturnBinary_Value.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_Bind.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_Bind.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_Bind.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_GetSymValue.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_GetSymValue.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_GetSymValue.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_Rounding.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_Rounding.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_Rounding.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_ReturnComponentNumber.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_ReturnComponentNumber.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_ReturnComponentNumber.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_ReturnComponentType.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_ReturnComponentType.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_ReturnComponentType.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_Navigate_ControlsScreens.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_Navigate_ControlsScreens.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_Navigate_ControlsScreens.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_GotoPrev_ControlsScreen.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_GotoPrev_ControlsScreen.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_GotoPrev_ControlsScreen.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_GotoNext_ControlsScreen.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_GotoNext_ControlsScreen.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_GotoNext_ControlsScreen.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_GetDateTime.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_GetDateTime.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_GetDateTime.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_ReturnComponentPrompt.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_ReturnComponentPrompt.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_ReturnComponentPrompt.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_NumToHex.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_NumToHex.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_NumToHex.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_GetContentName.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_GetContentName.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_GetContentName.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_ReturnControlsOverviewImage.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_ReturnControlsOverviewImage.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_ReturnControlsOverviewImage.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_ReturnControlsOverviewPath.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_ReturnControlsOverviewPath.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_ReturnControlsOverviewPath.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_StringToReal.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_StringToReal.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_StringToReal.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_StrLeft.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_StrLeft.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_StrLeft.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_StrMid.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_StrMid.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_StrMid.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_StrRight.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_StrRight.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_StrRight.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_ClearBinary_Bit.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_ClearBinary_Bit.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_ClearBinary_Bit.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_GetBinary_Bit.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_GetBinary_Bit.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_GetBinary_Bit.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_SetBinary_Bit.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_SetBinary_Bit.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_SetBinary_Bit.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_ReturnStringLen.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_ReturnStringLen.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_ReturnStringLen.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_BinaryFormat.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_BinaryFormat.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_BinaryFormat.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_BoolToVis.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_BoolToVis.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_BoolToVis.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_ReturnBinary_Bit.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_ReturnBinary_Bit.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_ReturnBinary_Bit.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_Timeto.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_Timeto.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_Timeto.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_TimeToRealSeconds.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_TimeToRealSeconds.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_TimeToRealSeconds.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_UnBind.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_UnBind.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_UnBind.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_Write2DArray_ByIndexSymbol.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_Write2DArray_ByIndexSymbol.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_Write2DArray_ByIndexSymbol.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Functions\GTAC_ZeroStringPad.function.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Functions\GTAC_ZeroStringPad.js</DependentUpon>
+    </Content>
+    <Content Include="Functions\GTAC_ZeroStringPad.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\AssyImages\504_Assembly.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\AssyImages\504_Nut_Layout.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\AssyImages\524_Assembly.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\AssyImages\524_Nut_Layout.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\AssyImages\526_Assembly.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\AssyImages\526_Nut_Layout.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\AssyImages\536_Assembly.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\AssyImages\536_Nut_Layout.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\AssyImages\543_Assembly.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\AssyImages\543_Nut_Layout.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\AssyImages\550_Assembly.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\AssyImages\550_Nut_Layout.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\AssyImages\571_Assembly.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\AssyImages\571_Nut_Layout.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\BackgroundImages\BackgroundKeyence.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Human Fixtures\Fix01.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Human Fixtures\Fix01_Left.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Human Fixtures\Fix01_Middle.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Human Fixtures\Fix01_Right.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Human Fixtures\Fix01_Sub42.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Human Fixtures\Fix01_Sub43.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Human Fixtures\Fix01_Sub44.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Human Fixtures\Fix01_Sub45.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Human Fixtures\Fix01_Sub46.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Human Fixtures\Fix01_Sub47.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Human Fixtures\Fix02.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Human Fixtures\Fix03 - Left.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Human Fixtures\Fix03.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Human Fixtures\Fix03_Middle.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Human Fixtures\Fix03_Right.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Human Fixtures\Fix04.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Human Fixtures\Fix05.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Human Fixtures\Fix06.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Human Fixtures\Fix07.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Human Fixtures\Fix08.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Human Fixtures\Fix09.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Human Fixtures\Fix10.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Human Fixtures\Fix11.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Human Fixtures\Fix12.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Human Fixtures\Fix13.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Human Fixtures\Fix14.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Human Fixtures\Fix15.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Human Fixtures\Fix16.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Internal Fixtures\Fix101.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Internal Fixtures\Fix102.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Internal Fixtures\Fix103.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Internal Fixtures\Fix104.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Internal Fixtures\Fix105.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Internal Fixtures\Fix106.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Internal Fixtures\Fix107.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Internal Fixtures\Fix108.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Internal Fixtures\Fix109.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Internal Fixtures\Fix110.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Internal Fixtures\Fix111.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Fixture Images\Internal Fixtures\Fix112.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\LineOverview.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Line_Overview_1.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Line_Overview_2.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Line_Overview_3.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Ped Images\PED01.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Ped Images\PED02.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Ped Images\PED03.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Ped Images\PED04.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Ped Images\PED05.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Ped Images\PED06.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Ped Images\PED07.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Ped Images\PED08.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Ped Images\PED09.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Ped Images\PED10.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Ped Images\PED11.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Ped Images\PED12.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Ped Images\PED13.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Ped Images\PED14.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Ped Images\PED15.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Ped Images\PED16.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Ped Images\PED17.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Ped Images\PED18.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Ped Images\PED19.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Ped Images\PED20.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Ped Images\PED21.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Ped Images\PED22.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Ped Images\PED23.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Ped Images\PED24.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Ped Images\PED25.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Ped Images\PED26.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Ped Images\PED27.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Ped Images\PED28.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Ped Images\PED29.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\CellImages\Ped Images\PED30.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ATI Tool Changer.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ATV320.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\AX5206.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\CU1128.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\EP6224.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ESWxx.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\Graco EFLO-IQ2.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ico_9128.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ico_mdxx.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ico_mdxx_cntl.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ico_ssxx.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ico_stxx - Copy.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ico_vfdxx.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ICxxRack.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\LSRxx.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ISxx.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ISxx_wPbus.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\PEDxx.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\QAImage.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ico_eswxx.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ico_eswxx_io.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ico_icxx.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ico_icxx_cntl.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ico_icxx_cntl_lg.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ico_lsrxx.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ico_lsrxx_cntl.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ico_isxx.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ico_isxx_cntl.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ico_isxx_pbus.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ico_isxx_switch.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ico_rxx.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ico_rxx_cntl.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ico_sdxx.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ico_sdxx_lg.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ico_slxx_cntl.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ico_ssxx.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ico_ssxx_io.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ico_stxx.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ico_stxx_cntl.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ico_stxx_cntl_lg.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\ico_vfdxx.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\null_component.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\Rxx_1.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\Rxx_2.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\SmartRay_image.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\STxx.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Components\Tucker Stud Welder.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Dev_Team\dev1.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Dev_Team\dev10.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Dev_Team\dev12.jpeg">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Dev_Team\dev2.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Dev_Team\dev3.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Dev_Team\dev4.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Dev_Team\dev5.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Dev_Team\dev6.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Dev_Team\dev7.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Dev_Team\dev8.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Dev_Team\dev9.jpg">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Dev_Team\dev_11.gif">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Dev_Team\Bow.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Dev_Team\UI.jpg">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\horiz_break_line1.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\CP2215.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\EP1008.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\EP1111.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\EP1908.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\EP2008.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\EP3174.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\EP6224.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\EP9214.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\EP9224.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\EX260.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\GooglePin_0.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\GooglePin_180.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\GooglePin_270.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\GooglePin_90.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\icon_3d.jpg">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_auto.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_calipers.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_changeuser.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_controlpower.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_cylinder.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_db_clear.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_digital_IO.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_discrete_IO.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_estop.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_faulted.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_gate_closed.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_gate_open.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_Graph.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_Graph1.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_Graph2.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_image.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_in_sim.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_license.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_manual.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_oems_adobe2.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_opacity.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_origin.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_production.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_product_data.jpg">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_product_data2.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_prox.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_Report1.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_report2.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_ReportHistory.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_robotgeneric_play.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_robotgeneric_stop.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_robotkuka_playbk.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_robotkuka_stopbk.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_SafetyEP.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\EstopPB2.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\icon_gtac_eng.jpg">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\icon_oems_ecatsm.jpg">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\icon_red_x.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_Ecat_M12I-O.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_EP1111.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_EstopPB.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_ESWxx.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\icon_dev.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_diags.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_down.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_ethercatblock1.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_ethercatblock2.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_ethercatblock4.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_ethercatblock5.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_ethercatblock6.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_ethercatblock_id.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_gtac_conf2.jpg">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_home.jpg">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_lan.jpg">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_lan.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_mb_diags.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_oems_adobe OLD.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_oems_adobe.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_oems_adobe.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_oems_adobeGY.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_oems_beckhoff.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_oems_beckhoffmotor_1.jpg">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_oems_beckhoffmotor_2.jpg">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_oems_ecatlogo.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_oems_excel.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_oems_google.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_oems_gtac.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_oems_intellogo.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_oems_kuka.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_oems_question.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_oems_stacklight.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_oems_stacklight2.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_oems_tcat3logo.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_oems_tcatlogo.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_oems_wtc.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_os_openfolder.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_ped.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_rev_log.jpg">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_robotcontroller.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_robot_Kuka.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_servodrive.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_servo_inposition.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_servo_rotating.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_settings.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_shift_config.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_speed_ctrl.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_swap_arrows.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_tip.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_tip_dress.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_toggle0.jpg">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_toggle1.jpg">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_tv.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_ui_conf.jpg">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_under_construction.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_up.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_valvebank.jpg">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_warning_history.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_warning_prompt.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_warning_promptOLD.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ico_whatscreen_set.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\ICxxRackStart.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\SafetyDoorLk.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\Stacklight.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\UI_Conf_Icons\Icon_Current_Datalog.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\UI_Conf_Icons\Icon_history_Datalog.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\UI_Conf_Icons\ico_AlarmTheme1.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\UI_Conf_Icons\ico_AlarmTheme2.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\UI_Conf_Icons\ico_fontSize.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\UI_Conf_Icons\ico_lang_selection.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Icons\UI_Conf_Icons\ico_ui_theme.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\logo-GTAC_GREEN.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Robot Config Data Base\EOATs\Common\Tool_Changer.bmp">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Robot Config Data Base\EOATs\EOAT10.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Robot Config Data Base\EOATs\EOAT09.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Robot Config Data Base\EOATs\EOAT08.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Robot Config Data Base\EOATs\EOAT07.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Robot Config Data Base\EOATs\EOAT06.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Robot Config Data Base\EOATs\EOAT05.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Robot Config Data Base\EOATs\EOAT04.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Robot Config Data Base\EOATs\EOAT03.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Robot Config Data Base\EOATs\EOAT02.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Robot Config Data Base\EOATs\EOAT01.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Robot Config Data Base\Types\Type60.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Robot Config Data Base\Types\Type61.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Robot Config Data Base\Types\Type62.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Robot Config Data Base\Types\Type63.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Robot Config Data Base\Types\Type64.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Images\GTAC\Robot Config Data Base\Types\Type69.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Imports\CSS\pushy-buttons.min.css">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Intro.view">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="KeyboardLayouts\Numpad %28plusminus%29.keyboard.json">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="KeyboardLayouts\Numpad.keyboard.json">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\kkk_Czech.localization">
+      <SubType>Content</SubType>
+      <DependentUpon>Localization\kkk_Czech.tpl.localization</DependentUpon>
+    </Content>
+    <Content Include="Localization\kkk_Czech.tpl.localization">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\ccc_French.localization">
+      <SubType>Content</SubType>
+      <DependentUpon>Localization\ccc_French.tpl.localization</DependentUpon>
+    </Content>
+    <Content Include="Localization\ccc_French.tpl.localization">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\fff_Hindi.localization">
+      <SubType>Content</SubType>
+      <DependentUpon>Localization\fff_Hindi.tpl.localization</DependentUpon>
+    </Content>
+    <Content Include="Localization\fff_Hindi.tpl.localization">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\jjj_Italian.localization">
+      <SubType>Content</SubType>
+      <DependentUpon>Localization\jjj_Italian.tpl.localization</DependentUpon>
+    </Content>
+    <Content Include="Localization\jjj_Italian.tpl.localization">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\ggg_Chinese.localization">
+      <SubType>Content</SubType>
+      <DependentUpon>Localization\ggg_Chinese.tpl.localization</DependentUpon>
+    </Content>
+    <Content Include="Localization\ggg_Chinese.tpl.localization">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\hhh_Japanese.localization">
+      <SubType>Content</SubType>
+      <DependentUpon>Localization\hhh_Japanese.tpl.localization</DependentUpon>
+    </Content>
+    <Content Include="Localization\hhh_Japanese.tpl.localization">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\lll_Slovak.localization">
+      <SubType>Content</SubType>
+      <DependentUpon>Localization\lll_Slovak.tpl.localization</DependentUpon>
+    </Content>
+    <Content Include="Localization\lll_Slovak.tpl.localization">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\iii_Russian.localization">
+      <SubType>Content</SubType>
+      <DependentUpon>Localization\iii_Russian.tpl.localization</DependentUpon>
+    </Content>
+    <Content Include="Localization\iii_Russian.tpl.localization">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\bbb_Portugese.localization">
+      <SubType>Content</SubType>
+      <DependentUpon>Localization\bbb_Portugese.tpl.localization</DependentUpon>
+    </Content>
+    <Content Include="Localization\bbb_Portugese.tpl.localization">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Localization\eee_Spanish.localization">
+      <SubType>Content</SubType>
+      <DependentUpon>Localization\eee_Spanish.tpl.localization</DependentUpon>
+    </Content>
+    <Content Include="Localization\eee_Spanish.tpl.localization">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="packages.config">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Scripts\GTAC\Border-Animation.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Scripts\GTAC\GTAC_LoginFunctionality.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Scripts\GTAC\GTAC_PLCVarFunctions.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Scripts\GTAC\GTAC_ProductionReportHandler.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Scripts\GTAC\GTAC_FaultHistory.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Scripts\GTAC\GTAC_FaultHandler.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Scripts\GTAC\GTAC_CloseTcHmi.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Scripts\GTAC\GTAC_ProductReportHandler.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Scripts\GTAC\GTAC_Misc.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Scripts\GTAC\GTAC_FieldbusScreenHandler.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Scripts\GTAC\GTAC_TTxxHandler.js">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Secondary.view">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Server\ADS\ADS.Config.default.json">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.default.json" />
+    <Content Include="Server\ADS\ADS.Config.remote.json">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Server\ADS\ADS.Config.remote.json" />
+    <Content Include="Server\ADS\ADS.Config.remote.json" />
+    <Content Include="Server\GTAC_TcUI_PostgreSQL\GTAC_TcUI_PostgreSQL.Config.default.json">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Server\GTAC_TcUI_PostgreSQL\GTAC_TcUI_PostgreSQL.Config.remote.json">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Server\GTAC_TcUI_PostgreSQL\GTAC_TcUI_PostgreSQL.Storage.json">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Server\TcHmiEcDiagnostics\TcHmiEcDiagnostics.Config.default.json">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Server\TcHmiEcDiagnostics\TcHmiEcDiagnostics.Config.remote.json">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Server\TcHmiEcDiagnostics\TcHmiEcDiagnostics.Storage.json">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Server\TcHmiLua\TcHmiLua.Config.default.json">
+      <SubType>Content</SubType>
+      <Visible>True</Visible>
+    </Content>
+    <Content Include="Server\TcHmiLua\TcHmiLua.Config.remote.json">
+      <SubType>Content</SubType>
+      <Visible>True</Visible>
+    </Content>
+    <Content Include="Server\TcHmiLua\TcHmiLua.Storage.json">
+      <SubType>Content</SubType>
+      <Visible>True</Visible>
+    </Content>
+    <Content Include="Server\TcHmiSqliteHistorize\TcHmiSqliteHistorize.Config.default.json">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Server\TcHmiSqliteHistorize\TcHmiSqliteHistorize.Config.default.json" />
+    <Content Include="Server\TcHmiSqliteHistorize\TcHmiSqliteHistorize.Config.remote.json">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Server\TcHmiSqliteHistorize\TcHmiSqliteHistorize.Storage.json">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Server\TcHmiSqliteLogger\TcHmiSqliteLogger.Config.default.json">
+      <SubType>Content</SubType>
+      <Visible>True</Visible>
+    </Content>
+    <Content Include="Server\TcHmiSqliteLogger\TcHmiSqliteLogger.Config.remote.json">
+      <SubType>Content</SubType>
+      <Visible>True</Visible>
+    </Content>
+    <Content Include="Server\TcHmiSqliteLogger\TcHmiSqliteLogger.Storage.json">
+      <SubType>Content</SubType>
+      <Visible>True</Visible>
+    </Content>
+    <Content Include="Server\TcHmiUserManagement\TcHmiUserManagement.Config.default.json">
+      <SubType>Content</SubType>
+      <Visible>True</Visible>
+    </Content>
+    <Content Include="Server\TcHmiUserManagement\TcHmiUserManagement.Config.remote.json">
+      <SubType>Content</SubType>
+      <Visible>True</Visible>
+    </Content>
+    <Content Include="Server\TcHmiUserManagement\TcHmiUserManagement.Storage.json">
+      <SubType>Content</SubType>
+      <Visible>True</Visible>
+    </Content>
+    <Content Include="Symbols\3D\uc_GTAC_3DModelController.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\3D\uc_GTAC_3DModelController.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\3D\uc_GTAC_3DModelController.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\9214\EP9214-Channel_IO.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\9214\EP9214-Channel_IO.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\9214\EP9214-Channel_IO.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\9214\EP9214-Device_IO.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\9214\EP9214-Device_IO.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\9214\EP9214-Device_IO.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Custom\uc_Fix102_InspectionResults.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Custom\uc_Fix102_InspectionResults.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Custom\uc_Fix102_InspectionResults.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Cylinders\CylinderStatus2Pos.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Cylinders\CylinderStatus2Pos.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Cylinders\CylinderStatus2Pos.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Cylinders\CylinderStatus3Pos.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Cylinders\CylinderStatus3Pos.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Cylinders\CylinderStatus3Pos.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Ecat_Slaves\AutoFixIO.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Ecat_Slaves\AutoFixIO.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Ecat_Slaves\AutoFixIO.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Ecat_Slaves\EcatSlave_EP3174.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Ecat_Slaves\EcatSlave_EP3174.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Ecat_Slaves\EcatSlave_EP3174.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Ecat_Slaves\EcatSlave_EP19x8.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Ecat_Slaves\EcatSlave_EP19x8.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Ecat_Slaves\EcatSlave_EP19x8.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Ecat_Slaves\EcatSlave_EP9214.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Ecat_Slaves\EcatSlave_EP9214.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Ecat_Slaves\EcatSlave_EP9214.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Ecat_Slaves\EcatSlave_EP9214_SSxx.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Ecat_Slaves\EcatSlave_EP9214_SSxx.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Ecat_Slaves\EcatSlave_EP9214_SSxx.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Ecat_Slaves\EcatSlave_EP9224.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Ecat_Slaves\EcatSlave_EP9224.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Ecat_Slaves\EcatSlave_EP9224.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Ecat_Slaves\EcatSlave_SMCValveBank.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Ecat_Slaves\EcatSlave_SMCValveBank.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Ecat_Slaves\EcatSlave_SMCValveBank.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Ecat_Slaves\EcatSlave_EPxx08.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Ecat_Slaves\EcatSlave_EPxx08.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Ecat_Slaves\EcatSlave_EPxx08.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Ecat_Slaves\EcatSlave_EP1111.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Ecat_Slaves\EcatSlave_EP1111.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Ecat_Slaves\EcatSlave_EP1111.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Ecat_Slaves\EcatMaster_Status.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Ecat_Slaves\EcatMaster_Status.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Ecat_Slaves\EcatMaster_Status.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Ecat_Slaves\EcatSlave_TitleStatus.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Ecat_Slaves\EcatSlave_TitleStatus.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Ecat_Slaves\EcatSlave_TitleStatus.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Ecat_Slaves\ucECATState.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Ecat_Slaves\ucECATState.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Ecat_Slaves\ucECATState.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\EP9224\EP9224-Channel_IO.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\EP9224\EP9224-Channel_IO.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\EP9224\EP9224-Channel_IO.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\EP9224\EP9224-Device_IO.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\EP9224\EP9224-Device_IO.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\EP9224\EP9224-Device_IO.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\FixXXNavigation.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\FixXXNavigation.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\FixXXNavigation.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\GeneralStatus\GeneralControl.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\GeneralStatus\GeneralControl.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\GeneralStatus\GeneralControl.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\GeneralStatus\GeneralStatus.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\GeneralStatus\GeneralStatus.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\GeneralStatus\GeneralStatus.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\GTAC Components\uc_ControlsOverview_Next.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\GTAC Components\uc_ControlsOverview_Next.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\GTAC Components\uc_ControlsOverview_Next.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\GTAC Components\uc_ControlsOverview_Prev.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\GTAC Components\uc_ControlsOverview_Prev.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\GTAC Components\uc_ControlsOverview_Prev.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\GTAC Components\uc_GTAC_Components_v2.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\GTAC Components\uc_GTAC_Components_v2.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\GTAC Components\uc_GTAC_Components_v2.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\GTAC Standard UI Controls\uc_GTAC_IncDec_Buttons.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\GTAC Standard UI Controls\uc_GTAC_IncDec_Buttons.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\GTAC Standard UI Controls\uc_GTAC_IncDec_Buttons.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\GTAC Standard UI Controls\uc_GTAC_Toggle_Button.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\GTAC Standard UI Controls\uc_GTAC_Toggle_Button.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\GTAC Standard UI Controls\uc_GTAC_Toggle_Button.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Indicator\Generic_Inds_Byte.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Indicator\Generic_Inds_Byte.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Indicator\Generic_Inds_Byte.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Indicator\Generic_Inds_Nibble.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Indicator\Generic_Inds_Nibble.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Indicator\Generic_Inds_Nibble.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Indicator\uc_GTAC_Indicator V2.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Indicator\uc_GTAC_Indicator V2.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Indicator\uc_GTAC_Indicator V2.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Indicator\uc_GTAC_Indicator V3.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Indicator\uc_GTAC_Indicator V3.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Indicator\uc_GTAC_Indicator V3.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Indicator\uc_GTAC_Indicator.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Indicator\uc_GTAC_Indicator.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Indicator\uc_GTAC_Indicator.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Indicator\uc_GTAC_Indicator_wFlash.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Indicator\uc_GTAC_Indicator_wFlash.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Indicator\uc_GTAC_Indicator_wFlash.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\IVxx\IVxx.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\IVxx\IVxx.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\IVxx\IVxx.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\IVxx\ReleaseCam.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\IVxx\ReleaseCam.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\IVxx\ReleaseCam.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\LCStatus.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\LCStatus.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\LCStatus.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\LCStatus_v2.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\LCStatus_v2.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\LCStatus_v2.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Misc\AutoManCtrls.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Misc\AutoManCtrls.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Misc\AutoManCtrls.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Misc\EstopStatus.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Misc\EstopStatus.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Misc\EstopStatus.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Misc\ESWStatus.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Misc\ESWStatus.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Misc\ESWStatus.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Misc\GTAC_Line.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Misc\GTAC_Line.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Misc\GTAC_Line.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Misc\ManualControls.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Misc\ManualControls.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Misc\ManualControls.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Misc\ShiftConfigDisplay.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Misc\ShiftConfigDisplay.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Misc\ShiftConfigDisplay.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Misc\uc_ActuatorStatus.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Misc\uc_ActuatorStatus.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Misc\uc_ActuatorStatus.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Misc\uc_GTAC_OpacityController.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Misc\uc_GTAC_OpacityController.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Misc\uc_GTAC_OpacityController.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Misc\uc_NutWeldLVDT_Config.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Misc\uc_NutWeldLVDT_Config.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Misc\uc_NutWeldLVDT_Config.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Misc\uc_NutWeldLVDT_Status.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Misc\uc_NutWeldLVDT_Status.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Misc\uc_NutWeldLVDT_Status.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Product Data\uc_GTAC_ProductData.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Product Data\uc_GTAC_ProductData.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Product Data\uc_GTAC_ProductData.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\RollupDoor.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\RollupDoor.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\RollupDoor.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Rxx\Linear_Rxx\Linear_Rxx.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Rxx\Linear_Rxx\Linear_Rxx.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Rxx\Linear_Rxx\Linear_Rxx.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Rxx\Linear_Rxx\Linear_Rxx_Indicator.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Rxx\Linear_Rxx\Linear_Rxx_Indicator.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Rxx\Linear_Rxx\Linear_Rxx_Indicator.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Rxx\Rxx.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Rxx\Rxx.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Rxx\Rxx.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Rxx\Rxx_FlowMeter.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Rxx\Rxx_FlowMeter.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Rxx\Rxx_FlowMeter.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Rxx\TipChngRbtStatus.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Rxx\TipChngRbtStatus.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Rxx\TipChngRbtStatus.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Rxx\TTxxNavigation.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Rxx\TTxxNav_WithFixSwap.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Rxx\TTxxNav_WithFixSwap.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Rxx\TTxxNav_WithFixSwap.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\Rxx\uc_Rxx_Status.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\Rxx\uc_Rxx_Status.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\Rxx\uc_Rxx_Status.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\SafetyGate.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\SafetyGate.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\SafetyGate.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\SDxx\C1D_Errors.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\SDxx\C1D_Errors.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\SDxx\C1D_Errors.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\SDxx\SDxxDeviceErrors.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\SDxx\SDxxDeviceErrors.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\SDxx\SDxxDeviceErrors.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\SDxx\SDxxInfo.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\SDxx\SDxxInfo.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\SDxx\SDxxInfo.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\SDxx\SDxx_Diagnostics.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\SDxx\SDxx_Diagnostics.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\SDxx\SDxx_Diagnostics.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\SDxx\SDxx_SafetyStatus.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\SDxx\SDxx_SafetyStatus.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\SDxx\SDxx_SafetyStatus.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\PedXX.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\PedXX.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\PedXX.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\SDxx\SDxx_AxisControl.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\SDxx\SDxx_AxisControl.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\SDxx\SDxx_AxisControl.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\SmartMessages\uc_SmartMessage.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\SmartMessages\uc_SmartMessage.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\SmartMessages\uc_SmartMessage.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\SmartMessages\uc_SmartMessage_v2.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\SmartMessages\uc_SmartMessage_v2.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\SmartMessages\uc_SmartMessage_v2.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\SmartMessages\uc_SmartMessage_v3.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\SmartMessages\uc_SmartMessage_v3.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\SmartMessages\uc_SmartMessage_v3.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\SRxx\SRxx.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\SRxx\SRxx.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\SRxx\SRxx.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\uc_GTAC_PBUS_Status.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\uc_GTAC_PBUS_Status.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\uc_GTAC_PBUS_Status.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\uc_FlashTypeTextBanner.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\uc_FlashTypeTextBanner.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\uc_FlashTypeTextBanner.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\ucDateTimeInfo.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\ucDateTimeInfo.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\ucDateTimeInfo.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\uc_GenFixXXProduction.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\uc_GenFixXXProduction.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\uc_GenFixXXProduction.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\uc_GTAC_PNet_Status.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\uc_GTAC_PNet_Status.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\uc_GTAC_PNet_Status.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\uc_StdFixXXProduction.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\uc_StdFixXXProduction.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\uc_StdFixXXProduction.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\uc_GTAC_HexCRCDisplay.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\uc_GTAC_HexCRCDisplay.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\uc_GTAC_HexCRCDisplay.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\uc_GTAC_6900Info.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\uc_GTAC_6900Info.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\uc_GTAC_6900Info.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\uc_TimePicker.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\uc_TimePicker.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\uc_TimePicker.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\uc_GTAC_DBConnectionStatus.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\uc_GTAC_DBConnectionStatus.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\uc_GTAC_DBConnectionStatus.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Symbols\VFD\VFDxx.usercontrol">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Symbols\VFD\VFDxx.usercontrol.json">
+      <SubType>Content</SubType>
+      <DependentUpon>Symbols\VFD\VFDxx.usercontrol</DependentUpon>
+    </Content>
+    <Content Include="Themes\Classic-Dark\Classic-Dark.theme">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Classic-Dark\Images\Background.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Classic-Dark\Images\Splash-320x534.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Classic-Dark\Images\Splash-420x200.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Classic-Dark\Images\Splash-800x600.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Classic-Dark\Classic-Dark.css">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Classic-Light\Classic-Light.theme">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Classic-Light\Images\Background.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Classic-Light\Images\Splash-320x534.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Classic-Light\Images\Splash-420x200.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Classic-Light\Images\Splash-800x600.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Classic-Light\Classic-Light.css">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Classic-Sodecia\Classic-Sodecia.theme">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Classic-Sodecia\Images\Background.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Classic-Sodecia\Images\Splash-320x534.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Classic-Sodecia\Images\Splash-420x200.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Classic-Sodecia\Images\Splash-800x600.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Classic-Sodecia\Classic-Sodecia.css">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Modern-Dark\Images\Background.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Modern-Dark\Images\Splash-320x534.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Modern-Dark\Images\Splash-420x200.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Modern-Dark\Images\Splash-800x600.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Modern-Dark\Modern-Dark.theme">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Modern-Dark\Modern-Dark.css">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Modern-Light\Images\Background.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Modern-Light\Images\Splash-320x534.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Modern-Light\Images\Splash-420x200.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Modern-Light\Images\Splash-800x600.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Modern-Light\Modern-Light.theme">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Modern-Light\Modern-Light.css">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Modern-Sodecia\Images\Background.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Modern-Sodecia\Images\Splash-320x534.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Modern-Sodecia\Images\Splash-420x200.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Modern-Sodecia\Images\Splash-800x600.png">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Modern-Sodecia\Modern-Sodecia.theme">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Themes\Modern-Sodecia\Modern-Sodecia.css">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="tsconfig.tpl.json">
+      <SubType>Content</SubType>
+      <Visible>true</Visible>
+    </Content>
+    <Content Include="tsconfig.json">
+      <SubType>Content</SubType>
+      <Visible>true</Visible>
+      <DependentUpon>tsconfig.tpl.json</DependentUpon>
+    </Content>
+    <Content Include="packages.xsd">
+      <SubType>Content</SubType>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="Properties\tchmiconfig.json">
+      <SubType>Content</SubType>
+      <Visible>true</Visible>
+    </Content>
+    <Content Include="Properties\tchmi.framework.Schema.tpl.json">
+      <SubType>Content</SubType>
+      <Visible>true</Visible>
+    </Content>
+    <Content Include="Properties\tchmi.framework.Schema.json">
+      <SubType>Content</SubType>
+      <Visible>true</Visible>
+      <DependentUpon>Properties\tchmi.framework.Schema.tpl.json</DependentUpon>
+    </Content>
+    <Content Include="Properties\tchmi.project.Schema.tpl.json">
+      <SubType>Content</SubType>
+      <Visible>true</Visible>
+    </Content>
+    <Content Include="Properties\tchmi.project.Schema.json">
+      <SubType>Content</SubType>
+      <Visible>true</Visible>
+      <DependentUpon>Properties\tchmi.project.Schema.tpl.json</DependentUpon>
+    </Content>
+    <Content Include="Properties\tchmipublish.config.json">
+      <SubType>Content</SubType>
+      <Visible>true</Visible>
+    </Content>
+    <Content Include="Properties\tchmimanifest.json">
+      <SubType>Content</SubType>
+      <Visible>true</Visible>
+    </Content>
+    <Content Include="Properties\Default.tpl">
+      <SubType>Content</SubType>
+      <Visible>true</Visible>
+    </Content>
+    <Content Include=".tfignore">
+      <SubType>Content</SubType>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include=".gitignore">
+      <SubType>Content</SubType>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="Fonts\Fonts.css">
+      <SubType>Content</SubType>
+      <Visible>true</Visible>
+    </Content>
+    <Content Include="Fonts\Roboto-Condensed-webfont.woff">
+      <SubType>Content</SubType>
+      <Visible>true</Visible>
+    </Content>
+    <Content Include="Localization\ddd_German.tpl.localization">
+      <SubType>Content</SubType>
+      <Visible>true</Visible>
+    </Content>
+    <Content Include="Localization\aaa_English.tpl.localization">
+      <SubType>Content</SubType>
+      <Visible>true</Visible>
+    </Content>
+    <Content Include="Localization\ddd_German.localization">
+      <SubType>Content</SubType>
+      <Visible>true</Visible>
+      <DependentUpon>Localization\ddd_German.tpl.localization</DependentUpon>
+    </Content>
+    <Content Include="Localization\aaa_English.localization">
+      <SubType>Content</SubType>
+      <Visible>true</Visible>
+      <DependentUpon>Localization\aaa_English.tpl.localization</DependentUpon>
+    </Content>
+    <Content Include="KeyboardLayouts\German - compact.keyboard.json">
+      <SubType>Content</SubType>
+      <Visible>true</Visible>
+    </Content>
+    <Content Include="KeyboardLayouts\US - compact.keyboard.json">
+      <SubType>Content</SubType>
+      <Visible>true</Visible>
+    </Content>
+    <Content Include="Images\Favicon.ico">
+      <SubType>Content</SubType>
+      <Visible>true</Visible>
+    </Content>
+    <Content Include="Images\Beckhoff_Logo.svg">
+      <SubType>Content</SubType>
+      <Visible>true</Visible>
+    </Content>
+    <Content Include="Images\Manifest\launcher-icon-0-75x.png">
+      <SubType>Content</SubType>
+      <Visible>true</Visible>
+    </Content>
+    <Content Include="Images\Manifest\launcher-icon-1-5x.png">
+      <SubType>Content</SubType>
+      <Visible>true</Visible>
+    </Content>
+    <Content Include="Images\Manifest\launcher-icon-1x.png">
+      <SubType>Content</SubType>
+      <Visible>true</Visible>
+    </Content>
+    <Content Include="Images\Manifest\launcher-icon-2x.png">
+      <SubType>Content</SubType>
+      <Visible>true</Visible>
+    </Content>
+    <Content Include="Images\Manifest\launcher-icon-3x.png">
+      <SubType>Content</SubType>
+      <Visible>true</Visible>
+    </Content>
+    <Content Include="Images\Manifest\launcher-icon-4x.png">
+      <SubType>Content</SubType>
+      <Visible>true</Visible>
+    </Content>
+    <Content Include="Desktop.view">
+      <SubType>Content</SubType>
+      <Visible>true</Visible>
+    </Content>
+    <Folder Include="Server\ADS\" />
+    <Folder Include="Server\TcHmiLua\" />
+    <Folder Include="Server\TcHmiSqliteLogger\" />
+    <Folder Include="Server\TcHmiSrv\" />
+    <Folder Include="Server\TcHmiUserManagement\" />
+    <Content Include="Server\ADS\ADS.Config.default.json">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Server\ADS\ADS.Config.remote.json">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Server\ADS\ADS.Storage.json">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Server\TcHmiLua\TcHmiLua.Config.default.json">
+      <SubType>Content</SubType>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="Server\TcHmiLua\TcHmiLua.Config.remote.json">
+      <SubType>Content</SubType>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="Server\TcHmiLua\TcHmiLua.Storage.json">
+      <SubType>Content</SubType>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="Server\TcHmiSqliteLogger\TcHmiSqliteLogger.Config.default.json">
+      <SubType>Content</SubType>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="Server\TcHmiSqliteLogger\TcHmiSqliteLogger.Config.remote.json">
+      <SubType>Content</SubType>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="Server\TcHmiSqliteLogger\TcHmiSqliteLogger.Storage.json">
+      <SubType>Content</SubType>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="Server\TcHmiSrv\TcHmiSrv.Config.default.json">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Server\TcHmiSrv\TcHmiSrv.Config.remote.json">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Server\TcHmiSrv\TcHmiSrv.Storage.json">
+      <SubType>Content</SubType>
+    </Content>
+    <Content Include="Server\TcHmiUserManagement\TcHmiUserManagement.Config.default.json">
+      <SubType>Content</SubType>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="Server\TcHmiUserManagement\TcHmiUserManagement.Config.remote.json">
+      <SubType>Content</SubType>
+      <Visible>false</Visible>
+    </Content>
+    <Content Include="Server\TcHmiUserManagement\TcHmiUserManagement.Storage.json">
+      <SubType>Content</SubType>
+      <Visible>false</Visible>
+    </Content>
+    <Folder Include="Themes\Classic-Dark\" />
+    <Folder Include="Themes\Classic-Dark\Images" />
+    <Folder Include="Themes\Classic-Light\" />
+    <Folder Include="Themes\Classic-Light\Images" />
+    <Folder Include="Themes\Classic-Sodecia\" />
+    <Folder Include="Themes\Classic-Sodecia\Images" />
+    <Folder Include="Themes\Modern-Dark\" />
+    <Folder Include="Themes\Modern-Dark\Images" />
+    <Folder Include="Themes\Modern-Light\" />
+    <Folder Include="Themes\Modern-Light\Images" />
+    <Folder Include="Themes\Modern-Sodecia\" />
+    <Folder Include="Themes\Modern-Sodecia\Images" />
+  </ItemGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\Microsoft.TypeScript.MSBuild.4.8.4\build\Microsoft.TypeScript.MSBuild.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.TypeScript.MSBuild.4.8.4\build\Microsoft.TypeScript.MSBuild.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.TypeScript.MSBuild.4.8.4\build\Microsoft.TypeScript.MSBuild.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.TypeScript.MSBuild.4.8.4\build\Microsoft.TypeScript.MSBuild.targets'))" />
+  </Target>
+  <Import Project="..\packages\Microsoft.TypeScript.MSBuild.4.8.4\build\Microsoft.TypeScript.MSBuild.targets" Condition="Exists('..\packages\Microsoft.TypeScript.MSBuild.4.8.4\build\Microsoft.TypeScript.MSBuild.targets')" />
+</Project>

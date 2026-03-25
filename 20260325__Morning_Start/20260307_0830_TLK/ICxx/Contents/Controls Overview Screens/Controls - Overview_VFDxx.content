@@ -1,0 +1,274 @@
+<div id="VFDxx_Content_1" data-tchmi-type="TcHmi.Controls.System.TcHmiContent" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="1024" data-tchmi-height="670" data-tchmi-zindex="2" data-tchmi-is-enabled="true">
+<div id="VFDxx_EcatInd_1" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="20" data-tchmi-height-unit="px" data-tchmi-ind_height="22" data-tchmi-ind_width="15" data-tchmi-left="490" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Indicator/uc_GTAC_Indicator.usercontrol" data-tchmi-top="105" data-tchmi-top-unit="px" data-tchmi-width="19" data-tchmi-width-unit="px" data-tchmi-is-enabled="true" data-tchmi-input="%f%TcHmi.Functions.Beckhoff.GetElementByIndex(%s%PLC1..Out_To_ICxx::VFD%/s%, %i%Component_Num%/i%).Discrete_Image.VFD_State.InfoData.State%/f%" data-tchmi-zindex="2" data-tchmi-width-mode="Content" data-tchmi-height-mode="Content">
+<script data-tchmi-target-attribute="data-tchmi-on_color" type="application/json">
+{
+  "color": "rgba(0, 255, 0, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-off_color" type="application/json">
+{
+  "color": "rgba(255, 0, 0, 1)"
+}
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-compare" type="application/json">
+8
+</script>
+
+
+</div>
+<div id="FromVFDxx_To_Next_1" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiPolyline" data-tchmi-height="457" data-tchmi-height-unit="px" data-tchmi-left="556" data-tchmi-left-unit="px" data-tchmi-scale-mode="None" data-tchmi-top="150" data-tchmi-top-unit="px" data-tchmi-is-enabled="true" data-tchmi-fill-mode="NonZero" data-tchmi-stroke-thickness="2" data-tchmi-points="%f%&quot;40,45 275,45 275,449 &quot;+ (%ctrl%FromVFDxx_To_Next_1::RenderedWidth%/ctrl%-5)+&quot;,449 &quot; +(%ctrl%FromVFDxx_To_Next_1::RenderedWidth%/ctrl% -7) + &quot;,447 &quot; + (%ctrl%FromVFDxx_To_Next_1::RenderedWidth%/ctrl% - 7) + &quot;,449 &quot; %/f%" data-tchmi-width="466" data-tchmi-zindex="15" data-tchmi-creator-visibility="Visible">
+<script data-tchmi-target-attribute="data-tchmi-stroke-color" type="application/json">
+{
+  "color": "rgba(0, 255, 0, 1)"
+}
+</script>
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "%i%Pulse_500ms%/i%",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::VFD[\"+%i%Component_Num%/i%+\"]::ECAT_Cable_Breaks\", 1)"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "1"
+                },
+                "compareOperator": "==",
+                "logic": null
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/Boolean",
+                  "symbolExpression": "%i%Pulse_500ms%/i%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/Boolean",
+                  "value": true
+                },
+                "compareOperator": "==",
+                "logic": "AND"
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%FromVFDxx_To_Next_1::StrokeColor%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/SolidColor",
+                  "value": {
+                    "color": "rgba(255, 0, 0, 1)"
+                  }
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%FromVFDxx_To_Next_1::StrokeColor%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/SolidColor",
+                  "value": {
+                    "color": "rgba(0, 255, 0, 1)"
+                  }
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="FromSSxx_To_Next_3" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiPolyline" data-tchmi-height="457" data-tchmi-height-unit="px" data-tchmi-left="556" data-tchmi-left-unit="px" data-tchmi-scale-mode="None" data-tchmi-top="150" data-tchmi-top-unit="px" data-tchmi-is-enabled="true" data-tchmi-fill-mode="NonZero" data-tchmi-stroke-thickness="4" data-tchmi-width="466" data-tchmi-zindex="4" data-tchmi-creator-visibility="Visible" data-tchmi-points="%ctrl%FromVFDxx_To_Next_1::Points%/ctrl%" data-tchmi-visibility="Visible">
+<script data-tchmi-target-attribute="data-tchmi-stroke-color" type="application/json">
+{
+  "color": "rgba(0, 118, 0, 1)"
+}
+</script>
+
+
+
+
+</div>
+<div id="VFDxx_FromPrev_1" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiPolyline" data-tchmi-height="459" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-scale-mode="None" data-tchmi-top="150" data-tchmi-top-unit="px" data-tchmi-is-enabled="true" data-tchmi-fill-mode="NonZero" data-tchmi-stroke-thickness="2" data-tchmi-width="432" data-tchmi-zindex="17" data-tchmi-creator-visibility="Visible" data-tchmi-points="0,450 0,452 2,450 0,448 0,450  200,450 200,45 405,45" data-tchmi-visibility="Visible">
+<script data-tchmi-target-attribute="data-tchmi-stroke-color" type="application/json">
+{
+  "color": "rgba(0, 255, 0, 1)"
+}
+</script>
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "%i%Pulse_500ms%/i%",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::VFD[\"+%i%Component_Num%/i%+\"]::ECAT_Cable_Breaks\", 0)"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "1"
+                },
+                "compareOperator": "==",
+                "logic": null
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/Boolean",
+                  "symbolExpression": "%i%Pulse_500ms%/i%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/Boolean",
+                  "value": true
+                },
+                "compareOperator": "==",
+                "logic": "AND"
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%VFDxx_FromPrev_1::StrokeColor%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/SolidColor",
+                  "value": {
+                    "color": "rgba(255, 0, 0, 1)"
+                  }
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%VFDxx_FromPrev_1::StrokeColor%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/SolidColor",
+                  "value": {
+                    "color": "rgba(0, 255, 0, 1)"
+                  }
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="SSxx_FromPrev_4" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiPolyline" data-tchmi-height="459" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-scale-mode="None" data-tchmi-top="150" data-tchmi-top-unit="px" data-tchmi-is-enabled="true" data-tchmi-fill-mode="NonZero" data-tchmi-stroke-thickness="4" data-tchmi-width="432" data-tchmi-zindex="15" data-tchmi-creator-visibility="Visible" data-tchmi-points="%ctrl%VFDxx_FromPrev_1::Points%/ctrl%" data-tchmi-visibility="Visible">
+<script data-tchmi-target-attribute="data-tchmi-stroke-color" type="application/json">
+{
+  "color": "rgba(0, 118, 0, 1)"
+}
+</script>
+
+
+
+
+</div>
+<div id="VFDxx_Image" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiImage" data-tchmi-height="332" data-tchmi-height-unit="px" data-tchmi-left="359" data-tchmi-left-unit="px" data-tchmi-src="Images/GTAC/Icons/ico_vfdxx.png" data-tchmi-top="139" data-tchmi-top-unit="px" data-tchmi-width="279" data-tchmi-width-unit="px" data-tchmi-zindex="18">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "VFDxx_Image.onPressed",
+    "actions": [
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Change_Screen",
+        "fnParams": [
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:framework#/definitions/ContentPath",
+            "value": "Contents/GTAC Component Screens/VFDxx/VFDxx - Discrete_1.content"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": ""
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="VFDxx_PrevArrow_1" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="49" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/GTAC Components/uc_ControlsOverview_Prev.usercontrol" data-tchmi-top="0" data-tchmi-top-unit="px" data-tchmi-width="52" data-tchmi-width-unit="px" data-tchmi-is-enabled="true" data-tchmi-zindex="4">
+</div>
+<div id="VFDxx_NextArrow_1" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="49" data-tchmi-height-unit="px" data-tchmi-left="970" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/GTAC Components/uc_ControlsOverview_Next.usercontrol" data-tchmi-top="0" data-tchmi-top-unit="px" data-tchmi-width="52" data-tchmi-width-unit="px" data-tchmi-creator-locked="False" data-tchmi-zindex="8" data-tchmi-is-enabled="true">
+</div>
+<div id="VFDxx_ControllerFLT_Banner" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="30" data-tchmi-height-unit="px" data-tchmi-left="412" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/uc_FlashTypeTextBanner.usercontrol" data-tchmi-tb_height="28" data-tchmi-tb_width="120" data-tchmi-top="305" data-tchmi-top-unit="px" data-tchmi-width="126" data-tchmi-width-unit="px" data-tchmi-text="%l%title_Faulted%/l%" data-tchmi-hide_on_recover="true" data-tchmi-flash_enable="%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(&quot;PLC1..Out_To_ICxx::System_Faults[&quot;+(150+%i%Component_Num%/i%)+&quot;]&quot;)%/f%" data-tchmi-zindex="19">
+>5%/f%" data-tchmi-hide_on_recover="true">
+<script data-tchmi-target-attribute="data-tchmi-flash_bg_color" type="application/json">
+{
+  "color": "rgba(255, 0, 0, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-bg_color" type="application/json">
+{
+  "color": "rgba(255, 251, 240, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-text_color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+
+</div>
+</div>

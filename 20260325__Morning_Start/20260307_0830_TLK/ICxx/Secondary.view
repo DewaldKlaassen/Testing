@@ -1,0 +1,49 @@
+<div id="SecondaryView"
+     data-tchmi-type="TcHmi.Controls.System.TcHmiView"
+     data-tchmi-top="0" data-tchmi-left="0"
+     data-tchmi-width-mode="Content"
+     data-tchmi-min-width="100" data-tchmi-min-width-unit="%"
+     data-tchmi-height-mode="Content"
+     data-tchmi-min-height="100" data-tchmi-min-height-unit="%"
+     data-tchmi-background-image-height="100" data-tchmi-background-image-width="100"
+     data-tchmi-background-image-height-unit="%" data-tchmi-background-image-width-unit="%" data-tchmi-zindex="1">
+
+
+<div id="SecondaryViewContent" data-tchmi-type="TcHmi.Controls.System.TcHmiRegion" data-tchmi-height="768" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-top="0" data-tchmi-top-unit="px" data-tchmi-width="1024" data-tchmi-width-unit="px" data-tchmi-zindex="1">
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "%i%Pulse_500ms%/i%",
+    "actions": [
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "//Get data from either static fixture or Turntable Fixtures ",
+          "//then populate this secondary screen",
+          "//(TT example shown as default functionality, static fixture example below commented out)",
+          "",
+          "PopulateSecondaryScreen(true, \"TT01\");",
+          "",
+          "//PopulateSecondaryScreen(false, \"Fix01\");"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="SecondaryViewText" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="32" data-tchmi-height-unit="px" data-tchmi-left="321" data-tchmi-left-unit="px" data-tchmi-text="Secondary View" data-tchmi-top="15" data-tchmi-top-unit="px" data-tchmi-width="374" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-font-size="25" data-tchmi-zindex="2">
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(177, 177, 177, 1)"
+}
+</script>
+</div>
+</div>

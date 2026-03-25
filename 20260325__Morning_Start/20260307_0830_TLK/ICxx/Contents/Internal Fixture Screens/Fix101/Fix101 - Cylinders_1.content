@@ -1,0 +1,102 @@
+<div id="Fix101_Cyl1_Content_1" data-tchmi-type="TcHmi.Controls.System.TcHmiContent" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="1024" data-tchmi-height="670" data-tchmi-zindex="0">
+<div id="Fix101_Cyl1_BGImage_2" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiImage" data-tchmi-height="470" data-tchmi-height-unit="px" data-tchmi-left="35" data-tchmi-left-unit="px" data-tchmi-src="Images/GTAC/CellImages/Fixture Images/Internal Fixtures/Fix101.png" data-tchmi-top="105" data-tchmi-top-unit="px" data-tchmi-width="959" data-tchmi-width-unit="px" data-tchmi-is-enabled="true" data-tchmi-zindex="0">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix101_Cyl1_BGImage_2.onPressed",
+    "actions": [
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "//Clear out any cylinder status drop downs if they weren't closed manually",
+          "",
+          "$('#DesktopCylStatus').animate({",
+          "                          \ttop: '-300px'",
+          "                          \t\t});"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%CylinderLabelTop%/i%",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:general#/definitions/Number",
+          "value": -300.0
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+
+
+<div id="Fix101_OpacityController_2" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="8" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Misc/uc_GTAC_OpacityController.usercontrol" data-tchmi-top="610" data-tchmi-top-unit="px" data-tchmi-width="85" data-tchmi-width-unit="px" data-tchmi-opacity_level="0.4" data-tchmi-zindex="1">
+</div>
+<div id="Fix101_Actu_1" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-advd="False" data-tchmi-faulted="%f%TcHmi.Functions.ICxx.GTAC_ReturnBinary_Bit(%s%PLC1..Out_To_ICxx::Fix101_Discrete_Image::CLFaults1%/s%, 1)%/f%" data-tchmi-height="60" data-tchmi-height-unit="px" data-tchmi-left="73" data-tchmi-left-unit="px" data-tchmi-retd="False" data-tchmi-scale="1" data-tchmi-target-user-control="Symbols/Misc/uc_ActuatorStatus.usercontrol" data-tchmi-top="148" data-tchmi-top-unit="px" data-tchmi-width="74" data-tchmi-width-unit="px" data-tchmi-name="Clamp1" data-tchmi-retdinputname="Fix101.N02.0 - RETD" data-tchmi-advdinputname="Fix101.N02.1 - ADVD" data-tchmi-zindex="1">
+</div>
+<div id="Fix101_Actu_2" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-advd="False" data-tchmi-faulted="%f%TcHmi.Functions.ICxx.GTAC_ReturnBinary_Bit(%s%PLC1..Out_To_ICxx::Fix101_Discrete_Image::CLFaults1%/s%, 2)%/f%" data-tchmi-height="60" data-tchmi-height-unit="px" data-tchmi-left="236" data-tchmi-left-unit="px" data-tchmi-retd="False" data-tchmi-scale="1" data-tchmi-target-user-control="Symbols/Misc/uc_ActuatorStatus.usercontrol" data-tchmi-top="148" data-tchmi-top-unit="px" data-tchmi-width="74" data-tchmi-width-unit="px" data-tchmi-name="Clamp2" data-tchmi-retdinputname="Fix101.N02.2 - RETD" data-tchmi-advdinputname="Fix101.N02.3 - ADVD" data-tchmi-zindex="1">
+</div>
+<div id="Fix101_Actu_3" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-advd="False" data-tchmi-faulted="%f%TcHmi.Functions.ICxx.GTAC_ReturnBinary_Bit(%s%PLC1..Out_To_ICxx::Fix101_Discrete_Image::CLFaults1%/s%, 3)%/f%" data-tchmi-height="60" data-tchmi-height-unit="px" data-tchmi-left="360" data-tchmi-left-unit="px" data-tchmi-retd="False" data-tchmi-scale="1" data-tchmi-target-user-control="Symbols/Misc/uc_ActuatorStatus.usercontrol" data-tchmi-top="148" data-tchmi-top-unit="px" data-tchmi-width="74" data-tchmi-width-unit="px" data-tchmi-name="Clamp3" data-tchmi-retdinputname="Fix101.N02.4 - RETD" data-tchmi-advdinputname="Fix101.N02.5 - ADVD" data-tchmi-zindex="1">
+</div>
+<div id="Fix101_Actu_4" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-advd="False" data-tchmi-faulted="%f%TcHmi.Functions.ICxx.GTAC_ReturnBinary_Bit(%s%PLC1..Out_To_ICxx::Fix101_Discrete_Image::CLFaults1%/s%, 4)%/f%" data-tchmi-height="60" data-tchmi-height-unit="px" data-tchmi-left="561" data-tchmi-left-unit="px" data-tchmi-retd="False" data-tchmi-scale="1" data-tchmi-target-user-control="Symbols/Misc/uc_ActuatorStatus.usercontrol" data-tchmi-top="148" data-tchmi-top-unit="px" data-tchmi-width="74" data-tchmi-width-unit="px" data-tchmi-name="Clamp4" data-tchmi-retdinputname="Fix101.N02.6 - RETD" data-tchmi-advdinputname="Fix101.N02.7 - ADVD" data-tchmi-zindex="1">
+</div>
+<div id="Fix101_Actu_5" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-advd="False" data-tchmi-faulted="%f%TcHmi.Functions.ICxx.GTAC_ReturnBinary_Bit(%s%PLC1..Out_To_ICxx::Fix101_Discrete_Image::CLFaults1%/s%, 5)%/f%" data-tchmi-height="60" data-tchmi-height-unit="px" data-tchmi-left="671" data-tchmi-left-unit="px" data-tchmi-retd="False" data-tchmi-scale="1" data-tchmi-target-user-control="Symbols/Misc/uc_ActuatorStatus.usercontrol" data-tchmi-top="148" data-tchmi-top-unit="px" data-tchmi-width="74" data-tchmi-width-unit="px" data-tchmi-name="Clamp5" data-tchmi-retdinputname="Fix101.N03.0 - RETD" data-tchmi-advdinputname="Fix101.N03.1- ADVD" data-tchmi-zindex="1">
+</div>
+<div id="Fix101_Actu_6" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-advd="False" data-tchmi-faulted="%f%TcHmi.Functions.ICxx.GTAC_ReturnBinary_Bit(%s%PLC1..Out_To_ICxx::Fix101_Discrete_Image::CLFaults1%/s%, 6)%/f%" data-tchmi-height="60" data-tchmi-height-unit="px" data-tchmi-left="849" data-tchmi-left-unit="px" data-tchmi-retd="False" data-tchmi-scale="1" data-tchmi-target-user-control="Symbols/Misc/uc_ActuatorStatus.usercontrol" data-tchmi-top="148" data-tchmi-top-unit="px" data-tchmi-width="74" data-tchmi-width-unit="px" data-tchmi-name="Clamp6" data-tchmi-retdinputname="Fix101.N03.2 - RETD" data-tchmi-advdinputname="Fix101.N03.3- ADVD" data-tchmi-zindex="1">
+</div>
+<div id="Fix101_Actu_7" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-advd="False" data-tchmi-faulted="%f%TcHmi.Functions.ICxx.GTAC_ReturnBinary_Bit(%s%PLC1..Out_To_ICxx::Fix101_Discrete_Image::CLFaults1%/s%, 7)%/f%" data-tchmi-height="60" data-tchmi-height-unit="px" data-tchmi-left="286" data-tchmi-left-unit="px" data-tchmi-retd="False" data-tchmi-scale="1" data-tchmi-target-user-control="Symbols/Misc/uc_ActuatorStatus.usercontrol" data-tchmi-top="257" data-tchmi-top-unit="px" data-tchmi-width="74" data-tchmi-width-unit="px" data-tchmi-name="Pin1" data-tchmi-retdinputname="Fix101.N04.4 - RETD" data-tchmi-advdinputname="Fix101.N04.5- ADVD" data-tchmi-zindex="1">
+</div>
+<div id="Fix101_Actu_8" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-advd="False" data-tchmi-faulted="%f%TcHmi.Functions.ICxx.GTAC_ReturnBinary_Bit(%s%PLC1..Out_To_ICxx::Fix101_Discrete_Image::CLFaults1%/s%, 8)%/f%" data-tchmi-height="60" data-tchmi-height-unit="px" data-tchmi-left="635" data-tchmi-left-unit="px" data-tchmi-retd="False" data-tchmi-scale="1" data-tchmi-target-user-control="Symbols/Misc/uc_ActuatorStatus.usercontrol" data-tchmi-top="251" data-tchmi-top-unit="px" data-tchmi-width="74" data-tchmi-width-unit="px" data-tchmi-name="Pin2" data-tchmi-retdinputname="Fix101.N04.6 - RETD" data-tchmi-advdinputname="Fix101.N04.7- ADVD" data-tchmi-zindex="1">
+</div>
+<div id="Fix101_Actu_9" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-advd="False" data-tchmi-faulted="%f%TcHmi.Functions.ICxx.GTAC_ReturnBinary_Bit(%s%PLC1..Out_To_ICxx::Fix101_Discrete_Image::CLFaults1%/s%, 9)%/f%" data-tchmi-height="60" data-tchmi-height-unit="px" data-tchmi-left="242" data-tchmi-left-unit="px" data-tchmi-retd="False" data-tchmi-scale="1" data-tchmi-target-user-control="Symbols/Misc/uc_ActuatorStatus.usercontrol" data-tchmi-top="357" data-tchmi-top-unit="px" data-tchmi-width="74" data-tchmi-width-unit="px" data-tchmi-name="Slide1" data-tchmi-retdinputname="Fix101.N03.4 - RETD" data-tchmi-advdinputname="Fix101.N03.5- ADVD" data-tchmi-zindex="1">
+</div>
+<div id="Fix101_Actu_10" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-advd="False" data-tchmi-faulted="%f%TcHmi.Functions.ICxx.GTAC_ReturnBinary_Bit(%s%PLC1..Out_To_ICxx::Fix101_Discrete_Image::CLFaults1%/s%, 10)%/f%" data-tchmi-height="60" data-tchmi-height-unit="px" data-tchmi-left="370" data-tchmi-left-unit="px" data-tchmi-retd="False" data-tchmi-scale="1" data-tchmi-target-user-control="Symbols/Misc/uc_ActuatorStatus.usercontrol" data-tchmi-top="357" data-tchmi-top-unit="px" data-tchmi-width="74" data-tchmi-width-unit="px" data-tchmi-name="Slide2" data-tchmi-retdinputname="Fix101.N03.6 - RETD" data-tchmi-advdinputname="Fix101.N03.7- ADVD" data-tchmi-zindex="1">
+</div>
+<div id="Fix101_Actu_11" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-advd="False" data-tchmi-faulted="%f%TcHmi.Functions.ICxx.GTAC_ReturnBinary_Bit(%s%PLC1..Out_To_ICxx::Fix101_Discrete_Image::CLFaults1%/s%, 11)%/f%" data-tchmi-height="60" data-tchmi-height-unit="px" data-tchmi-left="551" data-tchmi-left-unit="px" data-tchmi-retd="False" data-tchmi-scale="1" data-tchmi-target-user-control="Symbols/Misc/uc_ActuatorStatus.usercontrol" data-tchmi-top="357" data-tchmi-top-unit="px" data-tchmi-width="74" data-tchmi-width-unit="px" data-tchmi-name="Slide3" data-tchmi-retdinputname="Fix101.N04.0 - RETD" data-tchmi-advdinputname="Fix101.N04.1- ADVD" data-tchmi-zindex="1">
+</div>
+<div id="Fix101_Actu_12" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-advd="False" data-tchmi-faulted="%f%TcHmi.Functions.ICxx.GTAC_ReturnBinary_Bit(%s%PLC1..Out_To_ICxx::Fix101_Discrete_Image::CLFaults1%/s%, 12)%/f%" data-tchmi-height="60" data-tchmi-height-unit="px" data-tchmi-left="687" data-tchmi-left-unit="px" data-tchmi-retd="False" data-tchmi-scale="1" data-tchmi-target-user-control="Symbols/Misc/uc_ActuatorStatus.usercontrol" data-tchmi-top="357" data-tchmi-top-unit="px" data-tchmi-width="74" data-tchmi-width-unit="px" data-tchmi-name="Slide4" data-tchmi-retdinputname="Fix101.N04.2 - RETD" data-tchmi-advdinputname="Fix101.N04.3- ADVD" data-tchmi-zindex="1">
+</div>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fix101_Cyl1_Content_1.onDetached",
+    "actions": [
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "//Clear out any cylinder status drop downs if they weren't closed manually",
+          "",
+          "$('#DesktopCylStatus').animate({",
+          "                          \ttop: '-300px'",
+          "                          \t\t});"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%CylinderLabelTop%/i%",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:general#/definitions/Number",
+          "value": -300.0
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>

@@ -1,0 +1,772 @@
+<div id="PDF_Viewer_Content" data-tchmi-type="TcHmi.Controls.System.TcHmiContent" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="1024" data-tchmi-height="670" data-tchmi-creator-viewport-width="1024" data-tchmi-creator-viewport-height="670" data-tchmi-zindex="2">
+<div id="TcHmiPdfViewer" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiPdfViewer" data-tchmi-height="670" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-top="0" data-tchmi-top-unit="px" data-tchmi-width="1024" data-tchmi-width-unit="px" data-tchmi-is-enabled="true" data-tchmi-page-mode="none" data-tchmi-zoom="100" data-tchmi-file="%i%PDF_Path%/i%" data-tchmi-zindex="2">
+
+<script data-tchmi-target-attribute="data-tchmi-border-color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "TcHmiPdfViewer.onAttached",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%Current_Screen%/i%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%l%PDFViewer%/l%"
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="PDF_Menu_Button" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="32" data-tchmi-height-unit="px" data-tchmi-left="628" data-tchmi-left-unit="px" data-tchmi-text="Menu" data-tchmi-top="0" data-tchmi-top-unit="px" data-tchmi-width="96" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-text-font-size="16" data-tchmi-zindex="2">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PDF_Menu_Button.onPressed",
+    "actions": [
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "//Animate Slide Out buttons using JQuery Selector",
+          "$('#GTACManuals').animate({",
+          "                        \t\tleft:'875px'",
+          "                        \t\t},",
+          "                        \t\t'slow');",
+          "//Animate \"Additional Manuals\" button over to allow room for slide out button set                       \t\t",
+          "$('#PDF_Menu_Button').animate({",
+          "                        \t\tleft:'565px'",
+          "                        \t\t},",
+          "                        \t\t'slow');"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%TcHmiPdfViewer::Width%/ctrl%",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:framework#/definitions/MeasurementValue",
+          "value": 875.0
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "color": "rgba(255, 204, 0, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-border-color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-border-width" type="application/json">
+{
+  "left": 2,
+  "right": 2,
+  "top": 2,
+  "bottom": 2,
+  "leftUnit": "px",
+  "rightUnit": "px",
+  "topUnit": "px",
+  "bottomUnit": "px"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-border-style" type="application/json">
+{
+  "left": "Solid",
+  "right": "Solid",
+  "top": "Solid",
+  "bottom": "Solid"
+}
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="GTACManuals" data-tchmi-type="TcHmi.Controls.System.TcHmiContainer" data-tchmi-height="670" data-tchmi-height-unit="px" data-tchmi-left="1024" data-tchmi-left-unit="px" data-tchmi-top="0" data-tchmi-top-unit="px" data-tchmi-width="149" data-tchmi-width-unit="px" data-tchmi-is-enabled="true" data-tchmi-zindex="2">
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="PDF_Slideout_Button_101" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-text="Machine" data-tchmi-top="0" data-tchmi-top-unit="px" data-tchmi-width="149" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-text-font-size="20" data-tchmi-zindex="2">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PDF_Slideout_Button_101.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%PDF_Path%/i%",
+        "value": {
+          "objectType": "FunctionExpression",
+          "functionExpression": "\"PDFs/GTAC/\"+%s%PLC1..Out_To_ICxx::Machine_Serial%/s%+\"_ELEC.pdf\""
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="PDF_Slideout_Button_102" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-text="ISxx" data-tchmi-top="50" data-tchmi-top-unit="px" data-tchmi-width="149" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-font-size="20" data-tchmi-zindex="2">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PDF_Slideout_Button_102.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%PDF_Path%/i%",
+        "value": {
+          "objectType": "FunctionExpression",
+          "functionExpression": "\"/PDFs/GTAC/ISxx.pdf\""
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="PDF_Slideout_Button_103" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-text="ICxx" data-tchmi-top="100" data-tchmi-top-unit="px" data-tchmi-width="149" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-font-size="20" data-tchmi-zindex="2">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PDF_Slideout_Button_1223.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%PDF_Path%/i%",
+        "value": {
+          "objectType": "FunctionExpression",
+          "functionExpression": "\"Contents/Misc Screens/Doc Screens/PDFs/GTAC/ICxx.pdf\""
+        },
+        "asyncWait": true
+      }
+    ]
+  },
+  {
+    "event": "PDF_Slideout_Button_103.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%PDF_Path%/i%",
+        "value": {
+          "objectType": "FunctionExpression",
+          "functionExpression": "\"/PDFs/GTAC/ICxx.pdf\""
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="PDF_Slideout_Button_104" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-text="CSxx" data-tchmi-top="150" data-tchmi-top-unit="px" data-tchmi-width="149" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-font-size="20" data-tchmi-zindex="2">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PDF_Slideout_Button_104.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%PDF_Path%/i%",
+        "value": {
+          "objectType": "FunctionExpression",
+          "functionExpression": "\"/PDFs/GTAC/CSxx.pdf\""
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="PDF_Slideout_Button_105" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-text="Rxx" data-tchmi-top="200" data-tchmi-top-unit="px" data-tchmi-width="149" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-font-size="20" data-tchmi-zindex="11">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PDF_Slideout_Button_1225.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%PDF_Path%/i%",
+        "value": {
+          "objectType": "FunctionExpression",
+          "functionExpression": "\"Contents/Misc Screens/Doc Screens/PDFs/GTAC/Rxx.pdf\""
+        },
+        "asyncWait": true
+      }
+    ]
+  },
+  {
+    "event": "PDF_Slideout_Button_105.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%PDF_Path%/i%",
+        "value": {
+          "objectType": "FunctionExpression",
+          "functionExpression": "\"/PDFs/GTAC/Rxx.pdf\""
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="PDF_Slideout_Button_106" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-text="ESWxx" data-tchmi-top="250" data-tchmi-top-unit="px" data-tchmi-width="149" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-font-size="20" data-tchmi-zindex="12">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PDF_Slideout_Button_106.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%PDF_Path%/i%",
+        "value": {
+          "objectType": "FunctionExpression",
+          "functionExpression": "\"/PDFs/GTAC/ESWxx.pdf\""
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="PDF_Slideout_Button_107" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-text="STxx" data-tchmi-top="300" data-tchmi-top-unit="px" data-tchmi-width="149" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-text-font-size="20" data-tchmi-zindex="13">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PDF_Slideout_Button_107.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%PDF_Path%/i%",
+        "value": {
+          "objectType": "FunctionExpression",
+          "functionExpression": "\"/PDFs/GTAC/STxx.pdf\""
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="PDF_Slideout_Button_109" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-text="Lockout" data-tchmi-top="400" data-tchmi-top-unit="px" data-tchmi-width="149" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-font-size="20" data-tchmi-zindex="19">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PDF_Slideout_Button_109.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%PDF_Path%/i%",
+        "value": {
+          "objectType": "FunctionExpression",
+          "functionExpression": "\"/PDFs/GTAC/Lockout.pdf\""
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="PDF_Slideout_Button_110" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-text="Power Sources" data-tchmi-top="450" data-tchmi-top-unit="px" data-tchmi-width="149" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-font-size="20" data-tchmi-zindex="20">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PDF_Slideout_Button_110.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%PDF_Path%/i%",
+        "value": {
+          "objectType": "FunctionExpression",
+          "functionExpression": "\"/PDFs/GTAC/PowerSources.pdf\""
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="PDF_Slideout_Button_122" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-text=">>>" data-tchmi-top="620" data-tchmi-top-unit="px" data-tchmi-width="149" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-font-size="20" data-tchmi-zindex="17">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PDF_Slideout_Button_122.onPressed",
+    "actions": [
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "//Animate Both sets of Slide Out buttons back in using JQuery Selector  ",
+          "$('#GTACManuals').animate({",
+          "                        \t\tleft:'1024px'",
+          "                        \t\t},",
+          "                        \t\t'slow');",
+          "                   \t\t",
+          "$('#BeckhoffManuals').animate({",
+          "                        \t\tleft:'1024px'",
+          "                        \t\t},",
+          "                        \t\t'slow');",
+          "                        \t\t",
+          "//Animate \"Additional Manuals\" button back to original location                        \t\t",
+          "$('#PDF_Menu_Button').animate({",
+          "                        \t\tleft:'628px'",
+          "                        \t\t},",
+          "                        \t\t'slow');"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%TcHmiPdfViewer::Width%/ctrl%",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:framework#/definitions/MeasurementValue",
+          "value": 1024.0
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="PDF_Slideout_Button_121" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-text="Beckhoff/Kuka Manuals" data-tchmi-top="570" data-tchmi-top-unit="px" data-tchmi-width="149" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-font-size="20" data-tchmi-is-enabled="true" data-tchmi-zindex="22">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PDF_Slideout_Button_121.onPressed",
+    "actions": [
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "$('#GTACManuals').animate({",
+          "                        \t\tleft:'1024px'",
+          "                        \t\t},",
+          "                        \t\t'slow');",
+          "                   \t\t",
+          "$('#BeckhoffManuals').animate({",
+          "                        \t\tleft:'875px'",
+          "                        \t\t},",
+          "                        \t\t'slow');"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="PDF_Slideout_Button_111" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-text="Stack Lights" data-tchmi-top="500" data-tchmi-top-unit="px" data-tchmi-width="149" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-font-size="20" data-tchmi-is-enabled="true" data-tchmi-zindex="21">
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PDF_Slideout_Button_111.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%PDF_Path%/i%",
+        "value": {
+          "objectType": "FunctionExpression",
+          "functionExpression": "\"/PDFs/GTAC/StackLights.pdf\""
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="PDF_Slideout_Button_108" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-text="SSxx" data-tchmi-top="350" data-tchmi-top-unit="px" data-tchmi-width="149" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-font-size="20" data-tchmi-is-enabled="true" data-tchmi-zindex="18">
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PDF_Slideout_Button_108.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%PDF_Path%/i%",
+        "value": {
+          "objectType": "FunctionExpression",
+          "functionExpression": "\"/PDFs/GTAC/SSxx.pdf\""
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="BeckhoffManuals" data-tchmi-type="TcHmi.Controls.System.TcHmiContainer" data-tchmi-height="670" data-tchmi-height-unit="px" data-tchmi-left="1024" data-tchmi-left-unit="px" data-tchmi-top="0" data-tchmi-top-unit="px" data-tchmi-width="149" data-tchmi-width-unit="px" data-tchmi-is-enabled="true" data-tchmi-zindex="2">
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="PDF_Slideout_Button_201" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-text="EL6900" data-tchmi-top="0" data-tchmi-top-unit="px" data-tchmi-width="149" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-text-font-size="20" data-tchmi-zindex="2">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PDF_Slideout_Button_122201.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%PDF_Path%/i%",
+        "value": {
+          "objectType": "FunctionExpression",
+          "functionExpression": "/PDFs/Beckhoff/\"+%i%LocalName%/i%+\"/EL6900.pdf\""
+        },
+        "asyncWait": true
+      }
+    ]
+  },
+  {
+    "event": "PDF_Slideout_Button_201.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%PDF_Path%/i%",
+        "value": {
+          "objectType": "FunctionExpression",
+          "functionExpression": "\"/PDFs/Beckhoff/\"+%i%Current_Language%/i%+\"/EL6900.pdf\""
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="PDF_Slideout_Button_202" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-text="EL6900-FBs" data-tchmi-top="50" data-tchmi-top-unit="px" data-tchmi-width="149" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-font-size="20" data-tchmi-zindex="2">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PDF_Slideout_Button_122202.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%PDF_Path%/i%",
+        "value": {
+          "objectType": "FunctionExpression",
+          "functionExpression": "\"/PDFs/Beckhoff/\"+%i%LocalName%/i%+\"/EL6900_KL6904-FB.pdf\""
+        },
+        "asyncWait": true
+      }
+    ]
+  },
+  {
+    "event": "PDF_Slideout_Button_202.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%PDF_Path%/i%",
+        "value": {
+          "objectType": "FunctionExpression",
+          "functionExpression": "\"/PDFs/Beckhoff/\"+%i%Current_Language%/i%+\"/EL6900_KL6904-FB.pdf\""
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="PDF_Slideout_Button_203" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-text="EL1904" data-tchmi-top="100" data-tchmi-top-unit="px" data-tchmi-width="149" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-font-size="20" data-tchmi-zindex="2">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PDF_Slideout_Button_203.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%PDF_Path%/i%",
+        "value": {
+          "objectType": "FunctionExpression",
+          "functionExpression": "\"/PDFs/Beckhoff/\"+%i%Current_Language%/i%+\"/EL1904.pdf\""
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="PDF_Slideout_Button_204" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-text="EL2904" data-tchmi-top="150" data-tchmi-top-unit="px" data-tchmi-width="149" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-font-size="20" data-tchmi-zindex="2">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PDF_Slideout_Button_204.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%PDF_Path%/i%",
+        "value": {
+          "objectType": "FunctionExpression",
+          "functionExpression": "\"/PDFs/Beckhoff/\"+%i%Current_Language%/i%+\"/EL2904.pdf\""
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="PDF_Slideout_Button_205" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-text="AX5xxx" data-tchmi-top="200" data-tchmi-top-unit="px" data-tchmi-width="149" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-font-size="20" data-tchmi-zindex="2">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PDF_Slideout_Button_205.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%PDF_Path%/i%",
+        "value": {
+          "objectType": "FunctionExpression",
+          "functionExpression": "\"/PDFs/Beckhoff/\"+%i%Current_Language%/i%+\"/AX5xxx.pdf\""
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="PDF_Slideout_Button_206" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-text="AX5805" data-tchmi-top="250" data-tchmi-top-unit="px" data-tchmi-width="149" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-font-size="20" data-tchmi-zindex="2">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PDF_Slideout_Button_206.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%PDF_Path%/i%",
+        "value": {
+          "objectType": "FunctionExpression",
+          "functionExpression": "\"/PDFs/Beckhoff/\"+%i%Current_Language%/i%+\"/AX5805.pdf\""
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="PDF_Slideout_Button_207" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-text="EP9224" data-tchmi-top="300" data-tchmi-top-unit="px" data-tchmi-width="149" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-text-font-size="20" data-tchmi-zindex="2">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PDF_Slideout_Button_207.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%PDF_Path%/i%",
+        "value": {
+          "objectType": "FunctionExpression",
+          "functionExpression": "\"/PDFs/Beckhoff/\"+%i%Current_Language%/i%+\"/EP9224.pdf\""
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="PDF_Slideout_Button_208" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-text="Kuka KRC4" data-tchmi-top="450" data-tchmi-top-unit="px" data-tchmi-width="149" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-font-size="20" data-tchmi-zindex="2">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PDF_Slideout_Button_208.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%PDF_Path%/i%",
+        "value": {
+          "objectType": "FunctionExpression",
+          "functionExpression": "\"/PDFs/Kuka/\"+%i%Current_Language%/i%+\"/KRC4_Operating.pdf\""
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="PDF_Slideout_Button_209" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-text=">>>" data-tchmi-top="620" data-tchmi-top-unit="px" data-tchmi-width="149" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-font-size="20" data-tchmi-zindex="3">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PDF_Slideout_Button_209.onPressed",
+    "actions": [
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "",
+          "//Animate both sets of Slide Out buttons back in using JQuery Selector",
+          "$('#GTACManuals').animate({",
+          "                        \t\tleft:'1024px'",
+          "                        \t\t},",
+          "                        \t\t'slow');",
+          "                   \t\t",
+          "$('#BeckhoffManuals').animate({",
+          "                        \t\tleft:'1024px'",
+          "                        \t\t},",
+          "                        \t\t'slow');",
+          "                        \t\t",
+          "//Animate \"Additional Manuals\" button back to original location                        \t\t",
+          "$('#PDF_Menu_Button').animate({",
+          "                        \t\tleft:'628px'",
+          "                        \t\t},",
+          "                        \t\t'slow');"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%TcHmiPdfViewer::Width%/ctrl%",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:framework#/definitions/MeasurementValue",
+          "value": 1024.0
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="PDF_Slideout_Button_210" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-text="GTAC Manuals" data-tchmi-top="570" data-tchmi-top-unit="px" data-tchmi-width="149" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-font-size="20" data-tchmi-is-enabled="true" data-tchmi-zindex="5">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PDF_Slideout_Button_210.onPressed",
+    "actions": [
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "//Animate a Meu Exchange",
+          "$('#GTACManuals').animate({",
+          "                        \t\tleft:'875px'",
+          "                        \t\t},",
+          "                        \t\t'slow');",
+          "                   \t\t",
+          "$('#BeckhoffManuals').animate({",
+          "                        \t\tleft:'1024px'",
+          "                        \t\t},",
+          "                        \t\t'slow');"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div data-tchmi-grid-row-index="0" data-tchmi-grid-column-index="0" id="PDF_Slideout_Button_211" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height="50" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-text="EL6695" data-tchmi-top="350" data-tchmi-top-unit="px" data-tchmi-width="149" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-text-font-size="20" data-tchmi-zindex="2">
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PDF_Slideout_Button_211.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%PDF_Path%/i%",
+        "value": {
+          "objectType": "FunctionExpression",
+          "functionExpression": "\"/PDFs/Beckhoff/\"+%i%Current_Language%/i%+\"/EL6695.pdf\""
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+</div>
+</div>

@@ -1,0 +1,638 @@
+<div id="Content_UI_Config" data-tchmi-type="TcHmi.Controls.System.TcHmiContent" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="1024" data-tchmi-height="670" data-tchmi-creator-viewport-width="1024" data-tchmi-creator-viewport-height="670" data-tchmi-is-enabled="true">
+<div id="TcHmiImage_29" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiImage" data-tchmi-height="40" data-tchmi-height-unit="px" data-tchmi-left="984" data-tchmi-left-unit="px" data-tchmi-top="52" data-tchmi-top-unit="px" data-tchmi-width="40" data-tchmi-width-unit="px" data-tchmi-src="Images/GTAC/Icons/ico_ui_conf.jpg" data-tchmi-zindex="5">
+
+</div>
+<div id="Theme_Selection_Combobox" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiCombobox" data-tchmi-combobox-text="%f%GetTheme()%/f%" data-tchmi-height="44" data-tchmi-height-unit="px" data-tchmi-left="714" data-tchmi-left-unit="px" data-tchmi-top="234" data-tchmi-top-unit="px" data-tchmi-width="260" data-tchmi-width-unit="px" data-tchmi-allow-text-input="false" data-tchmi-is-enabled="true" data-tchmi-text-horizontal-alignment="Center" data-tchmi-ignore-escape-sequences="false" data-tchmi-text-font-size="20">
+<script data-tchmi-target-attribute="data-tchmi-content-padding" type="application/json">
+{"top":3,"right":3,"bottom":3,"left":3}
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-src-data" type="application/json">
+[
+  {
+    "id": 0.0,
+    "text": "Classic-Dark",
+    "value": "Classic-Dark"
+  },
+  {
+    "id": 1.0,
+    "text": "Classic-Light",
+    "value": "Classic-Light"
+  },
+  {
+    "id": 2.0,
+    "text": "Classic-Sodecia",
+    "value": "Classic-Sodecia"
+  },
+  {
+    "id": 3.0,
+    "text": "Modern-Dark",
+    "value": "Modern-Dark"
+  },
+  {
+    "id": 4.0,
+    "text": "Modern-Light",
+    "value": "Modern-Light"
+  },
+  {
+    "id": 5.0,
+    "text": "Modern-Sodecia",
+    "value": "Modern-Sodecia"
+  }
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-class-names" type="application/json">
+[
+  "Radius"
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Theme_Selection_Combobox.onSelectionChanged",
+    "actions": [
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.Beckhoff.SetTheme",
+        "fnParams": [
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:general#/definitions/String",
+            "symbolExpression": "%ctrl%Theme_Selection_Combobox::SelectedText%/ctrl%"
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_BakeCookie",
+        "fnParams": [
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": "ThemeSelected"
+          },
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:general#/definitions/String",
+            "symbolExpression": "%ctrl%Theme_Selection_Combobox::SelectedText%/ctrl%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/Number",
+            "value": null
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Language_Selection_Combobox" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiCombobox" data-tchmi-height="44" data-tchmi-height-unit="px" data-tchmi-left="381" data-tchmi-left-unit="px" data-tchmi-top="235" data-tchmi-top-unit="px" data-tchmi-width="260" data-tchmi-width-unit="px" data-tchmi-allow-text-input="false" data-tchmi-text-horizontal-alignment="Center" data-tchmi-is-enabled="true" data-tchmi-max-list-height="350" data-tchmi-text-font-size="20" data-tchmi-ignore-escape-sequences="false" data-tchmi-combobox-text="%f%resolve_language(GetLocale())%/f%">
+<script data-tchmi-target-attribute="data-tchmi-content-padding" type="application/json">
+{"top":3,"right":3,"bottom":3,"left":3}
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-src-data" type="application/json">
+[
+  {
+    "id": 0.0,
+    "text": "%l%English%/l%",
+    "value": "en-US"
+  },
+  {
+    "id": 1.0,
+    "text": "%l%Portugese%/l%",
+    "value": "pt-BR"
+  },
+  {
+    "id": 2.0,
+    "text": "%l%French%/l%",
+    "value": "fr-FR"
+  },
+  {
+    "id": 3.0,
+    "text": "%l%German%/l%",
+    "value": "de-DE"
+  },
+  {
+    "id": 4.0,
+    "text": "%l%Spanish%/l%",
+    "value": "es-MX"
+  },
+  {
+    "id": 5.0,
+    "text": "%l%Hindi%/l%",
+    "value": "hi-IN"
+  },
+  {
+    "id": 6.0,
+    "text": "%l%Chinese%/l%",
+    "value": "zh-HK"
+  },
+  {
+    "id": 7.0,
+    "text": "%l%Japanese%/l%",
+    "value": "ja-JP"
+  },
+  {
+    "id": 8.0,
+    "text": "%l%Russian%/l%",
+    "value": "ru-RU"
+  },
+  {
+    "id": 9.0,
+    "text": "%l%Italian%/l%",
+    "value": "it-IT"
+  },
+  {
+    "id": 10.0,
+    "text": "%l%Czech%/l%",
+    "value": "cs-CZ"
+  },
+  {
+    "id": 11.0,
+    "text": "%l%Slovak%/l%",
+    "value": "sk-SK"
+  }
+]
+</script>
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-class-names" type="application/json">
+[
+  "Radius"
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Language_Selection_Combobox.onSelectionChanged",
+    "actions": [
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.Beckhoff.SetLocaleEx",
+        "fnParams": [
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:general#/definitions/String",
+            "symbolExpression": "%f%%ctrl%Language_Selection_Combobox::SelectedValue%/ctrl%%/f%"
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_BakeCookie",
+        "fnParams": [
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": "Locale"
+          },
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:general#/definitions/String",
+            "symbolExpression": "%ctrl%Language_Selection_Combobox::SelectedValue%/ctrl%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/Number",
+            "value": null
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%s%SecondaryLocale%/s%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%ctrl%Language_Selection_Combobox::SelectedValue%/ctrl%"
+        },
+        "asyncWait": true
+      },
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "//Repopulate the internal fault message array with new language fault messages",
+          "//Using setTimeout as there's a slight delay on larger locale changes, gives time to settle (flakey....yes)",
+          "setTimeout(\"get_currentlang_faultmessages()\", 250)"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      }
+    ]
+  }
+]
+</script>
+</div>
+
+
+<div id="IC_Selection_Combobox" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiCombobox" data-tchmi-height="44" data-tchmi-height-unit="px" data-tchmi-left="48" data-tchmi-left-unit="px" data-tchmi-top="235" data-tchmi-top-unit="px" data-tchmi-width="260" data-tchmi-width-unit="px" data-tchmi-allow-text-input="false" data-tchmi-is-enabled="true" data-tchmi-text-horizontal-alignment="Center" data-tchmi-ignore-escape-sequences="false" data-tchmi-text-font-size="20" data-tchmi-combobox-text="%i%ICxx_Value%/i%">
+<script data-tchmi-target-attribute="data-tchmi-content-padding" type="application/json">
+{"top":3,"right":3,"bottom":3,"left":3}
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-src-data" type="application/json">
+[
+  {
+    "id": 1.0,
+    "text": "IC01",
+    "value": "1"
+  },
+  {
+    "id": 2.0,
+    "text": "IC02",
+    "value": "2"
+  },
+  {
+    "id": 3.0,
+    "text": "IC03",
+    "value": "3"
+  },
+  {
+    "id": 4.0,
+    "text": "IC04",
+    "value": "4"
+  },
+  {
+    "id": 5.0,
+    "text": "IC05",
+    "value": "5"
+  },
+  {
+    "id": 6.0,
+    "text": "IC06",
+    "value": "6"
+  },
+  {
+    "id": 7.0,
+    "text": "IC07",
+    "value": "7"
+  },
+  {
+    "id": 8.0,
+    "text": "IC08",
+    "value": "8"
+  }
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-class-names" type="application/json">
+[
+  "Radius"
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "IC_Selection_Combobox.onSelectionChanged",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%ICxx_Value%/i%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%ctrl%IC_Selection_Combobox::SelectedValue%/ctrl%"
+        },
+        "asyncWait": true
+      },
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_BakeCookie",
+        "fnParams": [
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": "ICxx_Value"
+          },
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:general#/definitions/Any",
+            "symbolExpression": "%i%ICxx_Value%/i%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/Number",
+            "value": null
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-access-config" type="application/json">
+[
+  {
+    "accessright": "operate",
+    "group": "Guest",
+    "permission": "Deny"
+  },
+  {
+    "accessright": "operate",
+    "group": "qa",
+    "permission": "Deny"
+  },
+  {
+    "accessright": "operate",
+    "group": "maint",
+    "permission": "Deny"
+  },
+  {
+    "accessright": "operate",
+    "group": "Maint",
+    "permission": "Deny"
+  },
+  {
+    "accessright": "operate",
+    "group": "QA",
+    "permission": "Deny"
+  },
+  {
+    "accessright": "operate",
+    "group": "Eng",
+    "permission": "Allow"
+  }
+]
+</script>
+</div>
+<div id="IC_Selection_Image" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiImage" data-tchmi-height="80" data-tchmi-height-unit="px" data-tchmi-left="131" data-tchmi-left-unit="px" data-tchmi-top="145" data-tchmi-top-unit="px" data-tchmi-width="80" data-tchmi-width-unit="px" data-tchmi-background-image="Images/GTAC/Icons/CP2215.png" data-tchmi-background-image-width="80" data-tchmi-background-image-height="80">
+</div>
+<div id="Theme_Selection_Image" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiImage" data-tchmi-height="80" data-tchmi-height-unit="px" data-tchmi-left="797" data-tchmi-left-unit="px" data-tchmi-top="145" data-tchmi-top-unit="px" data-tchmi-width="80" data-tchmi-width-unit="px" data-tchmi-background-image="Images/GTAC/Icons/UI_Conf_Icons/ico_ui_theme.png" data-tchmi-background-image-width="80" data-tchmi-background-image-height="80">
+</div>
+<div id="Language_Selection_Image" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiImage" data-tchmi-height="80" data-tchmi-height-unit="px" data-tchmi-left="464" data-tchmi-left-unit="px" data-tchmi-top="145" data-tchmi-top-unit="px" data-tchmi-width="80" data-tchmi-width-unit="px" data-tchmi-background-image-width="80" data-tchmi-background-image-height="80" data-tchmi-background-image="Images/GTAC/Icons/UI_Conf_Icons/ico_lang_selection.png">
+</div>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Content_UI_Config.onAttached",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%FaultRegion::TargetContent%/ctrl%",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:framework#/definitions/ContentPath",
+          "value": null
+        },
+        "asyncWait": true
+      },
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "//Drop Fault region right off screen                       ",
+          "$('#FaultRegion').animate({",
+          "                          \ttop: '768px',",
+          "                          \t\t});"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      }
+    ]
+  },
+  {
+    "event": "Content_UI_Config.onDetached",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%FaultRegion::TargetContent%/ctrl%",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:framework#/definitions/ContentPath",
+          "value": "Contents/Fault Screens/Faults_Current.content"
+        },
+        "asyncWait": true
+      },
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "//Bring Fault region back into exsistance                         ",
+          "$('#FaultRegion').animate({",
+          "                          \ttop: '669px',",
+          "                          \t\t});"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      }
+    ]
+  }
+]
+</script>
+<div id="Fault_Theme_Selection_Image" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiImage" data-tchmi-height="80" data-tchmi-height-unit="px" data-tchmi-left="301" data-tchmi-left-unit="px" data-tchmi-top="340" data-tchmi-top-unit="px" data-tchmi-width="80" data-tchmi-width-unit="px" data-tchmi-background-image-width="80" data-tchmi-background-image-height="80" data-tchmi-src="Images/GTAC/Icons/UI_Conf_Icons/ico_AlarmTheme1.png">
+
+
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "%i%Pulse_500ms%/i%",
+    "actions": [
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "//Update Image",
+          "if (TcHmi.Functions.ICxx.GTAC_EatCookie(\"alarm_textvsbg\", silence_console = true) ==\"red_on_black\") {",
+          "\tTcHmi.Symbol.writeEx(\"%ctrl%Fault_Theme_Selection_Image::Src%/ctrl%\", \"Images/GTAC/Icons/UI_Conf_Icons/ico_AlarmTheme1.png\");",
+          "} else if (TcHmi.Functions.ICxx.GTAC_EatCookie(\"alarm_textvsbg\", silence_console = true) ==\"black_on_red\") {",
+          "\tTcHmi.Symbol.writeEx(\"%ctrl%Fault_Theme_Selection_Image::Src%/ctrl%\", \"Images/GTAC/Icons/UI_Conf_Icons/ico_AlarmTheme2.png\");",
+          "}"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fault_Theme_Selection_Combobox" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiCombobox" data-tchmi-height="44" data-tchmi-height-unit="px" data-tchmi-left="218" data-tchmi-left-unit="px" data-tchmi-top="430" data-tchmi-top-unit="px" data-tchmi-width="260" data-tchmi-width-unit="px" data-tchmi-allow-text-input="false" data-tchmi-text-horizontal-alignment="Center" data-tchmi-is-enabled="true" data-tchmi-max-list-height="350" data-tchmi-text-font-size="20" data-tchmi-ignore-escape-sequences="false" data-tchmi-auto-select-text="true">
+<script data-tchmi-target-attribute="data-tchmi-content-padding" type="application/json">
+{"top":3,"right":3,"bottom":3,"left":3}
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-src-data" type="application/json">
+[
+  {
+    "id": 0.0,
+    "text": "%l%red_on_black%/l%",
+    "value": "red_on_black"
+  },
+  {
+    "id": 1.0,
+    "text": "%l%black_on_red%/l%",
+    "value": "black_on_red"
+  }
+]
+</script>
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-class-names" type="application/json">
+[
+  "Radius"
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fault_Theme_Selection_Combobox.onSelectionChanged",
+    "actions": [
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_BakeCookie",
+        "fnParams": [
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": "alarm_textvsbg"
+          },
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:general#/definitions/String",
+            "symbolExpression": "%ctrl%Fault_Theme_Selection_Combobox::SelectedValue%/ctrl%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/Number",
+            "value": null
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  },
+  {
+    "event": "Fault_Theme_Selection_Combobox.onAttached",
+    "actions": [
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "//Preload the proper text of the current value of the cookie",
+          "if(TcHmi.Functions.ICxx.GTAC_EatCookie(\"alarm_textvsbg\", silence_console = true) == \"red_on_black\"){",
+          "\tTcHmi.Symbol.writeEx(\"%ctrl%Fault_Theme_Selection_Combobox::ComboboxText%/ctrl%\", TcHmi.Symbol.readEx(\"%l%red_on_black%/l%\"));",
+          "}else if (TcHmi.Functions.ICxx.GTAC_EatCookie(\"alarm_textvsbg\", silence_console = true) == \"black_on_red\"){",
+          "\tTcHmi.Symbol.writeEx(\"%ctrl%Fault_Theme_Selection_Combobox::ComboboxText%/ctrl%\", TcHmi.Symbol.readEx(\"%l%black_on_red%/l%\"));",
+          "}"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="Fault_FontSize_Selection_Image" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiImage" data-tchmi-height="80" data-tchmi-height-unit="px" data-tchmi-left="634" data-tchmi-left-unit="px" data-tchmi-top="340" data-tchmi-top-unit="px" data-tchmi-width="80" data-tchmi-width-unit="px" data-tchmi-background-image-width="80" data-tchmi-background-image-height="80" data-tchmi-src="Images/GTAC/Icons/UI_Conf_Icons/ico_fontSize.png">
+
+
+
+</div>
+<div id="Fault_FontSize_Selection_Combobox" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiCombobox" data-tchmi-height="44" data-tchmi-height-unit="px" data-tchmi-left="551" data-tchmi-left-unit="px" data-tchmi-top="430" data-tchmi-top-unit="px" data-tchmi-width="260" data-tchmi-width-unit="px" data-tchmi-allow-text-input="false" data-tchmi-text-horizontal-alignment="Center" data-tchmi-is-enabled="true" data-tchmi-max-list-height="350" data-tchmi-text-font-size="20" data-tchmi-ignore-escape-sequences="false" data-tchmi-combobox-text="%f% TcHmi.Functions.ICxx.GTAC_EatCookie(&quot;alarm_text_size&quot;, silence_console = true);%/f%">
+<script data-tchmi-target-attribute="data-tchmi-content-padding" type="application/json">
+{"top":3,"right":3,"bottom":3,"left":3}
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-src-data" type="application/json">
+[
+  {
+    "id": 12.0,
+    "text": "12",
+    "value": 12.0
+  },
+  {
+    "id": 14.0,
+    "text": "14",
+    "value": 14.0
+  },
+  {
+    "id": 16.0,
+    "text": "16",
+    "value": 16.0
+  }
+]
+</script>
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-class-names" type="application/json">
+[
+  "Radius"
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Fault_FontSize_Selection_Combobox.onSelectionChanged",
+    "actions": [
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_BakeCookie",
+        "fnParams": [
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": "alarm_text_size"
+          },
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:general#/definitions/String",
+            "symbolExpression": "%ctrl%Fault_FontSize_Selection_Combobox::SelectedValue%/ctrl%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/Number",
+            "value": null
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+</div>

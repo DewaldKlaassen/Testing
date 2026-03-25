@@ -1,0 +1,34 @@
+<div id="TTxx_Nav_WithFixSwap" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControl" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="119" data-tchmi-height="223" data-tchmi-width-unit="px" data-tchmi-height-unit="px" data-tchmi-creator-viewport-width="500" data-tchmi-creator-viewport-height="500">
+
+<div id="TTxxNavigation_BaseUC" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-bypassacks_a="0" data-tchmi-bypassacks_b="0" data-tchmi-height="233" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-status_a="0" data-tchmi-status_b="0" data-tchmi-tableat180="%pp%TableAt180%/pp%" data-tchmi-target-user-control="Symbols/Rxx/TTxxNavigation.usercontrol" data-tchmi-top="0" data-tchmi-top-unit="px" data-tchmi-width="118" data-tchmi-width-unit="px" data-tchmi-tableat0="%pp%TableAt0%/pp%">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "%i%Pulse_500ms%/i%",
+    "actions": [
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "//----------------------------------------------------------------------------------------------",
+          "//--------- Multiplex Fixture Data in from Fixture sources based on state of N00 ---------------",
+          "//----------------------------------------------------------------------------------------------",
+          "",
+          "//Grab a couple user control parameters",
+          "let maximum_fixture_number = TcHmi.Symbol.readEx(\"%pp%MaxFixtureNumber%/pp%\");",
+          "let in_simulation = TcHmi.Symbol.readEx(\"%pp%In_Sim_Mode%/pp%\");",
+          "",
+          "//Call function",
+          "TTxxFixtureSwap(\"TTxxNavigation_BaseUC\", maximum_fixture_number, in_simulation);"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      }
+    ]
+  }
+]
+</script>
+</div>
+</div>

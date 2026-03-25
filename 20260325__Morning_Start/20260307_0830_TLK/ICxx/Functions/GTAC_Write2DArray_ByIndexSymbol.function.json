@@ -1,0 +1,81 @@
+{
+  "function": {
+    "name": "GTAC_Write2DArray_ByIndexSymbol",
+    "namespace": "TcHmi.Functions.ICxx",
+    "displayName": "GTAC_Write2DArray_ByIndexSymbol",
+    "description": "Writes a value into a 2D PLC array. Second index can be a symbol path or a literal number.",
+    "waitMode": "Synchronous",
+    "category": "GTAC",
+    "returnValue": {
+      "type": "tchmi:general#/definitions/VOID"
+    },
+    "visible": true,
+    "injectContextObject": false,
+    "arguments": [
+      {
+        "name": "ArrayBasePath",
+        "displayName": "Array Base Path",
+        "type": "tchmi:general#/definitions/String",
+        "description": "Base symbol path of the 2D array (e.g. PLC1.MAIN.MyArray)",
+        "defaultValue": "",
+        "required": true,
+        "bindable": true,
+        "restParameter": false,
+        "asReference": false,
+        "allowControlAttributeBindingOptions": false
+      },
+      {
+        "name": "Index1",
+        "displayName": "Index 1",
+        "type": "tchmi:general#/definitions/FLOAT",
+        "description": "First (row) index.",
+        "defaultValue": "0",
+        "required": true,
+        "bindable": true,
+        "restParameter": false,
+        "asReference": false,
+        "allowControlAttributeBindingOptions": false
+      },
+      {
+        "name": "Index2OrSymbol",
+        "displayName": "Index2 Or Symbol Path",
+        "type": "tchmi:general#/definitions/String",
+        "description": "Either a literal number (e.g. 3) or a PLC symbol path whose value supplies the second index.",
+        "defaultValue": "",
+        "required": true,
+        "bindable": true,
+        "restParameter": false,
+        "asReference": false,
+        "allowControlAttributeBindingOptions": false
+      },
+      {
+        "name": "Value",
+        "displayName": "Value",
+        "type": "tchmi:general#/definitions/Any",
+        "description": "Value to write to targeted element.",
+        "defaultValue": null,
+        "required": true,
+        "bindable": true,
+        "restParameter": false,
+        "asReference": false,
+        "allowControlAttributeBindingOptions": false
+      }
+    ]
+  },
+  "$schema": "./../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.760.59/runtimes/native1.12-tchmi/Schema/FunctionDescription.Schema.json",
+  "apiVersion": 1,
+  "version": {
+    "full": "1.0.0.0",
+    "major": 1,
+    "minor": 0,
+    "revision": 0,
+    "build": 0
+  },
+  "dependencyFiles": [
+    {
+      "name": "GTAC_Write2DArray_ByIndexSymbol.js",
+      "type": "JavaScript",
+      "description": ""
+    }
+  ]
+}

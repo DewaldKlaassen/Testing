@@ -1,0 +1,742 @@
+<div id="SDxx_SafetyStatus_3" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControl" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="129" data-tchmi-height="251" data-tchmi-width-unit="px" data-tchmi-height-unit="px" data-tchmi-creator-viewport-width="500" data-tchmi-creator-viewport-height="500">
+
+<div id="txtSDxx_Safety_AxisNum" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-left="28" data-tchmi-left-unit="px" data-tchmi-text="%f%&quot;Axis&quot;+%pp%AxisNumber%/pp%%/f%" data-tchmi-top="4" data-tchmi-top-unit="px" data-tchmi-width="67" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-font-size="18" data-tchmi-text-font-weight="Auto">
+
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+</div>
+<div id="txtSDxx_Safety_STO" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-left="45" data-tchmi-left-unit="px" data-tchmi-text="STO" data-tchmi-top="34" data-tchmi-top-unit="px" data-tchmi-width="84" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-font-size="18">
+</div>
+<div id="txtSDxx_Safety_SS1" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-left="45" data-tchmi-left-unit="px" data-tchmi-text="SS1" data-tchmi-top="61" data-tchmi-top-unit="px" data-tchmi-width="84" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-font-size="18">
+</div>
+<div id="txtSDxx_Safety_SS2" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-left="45" data-tchmi-left-unit="px" data-tchmi-text="SS2" data-tchmi-top="88" data-tchmi-top-unit="px" data-tchmi-width="84" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-font-size="18">
+</div>
+<div id="txtSDxx_Safety_SOS" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-left="45" data-tchmi-left-unit="px" data-tchmi-text="SOS" data-tchmi-top="115" data-tchmi-top-unit="px" data-tchmi-width="84" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-font-size="18">
+</div>
+<div id="txtSDxx_Safety_SSR" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-left="45" data-tchmi-left-unit="px" data-tchmi-text="SSR" data-tchmi-top="142" data-tchmi-top-unit="px" data-tchmi-width="84" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-font-size="18">
+</div>
+<div id="txtSDxx_Safety_SDIp" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-left="45" data-tchmi-left-unit="px" data-tchmi-text="SDIp" data-tchmi-top="169" data-tchmi-top-unit="px" data-tchmi-width="84" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-font-size="18">
+</div>
+<div id="txtSDxx_Safety_SDIn" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-left="45" data-tchmi-left-unit="px" data-tchmi-text="SDIn" data-tchmi-top="196" data-tchmi-top-unit="px" data-tchmi-width="84" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-font-size="18">
+</div>
+<div id="txtSDxx_Safety_ErrorAck" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-left="45" data-tchmi-left-unit="px" data-tchmi-text="Err" data-tchmi-top="223" data-tchmi-top-unit="px" data-tchmi-width="84" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-font-size="18">
+</div>
+<script data-tchmi-target-attribute="data-tchmi-on_color" type="application/json">
+{
+  "color": "rgba(0, 255, 0, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-off_color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "ind_SDxx_STO.onAttached",
+    "actions": [
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Bind",
+        "fnParams": [
+          {
+            "objectType": "FunctionExpression",
+            "functionExpression": "\"PLC1..Out_To_ICxx::SD[\"+%i%Component_Num%/i%+\"]::Discrete_Image::AX5805::Axis\"+%pp%AxisNumber%/pp%+\"_STO\""
+          },
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:framework#/definitions/Control",
+            "symbolExpression": "%ctrl%ind_SDxx_STO%/ctrl%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": "input"
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+<div id="SDxx_Ind_STO" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-ind_height="23" data-tchmi-ind_width="23" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Indicator/uc_GTAC_Indicator.usercontrol" data-tchmi-top="34" data-tchmi-top-unit="px" data-tchmi-width="26" data-tchmi-width-unit="px">
+<script data-tchmi-target-attribute="data-tchmi-on_color" type="application/json">
+{
+  "color": "rgba(255, 0, 0, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-off_color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-border_color" type="application/json">
+
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-compare" type="application/json">
+true
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "%i%Pulse_500ms%/i%",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%SDxx_Ind_STO::input%/ctrl%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::SD[\"+%pp%SD_Ref%/pp%+\"]::Discrete_Image::AX5805::Axis\"+%pp%AxisNumber%/pp%+\"_STO\")%/f%"
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="SDxx_Ind_SS1" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-ind_height="23" data-tchmi-ind_width="23" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Indicator/uc_GTAC_Indicator.usercontrol" data-tchmi-top="61" data-tchmi-top-unit="px" data-tchmi-width="26" data-tchmi-width-unit="px">
+<script data-tchmi-target-attribute="data-tchmi-on_color" type="application/json">
+{
+  "color": "rgba(255, 0, 0, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-off_color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-border_color" type="application/json">
+
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-compare" type="application/json">
+true
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "%i%Pulse_500ms%/i%",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%SDxx_Ind_SS1::input%/ctrl%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::SD[\"+%pp%SD_Ref%/pp%+\"]::Discrete_Image::AX5805::Axis\"+%pp%AxisNumber%/pp%+\"_SSM1\")%/f%"
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="SDxx_Ind_SS2" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-ind_height="23" data-tchmi-ind_width="23" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Indicator/uc_GTAC_Indicator.usercontrol" data-tchmi-top="88" data-tchmi-top-unit="px" data-tchmi-width="26" data-tchmi-width-unit="px">
+<script data-tchmi-target-attribute="data-tchmi-on_color" type="application/json">
+{
+  "color": "rgba(255, 0, 0, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-off_color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-border_color" type="application/json">
+
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-compare" type="application/json">
+true
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "%i%Pulse_500ms%/i%",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%SDxx_Ind_SS2::input%/ctrl%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::SD[\"+%pp%SD_Ref%/pp%+\"]::Discrete_Image::AX5805::Axis\"+%pp%AxisNumber%/pp%+\"_SSM2\")%/f%"
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="SDxx_Ind_SOS" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-ind_height="23" data-tchmi-ind_width="23" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Indicator/uc_GTAC_Indicator.usercontrol" data-tchmi-top="115" data-tchmi-top-unit="px" data-tchmi-width="26" data-tchmi-width-unit="px">
+<script data-tchmi-target-attribute="data-tchmi-on_color" type="application/json">
+{
+  "color": "rgba(255, 0, 0, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-off_color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-border_color" type="application/json">
+
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-compare" type="application/json">
+true
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "%i%Pulse_500ms%/i%",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%SDxx_Ind_SOS::input%/ctrl%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::SD[\"+%pp%SD_Ref%/pp%+\"]::Discrete_Image::AX5805::Axis\"+%pp%AxisNumber%/pp%+\"_SOS1\")%/f%"
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="SDxx_Ind_SSR" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-ind_height="23" data-tchmi-ind_width="23" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Indicator/uc_GTAC_Indicator.usercontrol" data-tchmi-top="142" data-tchmi-top-unit="px" data-tchmi-width="26" data-tchmi-width-unit="px">
+<script data-tchmi-target-attribute="data-tchmi-on_color" type="application/json">
+{
+  "color": "rgba(255, 0, 0, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-off_color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-border_color" type="application/json">
+
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-compare" type="application/json">
+true
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "%i%Pulse_500ms%/i%",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%SDxx_Ind_SSR::input%/ctrl%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::SD[\"+%pp%SD_Ref%/pp%+\"]::Discrete_Image::AX5805::Axis\"+%pp%AxisNumber%/pp%+\"_SSR1\")%/f%"
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="SDxx_Ind_SDIp" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-ind_height="23" data-tchmi-ind_width="23" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Indicator/uc_GTAC_Indicator.usercontrol" data-tchmi-top="169" data-tchmi-top-unit="px" data-tchmi-width="26" data-tchmi-width-unit="px">
+<script data-tchmi-target-attribute="data-tchmi-on_color" type="application/json">
+{
+  "color": "rgba(255, 0, 0, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-off_color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-border_color" type="application/json">
+
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-compare" type="application/json">
+true
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "%i%Pulse_500ms%/i%",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%SDxx_Ind_SDIp::input%/ctrl%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::SD[\"+%pp%SD_Ref%/pp%+\"]::Discrete_Image::AX5805::Axis\"+%pp%AxisNumber%/pp%+\"_SDIp\")%/f%"
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="SDxx_Ind_SDIn" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-ind_height="23" data-tchmi-ind_width="23" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Indicator/uc_GTAC_Indicator.usercontrol" data-tchmi-top="196" data-tchmi-top-unit="px" data-tchmi-width="26" data-tchmi-width-unit="px">
+<script data-tchmi-target-attribute="data-tchmi-on_color" type="application/json">
+{
+  "color": "rgba(255, 0, 0, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-off_color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-border_color" type="application/json">
+
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-compare" type="application/json">
+true
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "%i%Pulse_500ms%/i%",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%SDxx_Ind_SDIn::input%/ctrl%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::SD[\"+%pp%SD_Ref%/pp%+\"]::Discrete_Image::AX5805::Axis\"+%pp%AxisNumber%/pp%+\"_SDIn\")%/f%"
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="SDxx_Ind_ErrAck" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-ind_height="23" data-tchmi-ind_width="23" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Indicator/uc_GTAC_Indicator.usercontrol" data-tchmi-top="224" data-tchmi-top-unit="px" data-tchmi-width="26" data-tchmi-width-unit="px">
+<script data-tchmi-target-attribute="data-tchmi-on_color" type="application/json">
+{
+  "color": "rgba(255, 0, 0, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-off_color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-border_color" type="application/json">
+
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-compare" type="application/json">
+true
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "%i%Pulse_500ms%/i%",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%SDxx_Ind_ErrAck::input%/ctrl%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::SD[\"+%pp%SD_Ref%/pp%+\"]::Discrete_Image::AX5805::Axis\"+%pp%AxisNumber%/pp%+\"_Error_Ack\")%/f%"
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+</div>
+<<<<<<< HEAD
+<div id="ind_SDxx_SS1" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-ind_height="26" data-tchmi-ind_width="26" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Indicator/uc_GTAC_Indicator.usercontrol" data-tchmi-top="60" data-tchmi-top-unit="px" data-tchmi-width="26" data-tchmi-width-unit="px">
+=======
+<div id="ind_SDxx_SS1" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="27" data-tchmi-height-unit="px" data-tchmi-ind_height="26" data-tchmi-ind_width="26" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/uc_GTAC_Indicator.usercontrol" data-tchmi-top="61" data-tchmi-top-unit="px" data-tchmi-width="29" data-tchmi-width-unit="px">
+>>>>>>> 3ee6ecfc2bfcadcd18484d3df94e8e629d62caaf
+<script data-tchmi-target-attribute="data-tchmi-on_color" type="application/json">
+{
+  "color": "rgba(0, 255, 0, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-off_color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "ind_SDxx_SS1.onAttached",
+    "actions": [
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Bind",
+        "fnParams": [
+          {
+            "objectType": "FunctionExpression",
+            "functionExpression": "\"PLC1..Out_To_ICxx::SD[\"+%i%Component_Num%/i%+\"]::Discrete_Image::AX5805::Axis\"+%pp%AxisNumber%/pp%+\"_SS1\""
+          },
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:framework#/definitions/Control",
+            "symbolExpression": "%ctrl%ind_SDxx_SS1%/ctrl%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": "input"
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<<<<<<< HEAD
+<div id="ind_SDxx_SS2" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-ind_height="26" data-tchmi-ind_width="26" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Indicator/uc_GTAC_Indicator.usercontrol" data-tchmi-top="86" data-tchmi-top-unit="px" data-tchmi-width="26" data-tchmi-width-unit="px">
+=======
+<div id="ind_SDxx_SS2" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="27" data-tchmi-height-unit="px" data-tchmi-ind_height="26" data-tchmi-ind_width="26" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/uc_GTAC_Indicator.usercontrol" data-tchmi-top="88" data-tchmi-top-unit="px" data-tchmi-width="29" data-tchmi-width-unit="px">
+>>>>>>> 3ee6ecfc2bfcadcd18484d3df94e8e629d62caaf
+<script data-tchmi-target-attribute="data-tchmi-on_color" type="application/json">
+{
+  "color": "rgba(0, 255, 0, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-off_color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "ind_SDxx_SS2.onAttached",
+    "actions": [
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Bind",
+        "fnParams": [
+          {
+            "objectType": "FunctionExpression",
+            "functionExpression": "\"PLC1..Out_To_ICxx::SD[\"+%i%Component_Num%/i%+\"]::Discrete_Image::AX5805::Axis\"+%pp%AxisNumber%/pp%+\"_SS2\""
+          },
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:framework#/definitions/Control",
+            "symbolExpression": "%ctrl%ind_SDxx_SS2%/ctrl%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": "input"
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<<<<<<< HEAD
+<div id="ind_SDxx_SOS" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-ind_height="26" data-tchmi-ind_width="26" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Indicator/uc_GTAC_Indicator.usercontrol" data-tchmi-top="112" data-tchmi-top-unit="px" data-tchmi-width="26" data-tchmi-width-unit="px">
+=======
+<div id="ind_SDxx_SOS" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="27" data-tchmi-height-unit="px" data-tchmi-ind_height="26" data-tchmi-ind_width="26" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/uc_GTAC_Indicator.usercontrol" data-tchmi-top="115" data-tchmi-top-unit="px" data-tchmi-width="29" data-tchmi-width-unit="px">
+>>>>>>> 3ee6ecfc2bfcadcd18484d3df94e8e629d62caaf
+<script data-tchmi-target-attribute="data-tchmi-on_color" type="application/json">
+{
+  "color": "rgba(0, 255, 0, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-off_color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "ind_SDxx_SOS.onAttached",
+    "actions": [
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Bind",
+        "fnParams": [
+          {
+            "objectType": "FunctionExpression",
+            "functionExpression": "\"PLC1..Out_To_ICxx::SD[\"+%i%Component_Num%/i%+\"]::Discrete_Image::AX5805::Axis\"+%pp%AxisNumber%/pp%+\"_SOS\""
+          },
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:framework#/definitions/Control",
+            "symbolExpression": "%ctrl%ind_SDxx_SOS%/ctrl%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": "input"
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<<<<<<< HEAD
+<div id="ind_SDxx_SSR" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-ind_height="26" data-tchmi-ind_width="26" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Indicator/uc_GTAC_Indicator.usercontrol" data-tchmi-top="138" data-tchmi-top-unit="px" data-tchmi-width="26" data-tchmi-width-unit="px">
+=======
+<div id="ind_SDxx_SSR" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="27" data-tchmi-height-unit="px" data-tchmi-ind_height="26" data-tchmi-ind_width="26" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/uc_GTAC_Indicator.usercontrol" data-tchmi-top="142" data-tchmi-top-unit="px" data-tchmi-width="29" data-tchmi-width-unit="px">
+>>>>>>> 3ee6ecfc2bfcadcd18484d3df94e8e629d62caaf
+<script data-tchmi-target-attribute="data-tchmi-on_color" type="application/json">
+{
+  "color": "rgba(0, 255, 0, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-off_color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "ind_SDxx_SSR.onAttached",
+    "actions": [
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Bind",
+        "fnParams": [
+          {
+            "objectType": "FunctionExpression",
+            "functionExpression": "\"PLC1..Out_To_ICxx::SD[\"+%i%Component_Num%/i%+\"]::Discrete_Image::AX5805::Axis\"+%pp%AxisNumber%/pp%+\"_SSR\""
+          },
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:framework#/definitions/Control",
+            "symbolExpression": "%ctrl%ind_SDxx_SSR%/ctrl%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": "input"
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<<<<<<< HEAD
+<div id="ind_SDxx_SDIp" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-ind_height="26" data-tchmi-ind_width="26" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Indicator/uc_GTAC_Indicator.usercontrol" data-tchmi-top="164" data-tchmi-top-unit="px" data-tchmi-width="26" data-tchmi-width-unit="px">
+=======
+<div id="ind_SDxx_SDIp" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="27" data-tchmi-height-unit="px" data-tchmi-ind_height="26" data-tchmi-ind_width="26" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/uc_GTAC_Indicator.usercontrol" data-tchmi-top="169" data-tchmi-top-unit="px" data-tchmi-width="29" data-tchmi-width-unit="px">
+>>>>>>> 3ee6ecfc2bfcadcd18484d3df94e8e629d62caaf
+<script data-tchmi-target-attribute="data-tchmi-on_color" type="application/json">
+{
+  "color": "rgba(0, 255, 0, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-off_color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "ind_SDxx_SDIp.onAttached",
+    "actions": [
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Bind",
+        "fnParams": [
+          {
+            "objectType": "FunctionExpression",
+            "functionExpression": "\"PLC1..Out_To_ICxx::SD[\"+%i%Component_Num%/i%+\"]::Discrete_Image::AX5805::Axis\"+%pp%AxisNumber%/pp%+\"_SDIp\""
+          },
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:framework#/definitions/Control",
+            "symbolExpression": "%ctrl%ind_SDxx_SDIp%/ctrl%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": "input"
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<<<<<<< HEAD
+<div id="ind_SDxx_SDIn" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-ind_height="26" data-tchmi-ind_width="26" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Indicator/uc_GTAC_Indicator.usercontrol" data-tchmi-top="190" data-tchmi-top-unit="px" data-tchmi-width="26" data-tchmi-width-unit="px">
+=======
+<div id="ind_SDxx_SDIn" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="27" data-tchmi-height-unit="px" data-tchmi-ind_height="26" data-tchmi-ind_width="26" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/uc_GTAC_Indicator.usercontrol" data-tchmi-top="196" data-tchmi-top-unit="px" data-tchmi-width="29" data-tchmi-width-unit="px">
+>>>>>>> 3ee6ecfc2bfcadcd18484d3df94e8e629d62caaf
+<script data-tchmi-target-attribute="data-tchmi-on_color" type="application/json">
+{
+  "color": "rgba(0, 255, 0, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-off_color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "ind_SDxx_SDIn.onAttached",
+    "actions": [
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Bind",
+        "fnParams": [
+          {
+            "objectType": "FunctionExpression",
+            "functionExpression": "\"PLC1..Out_To_ICxx::SD[\"+%i%Component_Num%/i%+\"]::Discrete_Image::AX5805::Axis\"+%pp%AxisNumber%/pp%+\"_SDIn\""
+          },
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:framework#/definitions/Control",
+            "symbolExpression": "%ctrl%ind_SDxx_SDIn%/ctrl%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": "input"
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<<<<<<< HEAD
+<div id="ind_SDxx_ErrAck" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-ind_height="26" data-tchmi-ind_width="26" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Indicator/uc_GTAC_Indicator.usercontrol" data-tchmi-top="216" data-tchmi-top-unit="px" data-tchmi-width="26" data-tchmi-width-unit="px">
+=======
+<div id="ind_SDxx_ErrAck" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="28" data-tchmi-height-unit="px" data-tchmi-ind_height="26" data-tchmi-ind_width="26" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/uc_GTAC_Indicator.usercontrol" data-tchmi-top="223" data-tchmi-top-unit="px" data-tchmi-width="29" data-tchmi-width-unit="px">
+>>>>>>> 3ee6ecfc2bfcadcd18484d3df94e8e629d62caaf
+<script data-tchmi-target-attribute="data-tchmi-on_color" type="application/json">
+{
+  "color": "rgba(0, 255, 0, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-off_color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "ind_SDxx_ErrAck.onAttached",
+    "actions": [
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Bind",
+        "fnParams": [
+          {
+            "objectType": "FunctionExpression",
+            "functionExpression": "\"PLC1..Out_To_ICxx::SD[\"+%i%Component_Num%/i%+\"]::Discrete_Image::AX5805::Axis\"+%pp%AxisNumber%/pp%+\"_Error_Ack\""
+          },
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:framework#/definitions/Control",
+            "symbolExpression": "%ctrl%ind_SDxx_ErrAck%/ctrl%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": "input"
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+</div>

@@ -1,0 +1,96 @@
+﻿<div id="SmartMessage_Content_5" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControl" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-creator-viewport-width="500" data-tchmi-creator-viewport-height="500" data-tchmi-width-mode="Content" data-tchmi-height-mode="Content" data-tchmi-width="110" data-tchmi-height="30">
+<div id="SmartMessage_v3_FlashBanner" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="%pp%tb_height%/pp%" data-tchmi-height-unit="px" data-tchmi-target-user-control="Symbols/uc_FlashTypeTextBanner.usercontrol" data-tchmi-tb_height="%pp%tb_height%/pp%" data-tchmi-tb_width="%pp%tb_width%/pp%" data-tchmi-width="%pp%tb_width%/pp%" data-tchmi-width-unit="px" data-tchmi-border-color="%pp%text_color%/pp%" data-tchmi-background-color="%pp%bgColour%/pp%" data-tchmi-text_color="%pp%text_color%/pp%" data-tchmi-text_height="%pp%text_height%/pp%">
+
+
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "%pp%input_value%/pp%",
+    "actions": [
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "//Small JS function to update the User Control's textbox -> text and bg color based upon input_value parameter",
+          "//the message objects are listed from 0 to 499, the input_value parameter is used to determine",
+          "// which message to put in the control",
+          "// Cheers: Brent Lekx-Toniolo",
+          "// Modified by: Chris Drees",
+          "// Last edit: 20221014 (corrected issue with check of blank target_msg, blt)",
+          "//------------------------------------------------ S.H.H.D.I ---------------------------------",
+          "",
+          "//First create the message index variable, must be in three digist format (IE 001, 005, 010, 101 etc)",
+          "var msg_obj_index = \"000\";",
+          "",
+          "//store the parameter of input_value into the local variable inputvalue",
+          "var inputvalue = TcHmi.Symbol.readEx('%pp%input_value%/pp%'); ",
+          "",
+          "//Create the variables for target_msg and the \"ValueCheck:, which gets used as the comparison",
+          "var ValueCheck = 0;",
+          "var target_msg = \"\";",
+          "",
+          "//loops through the potential messages to check the inputvalue against the value set by developer",
+          "for (i=0;i<=499;i++){",
+          "\t//Create the index variable based on the for loop value, must be in three digist format (IE 001, 005, 010, 101 etc)",
+          "\tmsg_obj_index = \"000\" + i; // Fill with leading zeros",
+          "\tmsg_obj_index = msg_obj_index.substr(msg_obj_index.length - 3); //Remove unrequired zeros to set final length to 3",
+          "\t//store the value from that message index in ValueCheck for comparison function",
+          "\tValueCheck = TcHmi.Symbol.readEx('%pp%message_objects::message_obj_'+msg_obj_index+'::value%/pp%');",
+          "",
+          "\tif (ValueCheck == inputvalue){//compares the value in the message object to the value brought into the user control",
+          "\t\t//Read value of message from message_objs paramarter",
+          "\t\ttarget_msg = TcHmi.Symbol.readEx('%pp%message_objects::message_obj_'+msg_obj_index+'::message%/pp%');",
+          "\t\tbreak",
+          "\t\t}",
+          "\t};",
+          "\t",
+          "",
+          "",
+          "",
+          "//Update text in User Control's text box",
+          "if (target_msg != null && target_msg != \"\"){",
+          "TcHmi.Symbol.writeEx('%ctrl%SmartMessage_v3_FlashBanner::text%/ctrl%', target_msg);",
+          "}",
+          "else{",
+          "TcHmi.Symbol.writeEx('%ctrl%SmartMessage_v3_FlashBanner::text%/ctrl%', \"Msg not configured for: \"+inputvalue);",
+          "}",
+          "",
+          "//Read value of color from message_objs paramarter",
+          "var target_color = TcHmi.Symbol.readEx('%pp%message_objects::message_obj_'+msg_obj_index+'::color%/pp%');",
+          "//Update BG color of User Control's text box",
+          "TcHmi.Symbol.writeEx('%ctrl%SmartMessage_v3_FlashBanner::bg_color%/ctrl%', target_color);",
+          "",
+          "//Read state of flash enable",
+          "var flash_enable = TcHmi.Symbol.readEx('%pp%message_objects::message_obj_'+msg_obj_index+'::flash%/pp%');",
+          "//Update flash parameter on text box",
+          "TcHmi.Symbol.writeEx('%ctrl%SmartMessage_v3_FlashBanner::flash_enable%/ctrl%', flash_enable);"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      }
+    ]
+  }
+]
+</script>
+
+
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-flash_bg_color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-bg_color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+</div>
+</div>

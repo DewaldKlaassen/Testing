@@ -1,0 +1,67 @@
+<div id="LoginConfirm" data-tchmi-type="TcHmi.Controls.System.TcHmiContent" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="800" data-tchmi-height="640" data-tchmi-creator-viewport-width="400" data-tchmi-creator-viewport-height="200">
+
+<div id="LoginConfirmPopupBG" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiRectangle" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-top="0" data-tchmi-top-unit="%" data-tchmi-width-unit="px" data-tchmi-right-unit="%" data-tchmi-bottom-unit="%" data-tchmi-right="0" data-tchmi-bottom="0">
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "color": "rgba(18, 134, 18, 1)"
+}
+</script>
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-border-width" type="application/json">
+{
+  "left": 0,
+  "right": 0,
+  "top": 0,
+  "bottom": 0,
+  "leftUnit": "px",
+  "rightUnit": "px",
+  "topUnit": "px",
+  "bottomUnit": "px"
+}
+</script>
+</div>
+<div id="Login_Popup_txt" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="%" data-tchmi-text="%l%PasswordUpdateSuccess%/l%" data-tchmi-top="10" data-tchmi-top-unit="%" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-font-size="50" data-tchmi-text-horizontal-alignment="Center" data-tchmi-right-unit="%" data-tchmi-bottom-unit="%" data-tchmi-right="0" data-tchmi-bottom="30" data-tchmi-text-vertical-alignment="Center">
+</div>
+<div id="ConfirmPasswordUpdatePB" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiButton" data-tchmi-height-unit="px" data-tchmi-left="35" data-tchmi-left-unit="%" data-tchmi-text="OK" data-tchmi-top="80" data-tchmi-top-unit="%" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-right-unit="%" data-tchmi-bottom-unit="%" data-tchmi-right="35" data-tchmi-bottom="5" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-font-size="35">
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "color": "rgba(227, 227, 227, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "ConfirmPasswordUpdatePB.onPressed",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%LoginConfirmPopup::Visibility%/ctrl%",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:framework#/definitions/Visibility",
+          "value": "Collapsed"
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+</div>

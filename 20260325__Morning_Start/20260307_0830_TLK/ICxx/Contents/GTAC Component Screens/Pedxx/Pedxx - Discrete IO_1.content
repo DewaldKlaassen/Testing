@@ -1,0 +1,1110 @@
+<div id="PEDxx_Discrete_IO_Content" data-tchmi-type="TcHmi.Controls.System.TcHmiContent" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="1024" data-tchmi-height="670">
+<div id="PEDxx_N01_Byte" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="232" data-tchmi-height-unit="px" data-tchmi-left="378" data-tchmi-left-unit="px" data-tchmi-offset="0" data-tchmi-target-user-control="Symbols/Indicator/Generic_Inds_Byte.usercontrol" data-tchmi-top="83" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-text_ind_0="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N01.I.0 (Swing Advanced)&quot;%/f%" data-tchmi-text_ind_1="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N01.I.1 (Swing Retracted)&quot;%/f%" data-tchmi-text_ind_2="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N01.I.2 (Part Present 1)&quot;%/f%" data-tchmi-text_ind_7="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N01.I.7 (Spare)&quot;%/f%" data-tchmi-text_ind_6="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N01.I.6 (Spare)&quot;%/f%" data-tchmi-text_ind_5="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N01.I.5 (Part Present 4)&quot;%/f%" data-tchmi-text_ind_4="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N01.I.4 (Part Present 3)&quot;%/f%" data-tchmi-text_ind_3="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N01.I.3 (Part Present 2)&quot;%/f%">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PEDxx_N01_Byte.onAttached",
+    "actions": [
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Bind",
+        "fnParams": [
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:general#/definitions/String",
+            "symbolExpression": "%f%\"PLC1..Out_To_ICxx::PED[\"+%i%Component_Num%/i%+\"]::N01::I\"%/f%"
+          },
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:framework#/definitions/Control",
+            "symbolExpression": "%ctrl%PEDxx_N01_Byte%/ctrl%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": "Data"
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::PED[\"+%i%Component_Num%/i%+\"]::Input_Node_Count\")%/f%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "2"
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%PEDxx_N01_Byte::Left%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/MeasurementValue",
+                  "value": 135.0
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Comment",
+        "comment": "Evaluate Swing Cyl Option and Set I/O names to spare (or custom user values) if option is not selected"
+      },
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::PED[\"+%i%Component_Num%/i%+\"]::Option_SwingCylinder\")%/f%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "False"
+                },
+                "compareOperator": "==",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%PEDxx_N01_Byte::text_ind_0%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%\"Ped\"+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+\".N01.I.0 (Spare)\"%/f%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%PEDxx_N01_Byte::text_ind_1%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%\"Ped\"+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+\".N01.I.1 (Spare)\"%/f%"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Comment",
+        "comment": "Evaluate Part Present Options and Set I/O names to spare (or custom user values) if option is not selected"
+      },
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::PED[\"+%i%Component_Num%/i%+\"]::Part_Present_Count\")%/f%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "4"
+                },
+                "compareOperator": "<",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%PEDxx_N01_Byte::text_ind_5%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%\"Ped\"+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+\".N01.I.5 (Spare)\"%/f%"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::PED[\"+%i%Component_Num%/i%+\"]::Part_Present_Count\")%/f%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "3"
+                },
+                "compareOperator": "<",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%PEDxx_N01_Byte::text_ind_4%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%\"Ped\"+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+\".N01.I.4 (Spare)\"%/f%"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::PED[\"+%i%Component_Num%/i%+\"]::Part_Present_Count\")%/f%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "2"
+                },
+                "compareOperator": "<",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%PEDxx_N01_Byte::text_ind_3%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%\"Ped\"+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+\".N01.I.3 (Spare)\"%/f%"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::PED[\"+%i%Component_Num%/i%+\"]::Part_Present_Count\")%/f%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "1"
+                },
+                "compareOperator": "<",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%PEDxx_N01_Byte::text_ind_2%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%\"Ped\"+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+\".N01.I.2 (Spare)\"%/f%"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="PEDxx_N100_Byte" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="232" data-tchmi-height-unit="px" data-tchmi-left="378" data-tchmi-left-unit="px" data-tchmi-offset="0" data-tchmi-target-user-control="Symbols/Indicator/Generic_Inds_Byte.usercontrol" data-tchmi-top="387" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-text_ind_0="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N100.Q.0 (Advance Swing)&quot;%/f%" data-tchmi-text_ind_1="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N100.Q.1 (Retract Swing)&quot;%/f%" data-tchmi-text_ind_2="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N100.Q.2 (Spare)&quot;%/f%" data-tchmi-text_ind_3="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N100.Q.3 (Spare)&quot;%/f%" data-tchmi-text_ind_7="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N100.Q.7 (Spare)&quot;%/f%" data-tchmi-text_ind_6="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N100.Q.6 (Spare)&quot;%/f%" data-tchmi-text_ind_5="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N100.Q.5 (Spare)&quot;%/f%" data-tchmi-text_ind_4="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N100.Q.4 (Spare)&quot;%/f%">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PEDxx_N100_Byte.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::PED[\"+%i%Component_Num%/i%+\"]::VB_Node_Count\")%/f%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "1"
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "Function",
+                "active": true,
+                "fn": "TcHmi.Functions.ICxx.GTAC_Bind",
+                "fnParams": [
+                  {
+                    "objectType": "Symbol",
+                    "valueType": "tchmi:general#/definitions/String",
+                    "symbolExpression": "%f%\"PLC1..Out_To_ICxx::PED[\"+%i%Component_Num%/i%+\"]::N100::Q\"%/f%"
+                  },
+                  {
+                    "objectType": "Symbol",
+                    "valueType": "tchmi:framework#/definitions/Control",
+                    "symbolExpression": "%ctrl%PEDxx_N100_Byte%/ctrl%"
+                  },
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:general#/definitions/String",
+                    "value": "Data"
+                  }
+                ],
+                "asyncWait": true
+              },
+              {
+                "objectType": "Condition",
+                "active": true,
+                "parts": [
+                  {
+                    "if": [
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::PED[\"+%i%Component_Num%/i%+\"]::Output_Node_Count\")%/f%"
+                        },
+                        "compare2": {
+                          "objectType": "StaticValue",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "value": "1"
+                        },
+                        "compareOperator": ">=",
+                        "logic": null
+                      }
+                    ],
+                    "then": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%ctrl%PEDxx_N100_Byte::Left%/ctrl%",
+                        "value": {
+                          "objectType": "StaticValue",
+                          "valueType": "tchmi:framework#/definitions/MeasurementValue",
+                          "value": 592.0
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  },
+                  {
+                    "else": []
+                  }
+                ],
+                "asyncWait": true
+              },
+              {
+                "objectType": "Comment",
+                "comment": "Evaluate Swing Cyl Option and Set I/O names to spare (or custom user values) if option is not selected"
+              },
+              {
+                "objectType": "Condition",
+                "active": true,
+                "parts": [
+                  {
+                    "if": [
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::PED[\"+%i%Component_Num%/i%+\"]::Option_SwingCylinder\")%/f%"
+                        },
+                        "compare2": {
+                          "objectType": "StaticValue",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "value": "False"
+                        },
+                        "compareOperator": "==",
+                        "logic": null
+                      }
+                    ],
+                    "then": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%ctrl%PEDxx_N100_Byte::text_ind_0%/ctrl%",
+                        "value": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%f%\"Ped\"+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+\".N100.Q.0 (Spare)\"%/f%"
+                        },
+                        "asyncWait": true
+                      },
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%ctrl%PEDxx_N100_Byte::text_ind_1%/ctrl%",
+                        "value": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%f%\"Ped\"+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+\".N100.Q.1 (Spare)\"%/f%"
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  },
+                  {
+                    "else": []
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%PEDxx_N100_Byte::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Collapsed"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="PEDxx_N01_State" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)%/f%" data-tchmi-height="53" data-tchmi-height-unit="px" data-tchmi-left="378" data-tchmi-left-unit="px" data-tchmi-nodeid="N01" data-tchmi-nodetype="EP1008" data-tchmi-state="0" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_TitleStatus.usercontrol" data-tchmi-top="30" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PEDxx_N01_State.onAttached",
+    "actions": [
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Bind",
+        "fnParams": [
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:general#/definitions/String",
+            "symbolExpression": "%f%\"PLC1..Out_To_ICxx::PED[\"+%i%Component_Num%/i%+\"]::N01::InfoData::State\"%/f%"
+          },
+          {
+            "objectType": "Symbol",
+            "valueType": "tchmi:framework#/definitions/Control",
+            "symbolExpression": "%ctrl%PEDxx_N01_State%/ctrl%"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": "State"
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::PED[\"+%i%Component_Num%/i%+\"]::Input_Node_Count\")%/f%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "2"
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%PEDxx_N01_State::Left%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/MeasurementValue",
+                  "value": 135.0
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="PEDxx_N100_State" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)%/f%" data-tchmi-height="53" data-tchmi-height-unit="px" data-tchmi-left="378" data-tchmi-left-unit="px" data-tchmi-nodeid="N100" data-tchmi-nodetype="SMC" data-tchmi-state="0" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_TitleStatus.usercontrol" data-tchmi-top="334" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PEDxx_N100_State.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::PED[\"+%i%Component_Num%/i%+\"]::VB_Node_Count\")%/f%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "1"
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "Function",
+                "active": true,
+                "fn": "TcHmi.Functions.ICxx.GTAC_Bind",
+                "fnParams": [
+                  {
+                    "objectType": "Symbol",
+                    "valueType": "tchmi:general#/definitions/String",
+                    "symbolExpression": "%f%\"PLC1..Out_To_ICxx::PED[\"+%i%Component_Num%/i%+\"]::N100_STAT::InfoData::State\"%/f%"
+                  },
+                  {
+                    "objectType": "Symbol",
+                    "valueType": "tchmi:framework#/definitions/Control",
+                    "symbolExpression": "%ctrl%PEDxx_N100_State%/ctrl%"
+                  },
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:general#/definitions/String",
+                    "value": "State"
+                  }
+                ],
+                "asyncWait": true
+              },
+              {
+                "objectType": "Condition",
+                "active": true,
+                "parts": [
+                  {
+                    "if": [
+                      {
+                        "compare1": {
+                          "objectType": "Symbol",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::PED[\"+%i%Component_Num%/i%+\"]::Output_Node_Count\")%/f%"
+                        },
+                        "compare2": {
+                          "objectType": "StaticValue",
+                          "valueType": "tchmi:general#/definitions/String",
+                          "value": "1"
+                        },
+                        "compareOperator": ">=",
+                        "logic": null
+                      }
+                    ],
+                    "then": [
+                      {
+                        "objectType": "WriteToSymbol",
+                        "active": true,
+                        "symbolExpression": "%ctrl%PEDxx_N100_State::Left%/ctrl%",
+                        "value": {
+                          "objectType": "StaticValue",
+                          "valueType": "tchmi:framework#/definitions/MeasurementValue",
+                          "value": 592.0
+                        },
+                        "asyncWait": true
+                      }
+                    ]
+                  },
+                  {
+                    "else": []
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%PEDxx_N100_State::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Collapsed"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+
+
+<div id="PEDxx_N50_State" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)%/f%" data-tchmi-height="53" data-tchmi-height-unit="px" data-tchmi-left="135" data-tchmi-left-unit="px" data-tchmi-nodeid="N50" data-tchmi-nodetype="EP2028" data-tchmi-state="0" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_TitleStatus.usercontrol" data-tchmi-top="334" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-visibility="Hidden">
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PEDxx_N50_State.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::PED[\"+%i%Component_Num%/i%+\"]::Output_Node_Count\")%/f%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "1"
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%PEDxx_N50_State::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "Function",
+                "active": true,
+                "fn": "TcHmi.Functions.ICxx.GTAC_Bind",
+                "fnParams": [
+                  {
+                    "objectType": "Symbol",
+                    "valueType": "tchmi:general#/definitions/String",
+                    "symbolExpression": "%f%\"PLC1..Out_To_ICxx::PED[\"+%i%Component_Num%/i%+\"]::N50_STAT::InfoData::State\"%/f%"
+                  },
+                  {
+                    "objectType": "Symbol",
+                    "valueType": "tchmi:framework#/definitions/Control",
+                    "symbolExpression": "%ctrl%PEDxx_N50_State%/ctrl%"
+                  },
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:general#/definitions/String",
+                    "value": "State"
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::PED[\"+%i%Component_Num%/i%+\"]::VB_Node_Count\")%/f%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "0"
+                },
+                "compareOperator": "==",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%PEDxx_N50_State::Left%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/MeasurementValue",
+                  "value": 378.0
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="PEDxx_N50_Byte" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="232" data-tchmi-height-unit="px" data-tchmi-left="135" data-tchmi-left-unit="px" data-tchmi-offset="0" data-tchmi-target-user-control="Symbols/Indicator/Generic_Inds_Byte.usercontrol" data-tchmi-top="387" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-text_ind_0="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N50.Q.0 (Start Tip Dresser CW)&quot;%/f%" data-tchmi-text_ind_1="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N50.Q.1 (Start Tip Dresser CCW)&quot;%/f%" data-tchmi-text_ind_2="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N50.Q.2 (Spare)&quot;%/f%" data-tchmi-text_ind_7="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N50.Q.7 (Spare)&quot;%/f%" data-tchmi-text_ind_6="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N50.Q.6 (Spare)&quot;%/f%" data-tchmi-text_ind_5="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N50.Q.5 (Spare)&quot;%/f%" data-tchmi-text_ind_4="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N50.Q.4 (Spare)&quot;%/f%" data-tchmi-text_ind_3="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N50.Q.3 (Spare)&quot;%/f%" data-tchmi-visibility="Hidden">
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PEDxx_N50_Byte.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::PED[\"+%i%Component_Num%/i%+\"]::Output_Node_Count\")%/f%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "1"
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%PEDxx_N50_Byte::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "Function",
+                "active": true,
+                "fn": "TcHmi.Functions.ICxx.GTAC_Bind",
+                "fnParams": [
+                  {
+                    "objectType": "Symbol",
+                    "valueType": "tchmi:general#/definitions/String",
+                    "symbolExpression": "%f%\"PLC1..Out_To_ICxx::PED[\"+%i%Component_Num%/i%+\"]::N50::Q\"%/f%"
+                  },
+                  {
+                    "objectType": "Symbol",
+                    "valueType": "tchmi:framework#/definitions/Control",
+                    "symbolExpression": "%ctrl%PEDxx_N50_Byte%/ctrl%"
+                  },
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:general#/definitions/String",
+                    "value": "Data"
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::PED[\"+%i%Component_Num%/i%+\"]::VB_Node_Count\")%/f%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "0"
+                },
+                "compareOperator": "==",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%PEDxx_N50_Byte::Left%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/MeasurementValue",
+                  "value": 378.0
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Comment",
+        "comment": "Evaluate Tip Dresser Option and Set I/O names to spare (or custom user values) if option is not selected"
+      },
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::PED[\"+%i%Component_Num%/i%+\"]::Option_TipDresser\")%/f%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "False"
+                },
+                "compareOperator": "==",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%PEDxx_N50_Byte::text_ind_0%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%\"Ped\"+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+\".N50.Q.0 (Spare)\"%/f%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%PEDxx_N50_Byte::text_ind_1%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%\"Ped\"+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+\".N50.Q.1 (Spare)\"%/f%"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="PEDxx_N02_State" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-fixnumber="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)%/f%" data-tchmi-height="53" data-tchmi-height-unit="px" data-tchmi-left="592" data-tchmi-left-unit="px" data-tchmi-nodeid="N02" data-tchmi-nodetype="EP1008" data-tchmi-state="0" data-tchmi-target-user-control="Symbols/Ecat_Slaves/EcatSlave_TitleStatus.usercontrol" data-tchmi-top="30" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-visibility="Hidden">
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PEDxx_N02_State.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::PED[\"+%i%Component_Num%/i%+\"]::Input_Node_Count\")%/f%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "2"
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%PEDxx_N02_State::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "Function",
+                "active": true,
+                "fn": "TcHmi.Functions.ICxx.GTAC_Bind",
+                "fnParams": [
+                  {
+                    "objectType": "Symbol",
+                    "valueType": "tchmi:general#/definitions/String",
+                    "symbolExpression": "%f%\"PLC1..Out_To_ICxx::PED[\"+%i%Component_Num%/i%+\"]::N02::InfoData::State\"%/f%"
+                  },
+                  {
+                    "objectType": "Symbol",
+                    "valueType": "tchmi:framework#/definitions/Control",
+                    "symbolExpression": "%ctrl%PEDxx_N02_State%/ctrl%"
+                  },
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:general#/definitions/String",
+                    "value": "State"
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="PEDxx_N02_Byte" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="232" data-tchmi-height-unit="px" data-tchmi-left="592" data-tchmi-left-unit="px" data-tchmi-offset="0" data-tchmi-target-user-control="Symbols/Indicator/Generic_Inds_Byte.usercontrol" data-tchmi-top="83" data-tchmi-top-unit="px" data-tchmi-width="282" data-tchmi-width-unit="px" data-tchmi-text_ind_0="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N01.I.0 (Spare)&quot;%/f%" data-tchmi-text_ind_1="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N01.I.1 (Spare)&quot;%/f%" data-tchmi-text_ind_2="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N01.I.2 (Spare)&quot;%/f%" data-tchmi-text_ind_7="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N01.I.7 (Spare)&quot;%/f%" data-tchmi-text_ind_6="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N01.I.6 (Spare)&quot;%/f%" data-tchmi-text_ind_5="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N01.I.5 (Spare)&quot;%/f%" data-tchmi-text_ind_4="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N01.I.4 (Spare)&quot;%/f%" data-tchmi-text_ind_3="%f%&quot;Ped&quot;+TcHmi.Functions.ICxx.GTAC_ZeroStringPad(%i%Component_Num%/i%)+&quot;.N01.I.3 (Spare)&quot;%/f%" data-tchmi-visibility="Hidden">
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PEDxx_N02_Byte.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::PED[\"+%i%Component_Num%/i%+\"]::Input_Node_Count\")%/f%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "2"
+                },
+                "compareOperator": ">=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%PEDxx_N02_Byte::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "Function",
+                "active": true,
+                "fn": "TcHmi.Functions.ICxx.GTAC_Bind",
+                "fnParams": [
+                  {
+                    "objectType": "Symbol",
+                    "valueType": "tchmi:general#/definitions/String",
+                    "symbolExpression": "%f%\"PLC1..Out_To_ICxx::PED[\"+%i%Component_Num%/i%+\"]::N02::I\"%/f%"
+                  },
+                  {
+                    "objectType": "Symbol",
+                    "valueType": "tchmi:framework#/definitions/Control",
+                    "symbolExpression": "%ctrl%PEDxx_N02_Byte%/ctrl%"
+                  },
+                  {
+                    "objectType": "StaticValue",
+                    "valueType": "tchmi:general#/definitions/String",
+                    "value": "Data"
+                  }
+                ],
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+</div>

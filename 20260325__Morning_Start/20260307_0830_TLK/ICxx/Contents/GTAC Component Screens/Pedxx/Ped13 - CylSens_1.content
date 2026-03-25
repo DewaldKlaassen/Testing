@@ -1,0 +1,101 @@
+<div id="PED13_Content" data-tchmi-type="TcHmi.Controls.System.TcHmiContent" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="1024" data-tchmi-height="670">
+<div id="PED13_Image" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiImage" data-tchmi-height="419" data-tchmi-height-unit="px" data-tchmi-left="338" data-tchmi-left-unit="px" data-tchmi-src="Images/GTAC/CellImages/Ped Images/PED13.png" data-tchmi-top="92" data-tchmi-top-unit="px" data-tchmi-width="367" data-tchmi-width-unit="px">
+</div>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "PED13_Content.onAttached",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%Current_Screen%/i%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%f%%l%Ped%/l% +%i%Component_Num%/i% + \" - \" + %l%Discrete_IO%/l% +\" 2\"%/f%"
+        },
+        "asyncWait": true
+      }
+    ]
+  },
+  {
+    "event": "PED13_Content.onDetached",
+    "actions": [
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "//Clear out any cylinder status drop downs if they weren't closed manually",
+          "",
+          "$('#DesktopCylStatus').animate({",
+          "                          \ttop: '-300px'",
+          "                          \t\t});"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%PPNameBanner::Visibility%/ctrl%",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:framework#/definitions/Visibility",
+          "value": "Collapsed"
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+<div id="PED13_Swing_1" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="60" data-tchmi-height-unit="px" data-tchmi-left="349" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Misc/uc_ActuatorStatus.usercontrol" data-tchmi-top="60" data-tchmi-top-unit="px" data-tchmi-width="74" data-tchmi-width-unit="px" data-tchmi-advdinputname="PED13.N01.0 - ADVD" data-tchmi-retdinputname="PED13.N01.1 - RETD" data-tchmi-name="Swing Cyl" data-tchmi-advd="%f%TcHmi.Functions.ICxx.GTAC_ReturnBinary_Bit(%s%PLC1..Out_To_ICxx::PED[13]::N01::I%/s%, 0)%/f%" data-tchmi-retd="%f%TcHmi.Functions.ICxx.GTAC_ReturnBinary_Bit(%s%PLC1..Out_To_ICxx::PED[13]::N01::I%/s%, 1)%/f%" data-tchmi-faulted="%f%TcHmi.Functions.ICxx.GTAC_ReturnBinary_Bit(%s%PLC1..Out_To_ICxx::PED[13]::CLFaults1%/s%, 1)%/f%">
+</div>
+<div id="PED13_PP1" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-bitnumber="2" data-tchmi-height="40" data-tchmi-height-unit="px" data-tchmi-input="%s%PLC1..Out_To_ICxx::PED[13]::N01::I%/s%" data-tchmi-left="358" data-tchmi-left-unit="px" data-tchmi-partpresentnum="1" data-tchmi-target-user-control="Symbols/Indicator/uc_GTAC_Indicator V2.usercontrol" data-tchmi-top="227" data-tchmi-top-unit="px" data-tchmi-width="40" data-tchmi-width-unit="px" data-tchmi-is-enabled="true" data-tchmi-faultbit="%f%TcHmi.Functions.ICxx.GTAC_GetBinary_Bit(%s%PLC1..Out_To_ICxx::PED[13]::PPFaults%/s%, 1)%/f%" data-tchmi-sensorname="PED13.N01.I.2">
+<script data-tchmi-target-attribute="data-tchmi-off_color" type="application/json">
+{
+  "color": "rgba(2, 85, 2, 1)"
+}
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-border_color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+
+
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-off_indicator" type="application/json">
+{
+  "color": "rgba(0, 55, 0, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-on_indicator" type="application/json">
+{
+  "color": "rgba(0, 255, 0, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-on_text" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-off_text" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+
+
+</div>
+</div>

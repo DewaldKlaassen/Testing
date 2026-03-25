@@ -1,0 +1,96 @@
+<div id="GTAC_SimControlPanel_1" data-tchmi-type="TcHmi.Controls.System.TcHmiContent" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="854" data-tchmi-height="132">
+
+
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "angle": 0.0,
+  "stopPoints": [
+    {
+      "color": "rgba(0, 1, 113, 1)",
+      "stop": "30.68%"
+    },
+    {
+      "color": "rgba(1, 168, 171, 1)",
+      "stop": "57.61%"
+    }
+  ]
+}
+</script>
+<div id="TcHmiLinearGauge_1" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiLinearGauge" data-tchmi-base-animation-time="1" data-tchmi-height="102" data-tchmi-height-unit="px" data-tchmi-label-range="1000" data-tchmi-left="6" data-tchmi-left-unit="px" data-tchmi-show-labels="true" data-tchmi-show-ticks="true" data-tchmi-show-value-text="true" data-tchmi-top="10" data-tchmi-top-unit="px" data-tchmi-width="809" data-tchmi-width-unit="px" data-tchmi-editable="true" data-tchmi-step="0" data-tchmi-ignore-invalid-values="false" data-tchmi-value-font-size="20" data-tchmi-click-anywhere-to-edit="true" data-tchmi-label-position="Top" data-tchmi-label-font-size="10" data-tchmi-min-value="-15700" data-tchmi-max-value="200" data-tchmi-orientation="Horizontal" data-tchmi-value="%f%%i%Rxx_LinerAxis_Persist%/i%%/f%">
+<script data-tchmi-target-attribute="data-tchmi-range" type="application/json">
+[
+  {
+    "color": {
+      "color": "rgba(0, 128, 0, 1)"
+    },
+    "start": -15700.0,
+    "end": -8000.0
+  },
+  {
+    "color": {
+      "color": "rgba(255, 165, 0, 1)"
+    },
+    "start": -11870.0,
+    "end": -3000.0
+  },
+  {
+    "color": {
+      "color": "rgba(255, 0, 0, 1)"
+    },
+    "start": -3000.0,
+    "end": 200.0
+  }
+]
+</script>
+<script data-tchmi-target-attribute="data-tchmi-value-format" type="application/json">
+{
+  "objectType": "Function",
+  "fn": "GaugeValueFormatter",
+  "fnParams": []
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-tick-definition" type="application/json">
+{
+  "mainTickRange": 1000.0,
+  "subTickRange": 100.0
+}
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "%ctrl%TcHmiLinearGauge_1::Value%/ctrl%",
+    "actions": [
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%s%PLC1.MAIN.SIM_ExternalAxis_Control%/s%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%f%parseInt(%ctrl%TcHmiLinearGauge_1::Value%/ctrl%,10)%/f%"
+        },
+        "asyncWait": true
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%Rxx_LinerAxis_Persist%/i%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%s%PLC1.MAIN.SIM_ExternalAxis_Control%/s%"
+        },
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+
+
+</div>
+
+
+</div>

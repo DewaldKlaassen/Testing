@@ -1,0 +1,427 @@
+<div id="Linear_Robot" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControl" data-tchmi-creator-viewport-width="500" data-tchmi-creator-viewport-height="500" data-tchmi-is-enabled="true" data-tchmi-creator-visibility="Visible" data-tchmi-width="118" data-tchmi-height="148" data-tchmi-width-mode="Value" data-tchmi-height-mode="Value" data-tchmi-opacity="1" data-tchmi-background-image-horizontal-alignment="Center" data-tchmi-background-image-vertical-alignment="Center" data-tchmi-left="0">
+
+<div id="img_Kuka_Orng_1" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiImage" data-tchmi-left="38" data-tchmi-left-unit="px" data-tchmi-src="Images/GTAC/Icons/ico_robot_Kuka.png" data-tchmi-top="10" data-tchmi-top-unit="px" data-tchmi-is-enabled="true" data-tchmi-width-mode="Value" data-tchmi-height-mode="Value" data-tchmi-width="46" data-tchmi-height="102" data-tchmi-creator-visibility="Visible">
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-transform" type="application/json">
+[
+  {
+    "transformType": "Rotate",
+    "angle": "%f%%pp%Rotation%/pp%+%pp%StartingPosition%/pp%%/f%"
+  }
+]
+</script>
+
+
+</div>
+<div id="txtRxxNumber_1" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="26" data-tchmi-height-unit="px" data-tchmi-left="10" data-tchmi-left-unit="px" data-tchmi-top="86" data-tchmi-top-unit="px" data-tchmi-width="30" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-is-enabled="true" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center" data-tchmi-text="%f%'R'+%pp%RobotNumber%/pp%%/f%" data-tchmi-creator-visibility="Visible">
+
+<script data-tchmi-target-attribute="data-tchmi-background-color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-class-names" type="application/json">
+[
+  "Radius",
+  "TextBackground",
+  "TextColour"
+]
+</script>
+
+
+</div>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "Linear_Robot.onPressed",
+    "actions": [
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "$('#WhatScreenRegion').animate({",
+          "                          \tleft: '113px',",
+          "                          \ttop: '7px',",
+          " \t\t\t\t\t\t\topacity: '1'",
+          "                               });"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%Component_Num%/i%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%pp%RobotNumber%/pp%"
+        },
+        "asyncWait": true
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%RxxNumber%/i%",
+        "value": {
+          "objectType": "Symbol",
+          "valueType": "tchmi:general#/definitions/String",
+          "symbolExpression": "%pp%RobotNumber%/pp%"
+        },
+        "asyncWait": true
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%i%Component_Name%/i%",
+        "value": {
+          "objectType": "FunctionExpression",
+          "functionExpression": "\"R\""
+        },
+        "asyncWait": true
+      },
+      {
+        "objectType": "WriteToSymbol",
+        "active": true,
+        "symbolExpression": "%ctrl%ContextRegion::TargetContent%/ctrl%",
+        "value": {
+          "objectType": "StaticValue",
+          "valueType": "tchmi:framework#/definitions/ContentPath",
+          "value": "Contents/Context Menus/Rxx_FieldbusContext.content"
+        },
+        "asyncWait": true
+      },
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Change_Screen",
+        "fnParams": [
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:framework#/definitions/ContentPath",
+            "value": "Contents/GTAC Component Screens/GTAC_Fieldbus/GTACxx - Fieldbus IO.content"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": ""
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  },
+  {
+    "event": "%pp%ExternalAxisPosRaw%/pp%",
+    "actions": [
+      {
+        "objectType": "JavaScript",
+        "active": true,
+        "sourceLines": [
+          "// FYI commented out some of Will's console.logs to avoid console overload during production",
+          "//Uncomment if they are required for Development troubleshooting",
+          "",
+          "",
+          "var Converted_RawValue",
+          "var ExternalAxisPosRaw , Screen_Linear_Max, Screen_Linear_Min, Max_ExternalAxisPosRaw, Min_ExternalAxisPosRaw",
+          "\t",
+          "// Converts unsigned 32-bit PLC value to signed (handles negative External Axis values)",
+          "function toSigned32(x) {",
+          "    return x > 0x7FFFFFFF ? x - 0x100000000 : x;",
+          "}",
+          "",
+          "// Converts External Axis raw position to a readable value for the ICxx screen",
+          "function Raw_To_ICxx(rawValue, P_Max, P_Min, R_Max, R_Min) {",
+          "    // Convert raw value to signed if needed",
+          "    var signedValue = toSigned32(rawValue);",
+          "",
+          "    // Calculate scale factor (can be negative)",
+          "    var scaleFactor = (P_Max - P_Min) / (R_Max - R_Min);",
+          "",
+          "    // Map raw value to screen",
+          "    var output = (signedValue - R_Min) * scaleFactor + P_Min;",
+          "",
+          "    // console.log(\"Raw value:\", signedValue, \"=> Screen value:\", output);",
+          "",
+          "    return output;",
+          "}",
+          "",
+          "// Reading parameter data ",
+          "TcHmi.Symbol.readEx2('%pp%ExternalAxisPosRaw%/pp%', function (data) {",
+          "    if (data.error === TcHmi.Errors.NONE) {",
+          "\t    ExternalAxisPosRaw = data.value;",
+          "       // console.log('ExternalAxisPosRaw:', data.value);",
+          "    } else {",
+          "        console.error('Error reading parameter:', data.error);",
+          "    }",
+          "});",
+          "",
+          "TcHmi.Symbol.readEx2('%pp%Screen_Linear_Max%/pp%', function (data) {",
+          "    if (data.error === TcHmi.Errors.NONE) {",
+          "        Screen_Linear_Max = data.value;",
+          "       // console.log('Screen Linear max move:', data.value);",
+          "    } else {",
+          "        console.error('Error reading parameter:', data.error);",
+          "    }",
+          "});",
+          "",
+          "TcHmi.Symbol.readEx2('%pp%Screen_Linear_Min%/pp%', function (data) {",
+          "    if (data.error === TcHmi.Errors.NONE) {",
+          "        Screen_Linear_Min = data.value;             \t\t",
+          "       // console.log('Screen Linear Min:', data.value);",
+          "    } else {",
+          "        console.error('Error reading parameter:', data.error);",
+          "    }",
+          "});",
+          "",
+          "TcHmi.Symbol.readEx2('%pp%Max_ExternalAxisPosRaw%/pp%', function (data) {",
+          "    if (data.error === TcHmi.Errors.NONE) {",
+          "        Max_ExternalAxisPosRaw = data.value;             \t\t",
+          "       // console.log('Max_ExternalAxisPosRaw:', data.value);",
+          "    } else {",
+          "        console.error('Error reading parameter:', data.error);",
+          "    }",
+          "});",
+          "",
+          "TcHmi.Symbol.readEx2('%pp%Min_ExternalAxisPosRaw%/pp%', function (data) {",
+          "    if (data.error === TcHmi.Errors.NONE) {",
+          "        Min_ExternalAxisPosRaw = data.value;",
+          "       // console.log('Min_ExternalAxisPosRaw:', data.value);",
+          "    } else {",
+          "        console.error('Error reading parameter:', data.error);",
+          "    }",
+          "});",
+          "",
+          "",
+          "Converted_RawValue = Raw_To_ICxx(toSigned32(ExternalAxisPosRaw), Screen_Linear_Max, Screen_Linear_Min, Max_ExternalAxisPosRaw, Min_ExternalAxisPosRaw);",
+          "",
+          "\tTcHmi.Symbol.writeEx2('%pp%Calculated_ExternalAxisPosRaw%/pp%',Converted_RawValue);",
+          "\t TcHmi.Symbol.readEx2('%pp%Calculated_ExternalAxisPosRaw%/pp%', function (data) {",
+          "/*   ",
+          "   \tif (data.error === TcHmi.Errors.NONE) {",
+          "               if (data.value === Converted_RawValue){",
+          "                   console.log(\"Converted RawValue :\",data.value);}",
+          "               else{",
+          "                    console.log(\"Value mismatch between Converted_RawValue and Calculated_ExternalAxisPosRaw :\", data.value);}",
+          "       ",
+          "    } else {",
+          "        console.error('Error reading parameter:', data.error);",
+          "    }",
+          "*/",
+          "",
+          "});"
+        ],
+        "injectContextObject": false,
+        "asyncWait": true,
+        "waitMode": "Synchronous"
+      },
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/INT",
+                  "symbolExpression": "%pp%Calculated_ExternalAxisPosRaw%/pp%"
+                },
+                "compare2": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/REAL",
+                  "symbolExpression": "%pp%Screen_Linear_Max%/pp%"
+                },
+                "compareOperator": ">",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Linear_Robot::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Collapsed"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "elseif": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/INT",
+                  "symbolExpression": "%pp%Calculated_ExternalAxisPosRaw%/pp%"
+                },
+                "compare2": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/REAL",
+                  "symbolExpression": "%pp%Screen_Linear_Min%/pp%"
+                },
+                "compareOperator": "<",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Linear_Robot::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Collapsed"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Linear_Robot::Visibility%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/Visibility",
+                  "value": "Visible"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%Linear_AxisPlane%/pp%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "X"
+                },
+                "compareOperator": "==",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Linear_Robot::Left%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%Calculated_ExternalAxisPosRaw%/pp%"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Linear_Robot::Left%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/MeasurementValue",
+                  "value": 0.0
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      },
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%Linear_AxisPlane%/pp%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "Y"
+                },
+                "compareOperator": "==",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Linear_Robot::Top%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%Calculated_ExternalAxisPosRaw%/pp%"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%Linear_Robot::Top%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/MeasurementValue",
+                  "value": 0.0
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+<div id="Rxx_Status_Banner_1" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="33" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Rxx/uc_Rxx_Status.usercontrol" data-tchmi-top="115" data-tchmi-top-unit="px" data-tchmi-width="118" data-tchmi-width-unit="px" data-tchmi-status="%pp%Status%/pp%" data-tchmi-tb_width="117" data-tchmi-text_height="12" data-tchmi-creator-visibility="Visible" data-tchmi-zindex="0">
+
+
+</div>
+</div>

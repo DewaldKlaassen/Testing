@@ -1,0 +1,188 @@
+﻿<div id="GTAC_URHere" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControl" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="224" data-tchmi-height="234" data-tchmi-width-unit="px" data-tchmi-height-unit="px" data-tchmi-creator-viewport-width="500" data-tchmi-creator-viewport-height="500" data-tchmi-width-mode="Content" data-tchmi-height-mode="Content">
+
+<div id="TcHmiPolygon" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiPolygon" data-tchmi-height="200" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-scale-mode="ScaleToFill" data-tchmi-top="0" data-tchmi-top-unit="px" data-tchmi-width="200" data-tchmi-width-unit="px" data-tchmi-points="%f%&quot; 0,&quot;+(%ctrl%TcHmiPolygon::Height%/ctrl%*0.5)+&quot; &quot; + (%ctrl%TcHmiPolygon::Width%/ctrl%*0.5)+&quot;,0 &quot;+ %ctrl%TcHmiPolygon::Width%/ctrl%+&quot;,&quot;+(%ctrl%TcHmiPolygon::Height%/ctrl%*0.5)+&quot; &quot;+ (%ctrl%TcHmiPolygon::Width%/ctrl%*0.75)+&quot;,&quot; +(%ctrl%TcHmiPolygon::Height%/ctrl%*0.5)+ &quot; &quot; + (%ctrl%TcHmiPolygon::Width%/ctrl%*0.75)+&quot;,&quot;+%ctrl%TcHmiPolygon::Height%/ctrl% + &quot; &quot; +(%ctrl%TcHmiPolygon::Width%/ctrl%*0.25)+&quot;,&quot;+%ctrl%TcHmiPolygon::Height%/ctrl% +&quot; &quot; +(%ctrl%TcHmiPolygon::Width%/ctrl%*0.25)+&quot;,&quot;+(%ctrl%TcHmiPolygon::Height%/ctrl%*0.5)%/f%">
+<script data-tchmi-target-attribute="data-tchmi-stroke-color" type="application/json">
+{
+  "color": "rgba(255, 255, 255, 1)"
+}
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-transform" type="application/json">
+[
+  {
+    "transformType": "Rotate",
+    "angle": "%pp%Rotation%/pp%"
+  }
+]
+</script>
+
+<script data-tchmi-target-attribute="data-tchmi-fill-color" type="application/json">
+{
+  "color": "rgba(255, 153, 0, 1)"
+}
+</script>
+</div>
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "GTAC_URHere.onAttached",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%Rotation%/pp%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/DINT",
+                  "value": 45
+                },
+                "compareOperator": ">=",
+                "logic": null
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%Rotation%/pp%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/DINT",
+                  "value": 135
+                },
+                "compareOperator": "<=",
+                "logic": "AND"
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%TcHmiPolygon::Height%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(TcHmi.Functions.ICxx.GTAC_TruncIDs(%ctrl%GTAC_URHere::id%/ctrl%)+\"::RenderedWidth\", -1, \"ctrl\")%/f%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%TcHmiPolygon::Width%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(TcHmi.Functions.ICxx.GTAC_TruncIDs(%ctrl%GTAC_URHere::id%/ctrl%)+\"::RenderedHeight\", -1, \"ctrl\")%/f%"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "elseif": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%Rotation%/pp%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/DINT",
+                  "value": 235
+                },
+                "compareOperator": ">=",
+                "logic": null
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%pp%Rotation%/pp%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/DINT",
+                  "value": 315
+                },
+                "compareOperator": "==",
+                "logic": "AND"
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%TcHmiPolygon::Height%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(TcHmi.Functions.ICxx.GTAC_TruncIDs(%ctrl%GTAC_URHere::id%/ctrl%)+\"::RenderedWidth\", -1, \"ctrl\")%/f%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%TcHmiPolygon::Width%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(TcHmi.Functions.ICxx.GTAC_TruncIDs(%ctrl%GTAC_URHere::id%/ctrl%)+\"::RenderedHeight\", -1, \"ctrl\")%/f%"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%TcHmiPolygon::Width%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(TcHmi.Functions.ICxx.GTAC_TruncIDs(%ctrl%GTAC_URHere::id%/ctrl%)+\"::RenderedWidth\", -1, \"ctrl\")%/f%"
+                },
+                "asyncWait": true
+              },
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%TcHmiPolygon::Height%/ctrl%",
+                "value": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "symbolExpression": "%f%TcHmi.Functions.ICxx.GTAC_GetSymValue(TcHmi.Functions.ICxx.GTAC_TruncIDs(%ctrl%GTAC_URHere::id%/ctrl%)+\"::RenderedHeight\", -1, \"ctrl\")%/f%"
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+<div id="TcHmiTextblock_922" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiTextblock" data-tchmi-height="%f%%ctrl%TcHmiPolygon::RenderedHeight%/ctrl%/2%/f%" data-tchmi-height-unit="px" data-tchmi-left="%f%%ctrl%TcHmiPolygon::RenderedWidth%/ctrl%/4%/f%" data-tchmi-left-unit="px" data-tchmi-text="%l%URHere%/l%" data-tchmi-top="%f%%ctrl%TcHmiPolygon::RenderedHeight%/ctrl%/4%/f%" data-tchmi-top-unit="px" data-tchmi-width="%f%%ctrl%TcHmiPolygon::RenderedWidth%/ctrl%*0.5%/f%" data-tchmi-width-unit="px" data-tchmi-word-wrap="true" data-tchmi-text-horizontal-alignment="Center" data-tchmi-text-vertical-alignment="Center" data-tchmi-text-font-weight="Bold" data-tchmi-min-width="40" data-tchmi-text-font-size="%f%%ctrl%TcHmiPolygon::RenderedHeight%/ctrl%/8%/f%">
+
+<script data-tchmi-target-attribute="data-tchmi-text-color" type="application/json">
+{
+  "color": "rgba(0, 0, 0, 1)"
+}
+</script>
+</div>
+</div>

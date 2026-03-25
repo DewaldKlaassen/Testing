@@ -1,0 +1,373 @@
+<div id="LSRxx_Content" data-tchmi-type="TcHmi.Controls.System.TcHmiContent" data-tchmi-top="0" data-tchmi-left="0" data-tchmi-width="1024" data-tchmi-height="670" data-tchmi-is-enabled="true">
+<div id="LSRxx_Image_1" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiImage" data-tchmi-height="282" data-tchmi-height-unit="px" data-tchmi-left="386" data-tchmi-left-unit="px" data-tchmi-top="160" data-tchmi-top-unit="px" data-tchmi-width="235" data-tchmi-width-unit="px" data-tchmi-is-enabled="true" data-tchmi-src="Images/GTAC/Components/LSRxx.png">
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "LSRxx_Image_1.onPressed",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:framework#/definitions/ContentPath",
+                  "symbolExpression": "%ctrl%MainRegion::TargetContent%/ctrl%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/ContentPath",
+                  "value": null
+                },
+                "compareOperator": "!=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%MainRegion::TargetContent%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/ContentPath",
+                  "value": "Contents/GTAC Component Screens/LSRxx/LSRxx - Overview_1.content"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "elseif": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:framework#/definitions/ContentPath",
+                  "symbolExpression": "%ctrl%MainRegion_Right::TargetContent%/ctrl%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/ContentPath",
+                  "value": null
+                },
+                "compareOperator": "!=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%MainRegion_Right::TargetContent%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/ContentPath",
+                  "value": "Contents/GTAC Component Screens/LSRxx/LSRxx - Overview_1.content"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "elseif": [
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:framework#/definitions/ContentPath",
+                  "symbolExpression": "%ctrl%MainRegion_Left::TargetContent%/ctrl%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/ContentPath",
+                  "value": null
+                },
+                "compareOperator": "!=",
+                "logic": null
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%MainRegion_Left::TargetContent%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/ContentPath",
+                  "value": "Contents/GTAC Component Screens/LSRxx/LSRxx - Overview_1.content"
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": []
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="LSRxx_Ind_691" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="25" data-tchmi-height-unit="px" data-tchmi-ind_height="22" data-tchmi-ind_width="14" data-tchmi-left="557" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/Indicator/uc_GTAC_Indicator.usercontrol" data-tchmi-top="129" data-tchmi-top-unit="px" data-tchmi-width="19" data-tchmi-width-unit="px" data-tchmi-is-enabled="true" data-tchmi-input="%f%TcHmi.Functions.Beckhoff.GetElementByIndex(%s%PLC1..Out_To_ICxx::LSR%/s%, %i%Component_Num%/i%).Discrete_Image.LSRT01.InfoData.State%/f%" data-tchmi-width-mode="Content" data-tchmi-height-mode="Content">
+<script data-tchmi-target-attribute="data-tchmi-on_color" type="application/json">
+{
+  "color": "rgba(0, 255, 0, 1)"
+}
+</script>
+<script data-tchmi-target-attribute="data-tchmi-off_color" type="application/json">
+{
+  "color": "rgba(255, 0, 0, 1)"
+}
+</script>
+
+
+<script data-tchmi-target-attribute="data-tchmi-compare" type="application/json">
+8
+</script>
+
+
+
+
+
+
+</div>
+<div id="LSRxx_ToNext" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiPolyline" data-tchmi-height="313" data-tchmi-height-unit="px" data-tchmi-left="476" data-tchmi-left-unit="px" data-tchmi-scale-mode="None" data-tchmi-top="273" data-tchmi-top-unit="px" data-tchmi-is-enabled="true" data-tchmi-fill-mode="NonZero" data-tchmi-stroke-thickness="2" data-tchmi-points="%f%&quot;79,70 190,70  190,66 200,62 210,66 210,70  225,70 225,300 &quot;+ (%ctrl%LSRxx_ToNext::RenderedWidth%/ctrl%-5)+&quot;,300 &quot; +(%ctrl%LSRxx_ToNext::RenderedWidth%/ctrl% -7) + &quot;,298 &quot; + (%ctrl%LSRxx_ToNext::RenderedWidth%/ctrl% - 7) + &quot;,300 &quot; %/f%" data-tchmi-width="546" data-tchmi-zindex="13" data-tchmi-creator-visibility="Visible">
+<script data-tchmi-target-attribute="data-tchmi-stroke-color" type="application/json">
+{
+  "color": "rgba(0, 255, 0, 1)"
+}
+</script>
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "%i%Pulse_500ms%/i%",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::LSR[\"+ %i%Component_Num%/i%+\"]::ECAT_Cable_Breaks\", 1)"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "1"
+                },
+                "compareOperator": "==",
+                "logic": null
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/Boolean",
+                  "symbolExpression": "%i%Pulse_500ms%/i%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/Boolean",
+                  "value": true
+                },
+                "compareOperator": "==",
+                "logic": "AND"
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%LSRxx_ToNext::StrokeColor%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/SolidColor",
+                  "value": {
+                    "color": "rgba(255, 0, 0, 1)"
+                  }
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%LSRxx_ToNext::StrokeColor%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/SolidColor",
+                  "value": {
+                    "color": "rgba(0, 255, 0, 1)"
+                  }
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="FromPrev_ToLSRxx" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiPolyline" data-tchmi-height="313" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-scale-mode="None" data-tchmi-top="273" data-tchmi-top-unit="px" data-tchmi-is-enabled="true" data-tchmi-fill-mode="NonZero" data-tchmi-stroke-thickness="2" data-tchmi-width="750" data-tchmi-visibility="%f%if ((%ctrl%NodeImage::Src%/ctrl%== &quot;Images/GTAC/Icons/EX260.png&quot;) &amp;&amp; (%pp%NextNode%/pp%!=&quot;&quot;)){&quot;Visible&quot;} else {&quot;Collapsed&quot;}%/f%" data-tchmi-zindex="14" data-tchmi-creator-visibility="Visible" data-tchmi-points="0,300 0,298 2,300 0,302 0,300 675,300 675,22 555,22">
+<script data-tchmi-target-attribute="data-tchmi-stroke-color" type="application/json">
+{
+  "color": "rgba(0, 255, 0, 1)"
+}
+</script>
+
+
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "%i%Pulse_500ms%/i%",
+    "actions": [
+      {
+        "objectType": "Condition",
+        "active": true,
+        "parts": [
+          {
+            "if": [
+              {
+                "compare1": {
+                  "objectType": "FunctionExpression",
+                  "functionExpression": "TcHmi.Functions.ICxx.GTAC_GetSymValue(\"PLC1..Out_To_ICxx::LSR[\"+ %i%Component_Num%/i%+\"]::ECAT_Cable_Breaks\", 0)"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/String",
+                  "value": "1"
+                },
+                "compareOperator": "==",
+                "logic": null
+              },
+              {
+                "compare1": {
+                  "objectType": "Symbol",
+                  "valueType": "tchmi:general#/definitions/Boolean",
+                  "symbolExpression": "%i%Pulse_500ms%/i%"
+                },
+                "compare2": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:general#/definitions/Boolean",
+                  "value": true
+                },
+                "compareOperator": "==",
+                "logic": "AND"
+              }
+            ],
+            "then": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%FromPrev_ToLSRxx::StrokeColor%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/SolidColor",
+                  "value": {
+                    "color": "rgba(255, 0, 0, 1)"
+                  }
+                },
+                "asyncWait": true
+              }
+            ]
+          },
+          {
+            "else": [
+              {
+                "objectType": "WriteToSymbol",
+                "active": true,
+                "symbolExpression": "%ctrl%FromPrev_ToLSRxx::StrokeColor%/ctrl%",
+                "value": {
+                  "objectType": "StaticValue",
+                  "valueType": "tchmi:framework#/definitions/SolidColor",
+                  "value": {
+                    "color": "rgba(0, 255, 0, 1)"
+                  }
+                },
+                "asyncWait": true
+              }
+            ]
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+<div id="FromPrev_ToLSRxx_1" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiPolyline" data-tchmi-height="308" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-scale-mode="None" data-tchmi-top="273" data-tchmi-top-unit="px" data-tchmi-is-enabled="true" data-tchmi-fill-mode="NonZero" data-tchmi-stroke-thickness="4" data-tchmi-width="752" data-tchmi-visibility="%f%if ((%ctrl%NodeImage::Src%/ctrl%== &quot;Images/GTAC/Icons/EX260.png&quot;) &amp;&amp; (%pp%NextNode%/pp%!=&quot;&quot;)){&quot;Visible&quot;} else {&quot;Collapsed&quot;}%/f%" data-tchmi-zindex="13" data-tchmi-creator-visibility="Visible" data-tchmi-points="%ctrl%FromPrev_ToLSRxx::Points%/ctrl%">
+<script data-tchmi-target-attribute="data-tchmi-stroke-color" type="application/json">
+{
+  "color": "rgba(0, 118, 0, 1)"
+}
+</script>
+
+
+
+
+</div>
+<div id="LSRxx_ToNext1" data-tchmi-type="TcHmi.Controls.Beckhoff.TcHmiPolyline" data-tchmi-height="313" data-tchmi-height-unit="px" data-tchmi-left="476" data-tchmi-left-unit="px" data-tchmi-scale-mode="None" data-tchmi-top="273" data-tchmi-top-unit="px" data-tchmi-is-enabled="true" data-tchmi-fill-mode="NonZero" data-tchmi-stroke-thickness="4" data-tchmi-width="546" data-tchmi-visibility="%f%if ((%ctrl%NodeImage::Src%/ctrl%== &quot;Images/GTAC/Icons/EX260.png&quot;) &amp;&amp; (%pp%NextNode%/pp%!=&quot;&quot;)){&quot;Visible&quot;} else {&quot;Collapsed&quot;}%/f%" data-tchmi-zindex="2" data-tchmi-creator-visibility="Visible" data-tchmi-points="%ctrl%LSRxx_ToNext::Points%/ctrl%">
+<script data-tchmi-target-attribute="data-tchmi-stroke-color" type="application/json">
+{
+  "color": "rgba(0, 118, 0, 1)"
+}
+</script>
+
+
+
+
+</div>
+<div id="LSRxx_PrevArrow" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="49" data-tchmi-height-unit="px" data-tchmi-left="0" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/GTAC Components/uc_ControlsOverview_Prev.usercontrol" data-tchmi-top="0" data-tchmi-top-unit="px" data-tchmi-width="52" data-tchmi-width-unit="px" data-tchmi-is-enabled="true" data-tchmi-zindex="4">
+</div>
+<div id="LSRxx_NextArrow" data-tchmi-type="TcHmi.Controls.System.TcHmiUserControlHost" data-tchmi-height="49" data-tchmi-height-unit="px" data-tchmi-left="970" data-tchmi-left-unit="px" data-tchmi-target-user-control="Symbols/GTAC Components/uc_ControlsOverview_Next.usercontrol" data-tchmi-top="0" data-tchmi-top-unit="px" data-tchmi-width="52" data-tchmi-width-unit="px" data-tchmi-creator-locked="False" data-tchmi-zindex="8" data-tchmi-is-enabled="true">
+</div>
+<div id="TcHmiContainer_27" data-tchmi-type="TcHmi.Controls.System.TcHmiContainer" data-tchmi-height="282" data-tchmi-height-unit="px" data-tchmi-left="386" data-tchmi-left-unit="px" data-tchmi-top="160" data-tchmi-top-unit="px" data-tchmi-width="235" data-tchmi-width-unit="px" data-tchmi-zindex="15" data-tchmi-is-enabled="true">
+
+<script data-tchmi-target-attribute="data-tchmi-trigger" type="application/json">
+[
+  {
+    "event": "TcHmiContainer_27.onPressed",
+    "actions": [
+      {
+        "objectType": "Function",
+        "active": true,
+        "fn": "TcHmi.Functions.ICxx.GTAC_Change_Screen",
+        "fnParams": [
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:framework#/definitions/ContentPath",
+            "value": "Contents/GTAC Component Screens/LSRxx/LSRxx - Overview_1.content"
+          },
+          {
+            "objectType": "StaticValue",
+            "valueType": "tchmi:general#/definitions/String",
+            "value": ""
+          }
+        ],
+        "asyncWait": true
+      }
+    ]
+  }
+]
+</script>
+</div>
+</div>

@@ -1,0 +1,57 @@
+{
+  "function": {
+    "name": "GTAC_Change_Screen",
+    "namespace": "TcHmi.Functions.ICxx",
+    "displayName": "GTAC_Change_Screen",
+    "description": "",
+    "waitMode": "Synchronous",
+    "category": "",
+    "returnValue": {
+      "type": "tchmi:general#/definitions/Null"
+    },
+    "visible": true,
+    "injectContextObject": false,
+    "arguments": [
+      {
+        "name": "New_Target",
+        "displayName": "New_Target",
+        "type": "tchmi:framework#/definitions/ContentPath",
+        "description": "Content (screen) to change to",
+        "defaultValue": "",
+        "required": true,
+        "bindable": true,
+        "restParameter": false,
+        "asReference": false,
+        "allowControlAttributeBindingOptions": false
+      },
+      {
+        "name": "Animation_Type",
+        "displayName": "Animation_Type",
+        "type": "tchmi:general#/definitions/String",
+        "description": "Type of Animation to perform on screen change (leave blank for \"Fade\" or enter \"Left\" or \"Right\")",
+        "defaultValue": "",
+        "required": false,
+        "bindable": true,
+        "restParameter": false,
+        "asReference": false,
+        "allowControlAttributeBindingOptions": false
+      }
+    ]
+  },
+  "$schema": "./../../Packages/Beckhoff.TwinCAT.HMI.Framework.12.758.8/runtimes/native1.12-tchmi/Schema/FunctionDescription.Schema.json",
+  "apiVersion": 1,
+  "version": {
+    "full": "0.0.0.0",
+    "major": 0,
+    "minor": 0,
+    "revision": 0,
+    "build": 0
+  },
+  "dependencyFiles": [
+    {
+      "name": "FunctionJS1.js",
+      "type": "JavaScript",
+      "description": ""
+    }
+  ]
+}
